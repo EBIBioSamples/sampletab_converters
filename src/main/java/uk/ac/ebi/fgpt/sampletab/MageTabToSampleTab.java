@@ -11,25 +11,41 @@ import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 
 public class MageTabToSampleTab {
+	
+	private static final MageTabToSampleTab instance = new MageTabToSampleTab();
+	public static final MAGETABParser<MAGETABInvestigation> parser = new MAGETABParser<MAGETABInvestigation>();
 
-	public MageTabToSampleTab(String filename) throws IOException,
+	private MageTabToSampleTab(){
+		//private constructor to prevent accidental multiple initialisations
+	}
+	 
+    public static MageTabToSampleTab getInstance() {
+            return instance;
+    }
+	
+	public SampleData convert(String idfFilename) throws IOException,
 			ParseException {
-		this(new File(filename));
+		return convert(new File(idfFilename));
 	}
 
-	public MageTabToSampleTab(File msiFile) throws IOException,
+	public SampleData convert(File idfFile) throws IOException,
 			ParseException {
-		this(msiFile.toURI().toURL());
+		return convert(parser.parse(idfFile));
 	}
 
-	public MageTabToSampleTab(URL msiURL) throws IOException,
+	public SampleData convert(URL idfURL) throws IOException,
 			ParseException {
-		this(msiURL.openStream());
+		return convert(parser.parse(idfURL));
 	}
 
-	public MageTabToSampleTab(InputStream dataIn) throws ParseException {
-		MAGETABParser<MAGETABInvestigation> p = new MAGETABParser<MAGETABInvestigation>();
-		MAGETABInvestigation mt = p.parse(dataIn);
+	public SampleData convert(InputStream dataIn) throws ParseException {
+		MAGETABInvestigation mt = parser.parse(dataIn);
+		//return null;
+		return convert(mt);
+	}
+		
+	public SampleData convert(MAGETABInvestigation mt){
+		
 		SampleData st = new SampleData();
 		st.msi.submissionTitle = mt.IDF.investigationTitle;
 		st.msi.submissionDescription = mt.IDF.experimentDescription;
@@ -61,5 +77,9 @@ public class MageTabToSampleTab {
 		st.msi.termSourceName = mt.IDF.termSourceName;
 		st.msi.termSourceURI = mt.IDF.termSourceFile;
 		st.msi.termSourceVersion = mt.IDF.termSourceVersion;
+		
+		//TODO add samples...
+		
+		return st;
 	}
 }
