@@ -30,7 +30,9 @@ import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class MageTabToSampleTab {
 	
+	//singlton instance
 	private static final MageTabToSampleTab instance = new MageTabToSampleTab();
+	
 	public static final MAGETABParser<MAGETABInvestigation> parser = new MAGETABParser<MAGETABInvestigation>();
 	
     // logging
@@ -130,8 +132,6 @@ public class MageTabToSampleTab {
 		getLog().info("Node names");
 		//create a sample from each topmost node
 		for(SDRFNode sdrfnode : topnodes ){
-			getLog().info(sdrfnode.getNodeType());
-			getLog().info(sdrfnode.getNodeName());
 			
 			SampleNode scdnode = new SampleNode();
 			scdnode.setNodeName(sdrfnode.getNodeName());
