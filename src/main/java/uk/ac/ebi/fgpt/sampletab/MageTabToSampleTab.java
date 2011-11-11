@@ -1,6 +1,7 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -25,6 +26,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class MageTabToSampleTab {
 	
@@ -190,5 +192,48 @@ public class MageTabToSampleTab {
 		}
 		
 		return st;
+	}
+	
+	public static void main(String[] args) {
+		String idfFilename = args[1];
+		String sampleTabFilename = args[2];
+
+		MAGETABParser<MAGETABInvestigation> mtparser = new MAGETABParser<MAGETABInvestigation>();
+		MageTabToSampleTab converter = MageTabToSampleTab.getInstance();
+        
+		File idfFile = new File(idfFilename);
+		
+		MAGETABInvestigation mt = null;
+		try {
+			mt = mtparser.parse(idfFile);
+		} catch (ParseException e) {
+			System.out.println("Error parsing "+idfFilename);
+			e.printStackTrace();
+			return;
+		}
+		
+		SampleData st = null;
+		try {
+			st = converter.convert(mt);
+		} catch (ParseException e) {
+			System.out.println("Error converting "+idfFilename);
+			e.printStackTrace();
+		}
+		
+		FileWriter out = null;
+		try {
+			out = new FileWriter(sampleTabFilename);
+		} catch (IOException e) {
+			System.out.println("Error opening "+sampleTabFilename);
+			e.printStackTrace();
+		}
+		
+		SampleTabWriter sampletabwriter = new SampleTabWriter(out);
+		try {
+			sampletabwriter.write(st);
+		} catch (IOException e) {
+			System.out.println("Error writing "+sampleTabFilename);
+			e.printStackTrace();
+		}
 	}
 }
