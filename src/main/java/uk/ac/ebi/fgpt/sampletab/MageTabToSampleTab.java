@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -192,6 +193,38 @@ public class MageTabToSampleTab {
 		}
 		
 		return st;
+	}
+	
+	public void convert(MAGETABInvestigation mt, Writer writer) throws IOException, ParseException{
+		SampleData st = convert(mt);
+		SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
+		sampletabwriter.write(st);
+	}
+	
+	public void convert(File idffile, Writer writer) throws IOException, ParseException{
+		MAGETABParser<MAGETABInvestigation> mtparser = new MAGETABParser<MAGETABInvestigation>();
+		MAGETABInvestigation mt = mtparser.parse(idffile);
+		convert(mt, writer);
+	}
+	
+	public void convert(File idffile, String stfilename) throws IOException, ParseException{
+		convert(idffile, new File(stfilename));
+	}
+	
+	public void convert(File idffile, File stfile) throws IOException, ParseException{
+		convert(idffile, new FileWriter(stfile));
+	}
+	
+	public void convert(String idffilename, Writer writer) throws IOException, ParseException{
+		convert(new File(idffilename), writer);
+	}
+	
+	public void convert(String idffilename, File stfile) throws IOException, ParseException{
+		convert(idffilename, new FileWriter(stfile));
+	}
+	
+	public void convert(String idffilename, String stfilename) throws IOException, ParseException{
+		convert(idffilename, new File(stfilename));
 	}
 	
 	public static void main(String[] args) {
