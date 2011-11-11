@@ -95,7 +95,7 @@ public class MageTabFTPDownload {
 				}
 			}
 			if (error){
-				return "An error occored";
+				return "An IOException error occored";
 			}
 		}
 		//return a null string to indicate nothing went wrong
@@ -103,7 +103,15 @@ public class MageTabFTPDownload {
 	}
 
 	public static void main(String[] args) {
-		// TODO write me
+		String accession = args[1];
+		String outdir = args[2];
+		
+		MageTabFTPDownload magetabftpdownload = MageTabFTPDownload.getInstance();
+		String error = magetabftpdownload.download(accession, outdir);
+		if (error != null){
+			System.out.println("ERROR: "+error);
+			System.exit(1);
+		}
 
 	}
 
