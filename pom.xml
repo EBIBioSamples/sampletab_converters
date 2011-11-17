@@ -1,29 +1,29 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <artifactId>automation</artifactId>
-        <groupId>uk.ac.ebi.fgpt</groupId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
+	<parent>
+		<artifactId>automation</artifactId>
+		<groupId>uk.ac.ebi.fgpt</groupId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
 
-    <artifactId>sampletab-converters</artifactId>
-    <version>0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+	<artifactId>sampletab-converters</artifactId>
+	<version>0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
 
-    <name>Module for converting various format files to SampleTab</name>
+	<name>Module for converting various format files to SampleTab</name>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
-    <dependencies>
-  	     <dependency>
-  		      <groupId>uk.ac.ebi.arrayexpress2</groupId>
-  		      <artifactId>limpopo-sampletab</artifactId>
-  		      <version>0.0.1-SNAPSHOT</version>
-  	     </dependency>
+	<dependencies>
+		<dependency>
+			<groupId>uk.ac.ebi.arrayexpress2</groupId>
+			<artifactId>limpopo-sampletab</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 		<!-- testing -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -48,21 +48,34 @@
 			<artifactId>commons-net</artifactId>
 			<version>3.0.1</version>
 		</dependency>
-    </dependencies>
-  
-    <build>
-        <plugins> 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <fork>true</fork>
-                    <source>1.5</source>
-                    <target>1.7</target>
-                </configuration>
-           </plugin>
-        </plugins>
-    </build>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<fork>true</fork>
+					<source>1.5</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>coconut.ebi.ac.uk-releases</id>
+			<name>coconut.ebi.ac.uk-releases</name>
+			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
+		</repository>
+		<snapshotRepository>
+			<id>coconut.ebi.ac.uk-snapshots</id>
+			<name>coconut.ebi.ac.uk-snapshots</name>
+			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>
