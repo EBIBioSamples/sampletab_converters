@@ -2,11 +2,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<artifactId>automation</artifactId>
-		<groupId>uk.ac.ebi.fgpt</groupId>
-		<version>1.0-SNAPSHOT</version>
-	</parent>
 
 	<artifactId>sampletab-converters</artifactId>
 	<version>0.1-SNAPSHOT</version>
@@ -78,4 +73,5 @@
 		</snapshotRepository>
 	</distributionManagement>
 
+	<groupId>uk.ac.ebi.fgpt</groupId>
 </project>
