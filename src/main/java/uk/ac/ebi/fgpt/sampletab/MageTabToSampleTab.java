@@ -128,8 +128,7 @@ public class MageTabToSampleTab {
 				topnodes.add(node);
 			}
 		}
-			
-
+		
 		getLog().info("Node names");
 		//create a sample from each topmost node
 		for(SDRFNode sdrfnode : topnodes ){

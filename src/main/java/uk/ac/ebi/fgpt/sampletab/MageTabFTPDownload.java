@@ -2,14 +2,12 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
 public class MageTabFTPDownload {	
@@ -24,7 +22,7 @@ public class MageTabFTPDownload {
 	}
 	 
     public static MageTabFTPDownload getInstance() {
-            return instance;
+        return instance;
     }
 	
 	public String download(String accession, String outdir){
@@ -34,8 +32,7 @@ public class MageTabFTPDownload {
 	public String download(String accession, File outdir){
 		boolean error = false;
 		FTPClient ftp = new FTPClient();
-		String server = "ftp://ftp.ebi.ac.uk/pub/databases/arrayexpress/data/experiment/";
-		server = "ftp.ebi.ac.uk";
+		String server = "ftp.ebi.ac.uk";
 		try {
 			int reply;
 			ftp.connect(server);
@@ -64,11 +61,13 @@ public class MageTabFTPDownload {
 			FileOutputStream idffileoutputstream = new FileOutputStream(idffile);
 			ftp.retrieveFile(path+accession+".idf.txt", idffileoutputstream);
 			log.info("Downloaded " + path+accession+".idf.txt");
+			idffileoutputstream.close();
 
 			File sdrffile = new File(outdir, accession+".sdrf.txt");
 			FileOutputStream sdrffileoutputstream = new FileOutputStream(sdrffile);
 			ftp.retrieveFile(path+accession+".sdrf.txt", sdrffileoutputstream);
 			log.info("Downloaded " + path+accession+".sdrf.txt");
+			sdrffileoutputstream.close();
 			
 			/*
 			//this could be done using paged access. At the moment, bulk access is good enough.
@@ -84,6 +83,9 @@ public class MageTabFTPDownload {
 
 			ftp.logout();
 		} catch(IOException e) {
+			error = true;
+			e.printStackTrace();
+		} catch(RuntimeException e) {
 			error = true;
 			e.printStackTrace();
 		} finally {

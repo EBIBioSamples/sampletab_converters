@@ -49,10 +49,7 @@ public class TestMageTabToSampleTab extends TestCase {
 			System.out.println(out.toString());
 		} catch (ParseException e) {
             e.printStackTrace();
-            fail();/*
-		} catch (IOException e) {
-            e.printStackTrace();
-            fail();*/
+            fail();
 		}
     }
 
