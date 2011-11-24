@@ -134,7 +134,9 @@ public class MageTabToSampleTab {
 		for(SDRFNode sdrfnode : topnodes ){
 			
 			SampleNode scdnode = new SampleNode();
-			scdnode.setNodeName(sdrfnode.getNodeName());
+			String name = sdrfnode.getNodeName();
+			getLog().info("processing "+name);
+			scdnode.setNodeName(name);
 			//since some attributes only exist for some sub-classes, need to test 
 			//for instanceof for each of those sub-classes, cast accordingly
 			//and then access the attributes
@@ -190,7 +192,8 @@ public class MageTabToSampleTab {
 			
 			st.scd.addNode(scdnode);
 		}
-		
+
+		getLog().info("Finished convert()");
 		return st;
 	}
 	
