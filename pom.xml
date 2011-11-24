@@ -68,13 +68,13 @@
 	<distributionManagement>
 		<repository>
 			<id>bar.ebi.ac.uk-releases</id>
-			<name>coconut.ebi.ac.uk-releases</name>
-			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
+			<name>bar.ebi.ac.uk-releases</name>
+			<url>http://bar.ebi.ac.uk:8081/artifactory/local-repo</url>
 		</repository>
 		<snapshotRepository>
 			<id>bar-snapshots</id>
-			<name>coconut.ebi.ac.uk-snapshots</name>
-			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
+			<name>bar.ebi.ac.uk-snapshots</name>
+			<url>http://bar.ebi.ac.uk:8081/artifactory/local-repo</url>
 		</snapshotRepository>
 	</distributionManagement>
 
