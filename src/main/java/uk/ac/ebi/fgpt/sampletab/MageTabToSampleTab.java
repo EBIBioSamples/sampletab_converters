@@ -129,7 +129,7 @@ public class MageTabToSampleTab {
 			}
 		}
 		
-		getLog().info("Node names");
+		getLog().info("Creating node names");
 		//create a sample from each topmost node
 		for(SDRFNode sdrfnode : topnodes ){
 			
@@ -195,12 +195,15 @@ public class MageTabToSampleTab {
 	}
 	
 	public void convert(MAGETABInvestigation mt, Writer writer) throws IOException, ParseException{
+		getLog().debug("recieved magetab, preparing to convert");
 		SampleData st = convert(mt);
+		getLog().debug("sampletab converted, preparing to output");
 		SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
 		sampletabwriter.write(st);
 	}
 	
 	public void convert(File idffile, Writer writer) throws IOException, ParseException{
+		getLog().debug("preparing to load magetab");
 		MAGETABParser<MAGETABInvestigation> mtparser = new MAGETABParser<MAGETABInvestigation>();
 		MAGETABInvestigation mt = mtparser.parse(idffile);
 		convert(mt, writer);
