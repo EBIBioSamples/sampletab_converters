@@ -12,16 +12,20 @@ import org.apache.commons.net.ftp.FTPReply;
 
 public class MageTabFTPDownload {	
 	//singlton instance
-	private static final MageTabFTPDownload instance = new MageTabFTPDownload();
+	private static MageTabFTPDownload instance = null;
 	
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
+    /*
 	private MageTabFTPDownload(){
 		//private constructor to prevent accidental multiple initialisations
-	}
+	}*/
 	 
     public static MageTabFTPDownload getInstance() {
+    	if (instance == null){
+    		instance = new MageTabFTPDownload();
+    	}
         return instance;
     }
 	

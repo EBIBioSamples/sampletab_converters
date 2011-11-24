@@ -35,8 +35,9 @@ public class TestMageTabToSampleTab extends TestCase {
     public void testConversion() {
     	try {
 			MAGETABInvestigation mt = mtparser.parse(resource);
-			SampleData st = converter.convert(resource);
+			SampleData st = converter.convert(mt);
 			assertSame("Titles should match", st.msi.submissionTitle, mt.IDF.investigationTitle);
+			//assertSame("Titles should match", st.msi.submissionTitle, "Transcription profiling of wild type and DREB2C over-expression Arabidopsis plants");
 			
 			StringWriter out = new StringWriter();
 			SampleTabWriter sampletabwriter = new SampleTabWriter(out);
@@ -48,9 +49,6 @@ public class TestMageTabToSampleTab extends TestCase {
 			}
 			System.out.println(out.toString());
 		} catch (ParseException e) {
-            e.printStackTrace();
-            fail();
-		} catch (IOException e) {
             e.printStackTrace();
             fail();
 		}
