@@ -21,6 +21,10 @@ public class MageTabFTPDownload {
 	private MageTabFTPDownload(){
 		//private constructor to prevent accidental multiple initialisations
 	}*/
+    
+	public MageTabFTPDownload(){
+		
+	}
 	 
     public static MageTabFTPDownload getInstance() {
     	if (instance == null){
