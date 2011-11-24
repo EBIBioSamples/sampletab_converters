@@ -140,7 +140,7 @@ public class MageTabToSampleTab {
 			//since some attributes only exist for some sub-classes, need to test 
 			//for instanceof for each of those sub-classes, cast accordingly
 			//and then access the attributes
-			List<CharacteristicsAttribute> characteristics  = null;
+			List<CharacteristicsAttribute> characteristics = null;
 			Map<String, String> comments = null;
 			if (sdrfnode instanceof uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode){
 				//horribly long class references due to namespace collision
@@ -165,7 +165,8 @@ public class MageTabToSampleTab {
 				characteristics = sdrflabeledextractnode.characteristics;
 				comments = sdrflabeledextractnode.comments;
 			}
-			
+
+			getLog().info("got characteristics");
 			if (characteristics != null){
 				for (CharacteristicsAttribute sdrfcharacteristic : characteristics){
 					CharacteristicAttribute scdcharacteristic = new CharacteristicAttribute();
@@ -181,6 +182,7 @@ public class MageTabToSampleTab {
 					scdnode.addAttribute(scdcharacteristic);
 				}
 			}
+			getLog().info("got comments");
 			if (comments != null){
 				for (String key:comments.keySet()){
 					CommentAttribute comment = new CommentAttribute();
@@ -202,12 +204,14 @@ public class MageTabToSampleTab {
 		SampleData st = convert(mt);
 		getLog().debug("sampletab converted, preparing to output");
 		SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
+		getLog().debug("created SampleTabWriter");
 		sampletabwriter.write(st);
 	}
 	
 	public void convert(File idffile, Writer writer) throws IOException, ParseException{
 		getLog().debug("preparing to load magetab");
 		MAGETABParser<MAGETABInvestigation> mtparser = new MAGETABParser<MAGETABInvestigation>();
+		getLog().debug("created MAGETABParser<MAGETABInvestigation>");
 		MAGETABInvestigation mt = mtparser.parse(idffile);
 		convert(mt, writer);
 	}
