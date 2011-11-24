@@ -206,6 +206,7 @@ public class MageTabToSampleTab {
 		SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
 		getLog().debug("created SampleTabWriter");
 		sampletabwriter.write(st);
+		sampletabwriter.close();
 	}
 	
 	public void convert(File idffile, Writer writer) throws IOException, ParseException{
