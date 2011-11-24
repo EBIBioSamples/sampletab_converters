@@ -23,7 +23,7 @@ public class MageTabFTPDownload {
 	}*/
     
 	public MageTabFTPDownload(){
-		
+		log.debug("MageTabFTPDownload constructor running...");
 	}
 	 
     public static MageTabFTPDownload getInstance() {
