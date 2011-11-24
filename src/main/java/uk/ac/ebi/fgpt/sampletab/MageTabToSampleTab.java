@@ -202,11 +202,13 @@ public class MageTabToSampleTab {
 	public void convert(MAGETABInvestigation mt, Writer writer) throws IOException, ParseException{
 		getLog().debug("recieved magetab, preparing to convert");
 		SampleData st = convert(mt);
+		/*
 		getLog().debug("sampletab converted, preparing to output");
 		SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
 		getLog().debug("created SampleTabWriter");
 		sampletabwriter.write(st);
 		sampletabwriter.close();
+		*/
 	}
 	
 	public void convert(File idffile, Writer writer) throws IOException, ParseException{
