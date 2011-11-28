@@ -113,8 +113,12 @@ public class MageTabFTPDownload {
 	}
 
 	public static void main(String[] args) {
-		String accession = args[1];
-		String outdir = args[2];
+		if (args.length < 2){
+			System.out.println("Must provide a BioSample MageTab submission identifier and an output directory.");
+			return;
+		}
+		String accession = args[0];
+		String outdir = args[1];
 		
 		MageTabFTPDownload magetabftpdownload = MageTabFTPDownload.getInstance();
 		String error = magetabftpdownload.download(accession, outdir);
