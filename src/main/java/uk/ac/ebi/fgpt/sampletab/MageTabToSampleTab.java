@@ -240,8 +240,12 @@ public class MageTabToSampleTab {
 	}
 	
 	public static void main(String[] args) {
-		String idfFilename = args[1];
-		String sampleTabFilename = args[2];
+		if (args.length < 2){
+			System.out.println("Must provide an MAGETAB IDF filename and a SampleTab output filename.");
+			return;
+		}
+		String idfFilename = args[0];
+		String sampleTabFilename = args[1];
 
 		MAGETABParser<MAGETABInvestigation> mtparser = new MAGETABParser<MAGETABInvestigation>();
 		MageTabToSampleTab converter = MageTabToSampleTab.getInstance();
