@@ -1,0 +1,50 @@
+<BioSample access="public" id="122" last_update="2008-04-16T14:56:35.930"
+	publication_date="2008-05-10T00:01:18.323" submission_date="2008-04-16T14:56:35.930">
+	<Ids>
+		<Id db="SRA" is_primary="1">SRS000354</Id>
+	</Ids>
+	<Description>
+		<Organism taxonomy_id="7741" taxonomy_name="Branchiostoma belcheri">
+			<TaxaSet>
+				<Taxon>
+					<TaxId>7741</TaxId>
+					<ScientificName>Branchiostoma belcheri</ScientificName>
+					<OtherNames>
+						<GenbankCommonName>Japanese lancelet</GenbankCommonName>
+					</OtherNames>
+					<Rank>species</Rank>
+					<Division>Invertebrates</Division>
+					<GeneticCode>
+						<GCId>1</GCId>
+						<GCName>Standard</GCName>
+					</GeneticCode>
+					<MitoGeneticCode>
+						<MGCId>5</MGCId>
+						<MGCName>Invertebrate Mitochondrial</MGCName>
+					</MitoGeneticCode>
+					<Lineage>Eukaryota; Metazoa; Chordata; Cephalochordata;
+						Branchiostomidae; Branchiostoma</Lineage>
+				</Taxon>
+			</TaxaSet>
+		</Organism>
+		<Comment>
+			<Paragraph>Bacterially unchallenged intestine of Branchiostoma
+				belcheri</Paragraph>
+		</Comment>
+		<Title>Branchiostoma belcheri SRA sample SRS000354</Title>
+	</Description>
+	<Owner>
+		<Name abbreviation="">Sun Yat-Sen University</Name>
+		<Contacts>
+			<Contact email="gl1983guolei@gmail.com" lab="lab">
+				<Name>
+					<First>Guo</First>
+					<Last>Lei</Last>
+				</Name>
+			</Contact>
+		</Contacts>
+	</Owner>
+	<Attributes />
+	<Links />
+	<Status status="live" when="2008-04-16T14:56:35.930" />
+</BioSample>

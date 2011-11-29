@@ -59,6 +59,7 @@
 					<target>1.5</target> <!-- may need to be 1.7 eventually -->
 				</configuration>
 			</plugin>
+			<!--
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -78,6 +79,18 @@
 					</execution>
 				</executions>
 			</plugin>
+			-->
+			
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<finalName>sampletab-converters</finalName>
+					<descriptors>
+						<descriptor>src/main/assembly/sampletab-converters-assembly.xml</descriptor>
+					</descriptors>
+				</configuration>
+			</plugin>
+
 		</plugins>
 	</build>
 
