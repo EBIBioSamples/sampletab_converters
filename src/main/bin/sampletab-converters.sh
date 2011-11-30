@@ -2,10 +2,14 @@
 
 base=${0%/*}/..;
 current=`pwd`;
-#java=/ebi/research/software/Linux_x86_64/opt/java/jdk1.6.0_20/bin/java;
-java=/ebi/research/software/Linux_x86_64/opt/java/jdk1.7.0/bin/java;#
-args="-Dhttp.proxyHost=wwwcache.ebi.ac.uk -Dhttp.proxyPort=3128 -Dhttp.nonProxyHosts=*.ebi.ac.uk -DproxyHost=wwwcache.ebi.ac.uk -DproxyPort=3128 -DproxySet=true";
 
+#if a java environment variable is not provided, then use the default
+if [ -z $java ]
+then
+  java=java
+fi
+
+#args environment variable can be used to provide java arguments
 
 for file in `ls $base/lib`
 do
@@ -13,10 +17,5 @@ do
 done
 
 classpath="$jars:$base/config";
-
-
-echo "base is: $base"
-echo "currrent is: $current"
-echo "jars is $jars"
 
 $java $args -classpath $classpath $@
