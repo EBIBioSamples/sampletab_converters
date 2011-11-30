@@ -95,11 +95,13 @@ public class SampleTabAccessioner {
 		ResultSet results;
 		int accessionID;
 		String accession;
+		
 		Collection<SampleNode> samples = sampleIn.scd
 				.getNodes(SampleNode.class);
 
+		getLog().debug("got "+samples.size()+" samples.");
 		for (SampleNode sample : samples) {
-			if (sample.sampleAccession != null) {
+			if (sample.sampleAccession == null) {
 				name = sample.getNodeName();
 				statement = connect
 						.prepareStatement("INSERT IGNORE INTO ? (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
@@ -117,6 +119,8 @@ public class SampleTabAccessioner {
 
 				accessionID = results.getInt(1);
 				accession = prefix + accessionID;
+				
+				getLog().debug("Assigning "+accession+" to "+name);
 				sample.sampleAccession = accession;
 			}
 		}
