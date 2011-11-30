@@ -77,7 +77,7 @@ public class MageTabToSampleTab {
 		st.msi.submissionDescription = mt.IDF.experimentDescription;
 		st.msi.submissionReleaseDate = mt.IDF.publicReleaseDate;
 		st.msi.submissionIdentifier = "GA"+mt.IDF.accession;
-		st.msi.submissionReferenceLayer = "false";
+		st.msi.submissionReferenceLayer = false;
 		
 		st.msi.publicationDOI = mt.IDF.publicationDOI;
 		st.msi.publicationPubMedID = mt.IDF.pubMedId;
@@ -202,13 +202,12 @@ public class MageTabToSampleTab {
 	public void convert(MAGETABInvestigation mt, Writer writer) throws IOException, ParseException{
 		getLog().debug("recieved magetab, preparing to convert");
 		SampleData st = convert(mt);
-		/*
 		getLog().debug("sampletab converted, preparing to output");
 		SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
 		getLog().debug("created SampleTabWriter");
 		sampletabwriter.write(st);
 		sampletabwriter.close();
-		*/
+		
 	}
 	
 	public void convert(File idffile, Writer writer) throws IOException, ParseException{
