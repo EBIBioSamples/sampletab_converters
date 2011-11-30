@@ -220,6 +220,7 @@ public class SampleTabAccessioner {
 					.println("Parsing command line failed. " + e.getMessage());
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp("", options);
+			System.exit(100);
 			return;
 		}
 
@@ -249,11 +250,13 @@ public class SampleTabAccessioner {
 			System.err.println("ClassNotFoundException connecting to "
 					+ hostname + ":" + port + "/" + database);
 			e.printStackTrace();
+			System.exit(111);
 			return;
 		} catch (SQLException e) {
 			System.err.println("SQLException connecting to " + hostname + ":"
 					+ port + "/" + database);
 			e.printStackTrace();
+			System.exit(112);
 			return;
 		}
 
@@ -263,14 +266,17 @@ public class SampleTabAccessioner {
 		} catch (ParseException e) {
 			System.err.println("ParseException converting " + inputFilename);
 			e.printStackTrace();
+			System.exit(121);
 			return;
 		} catch (IOException e) {
 			System.err.println("IOException converting " + inputFilename);
 			e.printStackTrace();
+			System.exit(122);
 			return;
 		} catch (SQLException e) {
 			System.err.println("SQLException converting " + inputFilename);
 			e.printStackTrace();
+			System.exit(123);
 			return;
 		}
 
@@ -280,6 +286,7 @@ public class SampleTabAccessioner {
 		} catch (IOException e) {
 			System.out.println("Error opening " + outputFilename);
 			e.printStackTrace();
+			System.exit(131);
 			return;
 		}
 
@@ -289,6 +296,7 @@ public class SampleTabAccessioner {
 		} catch (IOException e) {
 			System.out.println("Error writing " + outputFilename);
 			e.printStackTrace();
+			System.exit(141);
 			return;
 		}
 
