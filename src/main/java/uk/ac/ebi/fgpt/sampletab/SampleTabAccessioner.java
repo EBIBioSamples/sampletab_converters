@@ -108,7 +108,7 @@ public class SampleTabAccessioner {
 				statement.setString(1, table);
 				statement.setString(1, name);
 				statement.setString(1, submission);
-				statement.executeQuery();
+				statement.executeUpdate();
 
 				statement = connect
 						.prepareStatement("SELECT accession FROM ? WHERE user_accession = ? AND submission_accession = ?");
