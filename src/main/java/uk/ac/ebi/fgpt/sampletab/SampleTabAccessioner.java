@@ -106,15 +106,15 @@ public class SampleTabAccessioner {
 				statement = connect
 						.prepareStatement("INSERT IGNORE INTO ? (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
 				statement.setString(1, table);
-				statement.setString(1, name);
-				statement.setString(1, submission);
+				statement.setString(2, name);
+				statement.setString(3, submission);
 				statement.executeUpdate();
 
 				statement = connect
 						.prepareStatement("SELECT accession FROM ? WHERE user_accession = ? AND submission_accession = ?");
 				statement.setString(1, table);
-				statement.setString(1, name);
-				statement.setString(1, submission);
+				statement.setString(2, name);
+				statement.setString(3, submission);
 				results = statement.executeQuery();
 
 				accessionID = results.getInt(1);
