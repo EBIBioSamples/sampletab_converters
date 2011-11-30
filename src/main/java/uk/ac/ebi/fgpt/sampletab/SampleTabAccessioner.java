@@ -114,7 +114,7 @@ public class SampleTabAccessioner {
 				statement.setString(1, name);
 				statement.setString(2, submission);
 				results = statement.executeQuery();
-
+				results.first();
 				accessionID = results.getInt(1);
 				accession = prefix + accessionID;
 				
