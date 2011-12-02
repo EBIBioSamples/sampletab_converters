@@ -1,0 +1,82 @@
+<BioSample access="public" id="362" last_update="2011-08-12T14:54:50.703"
+	publication_date="2008-07-30T16:42:03.790" submission_date="2011-08-12T14:54:50.703">
+	<Ids>
+		<Id db="SRA" is_primary="1">SRS000591</Id>
+		<Id db="Coriell" field="Coriell cell culture ID">GM06993</Id>
+		<Id db="HapMap" field="HapMap sample ID">NA06993</Id>
+	</Ids>
+	<Description>
+		<Organism taxonomy_id="9606" taxonomy_name="Homo sapiens">
+			<TaxaSet>
+				<Taxon>
+					<TaxId>9606</TaxId>
+					<ScientificName>Homo sapiens</ScientificName>
+					<OtherNames>
+						<GenbankCommonName>human</GenbankCommonName>
+						<CommonName>man</CommonName>
+						<Name>
+							<ClassCDE>authority</ClassCDE>
+							<DispName>Homo sapiens Linnaeus, 1758</DispName>
+						</Name>
+					</OtherNames>
+					<Rank>species</Rank>
+					<Division>Primates</Division>
+					<GeneticCode>
+						<GCId>1</GCId>
+						<GCName>Standard</GCName>
+					</GeneticCode>
+					<MitoGeneticCode>
+						<MGCId>2</MGCId>
+						<MGCName>Vertebrate Mitochondrial</MGCName>
+					</MitoGeneticCode>
+					<Lineage>Eukaryota; Metazoa; Chordata; Craniata; Vertebrata;
+						Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates;
+						Haplorrhini; Catarrhini; Hominidae; Homo</Lineage>
+				</Taxon>
+			</TaxaSet>
+		</Organism>
+		<Comment>
+			<Paragraph>Human HapMap individual NA06993</Paragraph>
+			<Table>
+				<Caption>Unclassified attributes</Caption>
+				<Header>
+					<Cell>Tag</Cell>
+					<Cell>Value</Cell>
+					<Cell>Unit</Cell>
+				</Header>
+				<Body>
+					<Row>
+						<Cell>Coriell cell culture ID</Cell>
+						<Cell>GM06993</Cell>
+						<Cell />
+					</Row>
+					<Row>
+						<Cell>HapMap sample ID</Cell>
+						<Cell>NA06993</Cell>
+						<Cell />
+					</Row>
+				</Body>
+			</Table>
+		</Comment>
+		<Title>Homo sapiens SRA sample SRS000591</Title>
+	</Description>
+	<Owner>
+		<Name abbreviation="NCBI">NCBI</Name>
+	</Owner>
+	<Models>
+		<Model>
+			<Name>HapMap</Name>
+		</Model>
+	</Models>
+	<Attributes>
+		<Attribute attribute_name="population" dictionary_name="sra">CEU</Attribute>
+		<Attribute attribute_name="sex" dictionary_name="ncbi_asn">Male</Attribute>
+		<Attribute attribute_name="family id" dictionary_name="sra">1341</Attribute>
+		<Attribute attribute_name="relationship" dictionary_name="sra">maternal	grandfather</Attribute>
+	</Attributes>
+	<Links>
+		<Link label="Individual record in dbSNP" type="url">http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ind.cgi?ind_id=186</Link>
+		<Link label="DNA source" type="url">http://ccr.coriell.org/Sections/Collections/NHGRI/hapmap.aspx?PgId=266</Link>
+	</Links>
+	<Status status="live" when="2011-08-12T14:54:50.703" />
+</BioSample>

@@ -21,6 +21,9 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class NCBIBiosampleToSampleTab {
@@ -90,21 +93,21 @@ public class NCBIBiosampleToSampleTab {
 	}
 
 	public SampleData convert(URL ncbiBiosampleXMLURL) throws SAXException,
-			IOException, ParseException {
+			IOException, ParseException, uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 		return convert(builder.parse(ncbiBiosampleXMLURL.openStream()));
 	}
 
 	public SampleData convert(String ncbiBiosampleXMLFilename)
-			throws SAXException, IOException, ParseException {
+			throws SAXException, IOException, ParseException, uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 		return convert(new File(ncbiBiosampleXMLFilename));
 	}
 
 	public SampleData convert(File ncbiBiosampleXMLFile) throws SAXException,
-			IOException, ParseException {
+			IOException, ParseException, uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 		return convert(builder.parse(ncbiBiosampleXMLFile));
 	}
 
-	public SampleData convert(Document ncbiBiosampleXML) throws ParseException {
+	public SampleData convert(Document ncbiBiosampleXML) throws ParseException, uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 
 		SampleData st = new SampleData();
 		Element root = ncbiBiosampleXML.getDocumentElement();
@@ -119,6 +122,8 @@ public class NCBIBiosampleToSampleTab {
 		Element owner = getChildByName(root, "Owner");
 		Element contacts = getChildByName(owner, "Contacts");
 		Element links = getChildByName(owner, "Links");
+		Element ids = getChildByName(owner, "Ids");
+		Element organism = getChildByName(description, "Organism");
 
 		// TODO unencode http conversion, e.g. &amp, if this is an issue
 		st.msi.submissionTitle = title.getTextContent();
@@ -217,19 +222,64 @@ public class NCBIBiosampleToSampleTab {
 			}
 		}
 
-		st.msi.databaseName.add("NCBI Biosamples");
-		st.msi.databaseID.add(root.getAttribute("id"));
-		// note this is already html encoded
-		st.msi.databaseURI.add("http://www.ncbi.nlm.nih.gov/biosample?term="
-				+ root.getAttribute("id") + "%5Buid%5D");
-		// TODO add other database links
 
+		st.msi.termSourceName.add("NEWT");
+		st.msi.termSourceURI.add("http://www.uniprot.org/taxonomy/");
+		st.msi.termSourceVersion.add("");
+		
+		SampleNode scdnode = new SampleNode();
+		scdnode.setNodeName(st.msi.submissionTitle);
+		scdnode.sampleDescription = st.msi.submissionDescription;
+		scdnode.sampleAccession = "SAMN"+root.getAttribute("id");
+		OrganismAttribute organismAttrib = new OrganismAttribute();
+		organismAttrib.setAttributeValue(organism.getAttribute("taxonomy_name"));
+		organismAttrib.setTermSourceREF("NEWT");
+		organismAttrib.setTermSourceID(organism.getAttribute("taxonomy_id"));
+		scdnode.addAttribute(organismAttrib);
+		
+		DatabaseAttribute databaseAttrib = new DatabaseAttribute();
+		databaseAttrib.setAttributeValue("NCBI Biosamples");
+		databaseAttrib.databaseID = root.getAttribute("id");
+		databaseAttrib.databaseURI = "http://www.ncbi.nlm.nih.gov/biosample?term="
+				+ root.getAttribute("id") + "%5Buid%5D";
+		scdnode.addAttribute(databaseAttrib);
+		// TODO add other database ids
+		if (ids != null) {
+			NodeList nodes = ids.getChildNodes();
+			log.debug("Has "+nodes.getLength()+" ids");
+			for (int i = 0; i < nodes.getLength(); i++) {
+				Node node = nodes.item(i);
+				if (node instanceof Element) {
+					log.debug("Found an id");
+					// a child element to process
+					Element id = (Element) node;
+					databaseAttrib = new DatabaseAttribute();
+					String dbname = id.getAttribute("db");
+					databaseAttrib.setAttributeValue(dbname);
+					databaseAttrib.databaseID = id.getTextContent();
+					//databaseURI has different construction rules for different databases
+					//TODO clear up ptential URL encoding problems
+					if (dbname=="sra"){
+						databaseAttrib.databaseURI = "http://www.ebi.ac.uk/ena/data/view/"+id.getTextContent();
+					} else if (dbname=="Coriell"){
+						databaseAttrib.databaseURI = "http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref="+id.getTextContent();
+					} else if (dbname=="HapMap"){
+					}
+					scdnode.addAttribute(databaseAttrib);
+				}
+			}
+		}
+
+		
+		st.scd.addNode(scdnode);
+		
+		
 		return st;
 	}
 
 	public static void main(String[] args) {
-		String ncbiBiosampleXMLFilename = args[1];
-		String sampleTabFilename = args[2];
+		String ncbiBiosampleXMLFilename = args[0];
+		String sampleTabFilename = args[1];
 
 		NCBIBiosampleToSampleTab converter = NCBIBiosampleToSampleTab
 				.getInstance();
@@ -244,6 +294,9 @@ public class NCBIBiosampleToSampleTab {
 			System.out.println("Error converting " + ncbiBiosampleXMLFilename);
 			e.printStackTrace();
 		} catch (ParseException e) {
+			System.out.println("Error converting " + ncbiBiosampleXMLFilename);
+			e.printStackTrace();
+		} catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
 			System.out.println("Error converting " + ncbiBiosampleXMLFilename);
 			e.printStackTrace();
 		}

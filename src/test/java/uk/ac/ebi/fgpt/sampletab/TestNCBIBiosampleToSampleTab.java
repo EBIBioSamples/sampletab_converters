@@ -22,7 +22,7 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
 	private NCBIBiosampleToSampleTab converter;
 
     public void setUp() {
-        resource = getClass().getClassLoader().getResource("ncbibiosample/4.xml");
+        resource = getClass().getClassLoader().getResource("ncbibiosample/2.xml");
         converter = NCBIBiosampleToSampleTab.getInstance();
     }
 
@@ -53,6 +53,9 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
 			e.printStackTrace();
             fail();
 		} catch (ParseException e) {
+			e.printStackTrace();
+            fail();
+		} catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
 			e.printStackTrace();
             fail();
 		}
