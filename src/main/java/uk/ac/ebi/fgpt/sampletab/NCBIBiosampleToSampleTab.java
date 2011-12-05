@@ -51,30 +51,13 @@ public class NCBIBiosampleToSampleTab {
 		return instance;
 	}
 
-	private Element getChildByName(Element parent, String name) {
-		NodeList nodes = parent.getChildNodes();
-
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Node node = nodes.item(i);
-
-			if (node instanceof Element) {
-				// a child element to process
-				Element child = (Element) node;
-				if (child.getNodeName() == name) {
-					return child;
-				}
-			}
-		}
-		return null;
-	}
-
 	public String addressToString(Element address) {
 		String toreturn = "";
 		if (address != null) {
-			Element street = getChildByName(address, "Street");
-			Element city = getChildByName(address, "City");
-			Element sub = getChildByName(address, "Sub");
-			Element country = getChildByName(address, "Country");
+			Element street = XMLUtils.getChildByName(address, "Street");
+			Element city = XMLUtils.getChildByName(address, "City");
+			Element sub = XMLUtils.getChildByName(address, "Sub");
+			Element country = XMLUtils.getChildByName(address, "Country");
 			// TODO handle joins better
 			if (street != null) {
 				toreturn = toreturn + street.getTextContent() + ", ";
@@ -111,19 +94,19 @@ public class NCBIBiosampleToSampleTab {
 
 		SampleData st = new SampleData();
 		Element root = ncbiBiosampleXML.getDocumentElement();
-		Element description = getChildByName(root, "Description");
-		Element title = getChildByName(description, "Title");
-		Element descriptioncomment = getChildByName(description, "Comment");
+		Element description = XMLUtils.getChildByName(root, "Description");
+		Element title = XMLUtils.getChildByName(description, "Title");
+		Element descriptioncomment = XMLUtils.getChildByName(description, "Comment");
 		Element descriptionparagraph = null;
 		if (descriptioncomment != null) {
-			descriptionparagraph = getChildByName(descriptioncomment,
+			descriptionparagraph = XMLUtils.getChildByName(descriptioncomment,
 					"Paragraph");
 		}
-		Element owner = getChildByName(root, "Owner");
-		Element contacts = getChildByName(owner, "Contacts");
-		Element links = getChildByName(owner, "Links");
-		Element ids = getChildByName(owner, "Ids");
-		Element organism = getChildByName(description, "Organism");
+		Element owner = XMLUtils.getChildByName(root, "Owner");
+		Element contacts = XMLUtils.getChildByName(owner, "Contacts");
+		Element links = XMLUtils.getChildByName(owner, "Links");
+		Element ids = XMLUtils.getChildByName(owner, "Ids");
+		Element organism = XMLUtils.getChildByName(description, "Organism");
 
 		// TODO unencode http conversion, e.g. &amp, if this is an issue
 		st.msi.submissionTitle = title.getTextContent();
@@ -152,72 +135,53 @@ public class NCBIBiosampleToSampleTab {
 
 		String organizationName = owner.getTextContent();
 		
-		if (contacts != null) {
-			NodeList nodes = contacts.getChildNodes();
-			for (int i = 0; i < nodes.getLength(); i++) {
-				Node node = nodes.item(i);
-				if (node instanceof Element) {
-					// a child element to process
-					Element child = (Element) node;
-					if (child.getNodeName() == "Contact") {
-						Element contact = child;
-						Element name = getChildByName(contact, "Name");
-						Element address = getChildByName(contact, "Address");
-						if (name != null) {
-							// this has a name, therefore it is a person
-							Element last = getChildByName(name, "Last");
-							Element first = getChildByName(name, "First");
-							Element middle = getChildByName(name, "Middle");
-							st.msi.personLastName.add(last.getTextContent());
-							if (first != null) {
-								st.msi.personFirstName.add(first
-										.getTextContent());
-							}
-							// TODO fix middlename == initials assumption
-							if (middle != null) {
-								st.msi.personInitials.add(middle
-										.getTextContent());
-							}
-							st.msi.personEmail.add(contact
-									.getAttribute("email"));
-						} else {
-							// no name of this contact, therefore it is an
-							// organziation
-							st.msi.organizationName.add(organizationName);
-							st.msi.organizationAddress
-									.add(addressToString(address));
-							st.msi.organizationEmail.add(contact
-									.getAttribute("email"));
-							// NCBI doesn't have roles or URIs
-							// Also, NCBI only allows one organization per
-							// sample
-							st.msi.organizationRole.add("");
-							st.msi.organizationURI.add("");
-						}
-
+		if (contacts != null) {			
+			for (Element contact : XMLUtils.getChildrenByName(contacts, "Contact")) {
+				Element name = XMLUtils.getChildByName(contact, "Name");
+				Element address = XMLUtils.getChildByName(contact, "Address");
+				if (name != null) {
+					// this has a name, therefore it is a person
+					Element last = XMLUtils.getChildByName(name, "Last");
+					Element first = XMLUtils.getChildByName(name, "First");
+					Element middle = XMLUtils.getChildByName(name, "Middle");
+					st.msi.personLastName.add(last.getTextContent());
+					if (first != null) {
+						st.msi.personFirstName.add(first
+								.getTextContent());
 					}
+					// TODO fix middlename == initials assumption
+					if (middle != null) {
+						st.msi.personInitials.add(middle
+								.getTextContent());
+					}
+					st.msi.personEmail.add(contact
+							.getAttribute("email"));
+				} else {
+					// no name of this contact, therefore it is an
+					// organziation
+					st.msi.organizationName.add(organizationName);
+					st.msi.organizationAddress
+							.add(addressToString(address));
+					st.msi.organizationEmail.add(contact
+							.getAttribute("email"));
+					// NCBI doesn't have roles or URIs
+					// Also, NCBI only allows one organization per
+					// sample
+					st.msi.organizationRole.add("");
+					st.msi.organizationURI.add("");
 				}
 			}
 		}
 		if (links != null) {
-			NodeList nodes = links.getChildNodes();
-			for (int i = 0; i < nodes.getLength(); i++) {
-				Node node = nodes.item(i);
-				if (node instanceof Element) {
-					// a child element to process
-					Element child = (Element) node;
-					if (child.getNodeName() == "Link") {
-						Element link = child;
-						// pubmedids
-						// could be url, db_xref or entrez
-						// entrez never seen to date, deprecated?
-						if (link.getAttribute("type") == "db_xref"
-								&& link.getAttribute("target") == "pubmed") {
-							String PubMedID = link.getTextContent();
-							st.msi.publicationPubMedID.add(PubMedID);
-							st.msi.publicationDOI.add("");
-						}
-					}
+			for (Element link : XMLUtils.getChildrenByName(links, "Links")) {
+				// pubmedids
+				// could be url, db_xref or entrez
+				// entrez never seen to date, deprecated?
+				if (link.getAttribute("type") == "db_xref"
+						&& link.getAttribute("target") == "pubmed") {
+					String PubMedID = link.getTextContent();
+					st.msi.publicationPubMedID.add(PubMedID);
+					st.msi.publicationDOI.add("");
 				}
 			}
 		}
@@ -258,7 +222,7 @@ public class NCBIBiosampleToSampleTab {
 					databaseAttrib.setAttributeValue(dbname);
 					databaseAttrib.databaseID = id.getTextContent();
 					//databaseURI has different construction rules for different databases
-					//TODO clear up ptential URL encoding problems
+					//TODO clear up potential URL encoding problems
 					if (dbname=="sra"){
 						databaseAttrib.databaseURI = "http://www.ebi.ac.uk/ena/data/view/"+id.getTextContent();
 					} else if (dbname=="Coriell"){
