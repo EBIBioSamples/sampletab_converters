@@ -18,7 +18,7 @@ public class XMLUtils {
 			if (node instanceof Element) {
 				// a child element to process
 				Element child = (Element) node;
-				if (child.getNodeName() == name) {
+				if (child.getNodeName().equals(name)) {
 					return child;
 				}
 			}
@@ -37,7 +37,7 @@ public class XMLUtils {
 			if (node instanceof Element) {
 				// a child element to process
 				Element child = (Element) node;
-				if (child.getNodeName() == name) {
+				if (child.getNodeName().equals(name)) {
 					children.add(child);
 				}
 			}
