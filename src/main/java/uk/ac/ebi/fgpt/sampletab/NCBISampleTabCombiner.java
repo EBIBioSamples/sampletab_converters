@@ -14,6 +14,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -87,8 +88,30 @@ public class NCBISampleTabCombiner {
 			if (ids != null) {
 				for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
 					String dbname = id.getAttribute("db");
+					String groupid = null;
 					if (dbname.equals("SRA")) {
+						String sampleid = id.getTextContent();
 						// TODO group by sra study
+						try {
+							groupid = ENAUtils.getInstance().getStudyForSample(
+									sampleid);
+						} catch (DOMException e) {
+							log.warn("Unable to get study of " + sampleid);
+							e.printStackTrace();
+							continue;
+						} catch (SAXException e) {
+							log.warn("Unable to get study of " + sampleid);
+							e.printStackTrace();
+							continue;
+						} catch (IOException e) {
+							log.warn("Unable to get study of " + sampleid);
+							e.printStackTrace();
+							continue;
+						} catch (ParserConfigurationException e) {
+							log.warn("Unable to get study of " + sampleid);
+							e.printStackTrace();
+							continue;
+						}
 					} else if (dbname.equals("dbGaP")) {
 						// TODO group by dbGaP project
 						// Characteristic[study name]
@@ -98,17 +121,19 @@ public class NCBISampleTabCombiner {
 					} else if (dbname.equals("EST")) {
 						// TODO group by EST project
 						// EST == Expressed Sequence Tag
-					} else if (dbname.equals("Geneva")) {
-						// TODO Geneva == Gene-Environment Association Studies
 					} else {
+						// could group by others, but some of them are very big
+					}
+					if (groupid != null) {
 						HashSet<File> group;
-						if (groupings.containsKey(dbname)) {
-							group = groupings.get(dbname);
+						if (groupings.containsKey(groupid)) {
+							group = groupings.get(groupid);
 						} else {
 							group = new HashSet<File>();
-							groupings.put(dbname, group);
+							groupings.put(groupid, group);
 						}
 						group.add(xmlfile);
+
 					}
 				}
 			}
@@ -131,7 +156,7 @@ public class NCBISampleTabCombiner {
 			log.info("Group : " + group);
 
 			for (File xmlfile : groups.get(group)) {
-				//log.debug("Group: " + group + " Filename: " + xmlfile);
+				// log.debug("Group: " + group + " Filename: " + xmlfile);
 
 				SampleData sampledata;
 				try {

@@ -8,18 +8,45 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 public class ENAUtils {
 
+	private Logger log = LoggerFactory.getLogger(getClass());
+	
+	private static ENAUtils instance = new ENAUtils();
+
+	private DocumentBuilderFactory builderFactory = DocumentBuilderFactory
+			.newInstance();
+	private DocumentBuilder builder;
+	
+	private ENAUtils() {
+		// private constructor
+
+		instance = ENAUtils.getInstance();
+
+		try {
+			builder = builderFactory.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			log.error("Unable to create new DocumentBuilder");
+			e.printStackTrace();
+			return;
+		}
+	}
+
+	public static ENAUtils getInstance() {
+		return instance;
+	}
+
 	
 	public String getStudyForSample(String srsId) throws SAXException, IOException, ParserConfigurationException{
-		String url = "http://www.ebi.ac.uk/ena/data/view/"+srsId+"&display=xml";	
-		DocumentBuilderFactory docbuilderfactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder docbuilder = docbuilderfactory.newDocumentBuilder();
-		Document doc = docbuilder.parse(new URL(url).openStream());
+		String url = "http://www.ebi.ac.uk/ena/data/view/"+srsId+"&display=xml";
+		
+		Document doc = builder.parse(new URL(url).openStream());
 		
 		Element root = doc.getDocumentElement();
 		Element links = XMLUtils.getChildByName(root, "SAMPLE_LINKS");

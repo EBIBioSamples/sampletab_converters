@@ -135,9 +135,14 @@ public class NCBIBiosampleToSampleTab {
 		}
 
 		st.msi.submissionReleaseDate = dateFormatEBI.format(publicationDate);
-		Date updateDate = dateFormatNCBI
-				.parse(root.getAttribute("last_update"));
-		st.msi.submissionUpdateDate = dateFormatEBI.format(updateDate);
+		//NCBI Biosamples does not always have a last_update attribute
+		if (root.getAttribute("last_update").equals("")){
+			st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
+		} else {
+			Date updateDate = dateFormatNCBI
+					.parse(root.getAttribute("last_update"));
+			st.msi.submissionUpdateDate = dateFormatEBI.format(updateDate);
+		}
 
 		// NCBI Biosamples identifier numbers are prefixed by GNC to get the
 		// submission identifier
