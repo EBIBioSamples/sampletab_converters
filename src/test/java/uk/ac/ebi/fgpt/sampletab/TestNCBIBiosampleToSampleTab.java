@@ -7,6 +7,7 @@ import java.text.ParseException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.dom4j.DocumentException;
 import org.xml.sax.SAXException;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
@@ -46,16 +47,13 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
 				fail();
 			}
 			System.out.println(out.toString());
-		} catch (SAXException e) {
-			e.printStackTrace();
-            fail();
-		} catch (IOException e) {
-			e.printStackTrace();
-            fail();
 		} catch (ParseException e) {
 			e.printStackTrace();
             fail();
 		} catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
+			e.printStackTrace();
+            fail();
+		} catch (DocumentException e) {
 			e.printStackTrace();
             fail();
 		}
