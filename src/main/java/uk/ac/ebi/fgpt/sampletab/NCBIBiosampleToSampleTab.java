@@ -70,21 +70,25 @@ public class NCBIBiosampleToSampleTab {
 	}
 
 	public SampleData convert(String ncbiBiosampleXMLFilename)
-			throws MalformedURLException, ParseException, DocumentException, uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
+			throws MalformedURLException, ParseException, DocumentException,
+			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 		return convert(new URL(ncbiBiosampleXMLFilename));
 	}
 
 	public SampleData convert(URL ncbiBiosampleXMLURL) throws ParseException,
-			DocumentException, uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
+			DocumentException,
+			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 		return convert(reader.read(ncbiBiosampleXMLURL));
 	}
 
 	public SampleData convert(File ncbiBiosampleXMLFile)
-			throws DocumentException, ParseException, uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
+			throws DocumentException, ParseException,
+			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 		return convert(reader.read(ncbiBiosampleXMLFile));
 	}
 
-	public SampleData convert(Document ncbiBiosampleXML) throws ParseException, uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
+	public SampleData convert(Document ncbiBiosampleXML) throws ParseException,
+			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 
 		SampleData st = new SampleData();
 		Element root = ncbiBiosampleXML.getRootElement();
@@ -125,7 +129,8 @@ public class NCBIBiosampleToSampleTab {
 
 		st.msi.submissionReleaseDate = dateFormatEBI.format(publicationDate);
 		// NCBI Biosamples does not always have a last_update attribute
-		if (root.attributeValue("last_update").equals("")) {
+		if (root.attributeValue("last_update") != null
+				&& root.attributeValue("last_update").equals("")) {
 			st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
 		} else {
 			Date updateDate = dateFormatNCBI.parse(root
@@ -147,6 +152,7 @@ public class NCBIBiosampleToSampleTab {
 		String organizationName = owner.getText();
 
 		if (contacts != null) {
+			// log.info("Processing contacts");
 			for (Element contact : XMLUtils.getChildrenByName(contacts,
 					"Contact")) {
 				Element name = XMLUtils.getChildByName(contact, "Name");
@@ -285,7 +291,7 @@ public class NCBIBiosampleToSampleTab {
 		} catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
 			System.out.println("Error converting " + ncbiBiosampleXMLFilename);
 			e.printStackTrace();
-		} 
+		}
 
 		FileWriter out = null;
 		try {

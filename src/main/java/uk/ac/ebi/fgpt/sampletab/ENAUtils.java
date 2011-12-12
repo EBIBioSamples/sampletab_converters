@@ -74,17 +74,19 @@ public class ENAUtils {
 
 		Element root = doc.getRootElement();
 		Element sample = XMLUtils.getChildByName(root, "SAMPLE");
-		Element links = XMLUtils.getChildByName(sample, "SAMPLE_LINKS");
-		if (links != null) {
-			for (Element link : XMLUtils
-					.getChildrenByName(links, "SAMPLE_LINK")) {
-				Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
-				if (xref != null) {
-					Element db = XMLUtils.getChildByName(xref, "DB");
-					Element id = XMLUtils.getChildByName(xref, "ID");
-					if (db != null && db.getText().equals("ENA-STUDY")
-							&& id != null) {
-						return getIdentifiers(id.getText());
+		if (sample != null) {
+			Element links = XMLUtils.getChildByName(sample, "SAMPLE_LINKS");
+			if (links != null) {
+				for (Element link : XMLUtils.getChildrenByName(links,
+						"SAMPLE_LINK")) {
+					Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
+					if (xref != null) {
+						Element db = XMLUtils.getChildByName(xref, "DB");
+						Element id = XMLUtils.getChildByName(xref, "ID");
+						if (db != null && db.getText().equals("ENA-STUDY")
+								&& id != null) {
+							return getIdentifiers(id.getText());
+						}
 					}
 				}
 			}
