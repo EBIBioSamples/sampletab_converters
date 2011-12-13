@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;

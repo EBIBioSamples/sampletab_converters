@@ -7,15 +7,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -23,10 +19,11 @@ import org.dom4j.io.SAXReader;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBIBiosampleToSampleTab {
 
@@ -97,9 +94,12 @@ public class NCBIBiosampleToSampleTab {
 		Element descriptioncomment = XMLUtils.getChildByName(description,
 				"Comment");
 		Element descriptionparagraph = null;
+		Element descriptiontable = null;
 		if (descriptioncomment != null) {
 			descriptionparagraph = XMLUtils.getChildByName(descriptioncomment,
 					"Paragraph");
+			descriptiontable = XMLUtils.getChildByName(descriptioncomment,
+					"Table");
 		}
 		Element owner = XMLUtils.getChildByName(root, "Owner");
 		Element contacts = XMLUtils.getChildByName(owner, "Contacts");
@@ -132,7 +132,7 @@ public class NCBIBiosampleToSampleTab {
 		if (root.attributeValue("last_update") != null
 				&& root.attributeValue("last_update").equals("")) {
 			st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
-		} else {
+		} else if (root.attributeValue("last_update") != null) {
 			Date updateDate = dateFormatNCBI.parse(root
 					.attributeValue("last_update"));
 			st.msi.submissionUpdateDate = dateFormatEBI.format(updateDate);
@@ -215,19 +215,31 @@ public class NCBIBiosampleToSampleTab {
 		organismAttrib.setTermSourceID(organism.attributeValue("taxonomy_id"));
 		scdnode.addAttribute(organismAttrib);
 
-		if (attributes != null) {
-			for (Element attribute : XMLUtils.getChildrenByName(attributes,
-					"Attribute")) {
-				CharacteristicAttribute attrib = new CharacteristicAttribute();
-				attrib.setAttributeValue(attribute.getText());
-				attrib.type = attribute.attributeValue("attribute_name");
-				// Dictionary name is kind of like ontology, but not.
-				if (attribute.attributeValue("dictionary_name") != null) {
-					attrib.termSourceREF = attribute
-							.attributeValue("dictionary_name");
-				}
-				scdnode.addAttribute(attrib);
+		for (Element row : XMLUtils.getChildrenByName(
+				XMLUtils.getChildByName(descriptiontable, "Body"), "Row")) {
+			// convert to an array list to ensure random access.
+			ArrayList<Element> cells = new ArrayList<Element>(
+					XMLUtils.getChildrenByName(row, "Cell"));
+
+			CommentAttribute attrib = new CommentAttribute();
+			attrib.setAttributeValue(cells.get(1).getText());
+			attrib.type = cells.get(0).getText();
+			scdnode.addAttribute(attrib);
+		}
+
+		for (Element attribute : XMLUtils.getChildrenByName(attributes,
+				"Attribute")) {
+			CommentAttribute attrib = new CommentAttribute();
+			attrib.setAttributeValue(attribute.getText());
+			attrib.type = attribute.attributeValue("attribute_name");
+			// Dictionary name is kind of like ontology, but not.
+			// TODO ensure that the dictionary name is included in the msi
+			// section
+			if (attribute.attributeValue("dictionary_name") != null) {
+				attrib.termSourceREF = attribute
+						.attributeValue("dictionary_name");
 			}
+			scdnode.addAttribute(attrib);
 		}
 
 		DatabaseAttribute databaseAttrib = new DatabaseAttribute();
@@ -259,6 +271,16 @@ public class NCBIBiosampleToSampleTab {
 					// TODO work out how to do this,
 					// http://ccr.coriell.org/Sections/Collections/NHGRI/?SsId=11
 					// is a starting point
+				} else if (dbname.equals("EST")) {
+					// One sample corresponds to many many ESTs generated from
+					// that sample 
+					// Can Search by the LIBEST_xxxxxxxx identifier in free text to
+					// find them but no way to encode this search in the URL
+				} else if (dbname.equals("GSS")) {
+					// One sample corresponds to many many ESTs generated from
+					// that sample 
+					// Can Search by the LIBGSS_xxxxxxxx identifier in free text to
+					// find them but no way to encode this search in the URL
 				}
 				scdnode.addAttribute(databaseAttrib);
 			}
