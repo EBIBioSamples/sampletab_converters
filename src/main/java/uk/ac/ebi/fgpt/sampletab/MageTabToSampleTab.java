@@ -37,7 +37,7 @@ public class MageTabToSampleTab {
 	
 	public static final MAGETABParser<MAGETABInvestigation> parser = new MAGETABParser<MAGETABInvestigation>();
 
-	private SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyy/MM/dd");
+	private SimpleDateFormat magetabdateformat = new SimpleDateFormat("yyyy-MM-dd");
 	
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -78,11 +78,13 @@ public class MageTabToSampleTab {
 		SampleData st = new SampleData();
 		st.msi.submissionTitle = mt.IDF.investigationTitle;
 		st.msi.submissionDescription = mt.IDF.experimentDescription;
-		try {
-			st.msi.submissionReleaseDate = simpledateformat.parse(mt.IDF.publicReleaseDate);
-		} catch (java.text.ParseException e) {
-			//re-throw as an ae2 error
-			throw new ParseException();
+		if (mt.IDF.publicReleaseDate != null){
+			try {
+				st.msi.submissionReleaseDate = magetabdateformat.parse(mt.IDF.publicReleaseDate);
+			} catch (java.text.ParseException e) {
+				//re-throw as an ae2 error
+				throw new ParseException("unable to read "+mt.IDF.publicReleaseDate);
+			}
 		}
 		//TODO update date
 		st.msi.submissionIdentifier = "GA"+mt.IDF.accession;
