@@ -17,13 +17,9 @@ public class MageTabFTPDownload {
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    /*
+    
 	private MageTabFTPDownload(){
 		//private constructor to prevent accidental multiple initialisations
-	}*/
-    
-	public MageTabFTPDownload(){
-		log.debug("MageTabFTPDownload constructor running...");
 	}
 	 
     public static MageTabFTPDownload getInstance() {
@@ -114,7 +110,7 @@ public class MageTabFTPDownload {
 
 	public static void main(String[] args) {
 		if (args.length < 2){
-			System.out.println("Must provide a BioSample MageTab submission identifier and an output directory.");
+			System.out.println("Must provide an ArrayExpress submission identifier and an output directory.");
 			return;
 		}
 		String accession = args[0];

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -35,6 +36,8 @@ public class MageTabToSampleTab {
 	private static final MageTabToSampleTab instance = new MageTabToSampleTab();
 	
 	public static final MAGETABParser<MAGETABInvestigation> parser = new MAGETABParser<MAGETABInvestigation>();
+
+	private SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyy/MM/dd");
 	
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -75,7 +78,13 @@ public class MageTabToSampleTab {
 		SampleData st = new SampleData();
 		st.msi.submissionTitle = mt.IDF.investigationTitle;
 		st.msi.submissionDescription = mt.IDF.experimentDescription;
-		st.msi.submissionReleaseDate = mt.IDF.publicReleaseDate;
+		try {
+			st.msi.submissionReleaseDate = simpledateformat.parse(mt.IDF.publicReleaseDate);
+		} catch (java.text.ParseException e) {
+			//re-throw as an ae2 error
+			throw new ParseException();
+		}
+		//TODO update date
 		st.msi.submissionIdentifier = "GA"+mt.IDF.accession;
 		st.msi.submissionReferenceLayer = false;
 		

@@ -4,13 +4,18 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.TreeSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,12 +23,12 @@ import org.slf4j.LoggerFactory;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.PersistentLookup;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBISampleTabCombiner {
@@ -31,16 +36,22 @@ public class NCBISampleTabCombiner {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private int maxident = 1000000; // max is 1,000,000
-	private File rootdir = new File("ncbicopy");
-
-	private static ENAUtils enautils = ENAUtils.getInstance();
-
+	private static File rootdir;
+	
+	private static PersistentLookup cacheserver;
+	
+	private final Map<String, Collection<File>> groupings;
+	
 	// singleton instance
 	private static final NCBIBiosampleToSampleTab converter = NCBIBiosampleToSampleTab
-			.getInstance();;
-
+			.getInstance();
+	
 	private NCBISampleTabCombiner() {
 		// private constructor
+		
+		rootdir = new File("ncbicopy");
+		groupings = new ConcurrentHashMap<String, Collection<File>>();
+		
 	}
 
 	private File getFileByIdent(int ident) {
@@ -49,16 +60,33 @@ public class NCBISampleTabCombiner {
 		return xmlfile;
 	}
 
+	public Collection<String> getGroupIds(int ident)
+			throws DocumentException, SQLException {
+		File xmlFile = getFileByIdent(ident);
+
+		if (xmlFile.exists()) {
+			if (cacheserver != null){
+				if (cacheserver.hasValues("NCBISampleTabIdent", Integer.toString(ident))){
+					return cacheserver.getValuesOfTarget("NCBISampleTabIdent", Integer.toString(ident), "NCBISampleTabGroupIds");
+				} else {
+					Collection<String> groupids = getGroupIds(xmlFile);
+					cacheserver.setValues("NCBISampleTabIdent", Integer.toString(ident), "NCBISampleTabGroupIds", groupids);
+					return groupids;
+				}
+			} else {
+				return getGroupIds(xmlFile);
+			}
+		} else {
+			return new ArrayList<String>();
+		}
+	}
+
 	public Collection<String> getGroupIds(File xmlFile)
 			throws DocumentException {
 
 		log.debug("Trying " + xmlFile);
-
-		SAXReader reader = new SAXReader();
-
-		Document xml;
-		xml = reader.read(xmlFile);
-
+		Document xml = XMLUtils.getDocument(xmlFile);
+		
 		Collection<String> groupids = new ArrayList<String>();
 		Element root = xml.getRootElement();
 		Element ids = XMLUtils.getChildByName(root, "Ids");
@@ -69,7 +97,7 @@ public class NCBISampleTabCombiner {
 			if (dbname.equals("SRA")) {
 				// group by sra study
 				log.debug("Getting studies of SRA sample " + sampleid);
-				Collection<String> studyids = enautils
+				Collection<String> studyids = ENAUtils
 						.getStudiesForSample(sampleid);
 				if (studyids != null) {
 					groupids.addAll(studyids);
@@ -87,7 +115,7 @@ public class NCBISampleTabCombiner {
 				// EST == Expressed Sequence Tag
 				// GSS == Genome Survey Sequence
 				// group by owner
-				
+//
 //				Element owner = XMLUtils.getChildByName(root, "Owner");
 //				Element name = XMLUtils.getChildByName(owner, "Name");
 //				if (name != null) {
@@ -104,8 +132,9 @@ public class NCBISampleTabCombiner {
 //					}
 //					groupids.add(cleanname);
 //				}
-				//this doesnt work so well by owner, so dont bother
-				//may need to group samples from the same owner in a post-hoc manner?
+				
+//				// 		This doesnt work so well by owner, so dont bother.
+//				//		May need to group samples from the same owner in a post-hoc manner?
 				groupids.add(sampleid);
 			} else {
 				// could group by others, but some of them are very big
@@ -114,21 +143,17 @@ public class NCBISampleTabCombiner {
 		return groupids;
 	}
 
-	public HashMap<String, Collection<File>> getGroupings()
-			throws DocumentException {
-
-		HashMap<String, Collection<File>> groupings = new HashMap<String, Collection<File>>();
-
+	public Map<String, Collection<File>> getGroupings()
+			throws DocumentException, SQLException {
+				
+		/*
+		 *  This is the serial version of this code 
+		 */
+		/*
 		for (int i = 0; i < maxident; i = i + 1) {
 			File xmlFile = getFileByIdent(i);
 
-			if (!xmlFile.exists()) {
-				log.debug("Skipping " + xmlFile);
-				continue;
-			}
-
-			Collection<String> groupids = getGroupIds(xmlFile);
-
+			Collection<String> groupids = getGroupIds(i);
 			
 			for (String groupid : groupids) {
 				Collection<File> group;
@@ -141,18 +166,81 @@ public class NCBISampleTabCombiner {
 				group.add(xmlFile);
 			}
 		}
+		*/
+
+		/*
+		 *  This is the parallel version of this code 
+		 */
+		class GroupIDsTask implements Runnable {
+			final int ident;
+			GroupIDsTask(int ident){
+				this.ident = ident;
+			}
+			
+			public void run(){
+				
+				File xmlFile = getFileByIdent(ident);
+
+				Collection<String> groupids = null;
+				
+				if (xmlFile.exists()) {				
+					 try {
+						groupids =  getGroupIds(this.ident);
+					} catch (DocumentException e) {
+						e.printStackTrace();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
+				
+				for (String groupid : groupids) {
+					Collection<File> group;
+					if (groupings.containsKey(groupid)) {
+						group = groupings.get(groupid);
+					} else {
+						group = new ConcurrentSkipListSet<File>();
+						groupings.put(groupid, group);
+					}
+					group.add(xmlFile);
+				}
+			}
+		};
+		
+		int nocpus = Runtime.getRuntime().availableProcessors();
+		ExecutorService pool = Executors.newFixedThreadPool(nocpus);
+		for (int i = 0; i < maxident; i = i + 1) {
+			pool.submit(new GroupIDsTask(i));
+		}
+		log.info("All tasks submitted");
+		
+		try {
+			pool.shutdown();
+			pool.awaitTermination(60, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		return groupings;
 
 	}
 
 	public void combine() {
 
-		HashMap<String, Collection<File>> groups;
+		Map<String, Collection<File>> groups;
+		
+		//cacheserver = new PersistentLookup();
+		
 		try {
+			log.info("Getting groupings...");
 			groups = getGroupings();
-		} catch (DocumentException e1) {
+			log.info("Got groupings...");
+		} catch (DocumentException e) {
 			log.warn("Unable to group");
-			e1.printStackTrace();
+			e.printStackTrace();
+			return;
+		} catch (SQLException e) {
+			log.warn("Unable to group");
+			e.printStackTrace();
 			return;
 		}
 
@@ -167,7 +255,7 @@ public class NCBISampleTabCombiner {
 				continue;
 			}
 
-			log.info(group + " : " + groups.get(group).size());
+			log.info("Size of group : " + group + " : " + groups.get(group).size());
 
 			File outsubdir = new File(outdir, group);
 			outsubdir.mkdirs();
@@ -339,17 +427,8 @@ public class NCBISampleTabCombiner {
 						// use the most recent of the two dates
 						SimpleDateFormat dateFormatEBI = new SimpleDateFormat(
 								"yyyy/MM/dd");
-						Date datadate = null;
-						Date outdate = null;
-						try {
-							datadate = dateFormatEBI
-									.parse(sampledata.msi.submissionReleaseDate);
-							outdate = dateFormatEBI
-									.parse(sampleout.msi.submissionReleaseDate);
-						} catch (ParseException e) {
-							log.error("unable to parse dates");
-							e.printStackTrace();
-						}
+						Date datadate = sampledata.msi.submissionReleaseDate;
+						Date outdate = sampleout.msi.submissionReleaseDate;
 						if (datadate != null && outdate != null
 								&& datadate.after(outdate)) {
 							sampleout.msi.submissionReleaseDate = sampledata.msi.submissionReleaseDate;
@@ -365,17 +444,8 @@ public class NCBISampleTabCombiner {
 						// use the most recent of the two dates
 						SimpleDateFormat dateFormatEBI = new SimpleDateFormat(
 								"yyyy/MM/dd");
-						Date datadate = null;
-						Date outdate = null;
-						try {
-							datadate = dateFormatEBI
-									.parse(sampledata.msi.submissionUpdateDate);
-							outdate = dateFormatEBI
-									.parse(sampleout.msi.submissionUpdateDate);
-						} catch (ParseException e) {
-							log.error("unable to parse dates");
-							e.printStackTrace();
-						}
+						Date datadate = sampledata.msi.submissionUpdateDate;
+						Date outdate = sampleout.msi.submissionUpdateDate;
 						if (datadate != null && outdate != null
 								&& datadate.after(outdate)) {
 							sampleout.msi.submissionUpdateDate = sampledata.msi.submissionUpdateDate;
@@ -387,7 +457,7 @@ public class NCBISampleTabCombiner {
 
 			// sanity checks to make sure sensible things happened
 			if (sampleout.scd.getRootNodes().size() != groups.get(group).size()) {
-				log.warn("unequal sizes: "
+				log.warn("unequal size of group "+group+ " : "
 						+ sampleout.scd.getRootNodes().size() + " vs "
 						+ groups.get(group).size());
 			}

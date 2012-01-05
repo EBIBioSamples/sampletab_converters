@@ -127,7 +127,7 @@ public class NCBIBiosampleToSampleTab {
 					.attributeValue("publication_date"));
 		}
 
-		st.msi.submissionReleaseDate = dateFormatEBI.format(publicationDate);
+		st.msi.submissionReleaseDate = publicationDate;
 		// NCBI Biosamples does not always have a last_update attribute
 		if (root.attributeValue("last_update") != null
 				&& root.attributeValue("last_update").equals("")) {
@@ -135,7 +135,7 @@ public class NCBIBiosampleToSampleTab {
 		} else if (root.attributeValue("last_update") != null) {
 			Date updateDate = dateFormatNCBI.parse(root
 					.attributeValue("last_update"));
-			st.msi.submissionUpdateDate = dateFormatEBI.format(updateDate);
+			st.msi.submissionUpdateDate = updateDate;
 		}
 
 		// NCBI Biosamples identifier numbers are prefixed by GNC to get the
