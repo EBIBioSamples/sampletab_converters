@@ -64,7 +64,6 @@ public class IMSRTabToSampleTab {
 
 		SampleData st = new SampleData();
 
-		// TODO add samples...
 		String stock = null;
 		String site = null;
 		String state = null;
@@ -183,18 +182,39 @@ public class IMSRTabToSampleTab {
 				// if there are multiple materials
 				// create a strain sample and derive individual materials
 
-				// TODO finish
-
-				// add the node to the st
+				MaterialAttribute matterialattribute = new MaterialAttribute();
+				matterialattribute.setAttributeValue("strain");
+				newnode.addAttribute(matterialattribute);
+				
+				// add the strain node to the st
 				st.scd.addNode(newnode);
+
+				for (String material: states.get(name)){
+					SampleNode materialnode = new SampleNode();
+					materialnode.setNodeName(name+" "+material);
+					
+					matterialattribute = new MaterialAttribute();
+					matterialattribute.setAttributeValue(material);
+					materialnode.addAttribute(matterialattribute);
+					
+					newnode.addChildNode(materialnode);
+					materialnode.addParentNode(newnode);
+					//dont add the separate material node
+					//If you do, duplication will result.
+					//st.scd.addNode(materialnode);
+					
+				}
 
 			} else if (states.containsKey(name)
 					&& (states.get(name).size() == 1)) {
 				// if there is only one material
-				MaterialAttribute matterialattribute = new MaterialAttribute();
-				matterialattribute.setAttributeValue((String) states.get(name)
-						.toArray()[0]);
-				newnode.addAttribute(matterialattribute);
+				//this is a for loop that only runs once because no easy way to access a member of a set
+				for (String materal: states.get(name)){
+					MaterialAttribute matterialattribute = new MaterialAttribute();
+					matterialattribute.setAttributeValue(materal);
+					newnode.addAttribute(matterialattribute);
+					break;
+				}
 
 				// TODO add efo mappings
 
