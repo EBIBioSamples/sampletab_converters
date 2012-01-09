@@ -297,8 +297,9 @@ public class IMSRTabToSampleTab {
 		// create parent directories, if they dont exist
 		outfile = outfile.getAbsoluteFile();
 		if (outfile.isDirectory()) {
-			outfile = new File(outfile, "sampletab.txt");
+			outfile = new File(outfile, "sampletab.pre.txt");
 		}
+		
 		if (!outfile.getParentFile().exists()) {
 			outfile.getParentFile().mkdirs();
 		}
