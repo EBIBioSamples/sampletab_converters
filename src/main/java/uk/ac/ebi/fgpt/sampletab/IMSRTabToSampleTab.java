@@ -23,6 +23,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class IMSRTabToSampleTab {
@@ -227,6 +228,13 @@ public class IMSRTabToSampleTab {
 				log.warn("found a sample without material: " + name);
 				continue;
 			}
+			
+			//all IMSR samples must be mice.
+			OrganismAttribute organismattribute = new OrganismAttribute();
+			organismattribute.setAttributeValue("Mus musculus (Mouse)");
+			organismattribute.setTermSourceREF("NEWT");
+			organismattribute.setTermSourceID(10090);
+			
 
 			if (mutations.containsKey(name)) {
 				for (List<String> thismutation : mutations.get(name)) {
