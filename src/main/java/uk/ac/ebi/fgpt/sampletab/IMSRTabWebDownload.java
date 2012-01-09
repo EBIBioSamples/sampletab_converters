@@ -94,9 +94,9 @@ public class IMSRTabWebDownload {
 		String accession = args[0];
 		String outdir = args[1];
 
-		IMSRTabWebDownload donloader = IMSRTabWebDownload
+		IMSRTabWebDownload downloader = IMSRTabWebDownload
 				.getInstance();
-		String error = donloader.download(accession, outdir);
+		String error = downloader.download(accession, outdir);
 		if (error != null) {
 			System.out.println("ERROR: " + error);
 			System.exit(1);
