@@ -51,16 +51,16 @@ public class NCBIBiosampleToSampleTab {
 			Element country = XMLUtils.getChildByName(address, "Country");
 			// TODO handle joins better
 			if (street != null) {
-				toreturn = toreturn + street.getText() + ", ";
+				toreturn = toreturn + street.getTextTrim() + ", ";
 			}
 			if (city != null) {
-				toreturn = toreturn + city.getText() + ", ";
+				toreturn = toreturn + city.getTextTrim() + ", ";
 			}
 			if (sub != null) {
-				toreturn = toreturn + sub.getText() + ", ";
+				toreturn = toreturn + sub.getTextTrim() + ", ";
 			}
 			if (country != null) {
-				toreturn = toreturn + country.getText();
+				toreturn = toreturn + country.getTextTrim();
 			}
 		}
 		return toreturn;
@@ -109,9 +109,8 @@ public class NCBIBiosampleToSampleTab {
 		Element organism = XMLUtils.getChildByName(description, "Organism");
 
 		// TODO unencode http conversion, e.g. &amp, if this is an issue
-		st.msi.submissionTitle = title.getText();
+		st.msi.submissionTitle = title.getTextTrim();
 
-		SimpleDateFormat dateFormatEBI = new SimpleDateFormat("yyyy/MM/dd");
 		SimpleDateFormat dateFormatNCBI = new SimpleDateFormat(
 				"yyyy-MM-dd'T'HH:mm:ss");
 		// some NCBI data has milliseconds, some doesn't.
@@ -144,12 +143,12 @@ public class NCBIBiosampleToSampleTab {
 		// samples in one submission
 		st.msi.submissionIdentifier = "GNC-" + root.attributeValue("id");
 		if (descriptionparagraph != null) {
-			if (!descriptionparagraph.getText().equals("none provided")) {
-				st.msi.submissionDescription = descriptionparagraph.getText();
+			if (!descriptionparagraph.getTextTrim().equals("none provided")) {
+				st.msi.submissionDescription = descriptionparagraph.getTextTrim();
 			}
 		}
 
-		String organizationName = owner.getText();
+		String organizationName = owner.getTextTrim();
 
 		if (contacts != null) {
 			// log.info("Processing contacts");
@@ -162,13 +161,13 @@ public class NCBIBiosampleToSampleTab {
 					Element last = XMLUtils.getChildByName(name, "Last");
 					Element first = XMLUtils.getChildByName(name, "First");
 					Element middle = XMLUtils.getChildByName(name, "Middle");
-					st.msi.personLastName.add(last.getText());
+					st.msi.personLastName.add(last.getTextTrim());
 					if (first != null) {
-						st.msi.personFirstName.add(first.getText());
+						st.msi.personFirstName.add(first.getTextTrim());
 					}
 					// TODO fix middlename == initials assumption
 					if (middle != null) {
-						st.msi.personInitials.add(middle.getText());
+						st.msi.personInitials.add(middle.getTextTrim());
 					}
 					st.msi.personEmail.add(contact.attributeValue("email"));
 				} else {
@@ -193,7 +192,7 @@ public class NCBIBiosampleToSampleTab {
 				// entrez never seen to date, deprecated?
 				if (link.attributeValue("type") == "db_xref"
 						&& link.attributeValue("target") == "pubmed") {
-					String PubMedID = link.getText();
+					String PubMedID = link.getTextTrim();
 					st.msi.publicationPubMedID.add(PubMedID);
 					st.msi.publicationDOI.add("");
 				}
@@ -222,15 +221,15 @@ public class NCBIBiosampleToSampleTab {
 					XMLUtils.getChildrenByName(row, "Cell"));
 
 			CommentAttribute attrib = new CommentAttribute();
-			attrib.setAttributeValue(cells.get(1).getText());
-			attrib.type = cells.get(0).getText();
+			attrib.setAttributeValue(cells.get(1).getTextTrim());
+			attrib.type = cells.get(0).getTextTrim();
 			scdnode.addAttribute(attrib);
 		}
 
 		for (Element attribute : XMLUtils.getChildrenByName(attributes,
 				"Attribute")) {
 			CommentAttribute attrib = new CommentAttribute();
-			attrib.setAttributeValue(attribute.getText());
+			attrib.setAttributeValue(attribute.getTextTrim());
 			attrib.type = attribute.attributeValue("attribute_name");
 			// Dictionary name is kind of like ontology, but not.
 			// TODO ensure that the dictionary name is included in the msi
@@ -255,17 +254,17 @@ public class NCBIBiosampleToSampleTab {
 				databaseAttrib = new DatabaseAttribute();
 				String dbname = id.attributeValue("db");
 				databaseAttrib.setAttributeValue(dbname);
-				databaseAttrib.databaseID = id.getText();
+				databaseAttrib.databaseID = id.getTextTrim();
 				// databaseURI has different construction rules for different
 				// databases
 				// TODO clear up potential URL encoding problems
 				if (dbname.equals("SRA")) {
 					databaseAttrib.databaseURI = "http://www.ebi.ac.uk/ena/data/view/"
-							+ id.getText();
+							+ id.getTextTrim();
 				} else if (dbname.equals("Coriell")) {
-					if (!id.getText().equals("N/A")) {
+					if (!id.getTextTrim().equals("N/A")) {
 						databaseAttrib.databaseURI = "http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref="
-								+ id.getText();
+								+ id.getTextTrim();
 					}
 				} else if (dbname.equals("HapMap")) {
 					// TODO work out how to do this,
