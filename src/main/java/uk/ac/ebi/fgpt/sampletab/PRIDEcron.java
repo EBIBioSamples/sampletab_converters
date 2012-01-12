@@ -84,8 +84,7 @@ public class PRIDEcron {
         Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
 
         Runtime runtime = Runtime.getRuntime();
-        //Executor pool = Executors.newFixedThreadPool(runtime.availableProcessors());
-        Executor pool = Executors.newFixedThreadPool(1);
+        Executor pool = Executors.newFixedThreadPool(runtime.availableProcessors());
 
         for (FTPFile file : files) {
             String filename = file.getName();

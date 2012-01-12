@@ -1,27 +1,13 @@
 package uk.ac.ebi.fgpt.sampletab;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPReply;
-
-import uk.ac.ebi.fgpt.sampletab.utils.Piper;
 
 public class PRIDEFTPDownload implements Runnable {
 
@@ -59,8 +45,8 @@ public class PRIDEFTPDownload implements Runnable {
 
         //make sure the path is valid
         // construct directories if required
-        this.outfile = this.outfile.getAbsoluteFile();
-        File outdir = this.outfile.getParentFile();
+        outfile = outfile.getAbsoluteFile();
+        File outdir = outfile.getParentFile();
         if (!outdir.exists()){
             outdir.mkdirs();
         }
@@ -155,7 +141,7 @@ public class PRIDEFTPDownload implements Runnable {
         String accession = args[0];
         String outdir = args[1];
 
-        PRIDEFTPDownload prideftpdownload = PRIDEFTPDownload.getInstance();
+        PRIDEFTPDownload prideftpdownload = new PRIDEFTPDownload();
         prideftpdownload.download(accession, outdir);
     }
 

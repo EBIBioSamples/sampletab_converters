@@ -29,8 +29,8 @@ public class MageTabFTPDownload {
         return instance;
     }
 	
-	public String download(String accession, String outdir){
-		return this.download(accession, new File(outdir));	
+	public String download(String accession, String outdirname){
+		return this.download(accession, new File(outdirname));	
 	}
 	
 	public String download(String accession, File outdir){
