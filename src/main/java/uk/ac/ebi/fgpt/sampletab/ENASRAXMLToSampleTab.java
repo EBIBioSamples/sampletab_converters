@@ -70,12 +70,14 @@ public class ENASRAXMLToSampleTab {
     }
 
     public SampleData convert(File infile) throws ParseException, IOException {
-
+        
+        infile = infile.getAbsoluteFile();
+        
         if (infile.isDirectory()) {
             infile = new File(infile, "study.xml");
             log.info("Given a directly, looking for " + infile);
         }
-        infile = infile.getAbsoluteFile();
+        
 
         if (!infile.exists()) {
             throw new IOException(infile + " does not exist");
