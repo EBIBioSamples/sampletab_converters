@@ -5,11 +5,7 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.text.ParseException;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.dom4j.DocumentException;
-import org.xml.sax.SAXException;
-
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 

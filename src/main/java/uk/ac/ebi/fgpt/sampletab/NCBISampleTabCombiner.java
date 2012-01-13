@@ -425,8 +425,6 @@ public class NCBISampleTabCombiner {
 						sampleout.msi.submissionReleaseDate = sampledata.msi.submissionReleaseDate;
 					} else {
 						// use the most recent of the two dates
-						SimpleDateFormat dateFormatEBI = new SimpleDateFormat(
-								"yyyy/MM/dd");
 						Date datadate = sampledata.msi.submissionReleaseDate;
 						Date outdate = sampleout.msi.submissionReleaseDate;
 						if (datadate != null && outdate != null
@@ -442,8 +440,6 @@ public class NCBISampleTabCombiner {
 						sampleout.msi.submissionUpdateDate = sampledata.msi.submissionUpdateDate;
 					} else {
 						// use the most recent of the two dates
-						SimpleDateFormat dateFormatEBI = new SimpleDateFormat(
-								"yyyy/MM/dd");
 						Date datadate = sampledata.msi.submissionUpdateDate;
 						Date outdate = sampleout.msi.submissionUpdateDate;
 						if (datadate != null && outdate != null
