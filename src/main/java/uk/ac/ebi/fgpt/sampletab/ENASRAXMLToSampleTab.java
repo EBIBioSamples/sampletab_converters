@@ -359,18 +359,18 @@ public class ENASRAXMLToSampleTab {
             System.out.println("Must provide an ENA SRA study filename and a SampleTab output filename.");
             return;
         }
-        String imsrTabFilename = args[0];
+        String enasrafilename = args[0];
         String sampleTabFilename = args[1];
 
         ENASRAXMLToSampleTab converter = ENASRAXMLToSampleTab.getInstance();
 
         try {
-            converter.convert(imsrTabFilename, sampleTabFilename);
+            converter.convert(enasrafilename, sampleTabFilename);
         } catch (ParseException e) {
-            System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
+            System.out.println("Error converting " + enasrafilename + " to " + sampleTabFilename);
             e.printStackTrace();
         } catch (IOException e) {
-            System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
+            System.out.println("Error converting " + enasrafilename + " to " + sampleTabFilename);
             e.printStackTrace();
         }
     }
