@@ -122,7 +122,7 @@ public class PRIDEFTPDownload implements Runnable {
             
             p = pb.start();
             synchronized (p) {
-                p.wait();
+                p.waitFor();
             }
 
             log.info("Trimmed " + outfile);
