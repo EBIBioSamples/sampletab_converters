@@ -70,12 +70,12 @@ public class PRIDEcron {
 
     }
 
-    private File getTrimFile(File outdir, String accesssion){
-        File subdir = new File(outdir, "GPR-"+accesssion);
+    private File getTrimFile(File outdir, String accesssion) {
+        File subdir = new File(outdir, "GPR-" + accesssion);
         File trim = new File(subdir, "trimmed.xml");
         return trim.getAbsoluteFile();
     }
-    
+
     public void run(File outdir) {
         FTPClient ftp;
         FTPFile[] files;
@@ -91,8 +91,8 @@ public class PRIDEcron {
         }
         Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
 
-        Runtime runtime = Runtime.getRuntime();
-        ExecutorService pool = Executors.newFixedThreadPool(runtime.availableProcessors());
+        int nothreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
 
         for (FTPFile file : files) {
             String filename = file.getName();
@@ -100,21 +100,24 @@ public class PRIDEcron {
             if (matcher.matches()) {
                 String accession = matcher.group(1);
                 File outfile = getTrimFile(outdir, accession);
-                //do not overwrite existing files
-                if (!outfile.exists()){
+                // do not overwrite existing files
+                if (!outfile.exists()) {
                     pool.execute(new PRIDEFTPDownload(accession, outfile, false));
                 }
             }
         }
 
         // run the pool and then close it afterwards
-        pool.shutdown();
-        try {
-            //allow 24h to execute. Rather too much, but meh
-            pool.awaitTermination(1, TimeUnit.DAYS);
-        } catch (InterruptedException e) {
-            log.error("Interuppted awaiting thread pool termination");
-            e.printStackTrace();
+        //must synchronize on the pool object
+        synchronized (pool) {
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                log.error("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
+            }
         }
     }
 
@@ -136,7 +139,7 @@ public class PRIDEcron {
             outdir.mkdirs();
 
         getInstance().run(outdir);
-        //tidy up ftp connection
+        // tidy up ftp connection
         getInstance().close();
     }
 }

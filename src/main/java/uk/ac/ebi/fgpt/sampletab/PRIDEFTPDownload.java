@@ -78,7 +78,7 @@ public class PRIDEFTPDownload implements Runnable {
         //command.add("-O");
         command.add("curl");
         command.add("-o");
-        command.add(outfile + ".gz");
+        command.add(outfile.getAbsolutePath() + ".gz");
         command.add("ftp://ftp.ebi.ac.uk/pub/databases/pride/PRIDE_Exp_Complete_Ac_" + accession + ".xml.gz");
 
         //create the actual process that will do the download
@@ -102,17 +102,17 @@ public class PRIDEFTPDownload implements Runnable {
             return;
         }
 
-        log.info("Downloaded " + outfile + ".gz");
+        log.info("Downloaded " + outfile.getAbsolutePath() + ".gz");
 
         //now we need to extract & filter the file
         try {
             String bashcom = "gunzip -c -d -f "
-                    + outfile + ".gz "
+                    + outfile.getAbsolutePath() + ".gz "
                     + "| sed '/<GelFreeIdentification>/,/<\\/GelFreeIdentification>/d' "
                     + "| sed '/<TwoDimensionalIdentification>/,/<\\/TwoDimensionalIdentification>/d'" 
                     + "| sed '/<spectrumList count=/,/<\\/spectrumList>/d'" 
                     + " > "+outfile;
-            log.info(bashcom);
+            log.debug(bashcom);
 
             command = new ArrayList<String>();
             command.add("/bin/sh");
@@ -142,7 +142,7 @@ public class PRIDEFTPDownload implements Runnable {
         }
         
         //clean up by deleting gzip version
-        File gz = new File(outfile+".gz");
+        File gz = new File(outfile.getAbsolutePath()+".gz");
         gz.delete();
         log.info("Cleaned up file "+gz);
         return;
