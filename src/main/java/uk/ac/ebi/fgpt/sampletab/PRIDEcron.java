@@ -3,7 +3,9 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,6 +70,12 @@ public class PRIDEcron {
 
     }
 
+    private File getTrimFile(File outdir, String accesssion){
+        File subdir = new File(outdir, "GPR-"+accesssion);
+        File trim = new File(subdir, "trimmed.xml");
+        return trim.getAbsoluteFile();
+    }
+    
     public void run(File outdir) {
         FTPClient ftp;
         FTPFile[] files;
@@ -84,24 +92,29 @@ public class PRIDEcron {
         Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
 
         Runtime runtime = Runtime.getRuntime();
-        Executor pool = Executors.newFixedThreadPool(runtime.availableProcessors());
+        ExecutorService pool = Executors.newFixedThreadPool(runtime.availableProcessors());
 
         for (FTPFile file : files) {
             String filename = file.getName();
             Matcher matcher = regex.matcher(filename);
             if (matcher.matches()) {
                 String accession = matcher.group(1);
-                File outfile = new File(outdir, accession + ".xml");
-                pool.execute(new PRIDEFTPDownload(accession, outfile));
+                File outfile = getTrimFile(outdir, accession);
+                //do not overwrite existing files
+                if (!outfile.exists()){
+                    pool.execute(new PRIDEFTPDownload(accession, outfile, false));
+                }
             }
         }
 
+        // run the pool and then close it afterwards
+        pool.shutdown();
         try {
-            synchronized (pool) {
-                pool.wait();
-            }
+            //allow 24h to execute. Rather too much, but meh
+            pool.awaitTermination(1, TimeUnit.DAYS);
         } catch (InterruptedException e) {
-            log.error("Interrupted waiting for FTP download pool to complete");
+            log.error("Interuppted awaiting thread pool termination");
+            e.printStackTrace();
         }
     }
 
@@ -123,5 +136,7 @@ public class PRIDEcron {
             outdir.mkdirs();
 
         getInstance().run(outdir);
+        //tidy up ftp connection
+        getInstance().close();
     }
 }

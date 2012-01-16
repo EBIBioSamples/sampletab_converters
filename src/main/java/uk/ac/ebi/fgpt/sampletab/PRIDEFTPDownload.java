@@ -17,14 +17,24 @@ public class PRIDEFTPDownload implements Runnable {
     
     private String accession = null;
     private File outfile = null;
+    private boolean replace = false;
 
     public PRIDEFTPDownload() {
         
     }
     
+    public PRIDEFTPDownload(String accession, String outfilename, boolean replace) {
+        this(accession, outfilename);
+        this.replace = replace;
+    }
+    
+    public PRIDEFTPDownload(String accession, File outfile, boolean replace) {
+        this(accession, outfile);
+        this.replace = replace;
+    }
+    
     public PRIDEFTPDownload(String accession, String outfilename) {
-        this.accession = accession;
-        this.outfile = new File(outfilename);
+        this(accession, new File(outfilename));
     }
     
     public PRIDEFTPDownload(String accession, File outfile) {
@@ -36,12 +46,16 @@ public class PRIDEFTPDownload implements Runnable {
         return new PRIDEFTPDownload();
     }
 
-
-    public boolean download(String accession, String outfilename) {
-        return this.download(accession, new File(outfilename));
+    public void download(String accession, String outfilename) {
+        //replace by default
+        this.download(accession, outfilename, true);
     }
 
-    public boolean download(String accession, File outfile) {
+    public void download(String accession, String outfilename, boolean replace) {
+        this.download(accession, new File(outfilename), replace);
+    }
+
+    public void download(String accession, File outfile, boolean replace) {
 
         //make sure the path is valid
         // construct directories if required
@@ -50,8 +64,14 @@ public class PRIDEFTPDownload implements Runnable {
         if (!outdir.exists()){
             outdir.mkdirs();
         }
+        
+        if (!replace && outfile.exists()){
+            //we are not supposed to overwrite, so dont
+            log.debug("Skipping "+accession+" to "+outfile);
+            return;
+        }
 
-        // for some reason that escapes me, the standard java ftp /gunzip tools dont work reliably for PRIDE data
+        // for some reason that escapes me, the standard java ftp /gunzip tools do not work reliably for all PRIDE data
         // therefore we sacrifice multiplatformness to run well
         List<String> command = new ArrayList<String>();
         //command.add("wget");
@@ -75,11 +95,11 @@ public class PRIDEFTPDownload implements Runnable {
         } catch (IOException e) {
             log.error("Unable to run "+command.get(0));
             e.printStackTrace();
-            return false;
+            return;
         } catch (InterruptedException e) {
             log.error("Unable to run "+command.get(0));
             e.printStackTrace();
-            return false;
+            return;
         }
 
         log.info("Downloaded " + outfile + ".gz");
@@ -110,27 +130,27 @@ public class PRIDEFTPDownload implements Runnable {
         } catch (IOException e) {
             log.error("Unable to run bash");
             e.printStackTrace();
-            return false;
+            return;
         } catch (RuntimeException e) {
             log.error("Unable to run bash");
             e.printStackTrace();
-            return false;
+            return;
         } catch (InterruptedException e) {
             log.error("Unable to run bash");
             e.printStackTrace();
-            return false;
+            return;
         }
         
         //clean up by deleting gzip version
         File gz = new File(outfile+".gz");
         gz.delete();
         log.info("Cleaned up file "+gz);
-        return true;
+        return;
 
     }
 
     public void run() {
-        download(this.accession, this.outfile);
+        download(this.accession, this.outfile, this.replace);
     }
 
     public static void main(String[] args) {
