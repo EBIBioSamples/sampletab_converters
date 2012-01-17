@@ -58,6 +58,16 @@ public class PRIDEutils {
     }
     
     public static String[] splitName(String name){
+        //strip titles
+        name = name.replace("Prof.", "");
+        name = name.replace("Dr.", "");
+        name = name.replace("Mr.", "");
+        name = name.replace("Ms.", "");
+        name = name.replace("Mrs.", "");
+        name = name.replace("Miss.", "");
+        name = name.replace("Sir.", "");
+        //any other titles we want to remove?
+        
         String firstname = null;
         String initial = null;
         String lastname = null;
@@ -87,9 +97,9 @@ public class PRIDEutils {
             
         }
         String[] toreturn = new String[3];
-        toreturn[0] = firstname;
-        toreturn[1] = initial;
-        toreturn[2] = lastname;
+        toreturn[0] = firstname.trim();
+        toreturn[1] = initial.trim();
+        toreturn[2] = lastname.trim();
         return toreturn;
     }
 }
