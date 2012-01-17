@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -206,18 +207,19 @@ public class PRIDEcron {
         // at this point, subs is a mapping from the project name to a set of BioSample accessions
         // output them to a file
         File projout = new File(outdir, "projects.tab.txt");
+        BufferedWriter projoutwrite = null; 
         try {
-            BufferedWriter projoutwrite = new BufferedWriter(new FileWriter(projout));
+            projoutwrite = new BufferedWriter(new FileWriter(projout));
             synchronized (subs) {
                 // sort them to put them in a sensible order
-                String[] projects = (String[]) subs.keySet().toArray();
-                java.util.Arrays.sort(projects);
+                List<String> projects = new ArrayList<String>(subs.keySet());
+                Collections.sort(projects);
                 for (String project : projects) {
-                    String[] accessions = (String[]) subs.get(project).toArray();
-                    java.util.Arrays.sort(accessions);
 
                     projoutwrite.write(project);
                     projoutwrite.write("\t");
+                    List<String> accessions = new ArrayList<String>(subs.get(project));
+                    Collections.sort(accessions);
                     for (String accession : accessions) {
 
                         projoutwrite.write(accession);
@@ -228,9 +230,19 @@ public class PRIDEcron {
                 }
             }
         } catch (IOException e) {
-            log.error("Unable to open " + projout + " for writing to");
+            log.error("Unable to write to " + projout);
             e.printStackTrace();
             return;
+        } finally {
+            if (projoutwrite != null){
+                try {
+                    projoutwrite.close();
+                } catch (IOException e) {
+                    //failed within a fail so give up
+                    log.error("Unable to close file writer " + projout);
+                    
+                }
+            }
         }
     }
 
