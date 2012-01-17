@@ -159,7 +159,7 @@ public class PRIDEcron {
                 File outfile = getTrimFile(outdir, accession);
                 // do not overwrite existing files
                 if (!outfile.exists()) {
-                    pool.execute(new PRIDEFTPDownload(accession, outfile, false));
+                    pool.execute(new PRIDEXMLFTPDownload(accession, outfile, false));
                 }
             }
         }

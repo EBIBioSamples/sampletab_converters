@@ -8,7 +8,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PRIDEFTPDownload implements Runnable {
+public class PRIDEXMLFTPDownload implements Runnable {
 
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -17,31 +17,31 @@ public class PRIDEFTPDownload implements Runnable {
     private File outfile = null;
     private boolean replace = false;
 
-    public PRIDEFTPDownload() {
+    public PRIDEXMLFTPDownload() {
 
     }
 
-    public PRIDEFTPDownload(String accession, String outfilename, boolean replace) {
+    public PRIDEXMLFTPDownload(String accession, String outfilename, boolean replace) {
         this(accession, outfilename);
         this.replace = replace;
     }
 
-    public PRIDEFTPDownload(String accession, File outfile, boolean replace) {
+    public PRIDEXMLFTPDownload(String accession, File outfile, boolean replace) {
         this(accession, outfile);
         this.replace = replace;
     }
 
-    public PRIDEFTPDownload(String accession, String outfilename) {
+    public PRIDEXMLFTPDownload(String accession, String outfilename) {
         this(accession, new File(outfilename));
     }
 
-    public PRIDEFTPDownload(String accession, File outfile) {
+    public PRIDEXMLFTPDownload(String accession, File outfile) {
         this.accession = accession;
         this.outfile = outfile;
     }
 
-    public static PRIDEFTPDownload getInstance() {
-        return new PRIDEFTPDownload();
+    public static PRIDEXMLFTPDownload getInstance() {
+        return new PRIDEXMLFTPDownload();
     }
 
     public void download(String accession, String outfilename) {
@@ -128,7 +128,7 @@ public class PRIDEFTPDownload implements Runnable {
         String accession = args[0];
         String outdir = args[1];
 
-        PRIDEFTPDownload prideftpdownload = new PRIDEFTPDownload();
+        PRIDEXMLFTPDownload prideftpdownload = new PRIDEXMLFTPDownload();
         prideftpdownload.download(accession, outdir);
     }
 

@@ -205,7 +205,7 @@ public class SampleTabAccessioner {
 
 		option = new Option("u", "username", true,
 				"username of accesion MySQL database");
-		option.setRequired(true);
+		//option.setRequired(true);
 		options.addOption(option);
 
 		option = new Option("p", "password", true,
@@ -224,12 +224,18 @@ public class SampleTabAccessioner {
 			formatter.printHelp("", options);
 			System.exit(100);
 			return;
+		} catch (IllegalArgumentException e) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("", options);
+            System.exit(100);
+            return;
 		}
 
 		if (line.hasOption("help")) {
 			// automatically generate the help statement
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("ant", options);
+			formatter.printHelp("", options);
+            System.exit(100);
 			return;
 		}
 
