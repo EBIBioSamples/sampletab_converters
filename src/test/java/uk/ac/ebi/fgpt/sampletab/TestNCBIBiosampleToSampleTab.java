@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 
@@ -31,7 +32,7 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
     public void testConversion() {
     	SampleData st;
 		try {
-			st = converter.convert(resource);
+			st = converter.convert(resource.getFile());
 			//assertSame("Titles should match", st.msi.submissionTitle, "ATCC 43183");
 			
 			StringWriter out = new StringWriter();
@@ -52,7 +53,10 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
 		} catch (DocumentException e) {
 			e.printStackTrace();
             fail();
-		}
+		} catch (MalformedURLException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
 }

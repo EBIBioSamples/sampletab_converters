@@ -37,9 +37,7 @@ public class NCBISampleTabCombiner {
 
 	private int maxident = 1000000; // max is 1,000,000
 	private static File rootdir;
-	
-	private static PersistentLookup cacheserver;
-	
+		
 	private final Map<String, Collection<File>> groupings;
 	
 	// singleton instance
@@ -60,166 +58,129 @@ public class NCBISampleTabCombiner {
 		return xmlfile;
 	}
 
-	public Collection<String> getGroupIds(int ident)
-			throws DocumentException, SQLException {
-		File xmlFile = getFileByIdent(ident);
-
-		if (xmlFile.exists()) {
-			if (cacheserver != null){
-				if (cacheserver.hasValues("NCBISampleTabIdent", Integer.toString(ident))){
-					return cacheserver.getValuesOfTarget("NCBISampleTabIdent", Integer.toString(ident), "NCBISampleTabGroupIds");
-				} else {
-					Collection<String> groupids = getGroupIds(xmlFile);
-					cacheserver.setValues("NCBISampleTabIdent", Integer.toString(ident), "NCBISampleTabGroupIds", groupids);
-					return groupids;
-				}
-			} else {
-				return getGroupIds(xmlFile);
-			}
-		} else {
-			return new ArrayList<String>();
-		}
-	}
-
-	public Collection<String> getGroupIds(File xmlFile)
-			throws DocumentException {
-
-		log.debug("Trying " + xmlFile);
-		Document xml = XMLUtils.getDocument(xmlFile);
-		
-		Collection<String> groupids = new ArrayList<String>();
-		Element root = xml.getRootElement();
-		Element ids = XMLUtils.getChildByName(root, "Ids");
-		Element attributes = XMLUtils.getChildByName(root, "Attributes");
-		for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
-			String dbname = id.attributeValue("db");
-			String sampleid = id.getText();
-			if (dbname.equals("SRA")) {
-				// group by sra study
-				log.debug("Getting studies of SRA sample " + sampleid);
-				Collection<String> studyids = ENAUtils
-						.getStudiesForSample(sampleid);
-				if (studyids != null) {
-					groupids.addAll(studyids);
-				}
-			} else if (dbname.equals("dbGaP")) {
-				// group by dbGaP project
-				for (Element attribute : XMLUtils.getChildrenByName(attributes,
-						"Attribute")) {
-					if (attribute.attributeValue("attribute_name").equals(
-							"gap_accession")) {
-						groupids.add(attribute.getText());
-					}
-				}
-			} else if (dbname.equals("EST") || dbname.equals("GSS")) {
-				// EST == Expressed Sequence Tag
-				// GSS == Genome Survey Sequence
-				// group by owner
-//
-//				Element owner = XMLUtils.getChildByName(root, "Owner");
-//				Element name = XMLUtils.getChildByName(owner, "Name");
-//				if (name != null) {
-//					String ownername = name.getText();
-//					// clean ownername
-//					ownername = ownername.toLowerCase();
-//					ownername = ownername.trim();
-//					String cleanname = "";
-//					for (int j = 0; j < ownername.length(); j++) {
-//						String c = ownername.substring(j, j + 1);
-//						if (c.matches("[a-z0-9]")) {
-//							cleanname += c;
-//						}
-//					}
-//					groupids.add(cleanname);
-//				}
-				
-//				// 		This doesnt work so well by owner, so dont bother.
-//				//		May need to group samples from the same owner in a post-hoc manner?
-				groupids.add(sampleid);
-			} else {
-				// could group by others, but some of them are very big
-			}
-		}
-		return groupids;
-	}
 
 	public Map<String, Collection<File>> getGroupings()
 			throws DocumentException, SQLException {
-				
-		/*
-		 *  This is the serial version of this code 
-		 */
-		/*
-		for (int i = 0; i < maxident; i = i + 1) {
-			File xmlFile = getFileByIdent(i);
-
-			Collection<String> groupids = getGroupIds(i);
-			
-			for (String groupid : groupids) {
-				Collection<File> group;
-				if (groupings.containsKey(groupid)) {
-					group = groupings.get(groupid);
-				} else {
-					group = new TreeSet<File>();
-					groupings.put(groupid, group);
-				}
-				group.add(xmlFile);
-			}
-		}
-		*/
-
-		/*
-		 *  This is the parallel version of this code 
-		 */
+	    
 		class GroupIDsTask implements Runnable {
-			final int ident;
-			GroupIDsTask(int ident){
+			private final int ident;
+			private final Map<String, Collection<File>> groupings;
+		    private Logger log = LoggerFactory.getLogger(getClass());
+		    
+			GroupIDsTask(int ident, Map<String, Collection<File>> groupings){
 				this.ident = ident;
+				this.groupings = groupings;
 			}
+
+		    public Collection<String> getGroupIds(File xmlFile)
+		            throws DocumentException {
+
+		        log.info("Trying " + xmlFile);
+		        Document xml = XMLUtils.getDocument(xmlFile);
+		        
+		        Collection<String> groupids = new ArrayList<String>();
+		        Element root = xml.getRootElement();
+		        Element ids = XMLUtils.getChildByName(root, "Ids");
+		        Element attributes = XMLUtils.getChildByName(root, "Attributes");
+		        for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
+		            String dbname = id.attributeValue("db");
+		            String sampleid = id.getText();
+		            if (dbname.equals("SRA")) {
+		                // group by sra study
+		                log.debug("Getting studies of SRA sample " + sampleid);
+		                Collection<String> studyids = ENAUtils
+		                        .getStudiesForSample(sampleid);
+		                if (studyids != null) {
+		                    groupids.addAll(studyids);
+		                }
+		            } else if (dbname.equals("dbGaP")) {
+		                // group by dbGaP project
+		                for (Element attribute : XMLUtils.getChildrenByName(attributes,
+		                        "Attribute")) {
+		                    if (attribute.attributeValue("attribute_name").equals(
+		                            "gap_accession")) {
+		                        groupids.add(attribute.getText());
+		                    }
+		                }
+		            } else if (dbname.equals("EST") || dbname.equals("GSS")) {
+		                // EST == Expressed Sequence Tag
+		                // GSS == Genome Survey Sequence
+		                // group by owner
+		//
+//		              Element owner = XMLUtils.getChildByName(root, "Owner");
+//		              Element name = XMLUtils.getChildByName(owner, "Name");
+//		              if (name != null) {
+//		                  String ownername = name.getText();
+//		                  // clean ownername
+//		                  ownername = ownername.toLowerCase();
+//		                  ownername = ownername.trim();
+//		                  String cleanname = "";
+//		                  for (int j = 0; j < ownername.length(); j++) {
+//		                      String c = ownername.substring(j, j + 1);
+//		                      if (c.matches("[a-z0-9]")) {
+//		                          cleanname += c;
+//		                      }
+//		                  }
+//		                  groupids.add(cleanname);
+//		              }
+		                
+//		              //      This doesnt work so well by owner, so dont bother.
+//		              //      May need to group samples from the same owner in a post-hoc manner?
+		                groupids.add(sampleid);
+		            } else {
+		                // could group by others, but some of them are very big
+		            }
+		        }
+		        return groupids;
+		    }
+			
 			
 			public void run(){
 				
-				File xmlFile = getFileByIdent(ident);
+				File xmlFile = getFileByIdent(this.ident);
 
-				Collection<String> groupids = null;
 				
-				if (xmlFile.exists()) {				
+				if (xmlFile.exists()) {		
+	                Collection<String> groupids = null;		
 					 try {
-						groupids =  getGroupIds(this.ident);
+						groupids =  getGroupIds(getFileByIdent(this.ident));
 					} catch (DocumentException e) {
 						e.printStackTrace();
-					} catch (SQLException e) {
-						e.printStackTrace();
+						return;
 					}
-				}
-				
-				for (String groupid : groupids) {
-					Collection<File> group;
-					if (groupings.containsKey(groupid)) {
-						group = groupings.get(groupid);
-					} else {
-						group = new ConcurrentSkipListSet<File>();
-						groupings.put(groupid, group);
-					}
-					group.add(xmlFile);
+					
+	                for (String groupid : groupids) {
+	                    Collection<File> group;
+	                    if (this.groupings.containsKey(groupid)) {
+	                        group = this.groupings.get(groupid);
+	                    } else {
+	                        group = new ConcurrentSkipListSet<File>();
+	                        this.groupings.put(groupid, group);
+	                    }
+	                    group.add(xmlFile);
+	                }
 				}
 			}
 		};
 		
 		int nocpus = Runtime.getRuntime().availableProcessors();
+		log.info("Using "+nocpus+" threads");
 		ExecutorService pool = Executors.newFixedThreadPool(nocpus);
-		for (int i = 0; i < maxident; i = i + 1) {
-			pool.submit(new GroupIDsTask(i));
+		for (int i = 0; i < maxident; i ++) {
+			pool.submit(new GroupIDsTask(i, groupings));
 		}
 		log.info("All tasks submitted");
 		
-		try {
-			pool.shutdown();
-			pool.awaitTermination(60, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
+	    synchronized(pool){
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                log.error("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
+            }
+	    }
 		return groupings;
 
 	}
@@ -227,8 +188,6 @@ public class NCBISampleTabCombiner {
 	public void combine() {
 
 		Map<String, Collection<File>> groups;
-		
-		//cacheserver = new PersistentLookup();
 		
 		try {
 			log.info("Getting groupings...");
@@ -284,19 +243,6 @@ public class NCBISampleTabCombiner {
 					e2.printStackTrace();
 					continue;
 				}
-
-				// File outfile = new File(outsubdir, xmlfile.getName().replace(
-				// ".xml", ".ncbi.sampletab.txt"));
-				// SampleTabWriter writer;
-				// try {
-				// writer = new SampleTabWriter(new FileWriter(outfile));
-				// writer.write(sampledata);
-				// writer.close();
-				// } catch (IOException e3) {
-				// log.warn("Unable to write " + outfile);
-				// e3.printStackTrace();
-				// continue;
-				// }
 
 				// add nodes from here to parent
 				for (SCDNode node : sampledata.scd.getRootNodes()) {
@@ -410,6 +356,7 @@ public class NCBISampleTabCombiner {
 					}
 				}
 
+				
 				sampleout.msi.databaseID.addAll(sampledata.msi.databaseID);
 				sampleout.msi.databaseName.addAll(sampledata.msi.databaseName);
 				sampleout.msi.databaseURI.addAll(sampledata.msi.databaseURI);
@@ -419,6 +366,8 @@ public class NCBISampleTabCombiner {
 				sampleout.msi.publicationPubMedID
 						.addAll(sampledata.msi.publicationPubMedID);
 
+                sampleout.msi.submissionDescription = sampledata.msi.submissionDescription;
+                sampleout.msi.submissionTitle = sampledata.msi.submissionTitle;
 				if (sampledata.msi.submissionReleaseDate != null) {
 					if (sampleout.msi.submissionReleaseDate == null
 							|| sampleout.msi.submissionReleaseDate.equals("")) {

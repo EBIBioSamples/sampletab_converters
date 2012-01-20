@@ -66,45 +66,45 @@ public class SampleTabToLoad {
 		sampledata.scd.addNode(group);
 		
 		//Copy msi information on to the group node
-//		group.addAttribute(new NamedAttribute("Submission Title", sampledata.msi.submissionTitle));
-//		group.addAttribute(new NamedAttribute("Submission Description", sampledata.msi.submissionDescription));
-//		group.addAttribute(new NamedAttribute("Submission Identifier", sampledata.msi.submissionIdentifier));
-//		group.addAttribute(new NamedAttribute("Submission Release Date", sampledata.msi.getSubmissionReleaseDateAsString()));
-//		group.addAttribute(new NamedAttribute("Submission Update Date", sampledata.msi.getSubmissionUpdateDateAsString()));
-//		group.addAttribute(new NamedAttribute("Submission Version", sampledata.msi.submissionVersion));
-//		group.addAttribute(new NamedAttribute("Submission Reference Layer", sampledata.msi.submissionReferenceLayer.toString()));
-//        //Have to do this for each group of tags (Person *, Database *, etc)
-//        //and complete each individual in each group before starting the next one
-//        //E.g. Person Last Name, Person First Name, Person Last Name, Person First Name
-//        //not E.g. Person Last Name, Person Last Name, Person First Name, Person First Name
-//		for (int i = 0 ; i < sampledata.msi.personLastName.size(); i++){
-//			group.addAttribute(new NamedAttribute("Person First Name", sampledata.msi.personFirstName.get(i)));
-//			group.addAttribute(new NamedAttribute("Person Mid Initials", sampledata.msi.personInitials.get(i)));
-//			group.addAttribute(new NamedAttribute("Person Last Name", sampledata.msi.personLastName.get(i)));
-//			group.addAttribute(new NamedAttribute("Person Email", sampledata.msi.personEmail.get(i)));
-//			group.addAttribute(new NamedAttribute("Person Role", sampledata.msi.personRole.get(i)));
-//		}
-//		for (int i = 0 ; i < sampledata.msi.organizationName.size(); i++){
-//			group.addAttribute(new NamedAttribute("Organization Name", sampledata.msi.organizationName.get(i)));
-//			group.addAttribute(new NamedAttribute("Organization Address", sampledata.msi.organizationAddress.get(i)));
-//			group.addAttribute(new NamedAttribute("Organization URI", sampledata.msi.organizationURI.get(i)));
-//			group.addAttribute(new NamedAttribute("Organization Email", sampledata.msi.organizationEmail.get(i)));
-//			group.addAttribute(new NamedAttribute("Organization Role", sampledata.msi.organizationRole.get(i)));
-//		}
-//		for (int i = 0 ; i < sampledata.msi.publicationDOI.size(); i++){
-//			group.addAttribute(new NamedAttribute("Publication DOI", sampledata.msi.publicationDOI.get(i)));
-//			group.addAttribute(new NamedAttribute("Publication PubMed ID", sampledata.msi.publicationPubMedID.get(i)));
-//		}
-//		for (int i = 0 ; i < sampledata.msi.termSourceName.size(); i++){
-//			group.addAttribute(new NamedAttribute("Term Source Name", sampledata.msi.termSourceName.get(i)));
-//			group.addAttribute(new NamedAttribute("Term Source URI", sampledata.msi.termSourceURI.get(i)));
-//			group.addAttribute(new NamedAttribute("Term Source Version", sampledata.msi.termSourceVersion.get(i)));
-//		}
-//		for (int i = 0 ; i < sampledata.msi.databaseName.size(); i++){
-//			group.addAttribute(new NamedAttribute("Database Name", sampledata.msi.databaseName.get(i)));
-//			group.addAttribute(new NamedAttribute("Database URI", sampledata.msi.databaseURI.get(i)));
-//			group.addAttribute(new NamedAttribute("Database ID", sampledata.msi.databaseID.get(i)));
-//		}
+		group.addAttribute(new NamedAttribute("Submission Title", sampledata.msi.submissionTitle));
+		group.addAttribute(new NamedAttribute("Submission Description", sampledata.msi.submissionDescription));
+		group.addAttribute(new NamedAttribute("Submission Identifier", sampledata.msi.submissionIdentifier));
+		group.addAttribute(new NamedAttribute("Submission Release Date", sampledata.msi.getSubmissionReleaseDateAsString()));
+		group.addAttribute(new NamedAttribute("Submission Update Date", sampledata.msi.getSubmissionUpdateDateAsString()));
+		group.addAttribute(new NamedAttribute("Submission Version", sampledata.msi.submissionVersion));
+		group.addAttribute(new NamedAttribute("Submission Reference Layer", sampledata.msi.submissionReferenceLayer.toString()));
+        //Have to do this for each group of tags (Person *, Database *, etc)
+        //and complete each individual in each group before starting the next one
+        //E.g. Person Last Name, Person First Name, Person Last Name, Person First Name
+        //not E.g. Person Last Name, Person Last Name, Person First Name, Person First Name
+		for (int i = 0 ; i < sampledata.msi.personLastName.size(); i++){
+			group.addAttribute(new NamedAttribute("Person First Name", sampledata.msi.personFirstName.get(i)));
+			group.addAttribute(new NamedAttribute("Person Mid Initials", sampledata.msi.personInitials.get(i)));
+			group.addAttribute(new NamedAttribute("Person Last Name", sampledata.msi.personLastName.get(i)));
+			group.addAttribute(new NamedAttribute("Person Email", sampledata.msi.personEmail.get(i)));
+			group.addAttribute(new NamedAttribute("Person Role", sampledata.msi.personRole.get(i)));
+		}
+		for (int i = 0 ; i < sampledata.msi.organizationName.size(); i++){
+			group.addAttribute(new NamedAttribute("Organization Name", sampledata.msi.organizationName.get(i)));
+			group.addAttribute(new NamedAttribute("Organization Address", sampledata.msi.organizationAddress.get(i)));
+			group.addAttribute(new NamedAttribute("Organization URI", sampledata.msi.organizationURI.get(i)));
+			group.addAttribute(new NamedAttribute("Organization Email", sampledata.msi.organizationEmail.get(i)));
+			group.addAttribute(new NamedAttribute("Organization Role", sampledata.msi.organizationRole.get(i)));
+		}
+		for (int i = 0 ; i < sampledata.msi.publicationDOI.size(); i++){
+			group.addAttribute(new NamedAttribute("Publication DOI", sampledata.msi.publicationDOI.get(i)));
+			group.addAttribute(new NamedAttribute("Publication PubMed ID", sampledata.msi.publicationPubMedID.get(i)));
+		}
+		for (int i = 0 ; i < sampledata.msi.termSourceName.size(); i++){
+			group.addAttribute(new NamedAttribute("Term Source Name", sampledata.msi.termSourceName.get(i)));
+			group.addAttribute(new NamedAttribute("Term Source URI", sampledata.msi.termSourceURI.get(i)));
+			group.addAttribute(new NamedAttribute("Term Source Version", sampledata.msi.termSourceVersion.get(i)));
+		}
+		for (int i = 0 ; i < sampledata.msi.databaseName.size(); i++){
+			group.addAttribute(new NamedAttribute("Database Name", sampledata.msi.databaseName.get(i)));
+			group.addAttribute(new NamedAttribute("Database URI", sampledata.msi.databaseURI.get(i)));
+			group.addAttribute(new NamedAttribute("Database ID", sampledata.msi.databaseID.get(i)));
+		}
 		
 		return sampledata;
 	}

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -15,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -31,8 +29,6 @@ public class NCBIBiosampleToSampleTab {
 	private static final NCBIBiosampleToSampleTab instance = new NCBIBiosampleToSampleTab();
 	// logging
 	private Logger log = LoggerFactory.getLogger(getClass());
-
-	private static SAXReader reader = new SAXReader();
 
 	private NCBIBiosampleToSampleTab() {
 		// private constructor to prevent accidental multiple initialisations
@@ -69,19 +65,13 @@ public class NCBIBiosampleToSampleTab {
 	public SampleData convert(String ncbiBiosampleXMLFilename)
 			throws MalformedURLException, ParseException, DocumentException,
 			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
-		return convert(new URL(ncbiBiosampleXMLFilename));
-	}
-
-	public SampleData convert(URL ncbiBiosampleXMLURL) throws ParseException,
-			DocumentException,
-			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
-		return convert(reader.read(ncbiBiosampleXMLURL));
+		return convert(new File(ncbiBiosampleXMLFilename));
 	}
 
 	public SampleData convert(File ncbiBiosampleXMLFile)
 			throws DocumentException, ParseException,
 			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
-		return convert(reader.read(ncbiBiosampleXMLFile));
+		return convert(XMLUtils.getDocument(ncbiBiosampleXMLFile));
 	}
 
 	public SampleData convert(Document ncbiBiosampleXML) throws ParseException,
