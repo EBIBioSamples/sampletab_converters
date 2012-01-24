@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -125,7 +127,8 @@ public class PRIDEcron {
             System.exit(1);
             return;
         }
-        Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
+        //Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
+        Pattern regex = Pattern.compile("PRIDE_Exp_IdentOnly_Ac_([0-9]+)\\.xml\\.gz");
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
@@ -137,8 +140,11 @@ public class PRIDEcron {
             if (matcher.matches()) {
                 String accession = matcher.group(1);
                 File outfile = getTrimFile(outdir, accession);
-                // do not overwrite existing files
-                if (!outfile.exists()) {
+                // do not overwrite existing files unless newer
+                Calendar ftptime = file.getTimestamp();
+                Calendar outfiletime = new GregorianCalendar();
+                outfiletime.setTimeInMillis(outfile.lastModified());
+                if (!outfile.exists() || ftptime.after(outfiletime)) {
                     pool.execute(new PRIDEXMLFTPDownload(accession, outfile, false));
                 }
             }

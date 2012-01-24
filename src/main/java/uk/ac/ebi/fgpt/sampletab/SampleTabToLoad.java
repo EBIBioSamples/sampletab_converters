@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.sql.SQLException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -19,6 +20,7 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.NamedAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
@@ -59,20 +61,27 @@ public class SampleTabToLoad {
 	    
 		//All samples must be in a group
 		//so create a new group and add all samples to it
+	    //TODO check there is not an existing group first...
 		GroupNode group = new GroupNode("Other Group");
-		for (SCDNode sample : sampledata.scd.getNodes("sample")){
-				group.addChildNode(sample);
+		for (SCDNode sample : sampledata.scd.getNodes(SampleNode.class)){
+		    log.info("Adding sample "+sample.getNodeName()+" to group "+group.getNodeName());
+			group.addSample(sample);
 		}
+		
 		sampledata.scd.addNode(group);
+        log.info("Added group node");
+        //also need to accession the new node
+        
+        
 		
 		//Copy msi information on to the group node
-		group.addAttribute(new NamedAttribute("Submission Title", sampledata.msi.submissionTitle));
+//		group.addAttribute(new NamedAttribute("Submission Title", sampledata.msi.submissionTitle));
 		group.addAttribute(new NamedAttribute("Submission Description", sampledata.msi.submissionDescription));
-		group.addAttribute(new NamedAttribute("Submission Identifier", sampledata.msi.submissionIdentifier));
-		group.addAttribute(new NamedAttribute("Submission Release Date", sampledata.msi.getSubmissionReleaseDateAsString()));
-		group.addAttribute(new NamedAttribute("Submission Update Date", sampledata.msi.getSubmissionUpdateDateAsString()));
-		group.addAttribute(new NamedAttribute("Submission Version", sampledata.msi.submissionVersion));
-		group.addAttribute(new NamedAttribute("Submission Reference Layer", sampledata.msi.submissionReferenceLayer.toString()));
+//		group.addAttribute(new NamedAttribute("Submission Identifier", sampledata.msi.submissionIdentifier));
+//		group.addAttribute(new NamedAttribute("Submission Release Date", sampledata.msi.getSubmissionReleaseDateAsString()));
+//		group.addAttribute(new NamedAttribute("Submission Update Date", sampledata.msi.getSubmissionUpdateDateAsString()));
+//		group.addAttribute(new NamedAttribute("Submission Version", sampledata.msi.submissionVersion));
+//		group.addAttribute(new NamedAttribute("Submission Reference Layer", sampledata.msi.submissionReferenceLayer.toString()));
         //Have to do this for each group of tags (Person *, Database *, etc)
         //and complete each individual in each group before starting the next one
         //E.g. Person Last Name, Person First Name, Person Last Name, Person First Name
@@ -127,6 +136,31 @@ public class SampleTabToLoad {
 		option.setRequired(true);
 		options.addOption(option);
 
+		//need information to connect to database to accession new groups
+        option = new Option("n", "hostname", true,
+                "hostname of accesion MySQL database");
+        option.setRequired(true);
+        options.addOption(option);
+
+        option = new Option("t", "port", true,
+                "port of accesion MySQL database");
+        options.addOption(option);
+
+        option = new Option("d", "database", true,
+                "database of accesion MySQL database");
+        option.setRequired(true);
+        options.addOption(option);
+
+        option = new Option("u", "username", true,
+                "username of accesion MySQL database");
+        //option.setRequired(true);
+        options.addOption(option);
+
+        option = new Option("p", "password", true,
+                "password of accesion MySQL database");
+        option.setRequired(true);
+        options.addOption(option);
+
 
 		CommandLineParser parser = new GnuParser();
 		CommandLine line;
@@ -150,9 +184,20 @@ public class SampleTabToLoad {
 
 		String inputFilename = line.getOptionValue("input");
 		String outputFilename = line.getOptionValue("output");
+		//this is for the accessioner database
+        String hostname = line.getOptionValue("hostname");
+        int port = 3306;
+        if (line.hasOption("port")) {
+            port = new Integer(line.getOptionValue("port"));
+        }
+        String database = line.getOptionValue("database");
+        String username = line.getOptionValue("username");
+        String password = line.getOptionValue("password");
+        
 		SampleTabToLoad toloader = new SampleTabToLoad();
-		
 
+        
+        //do initial parsing and conversion
 		SampleData st = null;
 		try {
 			st = toloader.convert(inputFilename);
@@ -167,7 +212,42 @@ public class SampleTabToLoad {
 			System.exit(122);
 			return;
 		} 
+		
+		//connect to accessioning database
+        SampleTabAccessioner accessioner = new SampleTabAccessioner();
+        try {
+            accessioner.makeConnection(hostname, port, database, username,
+                    password);
+        } catch (ClassNotFoundException e) {
+            System.err.println("ClassNotFoundException connecting to "
+                    + hostname + ":" + port + "/" + database);
+            e.printStackTrace();
+            System.exit(111);
+            return;
+        } catch (SQLException e) {
+            System.err.println("SQLException connecting to " + hostname + ":"
+                    + port + "/" + database);
+            e.printStackTrace();
+            System.exit(112);
+            return;
+        }
+        
+		//assign accession to any created groups 
+        try {
+            st = accessioner.convert(st);
+        } catch (ParseException e) {
+            System.err.println("ParseException converting " + inputFilename);
+            e.printStackTrace();
+            System.exit(121);
+            return;
+        } catch (SQLException e) {
+            System.err.println("SQLException converting " + inputFilename);
+            e.printStackTrace();
+            System.exit(123);
+            return;
+        }
 
+        //write back out
 		FileWriter out = null;
 		try {
 			out = new FileWriter(outputFilename);

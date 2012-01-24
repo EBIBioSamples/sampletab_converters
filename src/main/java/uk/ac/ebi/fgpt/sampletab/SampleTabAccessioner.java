@@ -22,6 +22,7 @@ import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
@@ -122,6 +123,33 @@ public class SampleTabAccessioner {
 				sample.sampleAccession = accession;
 			}
 		}
+        
+        Collection<GroupNode> groups = sampleIn.scd
+                .getNodes(GroupNode.class);
+
+        getLog().debug("got "+groups.size()+" groups.");
+        for (GroupNode group : groups) {
+            if (group.groupAccession == null) {
+                name = group.getNodeName();
+                statement = connect
+                        .prepareStatement("INSERT IGNORE INTO sample_groups (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
+                statement.setString(1, name);
+                statement.setString(2, submission);
+                statement.executeUpdate();
+
+                statement = connect
+                        .prepareStatement("SELECT accession FROM sample_groups WHERE user_accession = ? AND submission_accession = ?");
+                statement.setString(1, name);
+                statement.setString(2, submission);
+                results = statement.executeQuery();
+                results.first();
+                accessionID = results.getInt(1);
+                accession = "SAMEG" + accessionID;
+                
+                getLog().debug("Assigning "+accession+" to "+name);
+                group.groupAccession = accession;
+            }
+        }
 		return sampleIn;
 	}
 
