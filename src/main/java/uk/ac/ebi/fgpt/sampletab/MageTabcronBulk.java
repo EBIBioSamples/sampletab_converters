@@ -32,7 +32,7 @@ public class MageTabcronBulk {
         bashcommand.add(command);
         
         ProcessBuilder pb = new ProcessBuilder();
-        //pb.command(command); 
+        //pb.command(bashcommand); 
         pb.command(command.split(" "));
 
         Process p;
@@ -66,12 +66,14 @@ public class MageTabcronBulk {
 				File sampletab = new File(subdir, "sampletab.txt");
 				File sampletabtoload = new File(subdir, "sampletab.toload.txt");
 				File age = new File(subdir, "age");
+				
 
 				if (!idffile.exists()){
 					continue;
 				}
 				
 				if (!sampletabpre.exists()){
+					log.info("Processing "+sampletabpre);
 					//convert idf/sdrf to sampletab.pre.txt 
 					File script = new File(scriptdir, "MageTabToSampleTab.sh");
 			        String bashcom = script+" "+idffile+" "+sampletabpre;
