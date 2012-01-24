@@ -69,6 +69,48 @@ public class MageTabcron {
 		}
 
 	}
+	
+	private class CurlDownload implements Runnable {
+		private final String url;
+		private final String filename;
+		
+        public CurlDownload(String url, String filename){
+            this.url = url;
+            this.filename = filename;
+        }
+        
+        public void run(){
+	        ProcessBuilder pb = new ProcessBuilder();
+	        Process p;
+	        String bashcom;
+	        ArrayList<String> command;
+	        
+	        bashcom = "curl -z "+filename+" -o "+filename+" "+url;
+	        log.debug(bashcom);
+
+            command = new ArrayList<String>();
+            command.add("/bin/bash");
+            command.add("-c");
+            command.add(bashcom);
+            pb.command(command);
+            
+            try {
+				p = pb.start();
+	            synchronized (p) {
+	                p.waitFor();
+	            }
+			} catch (IOException e) {
+				System.err.println("Error running curl");
+				e.printStackTrace();
+				return;
+			} catch (InterruptedException e) {
+				System.err.println("Error running curl");
+				e.printStackTrace();
+				return;
+			}
+        	
+        }
+	}
 
 	public void run(File outdir) {
 		FTPFile[] subdirs = null;
@@ -89,8 +131,10 @@ public class MageTabcron {
 			e.printStackTrace();
 		}
 
-		
-		
+
+        int nothreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads*2);
+        
 		if (subdirs != null) {
 			//convert the subdir FTPFile objects to string names
 			//otherwise the time it takes to process GEOD causes problems.
@@ -132,52 +176,8 @@ public class MageTabcron {
 						//rather than using the java FTP libraries - which seem to
 						//break quite often - use curl. Sacrifices multiplatformness
 						//for reliability.
-						
-
-				        ProcessBuilder pb = new ProcessBuilder();
-				        Process pidf;
-				        Process psdrf;
-				        String bashcom;
-				        ArrayList<String> command;
-				        
-				        
-				        bashcom = "curl -z "+outidf+" -o "+outidf+" ftp://ftp.ebi.ac.uk"+idfpath;
-				        log.debug(bashcom);
-
-			            command = new ArrayList<String>();
-			            command.add("/bin/bash");
-			            command.add("-c");
-			            command.add(bashcom);
-			            pb.command(command);
-				        
-				        bashcom = "curl -z "+outsdrf+" -o "+outsdrf+" ftp://ftp.ebi.ac.uk"+sdrfpath;
-				        log.debug(bashcom);
-
-			            command = new ArrayList<String>();
-			            command.add("/bin/bash");
-			            command.add("-c");
-			            command.add(bashcom);
-			            pb.command(command);
-			            
-			            try {
-							pidf = pb.start();
-				            synchronized (pidf) {
-				                pidf.waitFor();
-				            }
-			            	psdrf = pb.start();
-				            synchronized (psdrf) {
-				            	psdrf.waitFor();
-				            }
-						} catch (IOException e) {
-							System.err.println("Error running curl");
-							e.printStackTrace();
-							System.exit(1);
-							return;
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-							System.exit(1);
-							return;
-						}
+	                    pool.execute(new CurlDownload("fttp://ftp.ebi.ac.uk"+idfpath, outidf.getAbsolutePath()));
+	                    pool.execute(new CurlDownload("fttp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath()));
 					}
 				}
 				//restart the connection after each subdir
@@ -192,7 +192,21 @@ public class MageTabcron {
 				}
 			}
 		}
+		
+        // run the pool and then close it afterwards
+        // must synchronize on the pool object
+        synchronized (pool) {
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                log.error("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
+            }
+        }
 
+        
 		// TODO hide files that have disappeared from the FTP site.
 	}
 
