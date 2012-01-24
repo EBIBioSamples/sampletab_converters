@@ -72,7 +72,8 @@ public class MageTabcronBulk {
 				
 				if (!sampletabpre.exists()){
 					//convert idf/sdrf to sampletab.pre.txt 
-			        String bashcom = scriptdir+"MageTabToSampleTab.sh "+idffile+" "+sampletabpre;
+					File script = new File(scriptdir, "MageTabToSampleTab.sh");
+			        String bashcom = script+" "+idffile+" "+sampletabpre;
 			        if (! doCommand(bashcom))
 		        		return;
 				}
@@ -80,7 +81,8 @@ public class MageTabcronBulk {
 				//accession sampletab.pre.txt to sampletab.txt
 				if (!sampletab.exists()){
 					//TODO hardcoding bad
-			        String bashcom = scriptdir.getAbsolutePath()+"SampleTabAccessioner.sh "
+					File script = new File(scriptdir, "SampleTabAccessioner.sh");
+			        String bashcom = script
 							+ " --input " + sampletabpre
 							+ " --output " + sampletab
 							+ " --hostname mysql-ae-autosubs-test.ebi.ac.uk" 
@@ -94,7 +96,8 @@ public class MageTabcronBulk {
 				
 				//preprocess to load
 				if (!sampletabtoload.exists()){
-			        String bashcom = scriptdir.getAbsolutePath()+"SampleTabToLoad.sh "
+					File script = new File(scriptdir, "SampleTabToLoad.sh");
+			        String bashcom = script
 							+ " --input " + sampletab
 							+ " --output " + sampletabtoload
 							+ " --hostname mysql-ae-autosubs-test.ebi.ac.uk" 
@@ -108,7 +111,8 @@ public class MageTabcronBulk {
 				
 				//convert to age
 				if (!age.exists()){
-			        String bashcom = scriptdir.getAbsolutePath()+"SampleTab-to-AGETAB.sh "
+					File script = new File(scriptdir, "SampleTab-to-AGETAB.sh");
+			        String bashcom = script
 			        		+ " -o "+age
 			        		+ " "+sampletabtoload;
 			        if (! doCommand(bashcom))
