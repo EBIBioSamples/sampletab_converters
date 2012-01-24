@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -88,9 +89,17 @@ public class MageTabcron {
 			e.printStackTrace();
 		}
 
+		
+		
 		if (subdirs != null) {
+			//convert the subdir FTPFile objects to string names
+			//otherwise the time it takes to process GEOD causes problems.
+			Collection<String> subdirstrs = new ArrayList<String>();
 			for (FTPFile subdir : subdirs) {
-				String subdirpath = root + subdir.getName() + "/";
+				subdirstrs.add(subdir.getName());
+			}
+			for (String subdirstr : subdirstrs) {
+				String subdirpath = root + subdirstrs + "/";
 				log.info("working on " + subdirpath);
 
 				FTPFile[] subsubdirs = null;
@@ -170,6 +179,16 @@ public class MageTabcron {
 							return;
 						}
 					}
+				}
+				//restart the connection after each subdir
+				//otherwise we hit some sort of limit?
+				try {
+					ftp = FTPUtils.connect("ftp.ebi.ac.uk");
+				} catch (IOException e) {
+					System.err.println("Unable to connect to FTP");
+					e.printStackTrace();
+					System.exit(1);
+					return;
 				}
 			}
 		}
