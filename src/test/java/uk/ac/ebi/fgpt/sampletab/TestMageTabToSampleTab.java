@@ -51,7 +51,7 @@ public class TestMageTabToSampleTab extends TestCase {
 		} catch (ParseException e) {
             e.printStackTrace();
             fail();
-		}
+		} 
     }
 
 }

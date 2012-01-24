@@ -31,146 +31,148 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttrib
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class MageTabToSampleTab {
-	
-	//singlton instance
+
+	// singlton instance
 	private static final MageTabToSampleTab instance = new MageTabToSampleTab();
-	
+
 	public static final MAGETABParser<MAGETABInvestigation> parser = new MAGETABParser<MAGETABInvestigation>();
 
-	private SimpleDateFormat magetabdateformat = new SimpleDateFormat("yyyy-MM-dd");
-	
-    // logging
-    private Logger log = LoggerFactory.getLogger(getClass());
+	private SimpleDateFormat magetabdateformat = new SimpleDateFormat(
+			"yyyy-MM-dd");
 
-	private MageTabToSampleTab(){
-		//private constructor to prevent accidental multiple initialisations
+	// logging
+	private Logger log = LoggerFactory.getLogger(getClass());
+
+	private MageTabToSampleTab() {
+		// private constructor to prevent accidental multiple initialisations
 	}
-	 
-    public static MageTabToSampleTab getInstance() {
-            return instance;
-    }
 
-    public Logger getLog() {
-        return log;
-    }
-	
-	public SampleData convert(String idfFilename) throws IOException,
-			ParseException {
+	public static MageTabToSampleTab getInstance() {
+		return instance;
+	}
+
+	public Logger getLog() {
+		return log;
+	}
+
+	public SampleData convert(String idfFilename) throws IOException, ParseException {
 		return convert(new File(idfFilename));
 	}
 
-	public SampleData convert(File idfFile) throws IOException,
-			ParseException {
+	public SampleData convert(File idfFile) throws IOException, ParseException {
 		return convert(parser.parse(idfFile));
 	}
 
-	public SampleData convert(URL idfURL) throws IOException,
-			ParseException {
+	public SampleData convert(URL idfURL) throws IOException, ParseException {
 		return convert(parser.parse(idfURL));
 	}
 
-	public SampleData convert(InputStream dataIn) throws ParseException {
+	public SampleData convert(InputStream dataIn)
+			throws ParseException {
 		return convert(parser.parse(dataIn));
 	}
-		
-	public SampleData convert(MAGETABInvestigation mt) throws ParseException{
-		
+
+	public SampleData convert(MAGETABInvestigation mt)
+			throws ParseException {
+
 		SampleData st = new SampleData();
 		st.msi.submissionTitle = mt.IDF.investigationTitle;
 		st.msi.submissionDescription = mt.IDF.experimentDescription;
-		if (mt.IDF.publicReleaseDate != null){
-			try {
-				st.msi.submissionReleaseDate = magetabdateformat.parse(mt.IDF.publicReleaseDate);
-			} catch (java.text.ParseException e) {
-				//re-throw as an ae2 error
-				throw new ParseException("unable to read "+mt.IDF.publicReleaseDate);
+		if (mt.IDF.publicReleaseDate != null && !mt.IDF.publicReleaseDate.trim().equals("")) {
+			try{
+			st.msi.submissionReleaseDate = magetabdateformat
+					.parse(mt.IDF.publicReleaseDate.trim());
+			} catch (java.text.ParseException e){
+				log.error("Unable to parse release date "+mt.IDF.publicReleaseDate);
 			}
 		}
-		//TODO update date
-		st.msi.submissionIdentifier = "GA"+mt.IDF.accession;
+		// TODO update date
+		st.msi.submissionIdentifier = "GA" + mt.IDF.accession;
 		st.msi.submissionReferenceLayer = false;
-		
+
 		st.msi.publicationDOI = mt.IDF.publicationDOI;
 		st.msi.publicationPubMedID = mt.IDF.pubMedId;
-		
+
 		st.msi.personLastName = mt.IDF.personLastName;
 		st.msi.personInitials = mt.IDF.personMidInitials;
 		st.msi.personFirstName = mt.IDF.personFirstName;
 		st.msi.personEmail = mt.IDF.personEmail;
-		//TODO fix minor spec mismatch when there are multiple roles for the same person
+		// TODO fix minor spec mismatch when there are multiple roles for the
+		// same person
 		st.msi.personRole = mt.IDF.personRoles;
-		
-		//AE doesn't really have organisations, but does have affiliations
-		//TODO check and remove duplicates
+
+		// AE doesn't really have organisations, but does have affiliations
+		// TODO check and remove duplicates
 		st.msi.organizationName = mt.IDF.personAffiliation;
 		st.msi.organizationAddress = mt.IDF.personAddress;
-		//st.msi.organizationURI/Email/Role can't be mapped from ArrayExpress
-		
+		// st.msi.organizationURI/Email/Role can't be mapped from ArrayExpress
+
 		st.msi.databaseName.add("ArrayExpress");
 		st.msi.databaseID.add(mt.IDF.accession);
-		st.msi.databaseURI.add("http://www.ebi.ac.uk/arrayexpress/experiments/"+mt.IDF.accession);
-		
-		//TODO check and remove duplicates
+		st.msi.databaseURI.add("http://www.ebi.ac.uk/arrayexpress/experiments/"
+				+ mt.IDF.accession);
+
+		// TODO check and remove duplicates
 		st.msi.termSourceName = mt.IDF.termSourceName;
 		st.msi.termSourceURI = mt.IDF.termSourceFile;
 		st.msi.termSourceVersion = mt.IDF.termSourceVersion;
-		
-		//TODO add samples...
-		//get the nodes that have relevant sample information
-		//e.g. characteristics 
+
+		// TODO add samples...
+		// get the nodes that have relevant sample information
+		// e.g. characteristics
 		Collection<SDRFNode> samplenodes = new ArrayList<SDRFNode>();
-		for (SDRFNode node : mt.SDRF.getNodes("sourcename")){
+		for (SDRFNode node : mt.SDRF.getNodes("sourcename")) {
 			samplenodes.add(node);
 		}
-		for (SDRFNode node : mt.SDRF.getNodes("samplename")){
+		for (SDRFNode node : mt.SDRF.getNodes("samplename")) {
 			samplenodes.add(node);
 		}
-		for (SDRFNode node : mt.SDRF.getNodes("extractname")){
+		for (SDRFNode node : mt.SDRF.getNodes("extractname")) {
 			samplenodes.add(node);
 		}
-		for (SDRFNode node : mt.SDRF.getNodes("labeledextractname")){
+		for (SDRFNode node : mt.SDRF.getNodes("labeledextractname")) {
 			samplenodes.add(node);
 		}
-		
-		//now get nodes that are the topmost nodes
+
+		// now get nodes that are the topmost nodes
 		ArrayList<SDRFNode> topnodes = new ArrayList<SDRFNode>();
-		for (SDRFNode node : samplenodes ){
-			if (node.getParentNodes().size() == 0){
+		for (SDRFNode node : samplenodes) {
+			if (node.getParentNodes().size() == 0) {
 				topnodes.add(node);
 			}
 		}
-		
+
 		getLog().info("Creating node names");
-		//create a sample from each topmost node
-		for(SDRFNode sdrfnode : topnodes ){
-			
+		// create a sample from each topmost node
+		for (SDRFNode sdrfnode : topnodes) {
+
 			SampleNode scdnode = new SampleNode();
 			String name = sdrfnode.getNodeName();
-			getLog().info("processing "+name);
+			getLog().info("processing " + name);
 			scdnode.setNodeName(name);
-			//since some attributes only exist for some sub-classes, need to test 
-			//for instanceof for each of those sub-classes, cast accordingly
-			//and then access the attributes
+			// since some attributes only exist for some sub-classes, need to
+			// test
+			// for instanceof for each of those sub-classes, cast accordingly
+			// and then access the attributes
 			List<CharacteristicsAttribute> characteristics = null;
 			Map<String, String> comments = null;
-			if (sdrfnode instanceof uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode){
-				//horribly long class references due to namespace collision
-				uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode sdrfsamplenode = 
-					(uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode) sdrfnode;
-				scdnode.sampleDescription = sdrfsamplenode.description;	
+			if (sdrfnode instanceof uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode) {
+				// horribly long class references due to namespace collision
+				uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode sdrfsamplenode = (uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode) sdrfnode;
+				scdnode.sampleDescription = sdrfsamplenode.description;
 				characteristics = sdrfsamplenode.characteristics;
 				comments = sdrfsamplenode.comments;
-			} else if (sdrfnode instanceof SourceNode){
+			} else if (sdrfnode instanceof SourceNode) {
 				SourceNode sdrfsourcenode = (SourceNode) sdrfnode;
 				scdnode.sampleDescription = sdrfsourcenode.description;
 				characteristics = sdrfsourcenode.characteristics;
 				comments = sdrfsourcenode.comments;
-			} else if (sdrfnode instanceof ExtractNode){
+			} else if (sdrfnode instanceof ExtractNode) {
 				ExtractNode sdrfextractnode = (ExtractNode) sdrfnode;
 				scdnode.sampleDescription = sdrfextractnode.description;
 				characteristics = sdrfextractnode.characteristics;
 				comments = sdrfextractnode.comments;
-			} else if (sdrfnode instanceof LabeledExtractNode){
+			} else if (sdrfnode instanceof LabeledExtractNode) {
 				LabeledExtractNode sdrflabeledextractnode = (LabeledExtractNode) sdrfnode;
 				scdnode.sampleDescription = sdrflabeledextractnode.description;
 				characteristics = sdrflabeledextractnode.characteristics;
@@ -178,12 +180,13 @@ public class MageTabToSampleTab {
 			}
 
 			getLog().info("got characteristics");
-			if (characteristics != null){
-				for (CharacteristicsAttribute sdrfcharacteristic : characteristics){
+			if (characteristics != null) {
+				for (CharacteristicsAttribute sdrfcharacteristic : characteristics) {
 					CharacteristicAttribute scdcharacteristic = new CharacteristicAttribute();
 					scdcharacteristic.type = sdrfcharacteristic.type;
-					scdcharacteristic.setAttributeValue(sdrfcharacteristic.getAttributeValue());
-					if (sdrfcharacteristic.unit != null){
+					scdcharacteristic.setAttributeValue(sdrfcharacteristic
+							.getAttributeValue());
+					if (sdrfcharacteristic.unit != null) {
 						scdcharacteristic.unit = new UnitAttribute();
 						scdcharacteristic.unit.termSourceREF = sdrfcharacteristic.unit.termSourceREF;
 						scdcharacteristic.unit.termSourceID = sdrfcharacteristic.unit.termAccessionNumber;
@@ -194,23 +197,24 @@ public class MageTabToSampleTab {
 				}
 			}
 			getLog().info("got comments");
-			if (comments != null){
-				for (String key:comments.keySet()){
+			if (comments != null) {
+				for (String key : comments.keySet()) {
 					CommentAttribute comment = new CommentAttribute();
 					comment.type = key;
 					comment.setAttributeValue(comments.get(key));
 					scdnode.addAttribute(comment);
 				}
 			}
-			
+
 			st.scd.addNode(scdnode);
 		}
 
 		getLog().info("Finished convert()");
 		return st;
 	}
-	
-	public void convert(MAGETABInvestigation mt, Writer writer) throws IOException, ParseException{
+
+	public void convert(MAGETABInvestigation mt, Writer writer)
+			throws IOException, ParseException {
 		getLog().debug("recieved magetab, preparing to convert");
 		SampleData st = convert(mt);
 		getLog().debug("sampletab converted, preparing to output");
@@ -218,40 +222,48 @@ public class MageTabToSampleTab {
 		getLog().debug("created SampleTabWriter");
 		sampletabwriter.write(st);
 		sampletabwriter.close();
-		
+
 	}
-	
-	public void convert(File idffile, Writer writer) throws IOException, ParseException{
+
+	public void convert(File idffile, Writer writer) throws IOException,
+			ParseException {
 		getLog().debug("preparing to load magetab");
 		MAGETABParser<MAGETABInvestigation> mtparser = new MAGETABParser<MAGETABInvestigation>();
 		getLog().debug("created MAGETABParser<MAGETABInvestigation>");
 		MAGETABInvestigation mt = mtparser.parse(idffile);
 		convert(mt, writer);
 	}
-	
-	public void convert(File idffile, String stfilename) throws IOException, ParseException{
+
+	public void convert(File idffile, String stfilename) throws IOException,
+			ParseException {
 		convert(idffile, new File(stfilename));
 	}
-	
-	public void convert(File idffile, File stfile) throws IOException, ParseException{
+
+	public void convert(File idffile, File stfile) throws IOException,
+			ParseException {
 		convert(idffile, new FileWriter(stfile));
 	}
-	
-	public void convert(String idffilename, Writer writer) throws IOException, ParseException{
+
+	public void convert(String idffilename, Writer writer) throws IOException,
+			ParseException {
 		convert(new File(idffilename), writer);
 	}
-	
-	public void convert(String idffilename, File stfile) throws IOException, ParseException{
+
+	public void convert(String idffilename, File stfile) throws IOException,
+			ParseException, java.text.ParseException {
 		convert(idffilename, new FileWriter(stfile));
 	}
-	
-	public void convert(String idffilename, String stfilename) throws IOException, ParseException{
+
+	public void convert(String idffilename, String stfilename)
+			throws IOException, ParseException, java.text.ParseException {
 		convert(idffilename, new File(stfilename));
 	}
-	
+
 	public static void main(String[] args) {
-		if (args.length < 2){
-			System.out.println("Must provide an MAGETAB IDF filename and a SampleTab output filename.");
+		if (args.length < 2) {
+			System.out
+					.println("Must provide an MAGETAB IDF filename and a SampleTab output filename.");
+			System.exit(1);
 			return;
 		}
 		String idfFilename = args[0];
@@ -259,40 +271,47 @@ public class MageTabToSampleTab {
 
 		MAGETABParser<MAGETABInvestigation> mtparser = new MAGETABParser<MAGETABInvestigation>();
 		MageTabToSampleTab converter = MageTabToSampleTab.getInstance();
-        
+
 		File idfFile = new File(idfFilename);
-		
+
 		MAGETABInvestigation mt = null;
 		try {
 			mt = mtparser.parse(idfFile);
 		} catch (ParseException e) {
-			System.out.println("Error parsing "+idfFilename);
+			System.out.println("Error parsing " + idfFilename);
 			e.printStackTrace();
+			System.exit(1);
 			return;
 		}
-		
+
 		SampleData st = null;
 		try {
 			st = converter.convert(mt);
 		} catch (ParseException e) {
-			System.out.println("Error converting "+idfFilename);
+			System.out.println("Error converting " + idfFilename);
 			e.printStackTrace();
+			System.exit(1);
+			return;
 		}
-		
+
 		FileWriter out = null;
 		try {
 			out = new FileWriter(sampleTabFilename);
 		} catch (IOException e) {
-			System.out.println("Error opening "+sampleTabFilename);
+			System.out.println("Error opening " + sampleTabFilename);
 			e.printStackTrace();
+			System.exit(1);
+			return;
 		}
-		
+
 		SampleTabWriter sampletabwriter = new SampleTabWriter(out);
 		try {
 			sampletabwriter.write(st);
 		} catch (IOException e) {
-			System.out.println("Error writing "+sampleTabFilename);
+			System.out.println("Error writing " + sampleTabFilename);
 			e.printStackTrace();
+			System.exit(1);
+			return;
 		}
 	}
 }
