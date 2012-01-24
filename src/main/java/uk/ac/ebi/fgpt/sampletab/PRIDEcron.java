@@ -30,6 +30,7 @@ import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
@@ -51,27 +52,6 @@ public class PRIDEcron {
         return instance;
     }
 
-    public FTPClient getFTPClient() throws IOException {
-        if (ftp == null) {
-            ftp = new FTPClient();
-            String server = "ftp.ebi.ac.uk";
-            int reply;
-            ftp.connect(server);
-            ftp.login("anonymous", "");
-
-            log.info("Connected to " + server + ".");
-            log.info(ftp.getReplyString());
-
-            // After connection attempt, check the reply code to verify success.
-            reply = ftp.getReplyCode();
-            if (!FTPReply.isPositiveCompletion(reply)) {
-                ftp.disconnect();
-                throw new IOException("Unable to connect to ftp server " + server);
-            }
-            log.info("connected to FTP");
-        }
-        return ftp;
-    }
 
     private void close() {
         try {
@@ -133,16 +113,16 @@ public class PRIDEcron {
     }
 
     public void run(File outdir) {
-        FTPClient ftp;
         FTPFile[] files;
         try {
-            ftp = getFTPClient();
+            ftp = FTPUtils.connect("ftp.ebi.ac.uk");
             log.info("Getting file listing...");
             files = ftp.listFiles("/pub/databases/pride/");
             log.info("Got file listing");
         } catch (IOException e) {
             System.err.println("Unable to connect to FTP");
             e.printStackTrace();
+            System.exit(1);
             return;
         }
         Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
@@ -232,6 +212,7 @@ public class PRIDEcron {
         } catch (IOException e) {
             log.error("Unable to write to " + projout);
             e.printStackTrace();
+            System.exit(1);
             return;
         } finally {
             if (projoutwrite != null){
@@ -244,12 +225,15 @@ public class PRIDEcron {
                 }
             }
         }
+        
+        //TODO hide files that have disappeared from the FTP site.
     }
 
     public static void main(String[] args) {
         if (args.length < 1) {
             System.err.println("Must provide the following paramters:");
             System.err.println("  PRIDE local directory");
+            System.exit(1);
             return;
         }
         String path = args[0];
@@ -257,6 +241,7 @@ public class PRIDEcron {
 
         if (outdir.exists() && !outdir.isDirectory()) {
             System.err.println("Target is not a directory");
+            System.exit(1);
             return;
         }
 
