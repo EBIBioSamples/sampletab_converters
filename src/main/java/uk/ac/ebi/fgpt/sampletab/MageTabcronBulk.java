@@ -29,7 +29,7 @@ public class MageTabcronBulk {
         ArrayList<String> bashcommand = new ArrayList<String>();
         bashcommand.add("/bin/bash");
         bashcommand.add("-c");
-        bashcommand.add(command);
+        bashcommand.add("\""+command+"\"");
         
         ProcessBuilder pb = new ProcessBuilder();
         pb.command(command);
