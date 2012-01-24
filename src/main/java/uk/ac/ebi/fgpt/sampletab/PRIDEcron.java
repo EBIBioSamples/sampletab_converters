@@ -131,7 +131,7 @@ public class PRIDEcron {
         Pattern regex = Pattern.compile("PRIDE_Exp_IdentOnly_Ac_([0-9]+)\\.xml\\.gz");
 
         int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads*2);
 
         for (FTPFile file : files) {
             String filename = file.getName();

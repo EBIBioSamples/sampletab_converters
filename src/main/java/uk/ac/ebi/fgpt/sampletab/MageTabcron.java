@@ -100,11 +100,11 @@ public class MageTabcron {
 	                p.waitFor();
 	            }
 			} catch (IOException e) {
-				System.err.println("Error running curl");
+				System.err.println("Error running "+bashcom);
 				e.printStackTrace();
 				return;
 			} catch (InterruptedException e) {
-				System.err.println("Error running curl");
+				System.err.println("Error running "+bashcom);
 				e.printStackTrace();
 				return;
 			}
@@ -176,8 +176,8 @@ public class MageTabcron {
 						//rather than using the java FTP libraries - which seem to
 						//break quite often - use curl. Sacrifices multiplatformness
 						//for reliability.
-	                    pool.execute(new CurlDownload("fttp://ftp.ebi.ac.uk"+idfpath, outidf.getAbsolutePath()));
-	                    pool.execute(new CurlDownload("fttp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath()));
+	                    pool.execute(new CurlDownload("ftp://ftp.ebi.ac.uk"+idfpath, outidf.getAbsolutePath()));
+	                    pool.execute(new CurlDownload("ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath()));
 					}
 				}
 				//restart the connection after each subdir
