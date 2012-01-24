@@ -99,7 +99,7 @@ public class MageTabcron {
 				subdirstrs.add(subdir.getName());
 			}
 			for (String subdirstr : subdirstrs) {
-				String subdirpath = root + subdirstrs + "/";
+				String subdirpath = root + subdirstr + "/";
 				log.info("working on " + subdirpath);
 
 				FTPFile[] subsubdirs = null;
