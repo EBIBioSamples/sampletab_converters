@@ -182,14 +182,14 @@ public class MageTabcron {
 				}
 				//restart the connection after each subdir
 				//otherwise we hit some sort of limit?
-				try {
-					ftp = FTPUtils.connect("ftp.ebi.ac.uk");
-				} catch (IOException e) {
-					System.err.println("Unable to connect to FTP");
-					e.printStackTrace();
-					System.exit(1);
-					return;
-				}
+//				try {
+//					ftp = FTPUtils.connect("ftp.ebi.ac.uk");
+//				} catch (IOException e) {
+//					System.err.println("Unable to connect to FTP");
+//					e.printStackTrace();
+//					System.exit(1);
+//					return;
+//				}
 			}
 		}
 		
