@@ -63,15 +63,6 @@ public class MageTabToSampleTab {
 		return convert(parser.parse(idfFile));
 	}
 
-	public SampleData convert(URL idfURL) throws IOException, ParseException {
-		return convert(parser.parse(idfURL));
-	}
-
-	public SampleData convert(InputStream dataIn)
-			throws ParseException {
-		return convert(parser.parse(dataIn));
-	}
-
 	public SampleData convert(MAGETABInvestigation mt)
 			throws ParseException {
 

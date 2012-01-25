@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.net.URL;
 import java.sql.SQLException;
 
@@ -16,7 +17,9 @@ import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
@@ -42,14 +45,6 @@ public class SampleTabToLoad {
 
     public SampleData convert(File sampleTabFile) throws IOException, ParseException {
         return convert(parser.parse(sampleTabFile));
-    }
-
-    public SampleData convert(URL sampleTabURL) throws IOException, ParseException {
-        return convert(parser.parse(sampleTabURL));
-    }
-
-    public SampleData convert(InputStream dataIn) throws ParseException {
-        return convert(parser.parse(dataIn));
     }
 
     public SampleData convert(SampleData sampledata) throws ParseException {
@@ -115,7 +110,8 @@ public class SampleTabToLoad {
         for (int i = 0; i < sampledata.msi.publicationDOI.size(); i++) {
             group.addAttribute(new NamedAttribute("Publication DOI", sampledata.msi.publicationDOI.get(i)));
             if (i < sampledata.msi.publicationPubMedID.size()) {
-                group.addAttribute(new NamedAttribute("Publication PubMed ID", sampledata.msi.publicationPubMedID.get(i)));
+                group.addAttribute(new NamedAttribute("Publication PubMed ID", sampledata.msi.publicationPubMedID
+                        .get(i)));
             }
         }
         for (int i = 0; i < sampledata.msi.termSourceName.size(); i++) {
@@ -132,6 +128,31 @@ public class SampleTabToLoad {
         }
 
         return sampledata;
+    }
+
+    public void convert(SampleData st, Writer writer) throws IOException, ParseException {
+        st = convert(st);
+        getLog().debug("sampletab converted, preparing to output");
+        SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
+        getLog().debug("created SampleTabWriter");
+        sampletabwriter.write(st);
+        sampletabwriter.close();
+    }
+
+    public void convert(SampleData st, String ouputfilename) throws IOException, ParseException {
+        convert(st, new File(ouputfilename));
+    }
+
+    public void convert(SampleData st, File outfile) throws IOException, ParseException {
+        convert(st, new FileWriter(outfile));
+    }
+
+    public void convert(File infile, File outfile) throws IOException, ParseException {
+        convert(parser.parse(infile), outfile);
+    }
+
+    public void convert(String infilename, String outfilename) throws IOException, ParseException {
+        convert(new File(infilename), new File(outfilename));
     }
 
     public static void main(String[] args) {
