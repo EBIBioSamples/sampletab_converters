@@ -174,7 +174,7 @@ public class MageTabcronBulk {
         scriptdir = scriptdir.getAbsoluteFile();
 
         int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads*2);
+        ExecutorService pool = Executors.newFixedThreadPool(1);
         
         for (File subdir : dir.listFiles()) {
             if (subdir.isDirectory()) {
