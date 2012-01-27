@@ -101,6 +101,7 @@ public class MageTabcronBulk {
                     return;
                 }
                 String bashcom = script + " " + idffile + " " + sampletabpre;
+                log.info(bashcom);
                 File logfile = new File(subdir, "sampletab.pre.txt.log");
                 if (!doCommand(bashcom, logfile)) {
                     log.error("Problem producing " + sampletabpre);
@@ -174,14 +175,14 @@ public class MageTabcronBulk {
         scriptdir = scriptdir.getAbsoluteFile();
 
         int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(1);
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads*2);
         
         for (File subdir : dir.listFiles()) {
             if (subdir.isDirectory()) {
-                //DoProcessFile todo = new DoProcessFile(subdir, scriptdir);
-                //todo.run();
+                DoProcessFile todo = new DoProcessFile(subdir, scriptdir);
+                todo.run();
                 
-                pool.execute( new DoProcessFile(subdir, scriptdir));
+                //pool.execute( new DoProcessFile(subdir, scriptdir));
             }
         }
         

@@ -1,0 +1,55 @@
+Comment[ArrayExpressAccession]	E-GEOD-20076
+Comment[AdditionalFile:TXT]	E-GEOD-20076.hyb.sdrf.txt
+Comment[AdditionalFile:TXT]	E-GEOD-20076.seq.sdrf.txt
+Investigation Title	BRD7 is a candidate tumour suppressor gene required for p53 function
+Comment[Submitted Name]	BRD7 is a candidate tumour suppressor gene required for p53 function
+Publication Title
+Publication Author List
+Publication DOI
+PubMed ID
+Experimental Design	transcription profiling by array	ChIP-seq
+Experimental Design Term Source REF	EFO	EFO
+Public Release Date	2010-03-13
+Experiment Description	Oncogene-induced senescence (OIS) is a p53-dependent defence mechanism against uncontrolled proliferation. Consequently, many human tumours harbour p53 mutations while others show a dysfunctional p53 pathway, frequently by unknown mechanisms. We identified BRD7, a bromodomain-containing protein whose inhibition allows full neoplastic transformation in the presence of wild-type p53. Intriguingly, in human breast tumours harbouring wild-type, but not mutant p53, the BRD7 gene locus was frequently deleted and low BRD7 expression was found in a subgroup of tumours. Functionally, BRD7 is required for efficient p53-mediated transcription of a subset of target genes. BRD7 interacts with p53 and p300, and is recruited to target gene promoters, affecting histone acetylation, p53 acetylation, and promoter activity. Thus, BRD7 suppresses tumourigenicity by serving as a p53 cofactor required for efficient induction of p53-dependent OIS. We recorded mRNA expression profiles of BJ primary fibroblasts expressing the oncogene RasV12 and either control vector, one of two BRD7 knockdown vectors, or p53 knockdown vector. In addition, we profiled genome-wide protein DNA interactions for p53 and BRD7 using ChIP-Seq. p53- and BRD7-binding sites were recorded in RasV12-expressing BJ cells; as a control we used knockdown of the gene of interest (BRD7 or p53).													
+Date of Experiment														
+Term Source Name	EFO
+Term Source Version														
+Term Source File	http://efo.svn.sourceforge.net/viewvc/efo/trunk/src/efoinowl/efo.owl													
+Person Last Name	Drost	Drost	Mantovani	Tocco										
+Person First Name	Jarno	Jarno	Fiamma	Francesca										
+Person Mid Initials														
+Person Email	j.drost@nki.nl													
+Person Affiliation	The Netherlands Cancer Institute													
+Person Phone	0031-5122078													
+Person Fax														
+Person Address	Gene Regulation, The Netherlands Cancer Institute, Plesmanlaan 121, Amsterdam, The Netherlands													
+Person Roles	submitter													
+Person Roles Term Source REF														
+Person Roles Term Accession Number														
+Normalization Type														
+Normalization Term Accession Number														
+Normalization Term Source REF														
+Replicate Type														
+Replicate Term Accession Number														
+Replicate Term Source REF														
+Quality Control Type														
+Quality Control Term Accession Number														
+Quality Control Term Source REF														
+Protocol Name	P-GSE20076-1	P-GSE20076-5	P-GSE20076-7	P-GSE20076-14	P-GSE20076-12	P-GSE20076-6	P-GSE20076-11	P-GSE20076-8	P-GSE20076-2	P-GSE20076-10	P-GSE20076-9	P-GSE20076-13	P-GSE20076-3	P-GSE20076-4
+Protocol Description	ID_REF = <br>VALUE = Expression value (log2)<br>Detection Pval = detection p-value	According to Illumina IntelliHyb protocol: Whole-Genome Gene Expression; Direct Hybridization (Assay Guide); Chips used: Sentrix(r) HumanWG-6 v3 Expression Beadchip.	BeadChip array data quality control was performed using Illumina BeadStudio software. Transcript average intensity signals were calculated with BeadStudio without background correction. Raw data were analyzed using Bioconductor. Average transcript intensities were log2 transformed and normalized by quantile method.	Alignment: Sequence reads were obtained using the Illumina Genome Analyzer Pipeline and mapped to the unmasked human reference genome (NCBI v36, hg18) using the Illumina Eland program. Only the tags uniquely mapped to the genome with at most two mismatches were retained.	BJ/ET/RASV12ER cells expressing vector, BRD7KD, or p53KD were cultured in the presence of 4OHT.	The BeadChip is scanned on the Illumina BeadArray Reader, according to Illumina settings.	The antibody used for the p53 IPs was DO-1 (Santa Cruz Biotechnology), and the one for the BRD7 IPs was produced in-house.	BJ/ET/RASV12ER cells containing p53 knockdown vector were cultured in the presence (+RASV12) of 4OHT for 10 days. mRNA levels were determined by microarray.	BJ/ET/RASV12ER cells containing control vector were cultured in the presence (+RASV12) of 4OHT for 10 days. mRNA levels were determined by microarray.	BJ/ET/RASV12ER cells containing BRD7#4 knockdown vector were cultured in the presence (+RASV12) of 4OHT for 10 days. mRNA levels were determined by microarray.	BJ/ET/RASV12ER cells containing BRD7#1 knockdown vector were cultured in the presence (+RASV12) of 4OHT for 10 days. mRNA levels were determined by microarray.	Libraries were prepared according to Illumina's instructions accompanying the DNA Sample Kit.	Trizol extraction of total RNA was performed according to the manufacturer's instructions.	RNA amplification+biotin labeling: Illumina(r) TotalPrep(tm) RNA Amplification Kit (Cat# AMIL1791); Extra: We started the protocol by adding 1ul T7 primer to the 11ul sample (input 350 ng) and incubate this for 10 minutes at 70 degrees Celsius, then let sample come to RT then place on ice. In the next step (adding the first strand mix) we left out the T7 primer and followed the protocol as described in the manual.
+Protocol Software														
+Protocol Hardware														
+Protocol Contact														
+Protocol Type	bioassay_data_transformation	hybridization	feature_extraction	feature_extraction	grow	image_aquisition	specified_biomaterial_action	specified_biomaterial_action	specified_biomaterial_action	specified_biomaterial_action	specified_biomaterial_action	nucleic_acid_extraction	nucleic_acid_extraction	labeling
+Protocol Term Source REF														
+Protocol Term Accession Number														
+Experimental Factor Name	SAMPLE TYPE	ANTIBODY	VECTOR											
+Experimental Factor Type	sample type	antibody	vector											
+Experimental Factor Term Source REF														
+Experimental Factor Term Accession Number														
+Comment[SecondaryAccession]	GSE20076	SRP002101												
+Comment[GEOLastUpdateDate]	2010-03-18
+Comment[GEOReleaseDate]	2010-03-14
+Comment[SequenceDataURI]	http://www.ebi.ac.uk/ena/data/view/SRR037648-SRR037651													
+Comment[ArrayExpressSubmissionDate]	2010-01-28
+SDRF File	E-GEOD-20076.hyb.sdrf.txt	E-GEOD-20076.seq.sdrf.txt

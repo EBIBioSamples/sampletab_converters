@@ -3,9 +3,14 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.mged.magetab.error.ErrorItem;
 
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
 import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
@@ -20,11 +25,20 @@ public class TestMageTabToSampleTab extends TestCase {
 	private MageTabToSampleTab converter;
 	
 	private MAGETABParser<MAGETABInvestigation> mtparser;
+    private List<ErrorItem> errorItems;
 
     public void setUp() {
         resource = getClass().getClassLoader().getResource("E-MEXP-986/E-MEXP-986.idf.txt");
+        //this breaks limpopo
+        //resource = getClass().getClassLoader().getResource("E-GEOD-20076/E-GEOD-20076.idf.txt");
         converter = MageTabToSampleTab.getInstance();
         mtparser = new MAGETABParser<MAGETABInvestigation>();
+        errorItems = new ArrayList<ErrorItem>();
+        mtparser.addErrorItemListener(new ErrorItemListener() {
+            public void errorOccurred(ErrorItem item) {
+                errorItems.add(item);
+            }
+        });
     }
 
     public void tearDown() {

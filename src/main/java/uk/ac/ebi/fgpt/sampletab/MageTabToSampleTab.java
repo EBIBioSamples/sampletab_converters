@@ -12,9 +12,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.mged.magetab.error.ErrorCode;
+import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.datamodel.IDF;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.ExtractNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.LabeledExtractNode;
@@ -22,6 +25,8 @@ import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SDRFNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SourceNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.attribute.CharacteristicsAttribute;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
+import uk.ac.ebi.arrayexpress2.magetab.parser.IDFParser;
 import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -60,6 +65,27 @@ public class MageTabToSampleTab {
 	}
 
 	public SampleData convert(File idfFile) throws IOException, ParseException {
+        //a few idf files specify multiple sdrf files which may not all have been downloaded
+        //due to a bug in limpopo, this can cause limpopo to hang indefinately.
+        //therefore, first parse the idf only to see if this is something to avoid.
+        
+        IDFParser idfparser = new IDFParser();
+        IDF idf = null;
+        try {
+            idf = idfparser.parse(idfFile);
+        } catch (ParseException e) {
+            System.err.println("Error parsing " + idfFile);
+            e.printStackTrace();
+            System.exit(1);
+            return null;
+        }
+        if (idf.sdrfFile.size() != 1){
+            System.err.println("Non-standard sdrf file references");
+            System.err.println(idf.sdrfFile);
+            System.exit(1);
+            return null;
+        }
+        
 		return convert(parser.parse(idfFile));
 	}
 
@@ -216,12 +242,32 @@ public class MageTabToSampleTab {
 
 	}
 
-	public void convert(File idffile, Writer writer) throws IOException,
+	public void convert(File idfFile, Writer writer) throws IOException,
 			ParseException {
-		getLog().debug("preparing to load magetab");
-		MAGETABParser<MAGETABInvestigation> mtparser = new MAGETABParser<MAGETABInvestigation>();
-		getLog().debug("created MAGETABParser<MAGETABInvestigation>");
-		MAGETABInvestigation mt = mtparser.parse(idffile);
+        //a few idf files specify multiple sdrf files which may not all have been downloaded
+        //due to a bug in limpopo, this can cause limpopo to hang indefinately.
+        //therefore, first parse the idf only to see if this is something to avoid.
+
+        log.info("Checking IDF");
+        IDFParser idfparser = new IDFParser();
+        IDF idf = null;
+        try {
+            idf = idfparser.parse(idfFile);
+        } catch (ParseException e) {
+            System.err.println("Error parsing " + idfFile);
+            e.printStackTrace();
+            System.exit(1);
+            return;
+        }
+        log.info("Checking IDF");
+        if (idf.sdrfFile.size() != 1){
+            log.error("Non-standard sdrf file references");
+            log.error(""+idf.sdrfFile);
+            System.exit(1);
+            return;
+        }
+        
+		MAGETABInvestigation mt = parser.parse(idfFile);
 		convert(mt, writer);
 	}
 
@@ -260,49 +306,17 @@ public class MageTabToSampleTab {
 		String idfFilename = args[0];
 		String sampleTabFilename = args[1];
 
-		MAGETABParser<MAGETABInvestigation> mtparser = new MAGETABParser<MAGETABInvestigation>();
-		MageTabToSampleTab converter = MageTabToSampleTab.getInstance();
-
-		File idfFile = new File(idfFilename);
-
-		MAGETABInvestigation mt = null;
 		try {
-			mt = mtparser.parse(idfFile);
-		} catch (ParseException e) {
-			System.out.println("Error parsing " + idfFilename);
-			e.printStackTrace();
-			System.exit(1);
-			return;
-		}
-
-		SampleData st = null;
-		try {
-			st = converter.convert(mt);
-		} catch (ParseException e) {
-			System.out.println("Error converting " + idfFilename);
-			e.printStackTrace();
-			System.exit(1);
-			return;
-		}
-
-		FileWriter out = null;
-		try {
-			out = new FileWriter(sampleTabFilename);
-		} catch (IOException e) {
-			System.out.println("Error opening " + sampleTabFilename);
-			e.printStackTrace();
-			System.exit(1);
-			return;
-		}
-
-		SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-		try {
-			sampletabwriter.write(st);
-		} catch (IOException e) {
-			System.out.println("Error writing " + sampleTabFilename);
-			e.printStackTrace();
-			System.exit(1);
-			return;
-		}
+            getInstance().convert(idfFilename, sampleTabFilename);
+        } catch (IOException e) {
+            System.err.println("Error converting "+idfFilename);
+            e.printStackTrace();
+        } catch (ParseException e) {
+            System.err.println("Error converting "+idfFilename);
+            e.printStackTrace();
+        } catch (java.text.ParseException e) {
+            System.err.println("Error converting "+idfFilename);
+            e.printStackTrace();
+        }
 	}
 }

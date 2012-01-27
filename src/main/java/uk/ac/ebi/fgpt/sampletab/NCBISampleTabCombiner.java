@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBISampleTabCombiner {
@@ -79,56 +81,53 @@ public class NCBISampleTabCombiner {
                 Element root = xml.getRootElement();
                 
                 Element ids = XMLUtils.getChildByName(root, "Ids");
-                Element attributes = XMLUtils.getChildByName(root, "Attributes");
-                //making groups gets complicated, so dont bother at first
-                groupids.add(""+ident);
-                
-//                for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
-//                    String dbname = id.attributeValue("db");
-//                    String sampleid = id.getText();
-//                    if (dbname.equals("SRA")) {
-//                        // group by sra study
-//                        log.debug("Getting studies of SRA sample " + sampleid);
-//                        Collection<String> studyids = ENAUtils.getStudiesForSample(sampleid);
-//                        if (studyids != null) {
-//                            groupids.addAll(studyids);
-//                        }
-//                    } else if (dbname.equals("dbGaP")) {
-//                        // group by dbGaP project
-//                        for (Element attribute : XMLUtils.getChildrenByName(attributes, "Attribute")) {
-//                            if (attribute.attributeValue("attribute_name").equals("gap_accession")) {
-//                                groupids.add(attribute.getText());
-//                            }
-//                        }
-//                    } else if (dbname.equals("EST") || dbname.equals("GSS")) {
-//                        // EST == Expressed Sequence Tag
-//                        // GSS == Genome Survey Sequence
-//                        // group by owner
-//                        //
-//                        // Element owner = XMLUtils.getChildByName(root, "Owner");
-//                        // Element name = XMLUtils.getChildByName(owner, "Name");
-//                        // if (name != null) {
-//                        // String ownername = name.getText();
-//                        // // clean ownername
-//                        // ownername = ownername.toLowerCase();
-//                        // ownername = ownername.trim();
-//                        // String cleanname = "";
-//                        // for (int j = 0; j < ownername.length(); j++) {
-//                        // String c = ownername.substring(j, j + 1);
-//                        // if (c.matches("[a-z0-9]")) {
-//                        // cleanname += c;
-//                        // }
-//                        // }
-//                        // groupids.add(cleanname);
-//                        // }
-//
-//                        // // This doesnt work so well by owner, so dont bother.
-//                        // // May need to group samples from the same owner in a post-hoc manner?
-//                        groupids.add(sampleid);
-//                    } else {
-//                        // could group by others, but some of them are very big
-//                    }
-//                }
+                Element attributes = XMLUtils.getChildByName(root, "Attributes");                
+                for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
+                    String dbname = id.attributeValue("db");
+                    String sampleid = id.getText();
+                    if (dbname.equals("SRA")) {
+                        // group by sra study
+                        log.debug("Getting studies of SRA sample " + sampleid);
+                        Collection<String> studyids = ENAUtils.getStudiesForSample(sampleid);
+                        if (studyids != null) {
+                            groupids.addAll(studyids);
+                        }
+                    } else if (dbname.equals("dbGaP")) {
+                        // group by dbGaP project
+                        for (Element attribute : XMLUtils.getChildrenByName(attributes, "Attribute")) {
+                            if (attribute.attributeValue("attribute_name").equals("gap_accession")) {
+                                groupids.add(attribute.getText());
+                            }
+                        }
+                    } else if (dbname.equals("EST") || dbname.equals("GSS")) {
+                        // EST == Expressed Sequence Tag
+                        // GSS == Genome Survey Sequence
+                        // group by owner
+                        //
+                        // Element owner = XMLUtils.getChildByName(root, "Owner");
+                        // Element name = XMLUtils.getChildByName(owner, "Name");
+                        // if (name != null) {
+                        // String ownername = name.getText();
+                        // // clean ownername
+                        // ownername = ownername.toLowerCase();
+                        // ownername = ownername.trim();
+                        // String cleanname = "";
+                        // for (int j = 0; j < ownername.length(); j++) {
+                        // String c = ownername.substring(j, j + 1);
+                        // if (c.matches("[a-z0-9]")) {
+                        // cleanname += c;
+                        // }
+                        // }
+                        // groupids.add(cleanname);
+                        // }
+
+                        // // This doesnt work so well by owner, so dont bother.
+                        // // May need to group samples from the same owner in a post-hoc manner?
+                        groupids.add(sampleid);
+                    } else {
+                        // could group by others, but some of them are very big
+                    }
+                }
                 return groupids;
             }
 
@@ -138,12 +137,14 @@ public class NCBISampleTabCombiner {
 
                 if (xmlFile.exists()) {
                     Collection<String> groupids = null;
-                    try {
-                        groupids = getGroupIds(getFileByIdent(this.ident));
-                    } catch (DocumentException e) {
-                        e.printStackTrace();
-                        return;
-                    }
+//                    try {
+//                        groupids = getGroupIds(getFileByIdent(this.ident));
+//                    } catch (DocumentException e) {
+//                        e.printStackTrace();
+//                        return;
+//                    }
+                    groupids = new HashSet<String>();
+                    groupids.add(""+this.ident);
                     
                     if(groupids.size() > 1){
                         log.error("Multiple groups for "+this.ident);
