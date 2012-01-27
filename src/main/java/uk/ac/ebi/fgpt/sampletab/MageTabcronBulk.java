@@ -91,9 +91,12 @@ public class MageTabcronBulk {
             if (!idffile.exists() || !sdrffile.exists()) {
                 return;
             }
-
-            if (!sampletabpre.exists()) {
-                log.info("Processing " + sampletabpre);
+            
+            File target;
+            
+            target = sampletabpre;
+            if (!target.exists()) {
+                log.info("Processing " + target);
                 // convert idf/sdrf to sampletab.pre.txt
                 File script = new File(scriptdir, "MageTabToSampleTab.sh");
                 if (!script.exists()) {
@@ -104,15 +107,20 @@ public class MageTabcronBulk {
                 log.info(bashcom);
                 File logfile = new File(subdir, "sampletab.pre.txt.log");
                 if (!doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + sampletabpre);
+                    log.error("Problem producing " + target);
                     log.error("See logfile " + logfile);
+                    if (target.exists()){
+                        target.delete();
+                        log.error("cleaning partly produced file");
+                    }
                     return;
                 }
             }
 
             // accession sampletab.pre.txt to sampletab.txt
-            if (!sampletab.exists()) {
-                log.info("Processing " + sampletab);
+            target = sampletab;
+            if (!target.exists()) {
+                log.info("Processing " + target);
                 File script = new File(scriptdir, "SampleTabAccessioner.sh");
                 if (!script.exists()) {
                     log.error("Unable to find " + script);
@@ -124,13 +132,18 @@ public class MageTabcronBulk {
                         + " --database autosubs_test" + " --username admin" + " --password edsK6BV6";
                 File logfile = new File(subdir, "sampletab.txt.log");
                 if (!doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + sampletab);
+                    log.error("Problem producing " + target);
                     log.error("See logfile " + logfile);
+                    if (target.exists()){
+                        target.delete();
+                        log.error("cleaning partly produced file");
+                    }
                     return;
                 }
             }
 
             // preprocess to load
+            target = sampletabtoload;
             if (!sampletabtoload.exists()) {
                 log.info("Processing " + sampletabtoload);
                 File script = new File(scriptdir, "SampleTabToLoad.sh");
@@ -145,11 +158,16 @@ public class MageTabcronBulk {
                 if (!doCommand(bashcom, logfile)) {
                     log.error("Problem producing " + sampletabtoload);
                     log.error("See logfile " + logfile);
+                    if (target.exists()){
+                        target.delete();
+                        log.error("cleaning partly produced file");
+                    }
                     return;
                 }
             }
 
             // convert to age
+            target = age;
             if (!age.exists()) {
                 log.info("Processing " + age);
                 File script = new File(scriptdir, "SampleTab-to-AGETAB.sh");
@@ -162,6 +180,13 @@ public class MageTabcronBulk {
                 if (!doCommand(bashcom, logfile)) {
                     log.error("Problem producing " + age);
                     log.error("See logfile " + logfile);
+                    if (target.exists()){
+                        for (File todel: target.listFiles()){
+                            todel.delete();
+                        }
+                        target.delete();
+                        log.error("cleaning partly produced file");
+                    }
                     return;
                 }
             }
