@@ -82,7 +82,7 @@ public class SampleTabToLoad {
                 group.addAttribute(new NamedAttribute("Person First Name", sampledata.msi.personFirstName.get(i)));
             }
             if (i < sampledata.msi.personInitials.size()) {
-                group.addAttribute(new NamedAttribute("Person Mid Initials", sampledata.msi.personInitials.get(i)));
+                group.addAttribute(new NamedAttribute("Person Initials", sampledata.msi.personInitials.get(i)));
             }
             group.addAttribute(new NamedAttribute("Person Last Name", sampledata.msi.personLastName.get(i)));
             if (i < sampledata.msi.personEmail.size()) {
@@ -116,7 +116,10 @@ public class SampleTabToLoad {
         }
         for (int i = 0; i < sampledata.msi.termSourceName.size(); i++) {
             group.addAttribute(new NamedAttribute("Term Source Name", sampledata.msi.termSourceName.get(i)));
-            group.addAttribute(new NamedAttribute("Term Source URI", sampledata.msi.termSourceURI.get(i)));
+            //this is optional in MageTab. Should be enforce stricter here or not?
+            if (i < sampledata.msi.termSourceURI.size()) {
+                group.addAttribute(new NamedAttribute("Term Source URI", sampledata.msi.termSourceURI.get(i)));
+            }
             if (i < sampledata.msi.termSourceVersion.size()) {
                 group.addAttribute(new NamedAttribute("Term Source Version", sampledata.msi.termSourceVersion.get(i)));
             }
