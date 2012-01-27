@@ -305,6 +305,27 @@ public class MageTabToSampleTab {
 		}
 		String idfFilename = args[0];
 		String sampleTabFilename = args[1];
+		
+        //a few idf files specify multiple sdrf files which may not all have been downloaded
+        //due to a bug in limpopo, this can cause limpopo to hang indefinately.
+        //therefore, first parse the idf only to see if this is something to avoid.
+
+        IDFParser idfparser = new IDFParser();
+        IDF idf = null;
+        try {
+            idf = idfparser.parse(new File(idfFilename));
+        } catch (ParseException e) {
+            System.err.println("Error parsing " + idfFilename);
+            e.printStackTrace();
+            System.exit(1);
+            return;
+        }
+        if (idf.sdrfFile.size() != 1){
+            System.err.println("Non-standard sdrf file references");
+            System.err.println(""+idf.sdrfFile);
+            System.exit(1);
+            return;
+        }
 
 		try {
             getInstance().convert(idfFilename, sampleTabFilename);
