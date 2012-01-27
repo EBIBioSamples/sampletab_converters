@@ -168,9 +168,7 @@ public class NCBISampleTabCombiner {
 
         int nocpus = Runtime.getRuntime().availableProcessors();
         log.info("Using " + nocpus + " threads");
-        //something is wrong in the multi-threading code
-        //therefore, dont do it
-        ExecutorService pool = Executors.newFixedThreadPool(1);
+        ExecutorService pool = Executors.newFixedThreadPool(nocpus*2);
         for (int i = 0; i < maxident; i++) {
             pool.submit(new GroupIDsTask(i, groupings));
         }
