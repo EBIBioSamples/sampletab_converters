@@ -4,15 +4,10 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Writer;
-import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -23,14 +18,10 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.io.filefilter.WildcardFileFilter;
-import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
-import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
@@ -39,8 +30,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.NamedAttri
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils.FileFilterGlob;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils.FileFilterRegex;
 
 public class SampleTabToLoad {
 
@@ -356,7 +345,7 @@ public class SampleTabToLoad {
         for (File inputFile : inputFiles) {
             //System.out.println("Checking "+inputFile);
             File outputFile = new File(inputFile.getParentFile(), outputFilename);
-            if (!outputFile.exists() || inputFile.lastModified() > outputFile.lastModified()){
+            if (!outputFile.exists()){
                 ToLoadTask t = new ToLoadTask(inputFile, outputFile);
                 //pool.execute(t);
                 t.run();

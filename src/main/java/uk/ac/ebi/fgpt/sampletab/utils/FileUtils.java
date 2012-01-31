@@ -2,10 +2,8 @@ package uk.ac.ebi.fgpt.sampletab.utils;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 public class FileUtils {
 
@@ -26,21 +24,24 @@ public class FileUtils {
         }
 
     }
+
     public static class FileFilterGlob implements FileFilter {
 
         private final String regex;
 
         public FileFilterGlob(String glob) {
             StringBuilder sb = new StringBuilder(glob.length());
-            for (char currentChar : glob.toCharArray())
-            {
-                switch (currentChar){
-                    case '*': sb.append(".*");
-                    case '.': sb.append("\\.");
-                    case '?': sb.append("\\?");
+            for (char currentChar : glob.toCharArray()) {
+                switch (currentChar) {
+                    case '*':
+                        sb.append(".*");
+                    case '.':
+                        sb.append("\\.");
+                    case '?':
+                        sb.append("\\?");
                 }
             }
-            
+
             this.regex = sb.toString();
         }
 
@@ -59,12 +60,12 @@ public class FileUtils {
             File[] subfiles = start.listFiles();
             Arrays.sort(subfiles);
             for (File subfile : subfiles) {
-                //System.out.println("Looking in " + subfile);
+                // System.out.println("Looking in " + subfile);
                 addMatches(subfile, filter, outfiles);
             }
         } else {
             if (filter.accept(start)) {
-                //System.out.println("Adding " + start);
+                // System.out.println("Adding " + start);
                 outfiles.add(start);
             }
         }

@@ -38,13 +38,10 @@ public class NCBISampleTabCombiner {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private int maxident = 1000000; // max is 1,000,000
+    private int maxident = 100000; // max is 1,000,000
     private static File rootdir;
 
     private final Map<String, Set<String>> groupings;
-
-    // singleton instance
-    private final NCBIBiosampleToSampleTab converter = new NCBIBiosampleToSampleTab();
 
     private NCBISampleTabCombiner() {
         // private constructor
