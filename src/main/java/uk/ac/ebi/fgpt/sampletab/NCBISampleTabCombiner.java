@@ -44,11 +44,10 @@ public class NCBISampleTabCombiner {
     private final Map<String, Set<String>> groupings;
 
     // singleton instance
-    private static final NCBIBiosampleToSampleTab converter = NCBIBiosampleToSampleTab.getInstance();
+    private final NCBIBiosampleToSampleTab converter = new NCBIBiosampleToSampleTab();
 
     private NCBISampleTabCombiner() {
         // private constructor
-
         rootdir = new File("ncbicopy");
         groupings = new ConcurrentHashMap<String, Set<String>>();
 
@@ -362,10 +361,10 @@ public class NCBISampleTabCombiner {
                     if (SampleNode.class.isInstance(node)){
                         //apply node metainformation to msi if missing
                         if (sampleout.msi.submissionDescription == null || sampleout.msi.submissionDescription.trim().equals(""))
-                            log.info("Using description from sample");
+                            log.debug("Using description from sample");
                             sampleout.msi.submissionDescription = ((SampleNode) node).sampleDescription;
                         if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals(""))
-                            log.info("Using title from sample");
+                            log.debug("Using title from sample");
                             sampleout.msi.submissionTitle = ((SampleNode) node).getNodeName();
                     }
                 } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e4) {
@@ -408,9 +407,76 @@ public class NCBISampleTabCombiner {
         }
         
         
+        class OutputTask implements Runnable {
+            private final Collection<String> group;
+            private final String groupname;
+            private final NCBIBiosampleToSampleTab converter;
+            public OutputTask(Collection<String> group, String groupname){
+                this.group = group;
+                this.groupname = groupname;
+                this.converter = new NCBIBiosampleToSampleTab();
+            }
+            public void run() {
+
+                //log.info("Size of group : " + group + " : " + groups.get(group).size());
+
+                //log.info("Group : " + group);
+                Collection<SampleData> sampledatas = new ArrayList<SampleData>();
+                for (String ncbiaccession : this.group) {
+                    File xmlfile = getFileByIdent(new Integer(ncbiaccession));
+                    log.debug("converting "+xmlfile);
+                    try {
+                        sampledatas.add(this.converter.convert(xmlfile));
+                    } catch (ParseException e2) {
+                        log.warn("Unable to convert " + xmlfile);
+                        e2.printStackTrace();
+                        continue;
+                    } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e2) {
+                        log.warn("Unable to convert " + xmlfile);
+                        e2.printStackTrace();
+                        continue;
+                    } catch (DocumentException e2) {
+                        log.warn("Unable to convert " + xmlfile);
+                        e2.printStackTrace();
+                        continue;
+                    }
+                }
+                SampleData sampleout = combine(sampledatas);
+                
+                sampleout.msi.submissionIdentifier = "GNC-" + this.groupname;
+                log.debug("submissionIdentifier: "+sampleout.msi.submissionIdentifier);
+                File outdir = new File("output");
+                File outsubdir = new File(outdir, sampleout.msi.submissionIdentifier);
+                outsubdir.mkdirs();
+                File outfile = new File(outsubdir, "sampletab.txt");
+                log.debug("outfile "+outfile);
+                
+                // more sanity checks
+                if (sampleout.scd.getRootNodes().size() != this.group.size()) {
+                    log.info("unequal group size "+outfile);
+                }
+                
+                SampleTabWriter writer;
+                try {
+                    writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outfile)));
+                    writer.write(sampleout);
+                    writer.close();
+                } catch (IOException e) {
+                    log.warn("Unable to write " + outfile);
+                    e.printStackTrace();
+                }
+                
+            }
+        }
+        
+        
         // sort them to put them in a sensible order
         List<String> projects = new ArrayList<String>(groupings.keySet());
         Collections.sort(projects);
+        
+        int nocpus = Runtime.getRuntime().availableProcessors();
+        log.info("Using " + nocpus + " threads");
+        ExecutorService pool = Executors.newFixedThreadPool(nocpus*2);
 
         for (String group : projects) {
 
@@ -421,59 +487,17 @@ public class NCBISampleTabCombiner {
             if (groups.get(group).size() < 1) {
                 continue;
             }
-
-            //log.info("Size of group : " + group + " : " + groups.get(group).size());
-
-            //log.info("Group : " + group);
-            Collection<SampleData> sampledatas = new ArrayList<SampleData>();
-            for (String ncbiaccession : groups.get(group)) {
-                File xmlfile = getFileByIdent(new Integer(ncbiaccession));
-                log.info("Group: " + group + " Filename: " + xmlfile);
-                log.debug("converting "+xmlfile);
-                try {
-                    sampledatas.add(converter.convert(xmlfile));
-                } catch (ParseException e2) {
-                    log.warn("Unable to convert " + xmlfile);
-                    e2.printStackTrace();
-                    continue;
-                } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e2) {
-                    log.warn("Unable to convert " + xmlfile);
-                    e2.printStackTrace();
-                    continue;
-                } catch (DocumentException e2) {
-                    log.warn("Unable to convert " + xmlfile);
-                    e2.printStackTrace();
-                    continue;
-                }
-            }
-//
-            SampleData sampleout = combine(sampledatas);
-            // more sanity checks
-            if (sampleout.scd.getRootNodes().size() != groups.get(group).size()) {
-                log.warn("unequal size of group " + group + " : " + sampleout.scd.getRootNodes().size() + " vs "
-                        + groups.get(group).size());
-            }
-//
-            sampleout.msi.submissionIdentifier = "GNC-" + group;
-            log.info("submissionIdentifier: "+sampleout.msi.submissionIdentifier);
-            File outdir = new File("output");
-            File outsubdir = new File(outdir, sampleout.msi.submissionIdentifier);
-            outsubdir.mkdirs();
-            File outfile = new File(outsubdir, "sampletab.txt");
-            log.info("outfile "+outfile);
-
-            // dont bother outputting if there are no samples...
-            if (sampleout.scd.getNodeCount() > 0) {
-                SampleTabWriter writer;
-                try {
-                    writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outfile)));
-                    writer.write(sampleout);
-                    writer.close();
-                } catch (IOException e) {
-                    log.warn("Unable to write " + outfile);
-                    e.printStackTrace();
-                    continue;
-                }
+            pool.submit(new OutputTask(groups.get(group), group));            
+        }
+        log.info("All tasks submitted");
+        synchronized (pool) {
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                log.error("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
             }
         }
     }
@@ -496,6 +520,7 @@ public class NCBISampleTabCombiner {
                 infiles.add(infile);
             }
             Collection<SampleData> sampledatas = new ArrayList<SampleData>();
+            NCBIBiosampleToSampleTab converter = new NCBIBiosampleToSampleTab();
             for (File xmlfile : infiles) {
                 SampleData sampledata;
                 try {

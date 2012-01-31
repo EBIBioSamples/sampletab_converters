@@ -21,7 +21,7 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
 
     public void setUp() {
         resource = getClass().getClassLoader().getResource("ncbibiosample/2.xml");
-        converter = NCBIBiosampleToSampleTab.getInstance();
+        converter = new NCBIBiosampleToSampleTab();
     }
 
     public void tearDown() {

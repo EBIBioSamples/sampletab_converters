@@ -25,17 +25,11 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBIBiosampleToSampleTab {
 
-	// singlton instance
-	private static final NCBIBiosampleToSampleTab instance = new NCBIBiosampleToSampleTab();
 	// logging
 	private Logger log = LoggerFactory.getLogger(getClass());
 
-	private NCBIBiosampleToSampleTab() {
+	public NCBIBiosampleToSampleTab() {
 		// private constructor to prevent accidental multiple initialisations
-	}
-
-	public static NCBIBiosampleToSampleTab getInstance() {
-		return instance;
 	}
 
 	public String addressToString(Element address) {
@@ -284,8 +278,7 @@ public class NCBIBiosampleToSampleTab {
 		String ncbiBiosampleXMLFilename = args[0];
 		String sampleTabFilename = args[1];
 
-		NCBIBiosampleToSampleTab converter = NCBIBiosampleToSampleTab
-				.getInstance();
+		NCBIBiosampleToSampleTab converter = new NCBIBiosampleToSampleTab();
 
 		SampleData st = null;
 		try {

@@ -1,12 +1,21 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -14,6 +23,8 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +38,18 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.NamedAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils.FileFilterGlob;
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils.FileFilterRegex;
 
 public class SampleTabToLoad {
 
-    public static final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
-
+    public final SampleTabParser<SampleData> parser;
+    
+    public SampleTabToLoad(){
+        parser = new SampleTabParser<SampleData>();
+    }
+    
     public Logger getLog() {
         return log;
     }
@@ -217,37 +235,23 @@ public class SampleTabToLoad {
         String inputFilename = line.getOptionValue("input");
         String outputFilename = line.getOptionValue("output");
         // this is for the accessioner database
-        String hostname = line.getOptionValue("hostname");
-        int port = 3306;
+        final String hostname = line.getOptionValue("hostname");
+        final int port;
         if (line.hasOption("port")) {
             port = new Integer(line.getOptionValue("port"));
+        } else {
+            port = 3306;
         }
-        String database = line.getOptionValue("database");
-        String username = line.getOptionValue("username");
-        String password = line.getOptionValue("password");
+        final String database = line.getOptionValue("database");
+        final String username = line.getOptionValue("username");
+        final String password = line.getOptionValue("password");
 
         SampleTabToLoad toloader = new SampleTabToLoad();
-
-        // do initial parsing and conversion
-        SampleData st = null;
-        try {
-            st = toloader.convert(inputFilename);
-        } catch (ParseException e) {
-            System.err.println("ParseException converting " + inputFilename);
-            e.printStackTrace();
-            System.exit(121);
-            return;
-        } catch (IOException e) {
-            System.err.println("IOException converting " + inputFilename);
-            e.printStackTrace();
-            System.exit(122);
-            return;
-        }
-
+        
         // connect to accessioning database
-        SampleTabAccessioner accessioner = new SampleTabAccessioner();
+        SampleTabAccessioner accessioner;
         try {
-            accessioner.makeConnection(hostname, port, database, username, password);
+            accessioner = new SampleTabAccessioner(hostname, port, database, username, password);
         } catch (ClassNotFoundException e) {
             System.err.println("ClassNotFoundException connecting to " + hostname + ":" + port + "/" + database);
             e.printStackTrace();
@@ -259,42 +263,117 @@ public class SampleTabToLoad {
             System.exit(112);
             return;
         }
-
-        // assign accession to any created groups
-        try {
-            st = accessioner.convert(st);
-        } catch (ParseException e) {
-            System.err.println("ParseException converting " + inputFilename);
-            e.printStackTrace();
-            System.exit(121);
-            return;
-        } catch (SQLException e) {
-            System.err.println("SQLException converting " + inputFilename);
-            e.printStackTrace();
-            System.exit(123);
-            return;
+        
+        System.out.println("Looking for input files");
+        ArrayList<File> inputFiles = new ArrayList<File>();
+        //TODO remove hardcoding
+        FileFilter filter = new FileUtils.FileFilterRegex("output/.*/sampletab\\.txt");
+        FileUtils.addMatches(new File("output"), filter , inputFiles);
+        System.out.println("Found "+inputFiles.size()+" files");
+        Collections.sort(inputFiles);
+        
+        class ToLoadTask implements Runnable {
+            private final File inputFile;
+            private final File outputFile;
+            public ToLoadTask(File inputFile, File outputFile){
+                this.inputFile = inputFile;
+                this.outputFile = outputFile;
+            }
+            
+            public void run(){
+                System.out.println("Processing "+inputFile);
+                
+                SampleData st = null;
+                SampleTabToLoad toloader = new SampleTabToLoad();
+                // do initial parsing and conversion
+                try {
+                    st = toloader.convert(inputFile);
+                } catch (ParseException e) {
+                    System.err.println("ParseException converting " + inputFile);
+                    e.printStackTrace();
+                    return;
+                } catch (IOException e) {
+                    System.err.println("IOException converting " + inputFile);
+                    e.printStackTrace();
+                    return;
+                }
+                
+                //get an accessioner and connect to database
+                SampleTabAccessioner accessioner;
+                try {
+                    accessioner = new SampleTabAccessioner(hostname, port, database, username, password);
+                } catch (ClassNotFoundException e) {
+                    System.err.println("ClassNotFoundException connecting to " + hostname + ":" + port + "/" + database);
+                    e.printStackTrace();
+                    return;
+                } catch (SQLException e) {
+                    System.err.println("SQLException connecting to " + hostname + ":" + port + "/" + database);
+                    e.printStackTrace();
+                    return;
+                }
+                
+                // assign accession to any created groups
+                try {
+                    st = accessioner.convert(st);
+                } catch (ParseException e) {
+                    System.err.println("ParseException converting " + inputFile);
+                    e.printStackTrace();
+                    return;
+                } catch (SQLException e) {
+                    System.err.println("SQLException converting " + inputFile);
+                    e.printStackTrace();
+                    return;
+                }
+                
+                // write back out
+                FileWriter out = null;
+                try {
+                    out = new FileWriter(outputFile);
+                } catch (IOException e) {
+                    System.out.println("Error opening " + outputFile);
+                    e.printStackTrace();
+                    return;
+                }
+        
+                SampleTabWriter sampletabwriter = new SampleTabWriter(out);
+                try {
+                    sampletabwriter.write(st);
+                } catch (IOException e) {
+                    System.out.println("Error writing " + outputFile);
+                    e.printStackTrace();
+                    return;
+                }
+                
+                System.out.println("Processed "+inputFile);
+                
+            }
         }
 
-        // write back out
-        FileWriter out = null;
-        try {
-            out = new FileWriter(outputFilename);
-        } catch (IOException e) {
-            System.out.println("Error opening " + outputFilename);
-            e.printStackTrace();
-            System.exit(131);
-            return;
-        }
 
-        SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-        try {
-            sampletabwriter.write(st);
-        } catch (IOException e) {
-            System.out.println("Error writing " + outputFilename);
-            e.printStackTrace();
-            System.exit(141);
-            return;
+        int nothreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads*2);
+        
+        for (File inputFile : inputFiles) {
+            //System.out.println("Checking "+inputFile);
+            File outputFile = new File(inputFile.getParentFile(), outputFilename);
+            if (!outputFile.exists() || inputFile.lastModified() > outputFile.lastModified()){
+                ToLoadTask t = new ToLoadTask(inputFile, outputFile);
+                //pool.execute(t);
+                t.run();
+            }
         }
-
+        // run the pool and then close it afterwards
+        // must synchronize on the pool object
+        synchronized (pool) {
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                System.err.println("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Finished processing");
     }
 }
