@@ -8,16 +8,16 @@ import java.io.Writer;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,11 +34,11 @@ import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 public class SampleTabToLoad {
 
     public final SampleTabParser<SampleData> parser;
-    
-    public SampleTabToLoad(){
+
+    public SampleTabToLoad() {
         parser = new SampleTabParser<SampleData>();
     }
-    
+
     public Logger getLog() {
         return log;
     }
@@ -123,7 +123,7 @@ public class SampleTabToLoad {
         }
         for (int i = 0; i < sampledata.msi.termSourceName.size(); i++) {
             group.addAttribute(new NamedAttribute("Term Source Name", sampledata.msi.termSourceName.get(i)));
-            //this is optional in MageTab. Should be enforce stricter here or not?
+            // this is optional in MageTab. Should be enforce stricter here or not?
             if (i < sampledata.msi.termSourceURI.size()) {
                 group.addAttribute(new NamedAttribute("Term Source URI", sampledata.msi.termSourceURI.get(i)));
             }
@@ -165,113 +165,77 @@ public class SampleTabToLoad {
         convert(new File(infilename), new File(outfilename));
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        new SampleTabToLoad().doMain(args);
+    }
 
-        // manager for command line arguments
-        Options options = new Options();
+    @Option(name = "-h", usage = "display help")
+    private boolean help;
+    
+    @Option(name = "-i", usage = "input filename or glob")
+    private String inputFilename;
+    
+    @Option(name = "-o", usage = "output filename")
+    private String outputFilename;
+    
+    @Option(name = "-n", usage = "server hostname")
+    private String hostname;
+    
+    @Option(name = "-t", usage = "server port")
+    private int port = 3306;
+    
+    @Option(name = "-d", usage = "server database")
+    private String database;
+    
+    @Option(name = "-u", usage = "server username")
+    private String username;
+    
+    @Option(name = "-p", usage = "server password")
+    private String password;
 
-        // individual option and required arguments
+    // receives other command line parameters than options
+    @Argument
+    private List<String> arguments = new ArrayList<String>();
 
-        options.addOption("h", "help", false, "print this message and exit");
-
-        Option option = new Option("i", "input", true, "input SampleTab filename");
-        option.setRequired(true);
-        options.addOption(option);
-
-        option = new Option("o", "output", true, "output SampleTab filename");
-        option.setRequired(true);
-        options.addOption(option);
-
-        // need information to connect to database to accession new groups
-        option = new Option("n", "hostname", true, "hostname of accesion MySQL database");
-        option.setRequired(true);
-        options.addOption(option);
-
-        option = new Option("t", "port", true, "port of accesion MySQL database");
-        options.addOption(option);
-
-        option = new Option("d", "database", true, "database of accesion MySQL database");
-        option.setRequired(true);
-        options.addOption(option);
-
-        option = new Option("u", "username", true, "username of accesion MySQL database");
-        // option.setRequired(true);
-        options.addOption(option);
-
-        option = new Option("p", "password", true, "password of accesion MySQL database");
-        option.setRequired(true);
-        options.addOption(option);
-
-        CommandLineParser parser = new GnuParser();
-        CommandLine line;
+    public void doMain(String[] args) throws IOException {
+        CmdLineParser parser = new CmdLineParser(this);
         try {
-            line = parser.parse(options, args);
-        } catch (org.apache.commons.cli.ParseException e) {
-            System.err.println("Parsing command line failed. " + e.getMessage());
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("", options);
-            System.exit(100);
+            // parse the arguments.
+            parser.parseArgument(args);
+            // TODO check for extra arguments?
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            help = true;
+        }
+
+        if (help) {
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println();
+            System.exit(1);
             return;
         }
 
-        if (line.hasOption("help")) {
-            // automatically generate the help statement
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("ant", options);
-            return;
-        }
-
-        String inputFilename = line.getOptionValue("input");
-        String outputFilename = line.getOptionValue("output");
-        // this is for the accessioner database
-        final String hostname = line.getOptionValue("hostname");
-        final int port;
-        if (line.hasOption("port")) {
-            port = new Integer(line.getOptionValue("port"));
-        } else {
-            port = 3306;
-        }
-        final String database = line.getOptionValue("database");
-        final String username = line.getOptionValue("username");
-        final String password = line.getOptionValue("password");
-
-        SampleTabToLoad toloader = new SampleTabToLoad();
-        
-        // connect to accessioning database
-        SampleTabAccessioner accessioner;
-        try {
-            accessioner = new SampleTabAccessioner(hostname, port, database, username, password);
-        } catch (ClassNotFoundException e) {
-            System.err.println("ClassNotFoundException connecting to " + hostname + ":" + port + "/" + database);
-            e.printStackTrace();
-            System.exit(111);
-            return;
-        } catch (SQLException e) {
-            System.err.println("SQLException connecting to " + hostname + ":" + port + "/" + database);
-            e.printStackTrace();
-            System.exit(112);
-            return;
-        }
-        
         System.out.println("Looking for input files");
-        ArrayList<File> inputFiles = new ArrayList<File>();
-        //TODO remove hardcoding
+        List<File> inputFiles = new ArrayList<File>();
+        // TODO remove hardcoding
         FileFilter filter = new FileUtils.FileFilterRegex("output/.*/sampletab\\.txt");
-        FileUtils.addMatches(new File("output"), filter , inputFiles);
-        System.out.println("Found "+inputFiles.size()+" files");
+        inputFiles = FileUtils.getMatches(new File("output"), inputFilename);
+        System.out.println("Found " + inputFiles.size() + " files");
         Collections.sort(inputFiles);
-        
+
         class ToLoadTask implements Runnable {
             private final File inputFile;
             private final File outputFile;
-            public ToLoadTask(File inputFile, File outputFile){
+
+            public ToLoadTask(File inputFile, File outputFile) {
                 this.inputFile = inputFile;
                 this.outputFile = outputFile;
             }
-            
-            public void run(){
-                System.out.println("Processing "+inputFile);
-                
+
+            public void run() {
+                System.out.println("Processing " + inputFile);
+
                 SampleData st = null;
                 SampleTabToLoad toloader = new SampleTabToLoad();
                 // do initial parsing and conversion
@@ -286,13 +250,14 @@ public class SampleTabToLoad {
                     e.printStackTrace();
                     return;
                 }
-                
-                //get an accessioner and connect to database
+
+                // get an accessioner and connect to database
                 SampleTabAccessioner accessioner;
                 try {
                     accessioner = new SampleTabAccessioner(hostname, port, database, username, password);
                 } catch (ClassNotFoundException e) {
-                    System.err.println("ClassNotFoundException connecting to " + hostname + ":" + port + "/" + database);
+                    System.err
+                            .println("ClassNotFoundException connecting to " + hostname + ":" + port + "/" + database);
                     e.printStackTrace();
                     return;
                 } catch (SQLException e) {
@@ -300,7 +265,7 @@ public class SampleTabToLoad {
                     e.printStackTrace();
                     return;
                 }
-                
+
                 // assign accession to any created groups
                 try {
                     st = accessioner.convert(st);
@@ -313,7 +278,7 @@ public class SampleTabToLoad {
                     e.printStackTrace();
                     return;
                 }
-                
+
                 // write back out
                 FileWriter out = null;
                 try {
@@ -323,7 +288,7 @@ public class SampleTabToLoad {
                     e.printStackTrace();
                     return;
                 }
-        
+
                 SampleTabWriter sampletabwriter = new SampleTabWriter(out);
                 try {
                     sampletabwriter.write(st);
@@ -332,22 +297,21 @@ public class SampleTabToLoad {
                     e.printStackTrace();
                     return;
                 }
-                
-                System.out.println("Processed "+inputFile);
-                
+
+                System.out.println("Processed " + inputFile);
+
             }
         }
 
-
         int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads*2);
-        
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads * 2);
+
         for (File inputFile : inputFiles) {
-            //System.out.println("Checking "+inputFile);
+            // System.out.println("Checking "+inputFile);
             File outputFile = new File(inputFile.getParentFile(), outputFilename);
-            if (!outputFile.exists()){
+            if (!outputFile.exists()) {
                 ToLoadTask t = new ToLoadTask(inputFile, outputFile);
-                //pool.execute(t);
+                // pool.execute(t);
                 t.run();
             }
         }

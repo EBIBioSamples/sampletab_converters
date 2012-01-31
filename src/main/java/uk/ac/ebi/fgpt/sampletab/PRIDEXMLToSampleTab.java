@@ -198,8 +198,19 @@ public class PRIDEXMLToSampleTab {
         if (!sampletabFile.getParentFile().exists()) {
             sampletabFile.getParentFile().mkdirs();
         }
-
-        convert(infiles, new FileWriter(sampletabFile));
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(sampletabFile); 
+            convert(infiles, writer);
+        } finally {
+            try {
+                if (writer != null ){
+                    writer.close();
+                }
+            } catch (IOException e) {
+                //do nothing
+            }
+        }
     }
 
     public void convert(Set<File> infiles, String outfilename) throws IOException, DocumentException  {
