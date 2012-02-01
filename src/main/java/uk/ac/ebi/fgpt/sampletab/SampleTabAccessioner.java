@@ -11,15 +11,15 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,23 +37,29 @@ public class SampleTabAccessioner {
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private final String connectionStr;
-    private final String username;
-    private final String password;
+    private String connectionStr;
     
     private static ConcurrentLinkedQueue<Connection> connectionQueue = new ConcurrentLinkedQueue<Connection>();
 
-    public SampleTabAccessioner(String host, int port, String database,
-			String username, String password) throws ClassNotFoundException,
+    public SampleTabAccessioner() throws ClassNotFoundException,
 			SQLException {
 		// This will load the MySQL driver, each DB has its own driver
 		Class.forName("com.mysql.jdbc.Driver");
+	}
+    
+    public SampleTabAccessioner(String host, int port, String database,
+			String username, String password) throws ClassNotFoundException,
+			SQLException {
+    	this();
 		// Setup the connection with the DB
 		// host:mysql-ae-autosubs.ebi.ac.uk port:4091 database:ae_autosubs
 		// username:curator password:troajsp
-		this.connectionStr = "jdbc:mysql://" + host + ":" + port + "/" + database;
 		this.username = username;
 		this.password = password;
+		this.hostname = host;
+		this.port = port;
+		this.database = database;
+		this.connectionStr = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
 
 	}
 
@@ -208,96 +214,63 @@ public class SampleTabAccessioner {
         convert(inputFilename, new File(outputFilename));
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
+        new SampleTabAccessioner().doMain(args);
+    }
 
-        // manager for command line arguments
-        Options options = new Options();
+    @Option(name = "-h", usage = "display help")
+    private boolean help;
+    
+    @Option(name = "-i", usage = "input filename or glob")
+    private String inputFilename;
+    
+    @Option(name = "-o", usage = "output filename")
+    private String outputFilename;
+    
+    @Option(name = "-n", usage = "server hostname")
+    private String hostname;
+    
+    @Option(name = "-t", usage = "server port")
+    private int port = 3306;
+    
+    @Option(name = "-d", usage = "server database")
+    private String database;
+    
+    @Option(name = "-u", usage = "server username")
+    private String username;
+    
+    @Option(name = "-p", usage = "server password")
+    private String password;
 
-        // individual option and required arguments
+    // receives other command line parameters than options
+    @Argument
+    private List<String> arguments = new ArrayList<String>();
 
-        options.addOption("h", "help", false, "print this message and exit");
+    public void doMain(String[] args) throws IOException {
 
-        Option option = new Option("i", "input", true, "input SampleTab filename");
-        option.setRequired(true);
-        options.addOption(option);
-
-        option = new Option("o", "output", true, "output SampleTab filename");
-        option.setRequired(true);
-        options.addOption(option);
-
-        option = new Option("n", "hostname", true, "hostname of accesion MySQL database");
-        option.setRequired(true);
-        options.addOption(option);
-
-        option = new Option("t", "port", true, "port of accesion MySQL database");
-        options.addOption(option);
-
-        option = new Option("d", "database", true, "database of accesion MySQL database");
-        option.setRequired(true);
-        options.addOption(option);
-
-        option = new Option("u", "username", true, "username of accesion MySQL database");
-        // option.setRequired(true);
-        options.addOption(option);
-
-        option = new Option("p", "password", true, "password of accesion MySQL database");
-        option.setRequired(true);
-        options.addOption(option);
-
-        CommandLineParser parser = new GnuParser();
-        CommandLine line;
+        CmdLineParser parser = new CmdLineParser(this);
         try {
-            line = parser.parse(options, args);
-        } catch (org.apache.commons.cli.ParseException e) {
-            System.err.println("Parsing command line failed. " + e.getMessage());
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("", options);
-            System.exit(100);
-            return;
-        } catch (IllegalArgumentException e) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("", options);
-            System.exit(100);
-            return;
+            // parse the arguments.
+            parser.parseArgument(args);
+            // TODO check for extra arguments?
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            help = true;
         }
 
-        if (line.hasOption("help")) {
-            // automatically generate the help statement
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("", options);
-            System.exit(100);
+        if (help) {
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println();
+            System.exit(1);
             return;
         }
-
-        String inputFilename = line.getOptionValue("input");
-        String outputFilename = line.getOptionValue("output");
-        String hostname = line.getOptionValue("hostname");
-        int port = 3306;
-        if (line.hasOption("port")) {
-            port = new Integer(line.getOptionValue("port"));
-        }
-        String database = line.getOptionValue("database");
-        String username = line.getOptionValue("username");
-        String password = line.getOptionValue("password");
-
-        SampleTabAccessioner converter = null;
-        try {
-            converter = new SampleTabAccessioner(hostname, port, database, username, password);
-        } catch (ClassNotFoundException e) {
-            System.err.println("ClassNotFoundException connecting to " + hostname + ":" + port + "/" + database);
-            e.printStackTrace();
-            System.exit(111);
-            return;
-        } catch (SQLException e) {
-            System.err.println("SQLException connecting to " + hostname + ":" + port + "/" + database);
-            e.printStackTrace();
-            System.exit(112);
-            return;
-        }
-
+        
+        //TODO handle globs in filenames
+        
         SampleData st = null;
         try {
-            st = converter.convert(inputFilename);
+            st = this.convert(inputFilename);
         } catch (ParseException e) {
             System.err.println("ParseException converting " + inputFilename);
             e.printStackTrace();

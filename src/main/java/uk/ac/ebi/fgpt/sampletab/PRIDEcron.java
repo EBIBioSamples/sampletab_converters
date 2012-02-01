@@ -180,7 +180,14 @@ public class PRIDEcron {
                 e.printStackTrace();
             }
         }
+        
+      //5 min pause to watch where file descriptors are used
         log.info("Parsing completed, starting output to disk...");
+        try {
+			Thread.sleep((long) 300.0);
+		} catch (InterruptedException e) {
+			//do nothing, carry on as normal
+		}
         
         // at this point, subs is a mapping from the project name to a set of BioSample accessions
         // output them to a file
@@ -234,6 +241,7 @@ public class PRIDEcron {
             System.exit(1);
             return;
         }
+        
         String path = args[0];
         File outdir = new File(path);
 

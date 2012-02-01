@@ -36,21 +36,29 @@ public class PRIDEutils {
         return projects;
     }
     
-    public static Map<String, Set<String>> loadProjects(File projectsfile) throws IOException{
+    public static Map<String, Set<String>> loadProjects(File projectsFile) throws IOException{
         Map<String, Set<String>> projects = new HashMap<String, Set<String>>();
         projects = Collections.synchronizedMap(projects);
-        
-        BufferedReader r = new BufferedReader(new FileReader(projectsfile));
-        String line;
-        while ((line = r.readLine()) != null){
-            String[] parts = line.split("\t");
-            String project = parts[0];
-            projects.put(project, new HashSet<String>());
-            for (int i = 1 ; i < parts.length; i++){
-                projects.get(project).add(parts[i]);
-            }
+        BufferedReader r = null;
+        try{
+        	r = new BufferedReader(new FileReader(projectsFile));
+	        String line;
+	        while ((line = r.readLine()) != null){
+	            String[] parts = line.split("\t");
+	            String project = parts[0];
+	            projects.put(project, new HashSet<String>());
+	            for (int i = 1 ; i < parts.length; i++){
+	                projects.get(project).add(parts[i]);
+	            }
+	        }
+        } catch (IOException e){
+        	try {
+        		r.close();
+        	} catch (IOException e2) {
+        		//do nothing
+        	}
+        	throw e;    	
         }
-        r.close();
         return projects;
     }
     
