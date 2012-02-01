@@ -1,5 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
@@ -56,7 +57,10 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
 		} catch (MalformedURLException e) {
             e.printStackTrace();
             fail();
-        }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            fail();
+		}
     }
 
 }

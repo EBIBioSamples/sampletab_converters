@@ -1,6 +1,7 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -47,7 +48,7 @@ public class PRIDEXMLToSampleTab {
     }
 
 
-    public SampleData convert(Set<File> infiles) throws DocumentException {
+    public SampleData convert(Set<File> infiles) throws DocumentException, FileNotFoundException {
         
         SampleData st = new SampleData();
         

@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -19,7 +20,7 @@ public class XMLUtils {
 
 	private static ConcurrentLinkedQueue<SAXReader> readerQueue = new ConcurrentLinkedQueue<SAXReader>();
 
-	public static Document getDocument(File xmlFile) throws DocumentException{
+	public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException{
 		SAXReader reader = readerQueue.poll();
 		if (reader == null){
 			reader = new SAXReader();
@@ -31,9 +32,6 @@ public class XMLUtils {
 		try {
 			r = new BufferedReader(new FileReader(xmlFile));
 			xml = reader.read(r);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} finally {
 			if (r != null){
 				try {

@@ -1,6 +1,7 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -58,13 +59,13 @@ public class NCBIBiosampleToSampleTab {
 
 	public SampleData convert(String ncbiBiosampleXMLFilename)
 			throws MalformedURLException, ParseException, DocumentException,
-			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
+			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException, FileNotFoundException {
 		return convert(new File(ncbiBiosampleXMLFilename));
 	}
 
 	public SampleData convert(File ncbiBiosampleXMLFile)
 			throws DocumentException, ParseException,
-			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
+			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException, FileNotFoundException {
 		return convert(XMLUtils.getDocument(ncbiBiosampleXMLFile));
 	}
 
@@ -87,7 +88,7 @@ public class NCBIBiosampleToSampleTab {
 		}
 		Element owner = XMLUtils.getChildByName(root, "Owner");
 		Element contacts = XMLUtils.getChildByName(owner, "Contacts");
-		Element links = XMLUtils.getChildByName(owner, "Links");
+		Element links = XMLUtils.getChildByName(owner, "Links"); 
 		Element ids = XMLUtils.getChildByName(root, "Ids");
 		Element attributes = XMLUtils.getChildByName(root, "Attributes");
 		Element organism = XMLUtils.getChildByName(description, "Organism");

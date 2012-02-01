@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -68,7 +69,7 @@ public class NCBISampleTabCombiner {
                 this.groupings = groupings;
             }
 
-            public Collection<String> getGroupIds(File xmlFile) throws DocumentException {
+            public Collection<String> getGroupIds(File xmlFile) throws DocumentException, FileNotFoundException {
 
                 log.debug("Trying " + xmlFile);
                 Document xml = XMLUtils.getDocument(xmlFile);
@@ -436,7 +437,11 @@ public class NCBISampleTabCombiner {
                         log.warn("Unable to convert " + xmlfile);
                         e2.printStackTrace();
                         continue;
-                    }
+                    } catch (FileNotFoundException e2) {
+                        log.warn("Unable to convert " + xmlfile);
+                        e2.printStackTrace();
+                        continue;
+					}
                 }
                 SampleData sampleout = combine(sampledatas);
                 
@@ -534,7 +539,11 @@ public class NCBISampleTabCombiner {
                     System.err.println("Unable to convert " + xmlfile);
                     e.printStackTrace();
                     return;
-                }
+                } catch (FileNotFoundException e) {
+                    System.err.println("Unable to convert " + xmlfile);
+                    e.printStackTrace();
+                    return;
+				}
                 sampledatas.add(sampledata);
             }
 

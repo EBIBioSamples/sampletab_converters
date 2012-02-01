@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -85,12 +86,12 @@ public class PRIDEcron {
                 if (xmlfile.exists()) {
                     Set<String> projects;
                     try {
-                        projects = PRIDEutils.getProjects(xmlfile);
-                    } catch (DocumentException e){
-                    	log.error("DocumentException on "+xmlfile);
-                        e.printStackTrace();
-                        return;
-                    }
+						projects = PRIDEutils.getProjects(xmlfile);
+					} catch (FileNotFoundException e) {
+						return;
+					} catch (DocumentException e) {
+						return;
+					}
                     for (String project : projects) {
                         // add it if it does not exist
                         synchronized (this.subs) {
@@ -167,7 +168,9 @@ public class PRIDEcron {
         pool = Executors.newFixedThreadPool(nothreads);        
         
         for (File subdir : outdir.listFiles()) {
-            pool.execute(new XMLProjectRunnable(subdir, subs));
+        	Runnable t = new XMLProjectRunnable(subdir, subs);
+        	t.run();
+            //pool.execute(t);
         }
 
         // run the pool and then close it afterwards

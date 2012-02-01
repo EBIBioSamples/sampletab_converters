@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collections;
@@ -17,21 +18,23 @@ import org.dom4j.Element;
 
 public class PRIDEutils {
 
-    public static Set<String> getProjects(File xmlFile) throws DocumentException {
+    public static Set<String> getProjects(File xmlFile) throws FileNotFoundException, DocumentException {
         Set<String> projects = new HashSet<String>();
         Document xmldoc = null;
         xmldoc = XMLUtils.getDocument(xmlFile);
-        // find the relevant bit in the xml file
-        Element expcoll = xmldoc.getRootElement();
-        Element exp = XMLUtils.getChildByName(expcoll, "Experiment");
-        Element addition = XMLUtils.getChildByName(exp, "additional");
-        for (Element cvparam : XMLUtils.getChildrenByName(addition, "cvParam")) {
-            if (cvparam.attributeValue("name").equals("Project")) {
-                String project = cvparam.attributeValue("value").trim();
-                if (project != null && !project.equals("")){
-                    projects.add(project);
-                }
-            }
+        if (xmldoc != null) {
+	        // find the relevant bit in the xml file
+	        Element expcoll = xmldoc.getRootElement();
+	        Element exp = XMLUtils.getChildByName(expcoll, "Experiment");
+	        Element addition = XMLUtils.getChildByName(exp, "additional");
+	        for (Element cvparam : XMLUtils.getChildrenByName(addition, "cvParam")) {
+	            if (cvparam.attributeValue("name").equals("Project")) {
+	                String project = cvparam.attributeValue("value").trim();
+	                if (project != null && !project.equals("")){
+	                    projects.add(project);
+	                }
+	            }
+	        }
         }
         return projects;
     }
