@@ -184,7 +184,7 @@ public class PRIDEcron {
         //5 min pause to watch where file descriptors are used
         log.info("Parsing completed, starting output to disk...");
         try {
-			Thread.sleep((long) 300.0);
+			Thread.sleep(1000*60*5);
 		} catch (InterruptedException e) {
 			//do nothing, carry on as normal
 		}
