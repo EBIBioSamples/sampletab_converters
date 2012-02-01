@@ -27,6 +27,7 @@ public class XMLUtils {
 			xml = reader.read(xmlFile);
 		} finally {
 		//return the reader back to the queue
+			reader.resetHandlers();
 			readerQueue.add(reader);
 		}
 		
@@ -45,6 +46,7 @@ public class XMLUtils {
 			xml = reader.read(xmlURL);
 		} finally {
 		//return the reader back to the queue
+			reader.resetHandlers();
 			readerQueue.add(reader);
 		}
 		
