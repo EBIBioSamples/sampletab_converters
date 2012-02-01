@@ -87,6 +87,8 @@ public class PRIDEcron {
                     try {
                         projects = PRIDEutils.getProjects(xmlfile);
                     } catch (DocumentException e){
+                    	log.error("DocumentException on "+xmlfile);
+                        e.printStackTrace();
                         return;
                     }
                     for (String project : projects) {
