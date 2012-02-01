@@ -88,8 +88,12 @@ public class PRIDEcron {
                     try {
 						projects = PRIDEutils.getProjects(xmlfile);
 					} catch (FileNotFoundException e) {
+						System.err.println("Error reading file "+xmlfile);
+			            e.printStackTrace();
 						return;
 					} catch (DocumentException e) {
+						System.err.println("Error parsing file "+xmlfile);
+			            e.printStackTrace();
 						return;
 					}
                     for (String project : projects) {
