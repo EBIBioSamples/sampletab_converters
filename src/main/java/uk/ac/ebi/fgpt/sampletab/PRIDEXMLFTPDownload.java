@@ -82,7 +82,7 @@ public class PRIDEXMLFTPDownload implements Runnable {
                 + " | gunzip -c -d"
                 + " | sed '/<GelFreeIdentification>/,/<\\/GelFreeIdentification>/d' "
                 + " | sed '/<TwoDimensionalIdentification>/,/<\\/TwoDimensionalIdentification>/d' "
-                + " | sed '/<spectrumList count=/,/<\\/spectrumList>/d' " 
+                + " | sed '/<spectrumList count=\"[0-9]+\">/,/<\\/spectrumList>/d' " 
                 + " > " + outfile;
             log.debug(bashcom);
 
@@ -99,7 +99,7 @@ public class PRIDEXMLFTPDownload implements Runnable {
                 p.waitFor();
             }
 
-            log.info("Processed " + outfile);
+            log.debug("Processed " + outfile);
 
         } catch (IOException e) {
             log.error("Unable to run bash");

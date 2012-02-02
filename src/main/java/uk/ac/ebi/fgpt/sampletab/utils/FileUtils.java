@@ -7,7 +7,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FileUtils {
+    //static logger must have name hand-written
+    private static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.utils.FileUtils");
 
     public static class FileFilterRegex implements FileFilter {
 
@@ -33,19 +38,7 @@ public class FileUtils {
         private final File regfile;
         
         public FileFilterGlob(String glob) {
-            StringBuilder sb = new StringBuilder(glob.length());
-            for (char currentChar : glob.toCharArray()) {
-                switch (currentChar) {
-                    case '*':
-                        sb.append(".*");
-                    case '.':
-                        sb.append("\\.");
-                    case '?':
-                        sb.append("\\?");
-                }
-            }
-
-            this.regex = sb.toString();
+            this.regex = globToRegex(glob);
             this.regfile = new File(this.regex);
         }
 
@@ -58,8 +51,36 @@ public class FileUtils {
         }
 
     }
+    
+    public static String globToRegex(String glob){
+        StringBuilder sb = new StringBuilder(glob.length());
+        for (char currentChar : glob.toCharArray()) {
+            switch (currentChar) {
+                case '*':
+                    sb.append(".*");
+                case '.':
+                    sb.append("\\.");
+                case '?':
+                    sb.append("\\?");
+            }
+        }
+        return sb.toString();
+    }
 
-    public static List<File> getMatches(File start, String regex) {
+    
+    public static List<File> getMatchesGlob(String glob) {
+        return getMatchesRegex(globToRegex(glob));
+    }
+    
+    public static List<File> getMatchesGlob(File start, String glob) {
+        return getMatchesRegex(start, globToRegex(glob));
+    }
+    
+    public static List<File> getMatchesRegex(String regex) {
+        return getMatchesRegex(new File("."), regex);
+    }
+
+    public static List<File> getMatchesRegex(File start, String regex) {
         List<File> outfiles = new ArrayList<File>();
         File regfile = new File(regex);
         addMatches(start, regex, outfiles, 0);
@@ -99,4 +120,5 @@ public class FileUtils {
 //            }
 //        }
 //    }
+    
 }

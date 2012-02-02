@@ -62,6 +62,8 @@ public class MageTabcron {
 	        String bashcom;
 	        ArrayList<String> command;
 	        
+	        log.info("Curl downloading "+this.filename);
+	        
 	        bashcom = "curl -z "+filename+" -o "+filename+" "+url;
 	        log.debug(bashcom);
 
@@ -138,8 +140,6 @@ public class MageTabcron {
 								+ ".idf.txt";
 						String sdrfpath = subsubdirpath + subsubdir.getName()
 								+ ".sdrf.txt";
-
-						log.info("working on " + subsubdirpath);
 
 						File outsubdir = new File(outdir, "GA"
 								+ subsubdir.getName());

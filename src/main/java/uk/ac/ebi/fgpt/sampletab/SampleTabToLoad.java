@@ -220,7 +220,7 @@ public class SampleTabToLoad {
         List<File> inputFiles = new ArrayList<File>();
         // TODO remove hardcoding
         FileFilter filter = new FileUtils.FileFilterRegex("output/.*/sampletab\\.txt");
-        inputFiles = FileUtils.getMatches(new File("output"), inputFilename);
+        inputFiles = FileUtils.getMatchesGlob(new File("output"), inputFilename);
         System.out.println("Found " + inputFiles.size() + " files");
         Collections.sort(inputFiles);
 
