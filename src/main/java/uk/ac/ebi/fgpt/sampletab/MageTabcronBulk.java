@@ -88,6 +88,14 @@ public class MageTabcronBulk {
             File sampletabtoload = new File(subdir, "sampletab.toload.txt");
             File age = new File(subdir, "age");
 
+            //TODO fix the few files that cannot be processed
+            
+            if (idffilename.equals("E-GEOD-27923.idf.txt")){
+                log.warn("Skipping E-GEOD-27923 as it is too large");
+                return;
+            }
+            
+            
             if (!idffile.exists() || !sdrffile.exists()) {
                 return;
             }

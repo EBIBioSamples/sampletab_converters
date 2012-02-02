@@ -27,6 +27,10 @@ import org.slf4j.LoggerFactory;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
@@ -37,22 +41,32 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBISampleTabCombiner {
 
+    @Option(name = "-h", usage = "display help")
+    private boolean help;
+    
+    @Option(name = "-i", usage = "input directory")
+    private String inputFilename;
+    
+    @Option(name = "-o", usage = "output directory")
+    private String outputFilename;
+
+    // receives other command line parameters than options
+    @Argument
+    private List<String> arguments = new ArrayList<String>();
+    
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private int maxident = 100000; // max is 1,000,000
-    private static File rootdir;
-
+    private int maxident = 300000; // max is 1,000,000
+    
     private final Map<String, Set<String>> groupings;
 
-    private NCBISampleTabCombiner() {
+    public NCBISampleTabCombiner() {
         // private constructor
-        rootdir = new File("ncbicopy");
         groupings = new ConcurrentHashMap<String, Set<String>>();
-
     }
 
     private File getFileByIdent(int ident) {
-        File subdir = new File(rootdir, "" + ((ident / 1000) * 1000));
+        File subdir = new File(this.inputFilename, "" + ((ident / 1000) * 1000));
         File xmlfile = new File(subdir, "" + ident + ".xml");
         return xmlfile;
     }
@@ -169,7 +183,7 @@ public class NCBISampleTabCombiner {
         for (int i = 0; i < maxident; i++) {
             pool.submit(new GroupIDsTask(i, groupings));
         }
-        log.info("All tasks submitted");
+        log.info("All GroupIDsTask tasks submitted");
 
         synchronized (pool) {
             pool.shutdown();
@@ -385,21 +399,44 @@ public class NCBISampleTabCombiner {
 
         return sampleout;
     }
+    
+    public static void main(String[] args) throws IOException {
+        new NCBISampleTabCombiner().doMain(args);
+    }
 
-    public void combine() {
+    public void doMain(String[] args) throws IOException {
+        CmdLineParser parser = new CmdLineParser(this);
+        try {
+            // parse the arguments.
+            parser.parseArgument(args);
+            // TODO check for extra arguments?
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            help = true;
+        }
+
+        if (help) {
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println();
+            System.exit(1);
+            return;
+        }
+        
+        log.info("Starting combiner...");
 
         Map<String, Set<String>> groups;
 
         try {
-            log.info("Getting groupings...");
+            log.debug("Getting groupings...");
             groups = getGroupings();
-            log.info("Got groupings...");
+            log.debug("Got groupings...");
         } catch (DocumentException e) {
-            log.warn("Unable to group");
+            log.error("Unable to group");
             e.printStackTrace();
             return;
         } catch (SQLException e) {
-            log.warn("Unable to group");
+            log.error("Unable to group");
             e.printStackTrace();
             return;
         }
@@ -408,11 +445,14 @@ public class NCBISampleTabCombiner {
         class OutputTask implements Runnable {
             private final Collection<String> group;
             private final String groupname;
+            private final File outFile;
             private final NCBIBiosampleToSampleTab converter;
-            public OutputTask(Collection<String> group, String groupname){
+            
+            public OutputTask(Collection<String> group, String groupname, File outFile){
                 this.group = group;
                 this.groupname = groupname;
                 this.converter = new NCBIBiosampleToSampleTab();
+                this.outFile = outFile;
             }
             public void run() {
 
@@ -441,31 +481,27 @@ public class NCBISampleTabCombiner {
                         log.warn("Unable to convert " + xmlfile);
                         e2.printStackTrace();
                         continue;
-					}
+                    }
                 }
                 SampleData sampleout = combine(sampledatas);
                 
                 sampleout.msi.submissionIdentifier = "GNC-" + this.groupname;
                 log.debug("submissionIdentifier: "+sampleout.msi.submissionIdentifier);
-                File outdir = new File("output");
-                File outsubdir = new File(outdir, sampleout.msi.submissionIdentifier);
-                outsubdir.mkdirs();
-                File outfile = new File(outsubdir, "sampletab.txt");
-                log.debug("outfile "+outfile);
                 
                 // more sanity checks
                 if (sampleout.scd.getRootNodes().size() != this.group.size()) {
-                    log.info("unequal group size "+outfile);
+                    log.warn("unequal group size "+sampleout.msi.submissionIdentifier);
                 }
                 
                 SampleTabWriter writer;
                 try {
-                    writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outfile)));
+                    writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outFile)));
                     writer.write(sampleout);
                     writer.close();
                 } catch (IOException e) {
-                    log.warn("Unable to write " + outfile);
+                    log.error("Unable to write " + outFile);
                     e.printStackTrace();
+                    return;
                 }
                 
             }
@@ -480,18 +516,30 @@ public class NCBISampleTabCombiner {
         log.info("Using " + nocpus + " threads");
         ExecutorService pool = Executors.newFixedThreadPool(nocpus*2);
 
-        for (String group : projects) {
+        for (String groupname : projects) {
 
-            if (group == null || group.equals("")) {
+            if (groupname == null || groupname.equals("")) {
                 log.info("Skipping empty group name");
                 continue;
             }
-            if (groups.get(group).size() < 1) {
+            if (groups.get(groupname).size() < 1) {
                 continue;
             }
-            pool.submit(new OutputTask(groups.get(group), group));            
+            
+            File outsubdir = new File(outputFilename, "GNC-"+groupname);
+            File outFile = new File(outsubdir, "sampletab.txt");
+            //TODO also compare file ages
+            //TODO also check output file is size > 0
+            if (!outFile.exists()){
+                outFile.getParentFile().mkdirs();
+                log.debug("outfile "+outFile);
+                //TODO make this operate on inputfiles and outputfiles
+                Runnable t = new OutputTask(groups.get(groupname), groupname, outFile);
+                pool.execute(t);
+                //t.run();        
+            }
         }
-        log.info("All tasks submitted");
+        log.info("All OutputTask tasks submitted");
         synchronized (pool) {
             pool.shutdown();
             try {
@@ -501,70 +549,6 @@ public class NCBISampleTabCombiner {
                 log.error("Interuppted awaiting thread pool termination");
                 e.printStackTrace();
             }
-        }
-    }
-
-    public static void main(String[] args) {
-        NCBISampleTabCombiner instance = new NCBISampleTabCombiner();
-
-        if (args.length == 0) {
-            // no args, so search and combine ones
-            instance.log.info("Starting combiner...");
-            instance.combine();
-        } else {
-            // convert and combine the given xml files
-            Collection<File> infiles = new ArrayList<File>();
-            for (int i = 0; i < args.length; i++) {
-                File infile = new File(args[i]);
-                infile = infile.getAbsoluteFile();
-                if (infile.exists())
-                    System.out.println("Combining " + infile);
-                infiles.add(infile);
-            }
-            Collection<SampleData> sampledatas = new ArrayList<SampleData>();
-            NCBIBiosampleToSampleTab converter = new NCBIBiosampleToSampleTab();
-            for (File xmlfile : infiles) {
-                SampleData sampledata;
-                try {
-                    sampledata = converter.convert(xmlfile);
-                } catch (DocumentException e) {
-                    System.err.println("Unable to convert " + xmlfile);
-                    e.printStackTrace();
-                    return;
-                } catch (ParseException e) {
-                    System.err.println("Unable to convert " + xmlfile);
-                    e.printStackTrace();
-                    return;
-                } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
-                    System.err.println("Unable to convert " + xmlfile);
-                    e.printStackTrace();
-                    return;
-                } catch (FileNotFoundException e) {
-                    System.err.println("Unable to convert " + xmlfile);
-                    e.printStackTrace();
-                    return;
-				}
-                sampledatas.add(sampledata);
-            }
-
-            SampleData outdata = instance.combine(sampledatas);
-
-            File outfile = new File("sampletab.txt").getAbsoluteFile();
-            //TODO hard coded, bad!
-            outdata.msi.submissionIdentifier = "GNC-DRP000001";
-           
-            SampleTabWriter writer;
-
-            try {
-                writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outfile)));
-                writer.write(outdata);
-                writer.close();
-            } catch (IOException e) {
-                System.err.println("Unable to write " + outfile);
-                e.printStackTrace();
-                return;
-            }
-            System.out.println("Writen to " + outfile);
         }
 
     }

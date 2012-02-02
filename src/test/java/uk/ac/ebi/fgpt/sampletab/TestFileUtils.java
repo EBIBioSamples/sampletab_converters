@@ -44,10 +44,10 @@ public class TestFileUtils extends TestCase {
         File secondA1 = new File(second, "A1.txt");
         File secondA2 = new File(second, "A2.txt");
         try {
-            org.apache.commons.io.FileUtils.touch(firstA1);
-            org.apache.commons.io.FileUtils.touch(firstA2);
-            org.apache.commons.io.FileUtils.touch(secondA1);
-            org.apache.commons.io.FileUtils.touch(secondA2);
+            firstA1.createNewFile();
+            firstA2.createNewFile();
+            secondA1.createNewFile();
+            secondA2.createNewFile();
         } catch (IOException e) {
             log.error("unable to create files for testing");
             e.printStackTrace();
@@ -56,7 +56,7 @@ public class TestFileUtils extends TestCase {
         
         
         //now check the results are what we expect
-        String regex = ".*/A1\\.txt";
+        String regex = "First/.*\\.txt";
         log.info(regex+" : "+FileUtils.getMatchesRegex(regex));
     
     }

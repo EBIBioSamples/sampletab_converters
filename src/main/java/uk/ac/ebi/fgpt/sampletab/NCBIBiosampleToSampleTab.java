@@ -9,12 +9,17 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -26,11 +31,24 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBIBiosampleToSampleTab {
 
-	// logging
+    @Option(name = "-h", usage = "display help")
+    private boolean help;
+    
+    @Option(name = "-i", usage = "input filename")
+    private String inputFilename;
+    
+    @Option(name = "-o", usage = "output filename")
+    private String outputFilename;
+
+    // receives other command line parameters than options
+    @Argument
+    private List<String> arguments = new ArrayList<String>();
+    
+
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	public NCBIBiosampleToSampleTab() {
-		// private constructor to prevent accidental multiple initialisations
+	    
 	}
 
 	public String addressToString(Element address) {
@@ -275,43 +293,66 @@ public class NCBIBiosampleToSampleTab {
 		return st;
 	}
 
-	public static void main(String[] args) {
-		String ncbiBiosampleXMLFilename = args[0];
-		String sampleTabFilename = args[1];
+    
+    public static void main(String[] args) throws IOException {
+        new NCBISampleTabCombiner().doMain(args);
+    }
 
+    public void doMain(String[] args) throws IOException {
+        CmdLineParser parser = new CmdLineParser(this);
+        try {
+            // parse the arguments.
+            parser.parseArgument(args);
+            // TODO check for extra arguments?
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            help = true;
+        }
+
+        if (help) {
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println();
+            System.exit(1);
+            return;
+        }
+        
+        //TODO handle glob filenames
 		NCBIBiosampleToSampleTab converter = new NCBIBiosampleToSampleTab();
 
 		SampleData st = null;
 		try {
-			st = converter.convert(ncbiBiosampleXMLFilename);
+			st = converter.convert(inputFilename);
 		} catch (IOException e) {
-			System.out.println("Error converting " + ncbiBiosampleXMLFilename);
+			System.out.println("Error converting " + inputFilename);
 			e.printStackTrace();
 		} catch (ParseException e) {
-			System.out.println("Error converting " + ncbiBiosampleXMLFilename);
+			System.out.println("Error converting " + inputFilename);
 			e.printStackTrace();
 		} catch (DocumentException e) {
-			System.out.println("Error converting " + ncbiBiosampleXMLFilename);
+			System.out.println("Error converting " + inputFilename);
 			e.printStackTrace();
 		} catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
-			System.out.println("Error converting " + ncbiBiosampleXMLFilename);
+			System.out.println("Error converting " + inputFilename);
 			e.printStackTrace();
 		}
 
 		FileWriter out = null;
 		try {
-			out = new FileWriter(sampleTabFilename);
+			out = new FileWriter(outputFilename);
+	        SampleTabWriter sampletabwriter = new SampleTabWriter(out);
+            sampletabwriter.write(st);
 		} catch (IOException e) {
-			System.out.println("Error opening " + sampleTabFilename);
+			System.out.println("Error writing " + outputFilename);
 			e.printStackTrace();
-		}
-
-		SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-		try {
-			sampletabwriter.write(st);
-		} catch (IOException e) {
-			System.out.println("Error writing " + sampleTabFilename);
-			e.printStackTrace();
+		} finally {
+		    if (out != null){
+		        try {
+		            out.close();
+		        } catch (IOException e2){
+		            //do nothing
+		        }
+		    }
 		}
 	}
 }

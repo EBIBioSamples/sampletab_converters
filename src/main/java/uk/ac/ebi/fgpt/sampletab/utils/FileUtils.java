@@ -11,9 +11,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FileUtils {
-    //static logger must have name hand-written
+    // static logger must have name hand-written
     private static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.utils.FileUtils");
 
+    //TODO javadoc
+    public static List<File> getParentFiles(File start) {
+        List<File> parents = new ArrayList<File>();
+        parents.add(new File(start.getName()));
+        File totest = start;
+        while (totest.getParentFile() != null) {
+            totest = totest.getParentFile();
+            parents.add(0, new File(totest.getName()));
+        }
+        return parents;
+    }
+
+    //TODO javadoc
+    public static File joinFileList(List<File> files){
+        File out = files.get(0);
+        int i = 1;
+        while (i < files.size()){
+            out = new File(out, files.get(i).getName());
+            i ++;
+        }
+        return out;
+    }
+
+    //TODO javadoc
     public static class FileFilterRegex implements FileFilter {
 
         private final String regex;
@@ -32,11 +56,12 @@ public class FileUtils {
 
     }
 
+    //TODO javadoc
     public static class FileFilterGlob implements FileFilter {
 
         private final String regex;
         private final File regfile;
-        
+
         public FileFilterGlob(String glob) {
             this.regex = globToRegex(glob);
             this.regfile = new File(this.regex);
@@ -51,8 +76,9 @@ public class FileUtils {
         }
 
     }
-    
-    public static String globToRegex(String glob){
+
+    //TODO javadoc
+    public static String globToRegex(String glob) {
         StringBuilder sb = new StringBuilder(glob.length());
         for (char currentChar : glob.toCharArray()) {
             switch (currentChar) {
@@ -67,32 +93,41 @@ public class FileUtils {
         return sb.toString();
     }
 
-    
+    //TODO javadoc
     public static List<File> getMatchesGlob(String glob) {
         return getMatchesRegex(globToRegex(glob));
     }
-    
-    public static List<File> getMatchesGlob(File start, String glob) {
-        return getMatchesRegex(start, globToRegex(glob));
-    }
-    
-    public static List<File> getMatchesRegex(String regex) {
-        return getMatchesRegex(new File("."), regex);
-    }
 
-    public static List<File> getMatchesRegex(File start, String regex) {
+    //TODO javadoc
+    public static List<File> getMatchesRegex(String regex) {
         List<File> outfiles = new ArrayList<File>();
         File regfile = new File(regex);
+        log.debug("regfile = "+regfile);
+
+        List<File> regparents = getParentFiles(regfile);
+        log.debug("regparents = "+regparents);
+        int i;
+        for(i = 0; i < regparents.size(); i++){
+            if (regparents.get(i).getName().contains(".*") || regparents.get(i).getName().contains("?")){
+                break;
+            }
+        }
+        regex = joinFileList(regparents.subList(i, regparents.size())).toString();
+        log.debug("cleaned regex : "+regex);
+        File start = joinFileList(regparents.subList(0, i));
+        log.debug("cleaned start : "+start);
         addMatches(start, regex, outfiles, 0);
         return outfiles;
     }
-    
+
+    //TODO javadoc
     private static void addMatches(File file, String regex, Collection<File> outfiles, int depth) {
+        log.debug("checking "+file);
         if (file.isDirectory()) {
             File[] subfiles = file.listFiles();
             Arrays.sort(subfiles);
             for (File subfile : subfiles) {
-                addMatches(subfile, regex, outfiles, depth+1);
+                addMatches(subfile, regex, outfiles, depth + 1);
             }
         } else {
             if (file.getPath().matches(regex)) {
@@ -100,25 +135,4 @@ public class FileUtils {
             }
         }
     }
-
-//    public static List<File> getMatches(File start, FileFilter filter) {
-//        List<File> outfiles = new ArrayList<File>();
-//        addMatches(start, filter, outfiles, 0);
-//        return outfiles;
-//    }
-//    
-//    private static void addMatches(File start, FileFilter filter, Collection<File> outfiles, int depth) {
-//        if (start.isDirectory()) {
-//            File[] subfiles = start.listFiles();
-//            Arrays.sort(subfiles);
-//            for (File subfile : subfiles) {
-//                addMatches(subfile, filter, outfiles, depth+1);
-//            }
-//        } else {
-//            if (filter.accept(start)) {
-//                outfiles.add(start);
-//            }
-//        }
-//    }
-    
 }

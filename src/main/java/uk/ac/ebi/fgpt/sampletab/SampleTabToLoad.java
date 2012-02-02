@@ -33,10 +33,38 @@ import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class SampleTabToLoad {
 
-    public final SampleTabParser<SampleData> parser;
+    @Option(name = "-h", usage = "display help")
+    private boolean help;
+
+    @Option(name = "-i", usage = "input filename or glob")
+    private String inputFilename;
+
+    @Option(name = "-o", usage = "output filename")
+    private String outputFilename;
+
+    @Option(name = "-n", usage = "server hostname")
+    private String hostname;
+
+    @Option(name = "-t", usage = "server port")
+    private int port = 3306;
+
+    @Option(name = "-d", usage = "server database")
+    private String database;
+
+    @Option(name = "-u", usage = "server username")
+    private String username;
+
+    @Option(name = "-p", usage = "server password")
+    private String password;
+
+    // receives other command line parameters than options
+    @Argument
+    private List<String> arguments = new ArrayList<String>();
+
+    public final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
 
     public SampleTabToLoad() {
-        parser = new SampleTabParser<SampleData>();
+        // do nothing
     }
 
     public Logger getLog() {
@@ -165,39 +193,85 @@ public class SampleTabToLoad {
         convert(new File(infilename), new File(outfilename));
     }
 
-    public static void main(String[] args) throws IOException {
+    class ToLoadTask implements Runnable {
+        private final File inputFile;
+        private final File outputFile;
+
+        public ToLoadTask(File inputFile, File outputFile) {
+            this.inputFile = inputFile;
+            this.outputFile = outputFile;
+        }
+
+        public void run() {
+            log.debug("Processing " + inputFile);
+
+            SampleData st = null;
+            SampleTabToLoad toloader = new SampleTabToLoad();
+            // do initial parsing and conversion
+            try {
+                st = toloader.convert(inputFile);
+            } catch (ParseException e) {
+                System.err.println("ParseException converting " + inputFile);
+                e.printStackTrace();
+                return;
+            } catch (IOException e) {
+                System.err.println("IOException converting " + inputFile);
+                e.printStackTrace();
+                return;
+            }
+
+            // get an accessioner and connect to database
+            SampleTabAccessioner accessioner;
+            try {
+                accessioner = new SampleTabAccessioner(hostname, port, database, username, password);
+            } catch (ClassNotFoundException e) {
+                log.error("ClassNotFoundException connecting to " + hostname + ":" + port + "/" + database);
+                e.printStackTrace();
+                return;
+            }
+
+            // assign accession to any created groups
+            try {
+                st = accessioner.convert(st);
+            } catch (ParseException e) {
+                System.err.println("ParseException converting " + inputFile);
+                e.printStackTrace();
+                return;
+            } catch (SQLException e) {
+                System.err.println("SQLException converting " + inputFile);
+                e.printStackTrace();
+                return;
+            }
+
+            // write back out
+            FileWriter out = null;
+            try {
+                out = new FileWriter(outputFile);
+            } catch (IOException e) {
+                System.out.println("Error opening " + outputFile);
+                e.printStackTrace();
+                return;
+            }
+
+            SampleTabWriter sampletabwriter = new SampleTabWriter(out);
+            try {
+                sampletabwriter.write(st);
+            } catch (IOException e) {
+                System.out.println("Error writing " + outputFile);
+                e.printStackTrace();
+                return;
+            }
+
+            log.debug("Processed " + inputFile);
+
+        }
+    }
+
+    public static void main(String[] args) {
         new SampleTabToLoad().doMain(args);
     }
 
-    @Option(name = "-h", usage = "display help")
-    private boolean help;
-    
-    @Option(name = "-i", usage = "input filename or glob")
-    private String inputFilename;
-    
-    @Option(name = "-o", usage = "output filename")
-    private String outputFilename;
-    
-    @Option(name = "-n", usage = "server hostname")
-    private String hostname;
-    
-    @Option(name = "-t", usage = "server port")
-    private int port = 3306;
-    
-    @Option(name = "-d", usage = "server database")
-    private String database;
-    
-    @Option(name = "-u", usage = "server username")
-    private String username;
-    
-    @Option(name = "-p", usage = "server password")
-    private String password;
-
-    // receives other command line parameters than options
-    @Argument
-    private List<String> arguments = new ArrayList<String>();
-
-    public void doMain(String[] args) throws IOException {
+    public void doMain(String[] args) {
         CmdLineParser parser = new CmdLineParser(this);
         try {
             // parse the arguments.
@@ -216,92 +290,12 @@ public class SampleTabToLoad {
             return;
         }
 
-        System.out.println("Looking for input files");
+        log.debug("Looking for input files");
         List<File> inputFiles = new ArrayList<File>();
         // TODO remove hardcoding
-        FileFilter filter = new FileUtils.FileFilterRegex("output/.*/sampletab\\.txt");
-        inputFiles = FileUtils.getMatchesGlob(new File("output"), inputFilename);
-        System.out.println("Found " + inputFiles.size() + " files");
+        inputFiles = FileUtils.getMatchesGlob(inputFilename);
+        log.info("Found " + inputFiles.size() + " input files");
         Collections.sort(inputFiles);
-
-        class ToLoadTask implements Runnable {
-            private final File inputFile;
-            private final File outputFile;
-
-            public ToLoadTask(File inputFile, File outputFile) {
-                this.inputFile = inputFile;
-                this.outputFile = outputFile;
-            }
-
-            public void run() {
-                System.out.println("Processing " + inputFile);
-
-                SampleData st = null;
-                SampleTabToLoad toloader = new SampleTabToLoad();
-                // do initial parsing and conversion
-                try {
-                    st = toloader.convert(inputFile);
-                } catch (ParseException e) {
-                    System.err.println("ParseException converting " + inputFile);
-                    e.printStackTrace();
-                    return;
-                } catch (IOException e) {
-                    System.err.println("IOException converting " + inputFile);
-                    e.printStackTrace();
-                    return;
-                }
-
-                // get an accessioner and connect to database
-                SampleTabAccessioner accessioner;
-                try {
-                    accessioner = new SampleTabAccessioner(hostname, port, database, username, password);
-                } catch (ClassNotFoundException e) {
-                    System.err
-                            .println("ClassNotFoundException connecting to " + hostname + ":" + port + "/" + database);
-                    e.printStackTrace();
-                    return;
-                } catch (SQLException e) {
-                    System.err.println("SQLException connecting to " + hostname + ":" + port + "/" + database);
-                    e.printStackTrace();
-                    return;
-                }
-
-                // assign accession to any created groups
-                try {
-                    st = accessioner.convert(st);
-                } catch (ParseException e) {
-                    System.err.println("ParseException converting " + inputFile);
-                    e.printStackTrace();
-                    return;
-                } catch (SQLException e) {
-                    System.err.println("SQLException converting " + inputFile);
-                    e.printStackTrace();
-                    return;
-                }
-
-                // write back out
-                FileWriter out = null;
-                try {
-                    out = new FileWriter(outputFile);
-                } catch (IOException e) {
-                    System.out.println("Error opening " + outputFile);
-                    e.printStackTrace();
-                    return;
-                }
-
-                SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-                try {
-                    sampletabwriter.write(st);
-                } catch (IOException e) {
-                    System.out.println("Error writing " + outputFile);
-                    e.printStackTrace();
-                    return;
-                }
-
-                System.out.println("Processed " + inputFile);
-
-            }
-        }
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads * 2);
@@ -309,10 +303,11 @@ public class SampleTabToLoad {
         for (File inputFile : inputFiles) {
             // System.out.println("Checking "+inputFile);
             File outputFile = new File(inputFile.getParentFile(), outputFilename);
+            // TODO also compare file ages
             if (!outputFile.exists()) {
-                ToLoadTask t = new ToLoadTask(inputFile, outputFile);
-                // pool.execute(t);
-                t.run();
+                Runnable t = new ToLoadTask(inputFile, outputFile);
+                pool.execute(t);
+                // t.run();
             }
         }
         // run the pool and then close it afterwards
@@ -323,10 +318,10 @@ public class SampleTabToLoad {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                System.err.println("Interuppted awaiting thread pool termination");
+                log.error("Interupted awaiting thread pool termination");
                 e.printStackTrace();
             }
         }
-        System.out.println("Finished processing");
+        log.info("Finished processing");
     }
 }

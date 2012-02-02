@@ -13,8 +13,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -29,50 +33,75 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class SampleTabAccessioner {
 
-    public static final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+    @Option(name = "-h", usage = "display help")
+    private boolean help;
 
-    // logging
+    @Option(name = "-i", usage = "input filename or glob")
+    private String inputFilename;
+
+    @Option(name = "-o", usage = "output filename")
+    private String outputFilename;
+
+    @Option(name = "-n", usage = "server hostname")
+    private String hostname;
+
+    @Option(name = "-t", usage = "server port")
+    private int port = 3306;
+
+    @Option(name = "-d", usage = "server database")
+    private String database;
+
+    @Option(name = "-u", usage = "server username")
+    private String username;
+
+    @Option(name = "-p", usage = "server password")
+    private String password;
+
+    // receives other command line parameters than options
+    @Argument
+    private List<String> arguments = new ArrayList<String>();
+
+    public final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private String connectionStr;
-    
+    // shared queue to cache instances in
     private static ConcurrentLinkedQueue<Connection> connectionQueue = new ConcurrentLinkedQueue<Connection>();
 
-    public SampleTabAccessioner() throws ClassNotFoundException,
-			SQLException {
-		// This will load the MySQL driver, each DB has its own driver
-		Class.forName("com.mysql.jdbc.Driver");
-	}
-    
-    public SampleTabAccessioner(String host, int port, String database,
-			String username, String password) throws ClassNotFoundException,
-			SQLException {
-    	this();
-		// Setup the connection with the DB
-		// host:mysql-ae-autosubs.ebi.ac.uk port:4091 database:ae_autosubs
-		// username:curator password:troajsp
-		this.username = username;
-		this.password = password;
-		this.hostname = host;
-		this.port = port;
-		this.database = database;
-		this.connectionStr = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
+    public SampleTabAccessioner() throws ClassNotFoundException {
+        // This will load the MySQL driver, each DB has its own driver
+        Class.forName("com.mysql.jdbc.Driver");
+    }
 
-	}
+    public SampleTabAccessioner(String host, int port, String database, String username, String password)
+            throws ClassNotFoundException {
+        this();
+        // Setup the connection with the DB
+        // host:mysql-ae-autosubs.ebi.ac.uk port:4091 database:ae_autosubs
+        // username:curator password:troajsp
+        this.username = username;
+        this.password = password;
+        this.hostname = host;
+        this.port = port;
+        this.database = database;
+
+    }
 
     private Connection checkoutConnection() throws SQLException {
         Connection connect = connectionQueue.poll();
-        if (connect == null){
-            connect = DriverManager.getConnection(this.connectionStr, this.username, this.password);
+        if (connect == null) {
+            String connectionStr = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
+            connect = DriverManager.getConnection(connectionStr, this.username, this.password);
         }
         return connect;
     }
 
     private void returnConnection(Connection connect) {
-        if (!connectionQueue.contains(connect)){
+        if (!connectionQueue.contains(connect)) {
             connectionQueue.add(connect);
         }
     }
@@ -121,57 +150,61 @@ public class SampleTabAccessioner {
 
         getLog().debug("got " + samples.size() + " samples.");
         Connection connect = checkoutConnection();
-        
-        for (SampleNode sample : samples) {
-            if (sample.sampleAccession == null) {
-                name = sample.getNodeName();
-                statement = connect.prepareStatement("INSERT IGNORE INTO " + table
-                        + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
-                statement.setString(1, name);
-                statement.setString(2, submission);
-                statement.executeUpdate();
+        try {
+            for (SampleNode sample : samples) {
+                if (sample.sampleAccession == null) {
+                    name = sample.getNodeName();
+                    statement = connect
+                            .prepareStatement("INSERT IGNORE INTO "
+                                    + table
+                                    + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
+                    statement.setString(1, name);
+                    statement.setString(2, submission);
+                    statement.executeUpdate();
 
-                statement = connect.prepareStatement("SELECT accession FROM " + table
-                        + " WHERE user_accession = ? AND submission_accession = ?");
-                statement.setString(1, name);
-                statement.setString(2, submission);
-                results = statement.executeQuery();
-                results.first();
-                accessionID = results.getInt(1);
-                accession = prefix + accessionID;
+                    statement = connect.prepareStatement("SELECT accession FROM " + table
+                            + " WHERE user_accession = ? AND submission_accession = ?");
+                    statement.setString(1, name);
+                    statement.setString(2, submission);
+                    results = statement.executeQuery();
+                    results.first();
+                    accessionID = results.getInt(1);
+                    accession = prefix + accessionID;
 
-                getLog().debug("Assigning " + accession + " to " + name);
-                sample.sampleAccession = accession;
+                    getLog().debug("Assigning " + accession + " to " + name);
+                    sample.sampleAccession = accession;
+                }
             }
+
+            Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
+
+            getLog().debug("got " + groups.size() + " groups.");
+            for (GroupNode group : groups) {
+                if (group.groupAccession == null) {
+                    name = group.getNodeName();
+                    statement = connect
+                            .prepareStatement("INSERT IGNORE INTO sample_groups (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
+                    statement.setString(1, name);
+                    statement.setString(2, submission);
+                    statement.executeUpdate();
+
+                    statement = connect
+                            .prepareStatement("SELECT accession FROM sample_groups WHERE user_accession = ? AND submission_accession = ?");
+                    statement.setString(1, name);
+                    statement.setString(2, submission);
+                    results = statement.executeQuery();
+                    results.first();
+                    accessionID = results.getInt(1);
+                    accession = "SAMEG" + accessionID;
+
+                    getLog().debug("Assigning " + accession + " to " + name);
+                    group.groupAccession = accession;
+                }
+            }
+        } finally {
+            returnConnection(connect);
         }
 
-        Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
-
-        getLog().debug("got " + groups.size() + " groups.");
-        for (GroupNode group : groups) {
-            if (group.groupAccession == null) {
-                name = group.getNodeName();
-                statement = connect
-                        .prepareStatement("INSERT IGNORE INTO sample_groups (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
-                statement.setString(1, name);
-                statement.setString(2, submission);
-                statement.executeUpdate();
-
-                statement = connect
-                        .prepareStatement("SELECT accession FROM sample_groups WHERE user_accession = ? AND submission_accession = ?");
-                statement.setString(1, name);
-                statement.setString(2, submission);
-                results = statement.executeQuery();
-                results.first();
-                accessionID = results.getInt(1);
-                accession = "SAMEG" + accessionID;
-
-                getLog().debug("Assigning " + accession + " to " + name);
-                group.groupAccession = accession;
-            }
-        }
-        
-        returnConnection(connect);
         return sampleIn;
     }
 
@@ -214,39 +247,16 @@ public class SampleTabAccessioner {
         convert(inputFilename, new File(outputFilename));
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
-        new SampleTabAccessioner().doMain(args);
+    public static void main(String[] args) {
+        try {
+            new SampleTabAccessioner().doMain(args);
+        } catch (ClassNotFoundException e) {
+            System.err.println("Unable to find com.mysql.jdbc.Driver");
+            e.printStackTrace();
+        }
     }
 
-    @Option(name = "-h", usage = "display help")
-    private boolean help;
-    
-    @Option(name = "-i", usage = "input filename or glob")
-    private String inputFilename;
-    
-    @Option(name = "-o", usage = "output filename")
-    private String outputFilename;
-    
-    @Option(name = "-n", usage = "server hostname")
-    private String hostname;
-    
-    @Option(name = "-t", usage = "server port")
-    private int port = 3306;
-    
-    @Option(name = "-d", usage = "server database")
-    private String database;
-    
-    @Option(name = "-u", usage = "server username")
-    private String username;
-    
-    @Option(name = "-p", usage = "server password")
-    private String password;
-
-    // receives other command line parameters than options
-    @Argument
-    private List<String> arguments = new ArrayList<String>();
-
-    public void doMain(String[] args) throws IOException {
+    public void doMain(String[] args) {
 
         CmdLineParser parser = new CmdLineParser(this);
         try {
@@ -265,48 +275,88 @@ public class SampleTabAccessioner {
             System.exit(1);
             return;
         }
-        
-        //TODO handle globs in filenames
-        
-        SampleData st = null;
-        try {
-            st = this.convert(inputFilename);
-        } catch (ParseException e) {
-            System.err.println("ParseException converting " + inputFilename);
-            e.printStackTrace();
-            System.exit(121);
-            return;
-        } catch (IOException e) {
-            System.err.println("IOException converting " + inputFilename);
-            e.printStackTrace();
-            System.exit(122);
-            return;
-        } catch (SQLException e) {
-            System.err.println("SQLException converting " + inputFilename);
-            e.printStackTrace();
-            System.exit(123);
-            return;
+
+        // TODO handle globs in filenames
+        log.debug("Looking for input files");
+        List<File> inputFiles = new ArrayList<File>();
+        // TODO remove hardcoding
+        inputFiles = FileUtils.getMatchesGlob(inputFilename);
+        log.info("Found " + inputFiles.size() + " input files");
+        Collections.sort(inputFiles);
+
+        class AccessionTask implements Runnable {
+            private final File inputFile;
+            private final File outputFile;
+
+            public AccessionTask(File inputFile, File outputFile) {
+                this.inputFile = inputFile;
+                this.outputFile = outputFile;
+            }
+
+            public void run() {
+                SampleData st = null;
+                try {
+                    st = convert(this.inputFile);
+                } catch (ParseException e) {
+                    System.err.println("ParseException converting " + this.inputFile);
+                    e.printStackTrace();
+                    return;
+                } catch (IOException e) {
+                    System.err.println("IOException converting " + this.inputFile);
+                    e.printStackTrace();
+                    return;
+                } catch (SQLException e) {
+                    System.err.println("SQLException converting " + this.inputFile);
+                    e.printStackTrace();
+                    return;
+                }
+
+                FileWriter out = null;
+                try {
+                    out = new FileWriter(this.outputFile);
+                } catch (IOException e) {
+                    System.out.println("Error opening " + this.outputFile);
+                    e.printStackTrace();
+                    return;
+                }
+
+                SampleTabWriter sampletabwriter = new SampleTabWriter(out);
+                try {
+                    sampletabwriter.write(st);
+                } catch (IOException e) {
+                    System.out.println("Error writing " + this.outputFile);
+                    e.printStackTrace();
+                    return;
+                }
+            }
         }
 
-        FileWriter out = null;
-        try {
-            out = new FileWriter(outputFilename);
-        } catch (IOException e) {
-            System.out.println("Error opening " + outputFilename);
-            e.printStackTrace();
-            System.exit(131);
-            return;
-        }
+        int nothreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads * 2);
 
-        SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-        try {
-            sampletabwriter.write(st);
-        } catch (IOException e) {
-            System.out.println("Error writing " + outputFilename);
-            e.printStackTrace();
-            System.exit(141);
-            return;
+        for (File inputFile : inputFiles) {
+            // System.out.println("Checking "+inputFile);
+            File outputFile = new File(inputFile.getParentFile(), outputFilename);
+            // TODO also compare file ages
+            if (!outputFile.exists()) {
+                Runnable t = new AccessionTask(inputFile, outputFile);
+                pool.execute(t);
+                // t.run();
+            }
         }
+        // run the pool and then close it afterwards
+        // must synchronize on the pool object
+        synchronized (pool) {
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                log.error("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
+            }
+        }
+        log.info("Finished processing");
 
     }
 }
