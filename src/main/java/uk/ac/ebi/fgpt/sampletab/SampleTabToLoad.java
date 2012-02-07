@@ -306,8 +306,8 @@ public class SampleTabToLoad {
             // TODO also compare file ages
             if (!outputFile.exists()) {
                 Runnable t = new ToLoadTask(inputFile, outputFile);
-                pool.execute(t);
-                // t.run();
+                //pool.execute(t);
+                t.run();
             }
         }
         // run the pool and then close it afterwards

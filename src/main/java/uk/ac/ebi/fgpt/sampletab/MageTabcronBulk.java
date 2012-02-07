@@ -79,9 +79,16 @@ public class MageTabcronBulk {
             File age = new File(subdir, "age");
 
             //TODO fix the few files that cannot be processed
-            
             if (idffilename.equals("E-GEOD-27923.idf.txt")){
                 log.warn("Skipping E-GEOD-27923 as it is too large");
+                return;
+            }
+            if (idffilename.equals("E-GEOD-21478.idf.txt")){
+                log.warn("Skipping E-GEOD-21478 as it is too large");
+                return;
+            }
+            if (idffilename.equals("E-GEOD-9376.idf.txt")){
+                log.warn("Skipping E-GEOD-9376 as it is too large");
                 return;
             }
             
@@ -202,10 +209,9 @@ public class MageTabcronBulk {
         
         for (File subdir : dir.listFiles()) {
             if (subdir.isDirectory()) {
-                DoProcessFile todo = new DoProcessFile(subdir, scriptdir);
-                todo.run();
-                
-                //pool.execute( new DoProcessFile(subdir, scriptdir));
+                Runnable t = new DoProcessFile(subdir, scriptdir);
+                //pool.execute(t);
+                t.run();
             }
         }
         
