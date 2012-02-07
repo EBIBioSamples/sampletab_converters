@@ -7,6 +7,8 @@ import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.dom4j.DocumentException;
 import org.slf4j.Logger;
@@ -56,8 +58,13 @@ public class TestFileUtils extends TestCase {
         
         
         //now check the results are what we expect
+        List<File> target = new ArrayList<File>();
+        target.add(new File("First/A1.txt"));
+        target.add(new File("First/A2.txt"));
         String regex = "First/.*\\.txt";
-        log.info(regex+" : "+FileUtils.getMatchesRegex(regex));
+        assertEquals(target, FileUtils.getMatchesRegex(regex));
+        String glob = "First/*.txt";
+        assertEquals(target, FileUtils.getMatchesGlob(glob));
     
     }
 

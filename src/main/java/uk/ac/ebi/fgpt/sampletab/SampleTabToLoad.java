@@ -33,6 +33,7 @@ import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class SampleTabToLoad {
 
+
     @Option(name = "-h", usage = "display help")
     private boolean help;
 
@@ -290,9 +291,8 @@ public class SampleTabToLoad {
             return;
         }
 
-        log.debug("Looking for input files");
+        log.info("Looking for input files "+inputFilename);
         List<File> inputFiles = new ArrayList<File>();
-        // TODO remove hardcoding
         inputFiles = FileUtils.getMatchesGlob(inputFilename);
         log.info("Found " + inputFiles.size() + " input files");
         Collections.sort(inputFiles);

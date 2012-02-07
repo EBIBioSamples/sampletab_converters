@@ -41,18 +41,9 @@ public class MageTabToSampleTab {
 			"yyyy-MM-dd");
 
 	// logging
-	private Logger log = LoggerFactory.getLogger(getClass());
+	public Logger log = LoggerFactory.getLogger(getClass());
 
-	private MageTabToSampleTab() {
-		// private constructor to prevent accidental multiple initialisations
-	}
-
-	public static MageTabToSampleTab getInstance() {
-		return instance;
-	}
-
-	public Logger getLog() {
-		return log;
+	public MageTabToSampleTab() {
 	}
 
 	public SampleData convert(String idfFilename) throws IOException, ParseException {
@@ -154,13 +145,13 @@ public class MageTabToSampleTab {
 			}
 		}
 
-		getLog().info("Creating node names");
+		log.info("Creating node names");
 		// create a sample from each topmost node
 		for (SDRFNode sdrfnode : topnodes) {
 
 			SampleNode scdnode = new SampleNode();
 			String name = sdrfnode.getNodeName();
-			getLog().info("processing " + name);
+			log.info("processing " + name);
 			scdnode.setNodeName(name);
 			// since some attributes only exist for some sub-classes, need to
 			// test
@@ -191,7 +182,7 @@ public class MageTabToSampleTab {
 				comments = sdrflabeledextractnode.comments;
 			}
 
-			getLog().info("got characteristics");
+			log.info("got characteristics");
 			if (characteristics != null) {
 				for (CharacteristicsAttribute sdrfcharacteristic : characteristics) {
 					CharacteristicAttribute scdcharacteristic = new CharacteristicAttribute();
@@ -208,7 +199,7 @@ public class MageTabToSampleTab {
 					scdnode.addAttribute(scdcharacteristic);
 				}
 			}
-			getLog().info("got comments");
+			log.info("got comments");
 			if (comments != null) {
 				for (String key : comments.keySet()) {
 					CommentAttribute comment = new CommentAttribute();
@@ -221,17 +212,17 @@ public class MageTabToSampleTab {
 			st.scd.addNode(scdnode);
 		}
 
-		getLog().info("Finished convert()");
+		log.info("Finished convert()");
 		return st;
 	}
 
 	public void convert(MAGETABInvestigation mt, Writer writer)
 			throws IOException, ParseException {
-		getLog().debug("recieved magetab, preparing to convert");
+	    log.debug("recieved magetab, preparing to convert");
 		SampleData st = convert(mt);
-		getLog().debug("sampletab converted, preparing to output");
+		log.debug("sampletab converted, preparing to output");
 		SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
-		getLog().debug("created SampleTabWriter");
+		log.debug("created SampleTabWriter");
 		sampletabwriter.write(st);
 		sampletabwriter.close();
 
@@ -292,6 +283,10 @@ public class MageTabToSampleTab {
 	}
 
 	public static void main(String[] args) {
+        new MageTabToSampleTab().doMain(args);
+    }
+
+    public void doMain(String[] args) {
 		if (args.length < 2) {
 			System.out
 					.println("Must provide an MAGETAB IDF filename and a SampleTab output filename.");
@@ -310,29 +305,33 @@ public class MageTabToSampleTab {
         try {
             idf = idfparser.parse(new File(idfFilename));
         } catch (ParseException e) {
-            System.err.println("Error parsing " + idfFilename);
+            log.error("Error parsing " + idfFilename);
             e.printStackTrace();
             System.exit(1);
             return;
         }
+        
         if (idf.sdrfFile.size() != 1){
-            System.err.println("Non-standard sdrf file references");
-            System.err.println(""+idf.sdrfFile);
+            log.error("Non-standard sdrf file references");
+            log.error(""+idf.sdrfFile);
             System.exit(1);
             return;
         }
 
 		try {
-            getInstance().convert(idfFilename, sampleTabFilename);
+            convert(idfFilename, sampleTabFilename);
         } catch (IOException e) {
-            System.err.println("Error converting "+idfFilename);
+            log.error("Error converting "+idfFilename);
             e.printStackTrace();
+            return;
         } catch (ParseException e) {
-            System.err.println("Error converting "+idfFilename);
+            log.error("Error converting "+idfFilename);
             e.printStackTrace();
+            return;
         } catch (java.text.ParseException e) {
-            System.err.println("Error converting "+idfFilename);
+            log.error("Error converting "+idfFilename);
             e.printStackTrace();
+            return;
         }
 	}
 }

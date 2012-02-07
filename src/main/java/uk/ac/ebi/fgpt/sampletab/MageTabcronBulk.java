@@ -12,18 +12,8 @@ import org.slf4j.LoggerFactory;
 
 public class MageTabcronBulk {
     private Logger log = LoggerFactory.getLogger(getClass());
-    // singlton instance
-    private static MageTabcronBulk instance = null;
 
-    private MageTabcronBulk() {
-        // private constructor to prevent accidental multiple initialisations
-    }
-
-    public static MageTabcronBulk getInstance() {
-        if (instance == null) {
-            instance = new MageTabcronBulk();
-        }
-        return instance;
+    public MageTabcronBulk() {
     }
 
     private boolean doCommand(String command) {
@@ -234,6 +224,10 @@ public class MageTabcronBulk {
     }
 
     public static void main(String[] args) {
+        new MageTabcronBulk().doMain(args);
+    }
+
+    public void doMain(String[] args) {
         if (args.length < 1) {
             System.err.println("Must provide the following paramters:");
             System.err.println("  ArrayExpress local directory");
@@ -245,7 +239,7 @@ public class MageTabcronBulk {
         File outdir = new File(args[0]);
 
         if (outdir.exists() && !outdir.isDirectory()) {
-            System.err.println("Target is not a directory");
+            log.error("Target is not a directory");
             System.exit(1);
             return;
         }
@@ -255,6 +249,6 @@ public class MageTabcronBulk {
 
         File scriptdir = new File(args[1]);
 
-        getInstance().run(outdir, scriptdir);
+        run(outdir, scriptdir);
     }
 }

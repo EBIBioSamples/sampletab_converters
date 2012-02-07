@@ -14,7 +14,7 @@ public class FileUtils {
     // static logger must have name hand-written
     private static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.utils.FileUtils");
 
-    //TODO javadoc
+    // TODO javadoc
     public static List<File> getParentFiles(File start) {
         List<File> parents = new ArrayList<File>();
         parents.add(new File(start.getName()));
@@ -26,18 +26,18 @@ public class FileUtils {
         return parents;
     }
 
-    //TODO javadoc
-    public static File joinFileList(List<File> files){
+    // TODO javadoc
+    public static File joinFileList(List<File> files) {
         File out = files.get(0);
         int i = 1;
-        while (i < files.size()){
+        while (i < files.size()) {
             out = new File(out, files.get(i).getName());
-            i ++;
+            i++;
         }
         return out;
     }
 
-    //TODO javadoc
+    // TODO javadoc
     public static class FileFilterRegex implements FileFilter {
 
         private final String regex;
@@ -56,7 +56,7 @@ public class FileUtils {
 
     }
 
-    //TODO javadoc
+    // TODO javadoc
     public static class FileFilterGlob implements FileFilter {
 
         private final String regex;
@@ -77,52 +77,61 @@ public class FileUtils {
 
     }
 
-    //TODO javadoc
+    // TODO javadoc
     public static String globToRegex(String glob) {
         StringBuilder sb = new StringBuilder(glob.length());
         for (char currentChar : glob.toCharArray()) {
             switch (currentChar) {
                 case '*':
                     sb.append(".*");
+                    break;
                 case '.':
                     sb.append("\\.");
+                    break;
                 case '?':
                     sb.append("\\?");
+                    break;
+                default:
+                    sb.append(currentChar);
+                    break;
             }
         }
         return sb.toString();
     }
 
-    //TODO javadoc
+    // TODO javadoc
     public static List<File> getMatchesGlob(String glob) {
+        log.debug("glob = " + glob);
         return getMatchesRegex(globToRegex(glob));
     }
 
-    //TODO javadoc
+    // TODO javadoc
     public static List<File> getMatchesRegex(String regex) {
+        log.debug("regex = " + regex);
         List<File> outfiles = new ArrayList<File>();
         File regfile = new File(regex);
-        log.debug("regfile = "+regfile);
+        log.debug("regfile = " + regfile);
 
         List<File> regparents = getParentFiles(regfile);
-        log.debug("regparents = "+regparents);
+        log.debug("regparents = " + regparents);
         int i;
-        for(i = 0; i < regparents.size(); i++){
-            if (regparents.get(i).getName().contains(".*") || regparents.get(i).getName().contains("?")){
+        for (i = 0; i < regparents.size(); i++) {
+            if (regparents.get(i).getName().contains(".*") || regparents.get(i).getName().contains("?")) {
                 break;
             }
         }
+        log.debug("i = " + i);
         regex = joinFileList(regparents.subList(i, regparents.size())).toString();
-        log.debug("cleaned regex : "+regex);
+        log.debug("cleaned regex : " + regex);
         File start = joinFileList(regparents.subList(0, i));
-        log.debug("cleaned start : "+start);
+        log.debug("cleaned start : " + start);
         addMatches(start, regex, outfiles, 0);
         return outfiles;
     }
 
-    //TODO javadoc
+    // TODO javadoc
     private static void addMatches(File file, String regex, Collection<File> outfiles, int depth) {
-        log.debug("checking "+file);
+        log.debug("checking " + file);
         if (file.isDirectory()) {
             File[] subfiles = file.listFiles();
             Arrays.sort(subfiles);

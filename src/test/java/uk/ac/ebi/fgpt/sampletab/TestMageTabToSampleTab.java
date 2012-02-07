@@ -31,7 +31,7 @@ public class TestMageTabToSampleTab extends TestCase {
         resource = getClass().getClassLoader().getResource("E-MEXP-986/E-MEXP-986.idf.txt");
         //this breaks limpopo
         //resource = getClass().getClassLoader().getResource("E-GEOD-20076/E-GEOD-20076.idf.txt");
-        converter = MageTabToSampleTab.getInstance();
+        converter = new MageTabToSampleTab();
         mtparser = new MAGETABParser<MAGETABInvestigation>();
         errorItems = new ArrayList<ErrorItem>();
         mtparser.addErrorItemListener(new ErrorItemListener() {
