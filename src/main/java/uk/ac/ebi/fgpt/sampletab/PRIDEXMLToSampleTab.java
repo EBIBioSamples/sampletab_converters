@@ -292,6 +292,7 @@ public class PRIDEXMLToSampleTab {
             //find the project
             String projectname = null;
             for (String name: projects.keySet()){
+                //TODO handle where one accession is in multiple projects...
                 if (projects.get(name).contains(accession)){
                     projectname = name;
                 }

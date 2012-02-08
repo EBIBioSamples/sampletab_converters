@@ -73,9 +73,6 @@ public class IMSRTabWebDownload {
         else if (accession.equals("GMS-OBS")) accessionid = 25;
         else if (accession.equals("GMS-WTSI")) accessionid = 26;
     
-        if (accessionid == 0) {
-            throw new IllegalArgumentException("Accession ("+accession+") is not valid");
-        }
         return accessionid;
 	}
 
@@ -146,7 +143,7 @@ public class IMSRTabWebDownload {
 	public static void main(String[] args) {
 		if (args.length < 2) {
 			System.out
-					.println("Must provide a IMSR accession and an output directory.");
+					.println("Must provide a IMSR accession and an output filename.");
 			return;
 		}
 		String accession = args[0];
