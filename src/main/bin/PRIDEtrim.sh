@@ -7,4 +7,4 @@
 #Trim out the assay part of the PRIDE XML files
 #If this is not done, they are too large to be used effectively.
 
-gunzip -cd $1 | sed '/<GelFreeIdentification>/,/<\/GelFreeIdentification>/d' | sed '/<TwoDimensionalIdentification>/,/<\/TwoDimensionalIdentification>/d' > $2
+gunzip -cd "$1" | sed '/<GelFreeIdentification>/,/<\/GelFreeIdentification>/d' | sed '/<TwoDimensionalIdentification>/,/<\/TwoDimensionalIdentification>/d' | sed '/<spectrumList count=\"[0-9]+\">/,/<\\/spectrumList>/d' > "$2"

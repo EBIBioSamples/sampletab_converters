@@ -28,4 +28,5 @@ done
 #and other dependent jars
 classpath="$jars:$base/config";
 
-$java $args -classpath $classpath $@
+#echo $java $args -classpath $classpath "$@"
+$java $args -classpath $classpath "$@"
