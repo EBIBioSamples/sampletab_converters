@@ -27,14 +27,10 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class ENASRAXMLToSampleTab {
 
-    // singlton instance
-    private static final ENASRAXMLToSampleTab instance = new ENASRAXMLToSampleTab();
-
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
     
     //characteristics that we want to ignore
-
     private static Collection<String> characteristicsIgnore;
     static {
         characteristicsIgnore = new TreeSet<String>();
@@ -43,17 +39,8 @@ public class ENASRAXMLToSampleTab {
         characteristicsIgnore = Collections.unmodifiableCollection(characteristicsIgnore);
     }
     
-    private ENASRAXMLToSampleTab() {
-        // private constructor to prevent accidental multiple initialisations
-
-    }
-
-    public static ENASRAXMLToSampleTab getInstance() {
-        return instance;
-    }
-
-    public Logger getLog() {
-        return log;
+    public ENASRAXMLToSampleTab() {
+        
     }
 
     public SampleData convert(String filename) throws IOException, ParseException {
@@ -298,18 +285,18 @@ public class ENASRAXMLToSampleTab {
             st.scd.addNode(samplenode);
         }
 
-        getLog().info("Finished convert()");
+        log.info("Finished convert()");
         return st;
     }
 
     public void convert(File file, Writer writer) throws IOException, ParseException {
-        getLog().debug("recieved magetab, preparing to convert");
+        log.debug("recieved xml, preparing to convert");
         SampleData st = convert(file);
 
-        getLog().info("SampleTab converted, preparing to write");
+        log.info("SampleTab converted, preparing to write");
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
         sampletabwriter.write(st);
-        getLog().info("SampleTab written");
+        log.info("SampleTab written");
         sampletabwriter.close();
 
     }
@@ -353,7 +340,7 @@ public class ENASRAXMLToSampleTab {
         String enasrafilename = args[0];
         String sampleTabFilename = args[1];
 
-        ENASRAXMLToSampleTab converter = ENASRAXMLToSampleTab.getInstance();
+        ENASRAXMLToSampleTab converter = new ENASRAXMLToSampleTab();
 
         try {
             converter.convert(enasrafilename, sampleTabFilename);

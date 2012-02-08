@@ -13,39 +13,86 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class IMSRTabWebDownload {
-	// singlton instance
-	private static IMSRTabWebDownload instance = null;
 
 	// logging
 	private Logger log = LoggerFactory.getLogger(getClass());
 
-	private IMSRTabWebDownload() {
-		// private constructor to prevent accidental multiple initialisations
+	public IMSRTabWebDownload() {
 
 	}
-
-	public static IMSRTabWebDownload getInstance() {
-		if (instance == null) {
-			instance = new IMSRTabWebDownload();
-		}
-
-		return instance;
+	
+	public int getAccessionID(String accession){
+        //IMSR web interface takes a number, not the site code
+        //However, this is not a straightforward lookup on the summary.
+        //For the moment, it is hardcoded here.
+        //TODO unhardcode this
+        int accessionid = 0;
+        /*
+        GMS-JAX
+        GMS-HAR
+        GMS-MMRRC
+        GMS-ORNL
+        GMS-CARD
+        GMS-EM
+        GMS-NMICE
+        GMS-RBRC
+        GMS-NCIMR
+        GMS-CMMR
+        GMS-APB
+        GMS-EMS
+        GMS-HLB
+        GMS-NIG
+        GMS-TAC
+        GMS-MUGEN
+        GMS-TIGM
+        GMS-KOMP
+        GMS-RMRC-NLAC
+        GMS-OBS
+        GMS-WTSI
+         */
+        
+        if      (accession.equals("GMS-JAX")) accessionid = 1;
+        else if (accession.equals("GMS-HAR")) accessionid = 2;
+        else if (accession.equals("GMS-MMRRC")) accessionid = 3;
+        else if (accession.equals("GMS-ORNL")) accessionid = 4;
+        else if (accession.equals("GMS-CARD")) accessionid = 5;
+        else if (accession.equals("GMS-EM")) accessionid = 6;
+        else if (accession.equals("GMS-NMICE")) accessionid = 7;
+        else if (accession.equals("GMS-RBRC")) accessionid = 9;
+        else if (accession.equals("GMS-NCIMR")) accessionid = 10;
+        else if (accession.equals("GMS-CMMR")) accessionid = 11;
+        else if (accession.equals("GMS-APB")) accessionid = 12;
+        else if (accession.equals("GMS-EMS")) accessionid = 13;
+        else if (accession.equals("GMS-HLB")) accessionid = 14;
+        else if (accession.equals("GMS-NIG")) accessionid = 17;
+        else if (accession.equals("GMS-TAC")) accessionid = 20;
+        else if (accession.equals("GMS-MUGEN")) accessionid = 21;
+        else if (accession.equals("GMS-TIGM")) accessionid = 22; //This is the really big one
+        else if (accession.equals("GMS-KOMP")) accessionid = 23;
+        else if (accession.equals("GMS-RMRC-NLAC")) accessionid = 24;
+        else if (accession.equals("GMS-OBS")) accessionid = 25;
+        else if (accession.equals("GMS-WTSI")) accessionid = 26;
+    
+        if (accessionid == 0) {
+            throw new IllegalArgumentException("Accession ("+accession+") is not valid");
+        }
+        return accessionid;
 	}
 
-	public String download(String accession, String outdir) {
-		return this.download(accession, new File(outdir));
+	public void download(String accession, String outdir) {
+		this.download(accession, new File(outdir));
 	}
 
-	public String download(String accession, File outfile) {
+	public void download(String accession, File outfile) {
 
-		int ident = Integer.parseInt(accession);
+		int ident = getAccessionID(accession);
 		String url = "http://www.findmice.org/fetch?page=imsrReport&report=repository&site="
 				+ ident + "&print=data";
 
 		// setup the input as buffered characters
 		// setup the output as a buffered file
-		BufferedReader input;
-		BufferedWriter output;
+		BufferedReader input = null;
+		BufferedWriter output = null;
 		String line;
 		
 		//create parent directories, if they dont exist
@@ -72,31 +119,41 @@ public class IMSRTabWebDownload {
 			input.close();
 			output.close();
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+	        return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+	        return;
+		} finally {
+		    //clean up file handles
+		    if (input != null){
+                try {
+                    input.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+		    }
+            if (output != null){
+                try {
+                    output.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
 		}
-		return null;
 	}
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
 			System.out
-					.println("Must provide a IMSR site number and an output directory.");
+					.println("Must provide a IMSR accession and an output directory.");
 			return;
 		}
 		String accession = args[0];
 		String outdir = args[1];
 
-		IMSRTabWebDownload downloader = IMSRTabWebDownload
-				.getInstance();
-		String error = downloader.download(accession, outdir);
-		if (error != null) {
-			System.out.println("ERROR: " + error);
-			System.exit(1);
-		}
+		IMSRTabWebDownload downloader = new IMSRTabWebDownload();
+		downloader.download(accession, outdir);
 
 	}
 

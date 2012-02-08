@@ -9,27 +9,30 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
 public class MageTabcron {
+
+    @Option(name = "-h", aliases={"--help"}, usage = "display help")
+    private boolean help;
+
+    @Option(name = "-o", aliases={"--output"}, usage = "output directory")
+    private String outputDirName;
+    
+    @Option(name = "--threaded", usage = "use multiple threads?")
+    private boolean threaded = false;
+    
 	private Logger log = LoggerFactory.getLogger(getClass());
-	// singlton instance
-	private static MageTabcron instance = null;
 
 	private FTPClient ftp = null;
 
 	private MageTabcron() {
-		// private constructor to prevent accidental multiple initialisations
-	}
-
-	public static MageTabcron getInstance() {
-		if (instance == null) {
-			instance = new MageTabcron();
-		}
-		return instance;
 	}
 
 	private void close() {
@@ -112,7 +115,7 @@ public class MageTabcron {
 
 
         int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads*2);
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
         
 		if (subdirs != null) {
 			//convert the subdir FTPFile objects to string names
@@ -153,8 +156,15 @@ public class MageTabcron {
 						//rather than using the java FTP libraries - which seem to
 						//break quite often - use curl. Sacrifices multiplatformness
 						//for reliability.
-	                    pool.execute(new CurlDownload("ftp://ftp.ebi.ac.uk"+idfpath, outidf.getAbsolutePath()));
-	                    pool.execute(new CurlDownload("ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath()));
+						Runnable t1 = new CurlDownload("ftp://ftp.ebi.ac.uk"+idfpath, outidf.getAbsolutePath());
+                        Runnable t2 = new CurlDownload("ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath());
+						if (threaded){
+    	                    pool.execute(t1);
+    	                    pool.execute(t2);
+						} else {
+						    t1.run();
+						    t2.run();
+						}
 					}
 				}
 				//restart the connection after each subdir
@@ -188,14 +198,29 @@ public class MageTabcron {
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 1) {
-			System.err.println("Must provide the following paramters:");
-			System.err.println("  ArrayExpress local directory");
-			System.exit(1);
-			return;
-		}
-		String path = args[0];
-		File outdir = new File(path);
+        new MageTabcron().doMain(args);
+    }
+
+    public void doMain(String[] args) {
+        CmdLineParser parser = new CmdLineParser(this);
+        try {
+            // parse the arguments.
+            parser.parseArgument(args);
+            // TODO check for extra arguments?
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            help = true;
+        }
+
+        if (help) {
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println();
+            System.exit(1);
+            return;
+        }
+        
+		File outdir = new File(this.outputDirName);
 
 		if (outdir.exists() && !outdir.isDirectory()) {
 			System.err.println("Target is not a directory");
@@ -206,8 +231,8 @@ public class MageTabcron {
 		if (!outdir.exists())
 			outdir.mkdirs();
 
-		getInstance().run(outdir);
+		this.run(outdir);
 		// tidy up ftp connection
-		getInstance().close();
+		this.close();
 	}
 }

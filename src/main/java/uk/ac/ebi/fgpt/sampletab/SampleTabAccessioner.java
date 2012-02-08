@@ -37,28 +37,28 @@ import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class SampleTabAccessioner {
 
-    @Option(name = "-h", usage = "display help")
+    @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
-    @Option(name = "-i", usage = "input filename or glob")
+    @Option(name = "-i", aliases={"--input"}, usage = "input filename or glob")
     private String inputFilename;
 
-    @Option(name = "-o", usage = "output filename")
+    @Option(name = "-o", aliases={"--output"}, usage = "output filename")
     private String outputFilename;
 
-    @Option(name = "-n", usage = "server hostname")
+    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
     private String hostname;
 
-    @Option(name = "-t", usage = "server port")
+    @Option(name = "-t", aliases={"--port"}, usage = "server port")
     private int port = 3306;
 
-    @Option(name = "-d", usage = "server database")
+    @Option(name = "-d", aliases={"--database"}, usage = "server database")
     private String database;
 
-    @Option(name = "-u", usage = "server username")
+    @Option(name = "-u", aliases={"--username"}, usage = "server username")
     private String username;
 
-    @Option(name = "-p", usage = "server password")
+    @Option(name = "-p", aliases={"--password"}, usage = "server password")
     private String password;
 
     // receives other command line parameters than options

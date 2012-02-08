@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -14,24 +16,33 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MageTabcronBulk {
+import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
+
+public class PRIDEcronBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
+    //TODO make required
     @Option(name = "-i", aliases={"--input"}, usage = "input filename")
     private String inputFilename;
 
+    //TODO make required
     @Option(name = "-s", aliases={"--scripts"}, usage = "script directory")
     private String scriptDirname;
+
+    //TODO make required
+    @Option(name = "-p", aliases={"--projects"}, usage = "projects filename")
+    private String projectsFilename;
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public MageTabcronBulk() {
+    public PRIDEcronBulk() {
     }
+
 
     //TODO move to utils
     private boolean doCommand(String command, File logfile) {
@@ -76,38 +87,23 @@ public class MageTabcronBulk {
     private class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
+        private final File projectsFile;
         
-        public DoProcessFile(File subdir, File scriptdir){
+        public DoProcessFile(File subdir, File scriptdir, File projectsFile){
             this.subdir = subdir;
             this.scriptdir = scriptdir;
+            this.projectsFile = projectsFile; 
         }
 
         public void run() {
-            String idffilename = (subdir.getName().replace("GAE-", "E-")) + ".idf.txt";
-            String sdrffilename = (subdir.getName().replace("GAE-", "E-")) + ".sdrf.txt";
-            File idffile = new File(subdir, idffilename);
-            File sdrffile = new File(subdir, sdrffilename);
+            File xml = new File(subdir, "trimmed.xml");
             File sampletabpre = new File(subdir, "sampletab.pre.txt");
             File sampletab = new File(subdir, "sampletab.txt");
             File sampletabtoload = new File(subdir, "sampletab.toload.txt");
             File age = new File(subdir, "age");
-
-            //TODO fix the few files that cannot be processed
-            if (idffilename.equals("E-GEOD-27923.idf.txt")){
-                log.warn("Skipping E-GEOD-27923 as it is too large");
-                return;
-            }
-            if (idffilename.equals("E-GEOD-21478.idf.txt")){
-                log.warn("Skipping E-GEOD-21478 as it is too large");
-                return;
-            }
-            if (idffilename.equals("E-GEOD-9376.idf.txt")){
-                log.warn("Skipping E-GEOD-9376 as it is too large");
-                return;
-            }
             
             
-            if (!idffile.exists() || !sdrffile.exists()) {
+            if (!xml.exists()) {
                 return;
             }
             
@@ -116,13 +112,16 @@ public class MageTabcronBulk {
             target = sampletabpre;
             if (!target.exists()) {
                 log.info("Processing " + target);
-                // convert idf/sdrf to sampletab.pre.txt
-                File script = new File(scriptdir, "MageTabToSampleTab.sh");
+                // convert xml to sampletab.pre.txt
+                File script = new File(scriptdir, "PRIDEXMLToSampleTab.sh");
                 if (!script.exists()) {
                     log.error("Unable to find " + script);
                     return;
                 }
-                String bashcom = script + " " + idffile + " " + sampletabpre;
+                String bashcom = script 
+                    + " -i " + xml 
+                    + " -o " + sampletabpre
+                    + " -p " + projectsFile;
                 log.info(bashcom);
                 File logfile = new File(subdir, "sampletab.pre.txt.log");
                 if (!doCommand(bashcom, logfile)) {
@@ -214,42 +213,8 @@ public class MageTabcronBulk {
         
     }
     
-    public void run(File dir, File scriptdir) {
-        dir = dir.getAbsoluteFile();
-        scriptdir = scriptdir.getAbsoluteFile();
-
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
-        
-        File[] subdirs = dir.listFiles();
-        Arrays.sort(subdirs);
-        for (File subdir : subdirs) {
-            if (subdir.isDirectory()) {
-                Runnable t = new DoProcessFile(subdir, scriptdir);
-                if (threaded) {
-                    pool.execute(t);
-                } else {
-                    t.run();
-                }
-            }
-        }
-        
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
-            }
-        }
-    }
-
     public static void main(String[] args) {
-        new MageTabcronBulk().doMain(args);
+        new PRIDEcronBulk().doMain(args);
     }
 
     public void doMain(String[] args) {
@@ -290,6 +255,46 @@ public class MageTabcronBulk {
             return;
         }
         
-        run(outdir, scriptdir);
+        log.info("Parsing projects file");
+        
+        File projectsFile = new File(projectsFilename);
+
+        //read all the projects
+        Map<String, Set<String>> projects;
+        try {
+            projects = PRIDEutils.loadProjects(projectsFile);
+        } catch (IOException e) {
+            log.error("Unable to read projects file "+projectsFilename);
+            e.printStackTrace();
+            System.exit(1);
+            return;
+        }
+        
+        
+        int nothreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+
+        for (String name: projects.keySet()){
+            File subdir = new File(outdir, name);
+            Runnable t = new DoProcessFile(subdir, scriptdir, projectsFile);
+            if (threaded) {
+                pool.execute(t);
+            } else {
+                t.run();
+            }
+        }
+        
+        // run the pool and then close it afterwards
+        // must synchronize on the pool object
+        synchronized (pool) {
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                log.error("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
+            }
+        }
     }
 }

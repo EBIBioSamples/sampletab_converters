@@ -1,10 +1,10 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -35,46 +35,6 @@ public class FileUtils {
             i++;
         }
         return out;
-    }
-
-    // TODO javadoc
-    public static class FileFilterRegex implements FileFilter {
-
-        private final String regex;
-
-        public FileFilterRegex(String regex) {
-            this.regex = regex;
-        }
-
-        public boolean accept(File pathname) {
-            if (pathname.getPath().matches(this.regex)) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-    }
-
-    // TODO javadoc
-    public static class FileFilterGlob implements FileFilter {
-
-        private final String regex;
-        private final File regfile;
-
-        public FileFilterGlob(String glob) {
-            this.regex = globToRegex(glob);
-            this.regfile = new File(this.regex);
-        }
-
-        public boolean accept(File pathname) {
-            if (pathname.getPath().matches(this.regex)) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
     }
 
     // TODO javadoc
@@ -120,12 +80,19 @@ public class FileUtils {
                 break;
             }
         }
-        log.debug("i = " + i);
-        regex = joinFileList(regparents.subList(i, regparents.size())).toString();
-        log.debug("cleaned regex : " + regex);
-        File start = joinFileList(regparents.subList(0, i));
-        log.debug("cleaned start : " + start);
-        addMatches(start, regex, outfiles, 0);
+        if (i == regparents.size()){
+            //no things left
+            //therefore only one match
+            String filename = regex.replace("\\.", ".");
+            outfiles.add(new File(filename));
+        } else {
+            regex = joinFileList(regparents.subList(i, regparents.size())).toString();
+            log.debug("cleaned regex : " + regex);
+            File start = joinFileList(regparents.subList(0, i));
+            log.debug("cleaned start : " + start);
+            addMatches(start, regex, outfiles, 0);
+        }
+        Collections.sort(outfiles);
         return outfiles;
     }
 

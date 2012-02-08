@@ -1,7 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -33,30 +32,32 @@ import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class SampleTabToLoad {
 
-
     @Option(name = "-h", usage = "display help")
     private boolean help;
 
-    @Option(name = "-i", usage = "input filename or glob")
+    @Option(name = "-i", aliases={"--input"}, usage = "input filename or glob")
     private String inputFilename;
 
-    @Option(name = "-o", usage = "output filename")
+    @Option(name = "-o", aliases={"--output"}, usage = "output filename")
     private String outputFilename;
 
-    @Option(name = "-n", usage = "server hostname")
+    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
     private String hostname;
 
-    @Option(name = "-t", usage = "server port")
+    @Option(name = "-t", aliases={"--port"}, usage = "server port")
     private int port = 3306;
 
-    @Option(name = "-d", usage = "server database")
+    @Option(name = "-d", aliases={"--database"}, usage = "server database")
     private String database;
 
-    @Option(name = "-u", usage = "server username")
+    @Option(name = "-u", aliases={"--username"}, usage = "server username")
     private String username;
 
-    @Option(name = "-p", usage = "server password")
+    @Option(name = "-p", aliases={"--password"}, usage = "server password")
     private String password;
+
+    @Option(name = "--threaded", usage = "use multiple threads?")
+    private boolean threaded = false;
 
     // receives other command line parameters than options
     @Argument
@@ -93,12 +94,12 @@ public class SampleTabToLoad {
         // TODO check there is not an existing group first...
         GroupNode group = new GroupNode("Other Group");
         for (SCDNode sample : sampledata.scd.getNodes(SampleNode.class)) {
-            log.info("Adding sample " + sample.getNodeName() + " to group " + group.getNodeName());
+            log.debug("Adding sample " + sample.getNodeName() + " to group " + group.getNodeName());
             group.addSample(sample);
         }
 
         sampledata.scd.addNode(group);
-        log.info("Added group node");
+        log.debug("Added group node");
         // also need to accession the new node
 
         // Copy msi information on to the group node
@@ -291,7 +292,7 @@ public class SampleTabToLoad {
             return;
         }
 
-        log.info("Looking for input files "+inputFilename);
+        log.info("Looking for input files " + inputFilename);
         List<File> inputFiles = new ArrayList<File>();
         inputFiles = FileUtils.getMatchesGlob(inputFilename);
         log.info("Found " + inputFiles.size() + " input files");
@@ -306,8 +307,11 @@ public class SampleTabToLoad {
             // TODO also compare file ages
             if (!outputFile.exists()) {
                 Runnable t = new ToLoadTask(inputFile, outputFile);
-                //pool.execute(t);
-                t.run();
+                if (threaded) {
+                    pool.execute(t);
+                } else {
+                    t.run();
+                }
             }
         }
         // run the pool and then close it afterwards

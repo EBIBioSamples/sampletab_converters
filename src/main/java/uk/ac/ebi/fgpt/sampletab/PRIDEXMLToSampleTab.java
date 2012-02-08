@@ -9,9 +9,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,25 +32,27 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class PRIDEXMLToSampleTab {
 
-    // singlton instance
-    private static final PRIDEXMLToSampleTab instance = new PRIDEXMLToSampleTab();
+    @Option(name = "-h", aliases={"--help"}, usage = "display help")
+    private boolean help;
+
+    //TODO make required
+    //TODO make multiple
+    @Option(name = "-i", aliases={"--input"}, usage = "input filename")
+    private String inputFilename;
+
+    //TODO make required
+    @Option(name = "-o", aliases={"--output"}, usage = "output filename")
+    private String outputFilename;
+
+    @Option(name = "-p", aliases={"--projects"}, usage = "projects filename")
+    private String projectsFilename;
 
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
         
-    private PRIDEXMLToSampleTab() {
-        // private constructor to prevent accidental multiple initialisations
-
+    public PRIDEXMLToSampleTab() {
     }
-
-    public static PRIDEXMLToSampleTab getInstance() {
-        return instance;
-    }
-
-    public Logger getLog() {
-        return log;
-    }
-
+    
 
     public SampleData convert(Set<File> infiles) throws DocumentException, FileNotFoundException {
         
@@ -173,18 +179,18 @@ public class PRIDEXMLToSampleTab {
         Collections.sort(submitids);
         st.msi.submissionIdentifier = submitids.get(0) ;
         
-        getLog().info("Finished convert()");
+        log.info("Finished convert()");
         return st;
     }
 
     public void convert(Set<File> infiles, Writer writer) throws IOException, DocumentException  {
-        getLog().debug("recieved infiles, preparing to convert");
+        log.debug("recieved infiles, preparing to convert");
         SampleData st = convert(infiles);
 
-        getLog().info("SampleTab converted, preparing to write");
+        log.info("SampleTab converted, preparing to write");
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
         sampletabwriter.write(st);
-        getLog().info("SampleTab written");
+        log.info("SampleTab written");
         sampletabwriter.close();
 
     }
@@ -221,34 +227,102 @@ public class PRIDEXMLToSampleTab {
 
 
     public static void main(String[] args) {
-        if (args.length < 2) {
-            System.out.println("Must provide a list of at least one PRIDE XML files and a SampleTab output filename.");
+        new PRIDEXMLToSampleTab().doMain(args);
+    }
+
+    public void doMain(String[] args) {
+        CmdLineParser parser = new CmdLineParser(this);
+        try {
+            // parse the arguments.
+            parser.parseArgument(args);
+            // TODO check for extra arguments?
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            help = true;
+        }
+
+        if (help) {
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println();
+            System.exit(1);
             return;
         }
         
-        Set<String> pridefilenames = new HashSet<String>();
-        for (int i = 0; i < args.length-1; i++){
-            pridefilenames.add(args[i]);
+        //TODO convert to using globs
+        
+        HashSet<File> prideFiles = new HashSet<File>();
+        
+        if (projectsFilename != null){
+            //if a project filename was given, then we find the project that the provided input filename is part of
+            
+            
+            //read the given input filename to determine accession
+            Element expcollection;
+            try {
+                expcollection = XMLUtils.getDocument(new File(inputFilename)).getRootElement();
+            } catch (FileNotFoundException e) {
+                System.out.println("Unable to read "+inputFilename);
+                System.exit(1);
+                return;
+            } catch (DocumentException e) {
+                System.out.println("Unable to parse "+inputFilename);
+                System.exit(1);
+                return;
+            }
+            Element exp = XMLUtils.getChildByName(expcollection, "Experiment");
+            String accession = "GPR-"+XMLUtils.getChildByName(exp, "ExperimentAccession").getTextTrim();
+
+            //read all the projects
+            Map<String, Set<String>> projects;
+            try {
+                projects = PRIDEutils.loadProjects(new File(projectsFilename));
+            } catch (IOException e) {
+                System.out.println("Unable to read projects file "+projectsFilename);
+                e.printStackTrace();
+                System.exit(1);
+                return;
+            }
+            //find the project
+            String projectname = null;
+            for (String name: projects.keySet()){
+                if (projects.get(name).contains(accession)){
+                    projectname = name;
+                }
+            }
+            if (projectname != null){
+                //now add all the files that are similar to the input filename but with the other accessions
+                Set<String> accessions = projects.get(projectname);
+                if (accession.equals(Collections.min(accessions))){
+                    for (String subaccession : accessions){
+                        prideFiles.add(new File(inputFilename.replace(accession, subaccession)));
+                    }
+                } else {
+                    System.out.println("Accession is not minimum in project, terminating");
+                    System.exit(0);
+                    return;
+                }
+            } else {
+                System.out.println("Unable to find project of "+accession);
+                System.exit(1);
+                return;
+            }
+            
+        } else {
+            prideFiles.add(new File(inputFilename));
         }
         
-        Set<File> pridefiles = new HashSet<File>();
-        for (String pridefilename : pridefilenames){
-            pridefiles.add(new File(pridefilename));
-        }
-        
-        String sampleTabFilename = args[args.length-1];
-
-        PRIDEXMLToSampleTab converter = PRIDEXMLToSampleTab.getInstance();
-
         try {
-            converter.convert(pridefiles, sampleTabFilename);
+            convert(prideFiles, outputFilename);
         } catch (IOException e) {
-            System.out.println("Error converting " + pridefilenames + " to " + sampleTabFilename);
+            System.out.println("Error converting " + prideFiles + " to " + outputFilename);
             e.printStackTrace();
+            System.exit(1);
             return;
         } catch (DocumentException e) {
-            System.out.println("Error converting " + pridefilenames + " to " + sampleTabFilename);
+            System.out.println("Error converting " + prideFiles + " to " + outputFilename);
             e.printStackTrace();
+            System.exit(1);
             return;
         }
     }

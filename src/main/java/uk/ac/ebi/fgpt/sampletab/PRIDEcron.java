@@ -23,6 +23,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.dom4j.DocumentException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,21 +33,22 @@ import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 
 public class PRIDEcron {
-    private Logger log = LoggerFactory.getLogger(getClass());
-    // singlton instance
-    private static PRIDEcron instance = null;
 
+    @Option(name = "-h", aliases={"--help"}, usage = "display help")
+    private boolean help;
+
+    //TODO make required
+    @Option(name = "-o", aliases={"--output"}, usage = "output directory")
+    private String outputDirName;
+    
+    @Option(name = "--threaded", usage = "use multiple threads?")
+    private boolean threaded = false;
+    
+    private Logger log = LoggerFactory.getLogger(getClass());
+    
     private FTPClient ftp = null;
 
     private PRIDEcron() {
-        // private constructor to prevent accidental multiple initialisations
-    }
-
-    public static PRIDEcron getInstance() {
-        if (instance == null) {
-            instance = new PRIDEcron();
-        }
-        return instance;
     }
 
 
@@ -173,8 +177,11 @@ public class PRIDEcron {
         
         for (File subdir : outdir.listFiles()) {
         	Runnable t = new XMLProjectRunnable(subdir, subs);
-        	t.run();
-            //pool.execute(t);
+        	if (threaded) {
+                pool.execute(t);
+        	} else {
+                t.run();
+        	}
         }
 
         // run the pool and then close it afterwards
@@ -189,14 +196,6 @@ public class PRIDEcron {
                 e.printStackTrace();
             }
         }
-        
-        //5 min pause to watch where file descriptors are used
-        log.info("Parsing completed, starting output to disk...");
-        try {
-			Thread.sleep(1000*60*5);
-		} catch (InterruptedException e) {
-			//do nothing, carry on as normal
-		}
         
         // at this point, subs is a mapping from the project name to a set of BioSample accessions
         // output them to a file
@@ -244,15 +243,29 @@ public class PRIDEcron {
     }
 
     public static void main(String[] args) {
-        if (args.length < 1) {
-            System.err.println("Must provide the following paramters:");
-            System.err.println("  PRIDE local directory");
+        new PRIDEcron().doMain(args);
+    }
+
+    public void doMain(String[] args) {
+        CmdLineParser parser = new CmdLineParser(this);
+        try {
+            // parse the arguments.
+            parser.parseArgument(args);
+            // TODO check for extra arguments?
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            help = true;
+        }
+
+        if (help) {
+            // print the list of available options
+            parser.printUsage(System.err);
+            System.err.println();
             System.exit(1);
             return;
         }
         
-        String path = args[0];
-        File outdir = new File(path);
+        File outdir = new File(this.outputDirName);
 
         if (outdir.exists() && !outdir.isDirectory()) {
             System.err.println("Target is not a directory");
@@ -263,8 +276,11 @@ public class PRIDEcron {
         if (!outdir.exists())
             outdir.mkdirs();
 
-        getInstance().run(outdir);
-        // tidy up ftp connection
-        getInstance().close();
+        try {
+            this.run(outdir);
+        } finally {
+            // tidy up ftp connection
+            this.close();
+        }
     }
 }

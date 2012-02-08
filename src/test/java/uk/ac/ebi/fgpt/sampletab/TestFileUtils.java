@@ -1,24 +1,14 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.dom4j.DocumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils.FileFilterGlob;
-
 import junit.framework.TestCase;
 
 
@@ -58,14 +48,18 @@ public class TestFileUtils extends TestCase {
         
         
         //now check the results are what we expect
-        List<File> target = new ArrayList<File>();
-        target.add(new File("First/A1.txt"));
-        target.add(new File("First/A2.txt"));
-        String regex = "First/.*\\.txt";
-        assertEquals(target, FileUtils.getMatchesRegex(regex));
-        String glob = "First/*.txt";
-        assertEquals(target, FileUtils.getMatchesGlob(glob));
-    
+        List<File> FA1A2 = new ArrayList<File>();
+        FA1A2.add(new File("First/A1.txt"));
+        FA1A2.add(new File("First/A2.txt"));
+        assertEquals(FA1A2, FileUtils.getMatchesRegex("First/.*\\.txt"));
+        assertEquals(FA1A2, FileUtils.getMatchesGlob("First/*.txt"));
+        
+
+        List<File> FA1 = new ArrayList<File>();
+        FA1.add(new File("First/A1.txt"));
+        assertEquals(FA1, FileUtils.getMatchesRegex("First/A1.txt"));
+        assertEquals(FA1, FileUtils.getMatchesGlob("First/A1.txt"));
+        
     }
 
 }

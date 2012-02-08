@@ -31,10 +31,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttrib
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class MageTabToSampleTab {
-
-	// singlton instance
-	private static final MageTabToSampleTab instance = new MageTabToSampleTab();
-
 	public static final MAGETABParser<MAGETABInvestigation> parser = new MAGETABParser<MAGETABInvestigation>();
 
 	private SimpleDateFormat magetabdateformat = new SimpleDateFormat(
