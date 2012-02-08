@@ -113,11 +113,13 @@ public class PRIDEXMLToSampleTab {
 
             for (Element cvparam : XMLUtils.getChildrenByName(sampledescription, "cvParam")){
                 String name = cvparam.attributeValue("name").trim();
-                String value = cvparam.attributeValue("value").trim();
+                String value = cvparam.attributeValue("value");
                 if (value == null){
                     //some PRIDE attributes are boolean
                     //set their value to be their name
                     value = name;
+                } else {
+                    value = value.trim();
                 }
                 //TODO  use special attribute classes where appropriate
                 CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
@@ -131,11 +133,13 @@ public class PRIDEXMLToSampleTab {
             
             for (Element cvparam : XMLUtils.getChildrenByName(additional, "cvParam")){
                 String name = cvparam.attributeValue("name").trim();
-                String value = cvparam.attributeValue("value").trim();
+                String value = cvparam.attributeValue("value");
                 if (value == null){
                     //some PRIDE attributes are boolean
                     //set their value to be their name
                     value = name;
+                } else {
+                    value = value.trim();
                 }
                 CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
                 if (cvparam.attributeValue("cvLabel") != null && cvparam.attributeValue("accession") != null){
@@ -148,11 +152,13 @@ public class PRIDEXMLToSampleTab {
             
             for (Element userparam : XMLUtils.getChildrenByName(additional, "userParam")){
                 String name = userparam.attributeValue("name").trim();
-                String value = userparam.attributeValue("value").trim();
+                String value = userparam.attributeValue("value");
                 if (value == null){
                     //some PRIDE attributes are boolean
                     //set their value to be their name
                     value = name;
+                } else {
+                    value = value.trim();
                 }
                 CommentAttribute attr = new CommentAttribute(name, value);
                 sample.addAttribute(attr);

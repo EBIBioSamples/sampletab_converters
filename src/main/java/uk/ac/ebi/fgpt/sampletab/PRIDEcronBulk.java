@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -104,6 +105,7 @@ public class PRIDEcronBulk {
             
             
             if (!xml.exists()) {
+                log.warn("xml does not exist ("+xml+")");
                 return;
             }
             
@@ -275,7 +277,7 @@ public class PRIDEcronBulk {
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
 
         for (String name: projects.keySet()){
-            File subdir = new File(outdir, name);
+            File subdir = new File(outdir, Collections.min(projects.get(name)));
             Runnable t = new DoProcessFile(subdir, scriptdir, projectsFile);
             if (threaded) {
                 pool.execute(t);
