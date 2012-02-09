@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,33 +14,24 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
-
-public class PRIDEcronBulk {
+public class IMSRTabcronBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
-    //TODO make required
     @Option(name = "-i", aliases={"--input"}, usage = "input filename")
     private String inputFilename;
 
-    //TODO make required
     @Option(name = "-s", aliases={"--scripts"}, usage = "script directory")
     private String scriptDirname;
-
-    //TODO make required
-    @Option(name = "-p", aliases={"--projects"}, usage = "projects filename")
-    private String projectsFilename;
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public PRIDEcronBulk() {
+    public IMSRTabcronBulk() {
     }
-
 
     //TODO move to utils
     private boolean doCommand(String command, File logfile) {
@@ -88,21 +76,19 @@ public class PRIDEcronBulk {
     private class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
-        private final File projectsFile;
         
-        public DoProcessFile(File subdir, File scriptdir, File projectsFile){
+        public DoProcessFile(File subdir, File scriptdir){
             this.subdir = subdir;
             this.scriptdir = scriptdir;
-            this.projectsFile = projectsFile; 
         }
 
         public void run() {
-            File xml = new File(subdir, "trimmed.xml");
+            String tabFilename = "raw.tab.txt";
+            File tabFile = new File(subdir, tabFilename);
             File sampletabpre = new File(subdir, "sampletab.pre.txt");
             
             
-            if (!xml.exists()) {
-                log.warn("xml does not exist ("+xml+")");
+            if (!tabFile.exists()) {
                 return;
             }
             
@@ -111,16 +97,13 @@ public class PRIDEcronBulk {
             target = sampletabpre;
             if (!target.exists()) {
                 log.info("Processing " + target);
-                // convert xml to sampletab.pre.txt
-                File script = new File(scriptdir, "PRIDEXMLToSampleTab.sh");
+                // convert raw.tab.txt to sampletab.pre.txt
+                File script = new File(scriptdir, "IMSRTabToSampleTab.sh");
                 if (!script.exists()) {
                     log.error("Unable to find " + script);
                     return;
                 }
-                String bashcom = script 
-                    + " -i " + xml 
-                    + " -o " + sampletabpre
-                    + " -p " + projectsFile;
+                String bashcom = script + " " + tabFile + " " + sampletabpre;
                 log.info(bashcom);
                 File logfile = new File(subdir, "sampletab.pre.txt.log");
                 if (!doCommand(bashcom, logfile)) {
@@ -133,14 +116,48 @@ public class PRIDEcronBulk {
                     return;
                 }
             }
-            
+
             new SampleTabcronBulk().process(subdir, scriptdir);
         }
         
     }
     
+    public void run(File dir, File scriptdir) {
+        dir = dir.getAbsoluteFile();
+        scriptdir = scriptdir.getAbsoluteFile();
+
+        int nothreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+        
+        File[] subdirs = dir.listFiles();
+        Arrays.sort(subdirs);
+        for (File subdir : subdirs) {
+            if (subdir.isDirectory()) {
+                Runnable t = new DoProcessFile(subdir, scriptdir);
+                if (threaded) {
+                    pool.execute(t);
+                } else {
+                    t.run();
+                }
+            }
+        }
+        
+        // run the pool and then close it afterwards
+        // must synchronize on the pool object
+        synchronized (pool) {
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                log.error("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
+            }
+        }
+    }
+
     public static void main(String[] args) {
-        new PRIDEcronBulk().doMain(args);
+        new IMSRTabcronBulk().doMain(args);
     }
 
     public void doMain(String[] args) {
@@ -181,46 +198,6 @@ public class PRIDEcronBulk {
             return;
         }
         
-        log.info("Parsing projects file");
-        
-        File projectsFile = new File(projectsFilename);
-
-        //read all the projects
-        Map<String, Set<String>> projects;
-        try {
-            projects = PRIDEutils.loadProjects(projectsFile);
-        } catch (IOException e) {
-            log.error("Unable to read projects file "+projectsFilename);
-            e.printStackTrace();
-            System.exit(1);
-            return;
-        }
-        
-        
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
-
-        for (String name: projects.keySet()){
-            File subdir = new File(outdir, Collections.min(projects.get(name)));
-            Runnable t = new DoProcessFile(subdir, scriptdir, projectsFile);
-            if (threaded) {
-                pool.execute(t);
-            } else {
-                t.run();
-            }
-        }
-        
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
-            }
-        }
+        run(outdir, scriptdir);
     }
 }

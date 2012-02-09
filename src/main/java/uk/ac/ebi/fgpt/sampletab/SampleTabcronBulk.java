@@ -14,7 +14,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MageTabcronBulk {
+public class SampleTabcronBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
@@ -30,7 +30,8 @@ public class MageTabcronBulk {
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public MageTabcronBulk() {
+    public SampleTabcronBulk() {
+        
     }
 
     //TODO move to utils
@@ -73,6 +74,11 @@ public class MageTabcronBulk {
 
     }
 
+    public void process(File subdir, File scriptdir){
+        Runnable t = new DoProcessFile(subdir, scriptdir);
+        t.run();
+    }
+    
     private class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
@@ -83,45 +89,31 @@ public class MageTabcronBulk {
         }
 
         public void run() {
-            String idffilename = (subdir.getName().replace("GAE-", "E-")) + ".idf.txt";
-            String sdrffilename = (subdir.getName().replace("GAE-", "E-")) + ".sdrf.txt";
-            File idffile = new File(subdir, idffilename);
-            File sdrffile = new File(subdir, sdrffilename);
             File sampletabpre = new File(subdir, "sampletab.pre.txt");
-
-            //TODO fix the few files that cannot be processed
-            if (idffilename.equals("E-GEOD-27923.idf.txt")){
-                log.warn("Skipping E-GEOD-27923 as it is too large");
-                return;
-            }
-            if (idffilename.equals("E-GEOD-21478.idf.txt")){
-                log.warn("Skipping E-GEOD-21478 as it is too large");
-                return;
-            }
-            if (idffilename.equals("E-GEOD-9376.idf.txt")){
-                log.warn("Skipping E-GEOD-9376 as it is too large");
-                return;
-            }
+            File sampletab = new File(subdir, "sampletab.txt");
+            File sampletabtoload = new File(subdir, "sampletab.toload.txt");
+            File age = new File(subdir, "age");
             
-            
-            if (!idffile.exists() || !sdrffile.exists()) {
+            if (!sampletabpre.exists()) {
                 return;
             }
             
             File target;
             
-            target = sampletabpre;
+            // accession sampletab.pre.txt to sampletab.txt
+            target = sampletab;
             if (!target.exists()) {
                 log.info("Processing " + target);
-                // convert idf/sdrf to sampletab.pre.txt
-                File script = new File(scriptdir, "MageTabToSampleTab.sh");
+                File script = new File(scriptdir, "SampleTabAccessioner.sh");
                 if (!script.exists()) {
                     log.error("Unable to find " + script);
                     return;
                 }
-                String bashcom = script + " " + idffile + " " + sampletabpre;
-                log.info(bashcom);
-                File logfile = new File(subdir, "sampletab.pre.txt.log");
+                // TODO hardcoding bad
+                String bashcom = script + " --input " + sampletabpre + " --output sampletab.txt"
+                        + " --hostname mysql-ae-autosubs-test.ebi.ac.uk" + " --port 4340"
+                        + " --database autosubs_test" + " --username admin" + " --password edsK6BV6";
+                File logfile = new File(subdir, "sampletab.txt.log");
                 if (!doCommand(bashcom, logfile)) {
                     log.error("Problem producing " + target);
                     log.error("See logfile " + logfile);
@@ -133,7 +125,55 @@ public class MageTabcronBulk {
                 }
             }
 
-            new SampleTabcronBulk().process(subdir, scriptdir);
+            // preprocess to load
+            target = sampletabtoload;
+            if (!sampletabtoload.exists()) {
+                log.info("Processing " + sampletabtoload);
+                File script = new File(scriptdir, "SampleTabToLoad.sh");
+                if (!script.exists()) {
+                    log.error("Unable to find " + script);
+                    return;
+                }
+                String bashcom = script + " --input " + sampletab + " --output sampletab.toload.txt"
+                        + " --hostname mysql-ae-autosubs-test.ebi.ac.uk" + " --port 4340"
+                        + " --database autosubs_test" + " --username admin" + " --password edsK6BV6";
+                File logfile = new File(subdir, "sampletab.toload.txt.log");
+                if (!doCommand(bashcom, logfile)) {
+                    log.error("Problem producing " + sampletabtoload);
+                    log.error("See logfile " + logfile);
+                    if (target.exists()){
+                        target.delete();
+                        log.error("cleaning partly produced file");
+                    }
+                    return;
+                }
+            }
+
+            // convert to age
+            target = age;
+            if (!age.exists()) {
+                log.info("Processing " + age);
+                File script = new File(scriptdir, "SampleTab-to-AGETAB.sh");
+                if (!script.exists()) {
+                    log.error("Unable to find " + script);
+                    return;
+                }
+                String bashcom = script + " -o " + age + " " + sampletabtoload;
+                File logfile = new File(subdir, "age.log");
+                if (!doCommand(bashcom, logfile)) {
+                    log.error("Problem producing " + age);
+                    log.error("See logfile " + logfile);
+                    if (target.exists()){
+                        for (File todel: target.listFiles()){
+                            todel.delete();
+                        }
+                        target.delete();
+                        log.error("cleaning partly produced file");
+                    }
+                    return;
+                }
+            }
+            
         }
         
     }
@@ -173,7 +213,7 @@ public class MageTabcronBulk {
     }
 
     public static void main(String[] args) {
-        new MageTabcronBulk().doMain(args);
+        new SampleTabcronBulk().doMain(args);
     }
 
     public void doMain(String[] args) {

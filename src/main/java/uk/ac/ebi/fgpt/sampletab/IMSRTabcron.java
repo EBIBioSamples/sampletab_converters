@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
-public class IMSRcron {
+public class IMSRTabcron {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
@@ -27,12 +27,12 @@ public class IMSRcron {
         
 	private Logger log = LoggerFactory.getLogger(getClass());
 
-	private IMSRcron() {
+	private IMSRTabcron() {
 	}
 	
 
 	public static void main(String[] args) {
-        new IMSRcron().doMain(args);
+        new IMSRTabcron().doMain(args);
     }
 
     public void doMain(String[] args) {
@@ -64,7 +64,6 @@ public class IMSRcron {
 
 		if (!outdir.exists())
 			outdir.mkdirs();
-
 
         IMSRTabWebDownload downloader = new IMSRTabWebDownload();
         downloader.download("GMS-JAX", new File(new File(outdir, "GMS-JAX"), "raw.tab.txt"));
