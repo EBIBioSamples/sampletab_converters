@@ -66,8 +66,8 @@ public class NCBISampleTabCombiner {
     }
 
     private File getFileByIdent(int ident) {
-        File subdir = new File(this.inputFilename, "" + ((ident / 1000) * 1000));
-        File xmlfile = new File(subdir, "" + ident + ".xml");
+        File subdir = new File(this.inputFilename, "GNC-"+ident);
+        File xmlfile = new File(subdir, "raw.xml");
         return xmlfile;
     }
 
