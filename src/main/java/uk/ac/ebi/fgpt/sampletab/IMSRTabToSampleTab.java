@@ -38,12 +38,12 @@ public class IMSRTabToSampleTab {
 
     private IMSRTabToSampleTab() {
         // private constructor to prevent accidental multiple initialisations
-
     }
 
-    private IMSRTabWebSummary getSummary() {
+    private IMSRTabWebSummary getSummary() throws NumberFormatException, java.text.ParseException, IOException {
         if (summary == null) {
             summary = IMSRTabWebSummary.getInstance();
+            summary.get();
         }
         return summary;
     }
@@ -56,11 +56,11 @@ public class IMSRTabToSampleTab {
         return log;
     }
 
-    public SampleData convert(String filename) throws IOException, ParseException {
+    public SampleData convert(String filename) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
         return convert(new File(filename));
     }
 
-    public SampleData convert(File infile) throws ParseException, IOException {
+    public SampleData convert(File infile) throws ParseException, IOException, NumberFormatException, java.text.ParseException {
 
         SampleData st = new SampleData();
 
@@ -261,7 +261,7 @@ public class IMSRTabToSampleTab {
         return st;
     }
 
-    public void convert(File file, Writer writer) throws IOException, ParseException {
+    public void convert(File file, Writer writer) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
         getLog().debug("recieved magetab, preparing to convert");
         SampleData st = convert(file);
 
@@ -273,12 +273,12 @@ public class IMSRTabToSampleTab {
 
     }
 
-    public void convert(File infile, String outfilename) throws IOException, ParseException {
+    public void convert(File infile, String outfilename) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
 
         convert(infile, new File(outfilename));
     }
 
-    public void convert(File infile, File outfile) throws IOException, ParseException {
+    public void convert(File infile, File outfile) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
 
         // create parent directories, if they dont exist
         outfile = outfile.getAbsoluteFile();
@@ -293,19 +293,19 @@ public class IMSRTabToSampleTab {
         convert(infile, new FileWriter(outfile));
     }
 
-    public void convert(String infilename, Writer writer) throws IOException, ParseException {
+    public void convert(String infilename, Writer writer) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
         convert(new File(infilename), writer);
     }
 
-    public void convert(String infilename, File outfile) throws IOException, ParseException {
+    public void convert(String infilename, File outfile) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
         convert(infilename, new FileWriter(outfile));
     }
 
-    public void convert(String infilename, String outfilename) throws IOException, ParseException {
+    public void convert(String infilename, String outfilename) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
         convert(infilename, new File(outfilename));
     }
 
-    private void addSite(SampleData st, String site) {
+    private void addSite(SampleData st, String site) throws NumberFormatException, java.text.ParseException, IOException {
         log.info("Adding site " + site);
         assert getSummary().sites.contains(site);
         int index = getSummary().sites.indexOf(site);
@@ -359,6 +359,12 @@ public class IMSRTabToSampleTab {
             System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
             e.printStackTrace();
         } catch (IOException e) {
+            System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
+            e.printStackTrace();
+        } catch (java.text.ParseException e) {
             System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
             e.printStackTrace();
         }

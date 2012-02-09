@@ -31,43 +31,45 @@ public class IMSRTabWebSummary {
 	
 	private IMSRTabWebSummary(){
 		// private constructor
-		BufferedReader input;
-		String line;
-		int lineid = 0;
-		SimpleDateFormat simpledateformat = new SimpleDateFormat("MMM dd, yyyy");
-		log.info("Retrieving IMSR summary information");
-		try {
-			//setup the input as buffered characters
-			input = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
-			//no go through each line in turn
-			while ((line = input.readLine()) != null){
-				if (lineid <= 2){
-					//read headers
-					lineid ++;
-					continue;
-				} else {
-					//read data
-					String[] entries = line.split("\t");
-					sites.add(entries[0]);
-					facilities.add(entries[1]);
-					strainss.add(Integer.parseInt(entries[2]));
-					esliness.add(Integer.parseInt(entries[3]));
-					totals.add(Integer.parseInt(entries[4]));
-					updates.add(simpledateformat.parse(entries[5]));
-					lineid ++;
-				}
-			}
-			input.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-		
+	}
+	
+	public void get() throws ParseException, NumberFormatException, IOException{
+        BufferedReader input = null;
+        String line;
+        int lineid = 0;
+        SimpleDateFormat simpledateformat = new SimpleDateFormat("MMM dd, yyyy");
+        log.info("Retrieving IMSR summary information");
+        try {
+            //setup the input as buffered characters
+            input = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
+            //no go through each line in turn
+            while ((line = input.readLine()) != null){
+                if (lineid <= 2){
+                    //read headers
+                    lineid ++;
+                    continue;
+                } else {
+                    //read data
+                    String[] entries = line.split("\t");
+                    sites.add(entries[0]);
+                    facilities.add(entries[1]);
+                    strainss.add(Integer.parseInt(entries[2]));
+                    esliness.add(Integer.parseInt(entries[3]));
+                    totals.add(Integer.parseInt(entries[4]));
+                    updates.add(simpledateformat.parse(entries[5]));
+                    lineid ++;
+                }
+            }
+        } finally {
+            try {
+                if (input != null){
+                    input.close();
+                }
+            } catch (IOException e){
+                //do nothing
+            }
+        }
+	    
 	}
 	 
     public static IMSRTabWebSummary getInstance() {

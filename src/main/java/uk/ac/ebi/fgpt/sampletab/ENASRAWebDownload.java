@@ -1,17 +1,25 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
+import org.dom4j.util.NodeComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,109 +27,89 @@ import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class ENASRAWebDownload {
-    // singlton instance
-    private static ENASRAWebDownload instance = null;
 
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private ENASRAWebDownload() {
-        // private constructor to prevent accidental multiple initialisations
-
+    public ENASRAWebDownload() {
+        
     }
 
-    public static ENASRAWebDownload getInstance() {
-        if (instance == null) {
-            instance = new ENASRAWebDownload();
-        }
 
-        return instance;
+    public void download(String accession, String outdir) throws DocumentException, IOException {
+        this.download(accession, new File(outdir));
     }
 
-    public String download(String accession, String outdir) {
-        return this.download(accession, new File(outdir));
-    }
-
-    public String download(String accession, File outdir) {
+    public void download(String accession, File outdir) throws DocumentException, IOException {
         // TODO check accession is actually an ENA SRA study accession
+
+        String url = "http://www.ebi.ac.uk/ena/data/view/" + accession + "&display=xml";
+
+        log.info("Prepared for download "+accession);
+
+        Document studyDoc = XMLUtils.getDocument(url);
+        Element root = studyDoc.getRootElement();
+        
+        //if this is a blank study, abort
+        if (XMLUtils.getChildrenByName(root, "STUDY").size() == 0) {
+            return;
+        }
 
         // create parent directories, if they dont exist
         File studyFile = new File(outdir.getAbsoluteFile(), "study.xml");
         if (!studyFile.getParentFile().exists()) {
             studyFile.getParentFile().mkdirs();
         }
-
-        // setup the input as buffered characters
-        // setup the output as a buffered file
-        BufferedReader input;
-        BufferedWriter output;
-        String line;
-
-        String url = "http://www.ebi.ac.uk/ena/data/view/" + accession + "&display=xml";
-
-        log.info("Prepared for download.");
-        try {
-            input = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
-            output = new BufferedWriter(new FileWriter(studyFile));
-            // now go through each line in turn
-            log.info("Starting study download...");
-            while ((line = input.readLine()) != null) {
-                output.write(line);
-                output.write("\n");
+        
+        //check that it does not already exist
+        if (studyFile.exists()){
+            Document existStudyDoc = XMLUtils.getDocument(studyFile);
+            NodeComparator c = new NodeComparator();
+            if (c.compare(studyDoc, existStudyDoc) != 0){
+                log.info("Skipping "+accession);
+                return;
             }
-            log.info("Study download complete.");
-            input.close();
-            output.close();
-        } catch (MalformedURLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
         }
-
-        // now that the study is downloaded, it needs to be examined
-        // to work out which samples to get
-
+        
+        //write the study file to disk
+        OutputStream os = null;
         try {
-            Document studydoc = XMLUtils.getDocument(studyFile);
-            Element root = studydoc.getRootElement();
-            Set<String> sampleSRAAccessions = ENAUtils.getSamplesForStudy(root);
-
-            // now there is a set of sample accessions they each need to be retrieved.
-            log.info("Prepared for ENA SRA sample XML download.");
-            for (String sampleSRAAccession : sampleSRAAccessions) {
-                String sampleURL = "http://www.ebi.ac.uk/ena/data/view/" + sampleSRAAccession + "&display=xml";
-                File sampleFile = new File(outdir.getAbsoluteFile(), sampleSRAAccession + ".xml");
-
-                input = new BufferedReader(new InputStreamReader(new URL(sampleURL).openStream()));
-                output = new BufferedWriter(new FileWriter(sampleFile));
-                // now go through each line in turn
-                while ((line = input.readLine()) != null) {
-                    output.write(line);
-                    output.write("\n");
+            os = new BufferedOutputStream(new FileOutputStream(studyFile));
+            OutputFormat format = OutputFormat.createPrettyPrint();
+            XMLWriter writer = new XMLWriter(os, format);
+            writer.write(studyDoc);
+            writer.flush();
+            os.close();
+        } finally {
+            if (os != null) {
+                os.close();
+            }
+        }
+        
+        Set<String> sampleSRAAccessions = ENAUtils.getSamplesForStudy(root);
+        // now there is a set of sample accessions they each need to be retrieved.
+        log.info("Prepared for ENA SRA sample XML download.");
+        for (String sampleSRAAccession : sampleSRAAccessions) {
+            String sampleURL = "http://www.ebi.ac.uk/ena/data/view/" + sampleSRAAccession + "&display=xml";
+            File sampleFile = new File(outdir.getAbsoluteFile(), sampleSRAAccession + ".xml");
+            Document sampledoc = XMLUtils.getDocument(sampleURL);
+            os = null;
+            try {
+                os = new BufferedOutputStream(new FileOutputStream(sampleFile));
+                OutputFormat format = OutputFormat.createPrettyPrint();
+                XMLWriter writer = new XMLWriter(os, format);
+                writer.write(sampledoc);
+                writer.flush();
+                os.close();
+            } finally {
+                if (os != null) {
+                    os.close();
                 }
-                input.close();
-                output.close();
             }
-        } catch (MalformedURLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
-        } catch (DocumentException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
+            
         }
-        log.info("ENA SRA Sample download complete.");
+        log.info("ENA SRA study download complete.");
 
-        return null;
     }
 
     public static void main(String[] args) {
@@ -132,11 +120,15 @@ public class ENASRAWebDownload {
         String accession = args[0];
         String outdir = args[1];
 
-        ENASRAWebDownload downloader = ENASRAWebDownload.getInstance();
-        String error = downloader.download(accession, outdir);
-        if (error != null) {
-            System.out.println("ERROR: " + error);
-            System.exit(1);
+        ENASRAWebDownload downloader = new ENASRAWebDownload();
+        try {
+            downloader.download(accession, outdir);
+        } catch (DocumentException e) {
+            System.err.println("Unable to download "+accession+" to "+outdir);
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Unable to download "+accession+" to "+outdir);
+            e.printStackTrace();
         }
 
     }
