@@ -85,7 +85,7 @@ public class NCBISampleTabCombiner {
 
             public Collection<String> getGroupIds(File xmlFile) throws DocumentException, FileNotFoundException {
 
-                log.debug("Trying " + xmlFile);
+                log.info("Trying " + xmlFile);
                 Document xml = XMLUtils.getDocument(xmlFile);
 
                 Collection<String> groupids = new ArrayList<String>();
@@ -179,7 +179,7 @@ public class NCBISampleTabCombiner {
 
         int nocpus = Runtime.getRuntime().availableProcessors();
         log.info("Using " + nocpus + " threads");
-        ExecutorService pool = Executors.newFixedThreadPool(nocpus*2);
+        ExecutorService pool = Executors.newFixedThreadPool(nocpus);
         for (int i = 0; i < maxident; i++) {
             pool.submit(new GroupIDsTask(i, groupings));
         }
