@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -13,6 +14,8 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class SampleTabcronBulk {
 
@@ -93,11 +96,7 @@ public class SampleTabcronBulk {
             File sampletab = new File(subdir, "sampletab.txt");
             File sampletabtoload = new File(subdir, "sampletab.toload.txt");
             File age = new File(subdir, "age");
-            
-            if (!sampletabpre.exists()) {
-                return;
-            }
-            
+                        
             File target;
             
             // accession sampletab.pre.txt to sampletab.txt
@@ -178,23 +177,21 @@ public class SampleTabcronBulk {
         
     }
     
-    public void run(File dir, File scriptdir) {
-        dir = dir.getAbsoluteFile();
-        scriptdir = scriptdir.getAbsoluteFile();
-
+    public void run(Collection<File> files, File scriptdir) {
+        
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
         
-        File[] subdirs = dir.listFiles();
-        Arrays.sort(subdirs);
-        for (File subdir : subdirs) {
-            if (subdir.isDirectory()) {
-                Runnable t = new DoProcessFile(subdir, scriptdir);
-                if (threaded) {
-                    pool.execute(t);
-                } else {
-                    t.run();
-                }
+        for (File subdir : files) {
+            if (!subdir.isDirectory()) {
+                subdir = subdir.getParentFile();
+            }
+            log.info("Processing "+subdir);
+            Runnable t = new DoProcessFile(subdir, scriptdir);
+            if (threaded) {
+                pool.execute(t);
+            } else {
+                t.run();
             }
         }
         
@@ -235,25 +232,18 @@ public class SampleTabcronBulk {
             return;
         }
         
-        File outdir = new File(inputFilename);
+        //TODO handle globs
         
-        if (outdir.exists() && !outdir.isDirectory()) {
-            log.error("Target is not a directory");
-            System.exit(1);
-            return;
-        }
-
-        if (!outdir.exists())
-            outdir.mkdirs();
-
         File scriptdir = new File(scriptDirname);
         
-        if (!outdir.exists() && !outdir.isDirectory()) {
+        if (!scriptdir.exists() && !scriptdir.isDirectory()) {
             log.error("Script directory missing or is not a directory");
             System.exit(1);
             return;
         }
         
-        run(outdir, scriptdir);
+        Collection<File> files = FileUtils.getMatchesGlob(inputFilename);
+        
+        run(files, scriptdir);
     }
 }

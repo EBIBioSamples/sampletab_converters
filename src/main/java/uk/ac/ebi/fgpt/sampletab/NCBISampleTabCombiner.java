@@ -37,62 +37,64 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBISampleTabCombiner {
 
     @Option(name = "-h", usage = "display help")
     private boolean help;
-    
-    @Option(name = "-i", usage = "input directory")
+
+    @Option(name = "-i", usage = "input filename or glob")
     private String inputFilename;
-    
-    @Option(name = "-o", usage = "output directory")
+
+    @Option(name = "-o", usage = "output filename")
     private String outputFilename;
+
+    @Option(name = "--threaded", usage = "use multiple threads?")
+    private boolean threaded = false;
 
     // receives other command line parameters than options
     @Argument
     private List<String> arguments = new ArrayList<String>();
-    
+
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private int maxident = 300000; // max is 1,000,000
-    
-    private final Map<String, Set<String>> groupings;
+    private final Map<String, Set<File>> groupings;
 
     public NCBISampleTabCombiner() {
         // private constructor
-        groupings = new ConcurrentHashMap<String, Set<String>>();
+        groupings = new ConcurrentHashMap<String, Set<File>>();
     }
 
     private File getFileByIdent(int ident) {
-        File subdir = new File(this.inputFilename, "GNC-"+ident);
+        File subdir = new File(this.inputFilename, "GNC-" + ident);
         File xmlfile = new File(subdir, "raw.xml");
         return xmlfile;
     }
 
-    public Map<String, Set<String>> getGroupings() throws DocumentException, SQLException {
+    private void makeGroupings(List<File> inFiles) throws DocumentException, SQLException {
 
         class GroupIDsTask implements Runnable {
-            private final int ident;
-            private final Map<String, Set<String>> groupings;
+            private final File inFile;
+            private int ncbiid = -1;
             private Logger log = LoggerFactory.getLogger(getClass());
 
-            GroupIDsTask(int ident, Map<String, Set<String>> groupings) {
-                this.ident = ident;
-                this.groupings = groupings;
+            GroupIDsTask(File inFile) {
+                this.inFile = inFile;
             }
 
-            public Collection<String> getGroupIds(File xmlFile) throws DocumentException, FileNotFoundException {
+            public Collection<String> getGroupIds() throws DocumentException, FileNotFoundException {
 
-                log.info("Trying " + xmlFile);
-                Document xml = XMLUtils.getDocument(xmlFile);
+                log.info("Trying " + this.inFile);
 
                 Collection<String> groupids = new ArrayList<String>();
-                Element root = xml.getRootElement();
                 
+
+                Document xml = XMLUtils.getDocument(this.inFile);
+                Element root = xml.getRootElement();
                 Element ids = XMLUtils.getChildByName(root, "Ids");
-                Element attributes = XMLUtils.getChildByName(root, "Attributes");                
+                Element attributes = XMLUtils.getChildByName(root, "Attributes");
                 for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
                     String dbname = id.attributeValue("db");
                     String sampleid = id.getText();
@@ -101,13 +103,13 @@ public class NCBISampleTabCombiner {
                         log.debug("Getting studies of SRA sample " + sampleid);
                         Collection<String> studyids = ENAUtils.getStudiesForSample(sampleid);
                         if (studyids != null) {
-                            groupids.addAll(studyids);
+                            //groupids.addAll(studyids);
                         }
                     } else if (dbname.equals("dbGaP")) {
                         // group by dbGaP project
                         for (Element attribute : XMLUtils.getChildrenByName(attributes, "Attribute")) {
                             if (attribute.attributeValue("attribute_name").equals("gap_accession")) {
-                                groupids.add(attribute.getText());
+                                //groupids.add(attribute.getText());
                             }
                         }
                     } else if (dbname.equals("EST") || dbname.equals("GSS")) {
@@ -134,54 +136,80 @@ public class NCBISampleTabCombiner {
 
                         // // This doesnt work so well by owner, so dont bother.
                         // // May need to group samples from the same owner in a post-hoc manner?
-                        groupids.add(sampleid);
+                        //groupids.add(sampleid);
                     } else {
                         // could group by others, but some of them are very big
                     }
                 }
                 return groupids;
             }
+            
+            public int getNCBIid(){
+                if (this.ncbiid == -1){
+                    Document xml;
+                    try {
+                        xml = XMLUtils.getDocument(this.inFile);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                        return -1;
+                    } catch (DocumentException e) {
+                        e.printStackTrace();
+                        return -1;
+                    }
+                    Element root = xml.getRootElement();
+                    this.ncbiid = new Integer(root.attributeValue("id"));
+                }
+                return this.ncbiid;
+            }
 
             public void run() {
 
-                File xmlFile = getFileByIdent(this.ident);
-
-                if (xmlFile.exists()) {
+                if (inFile.exists()) {
                     Collection<String> groupids = null;
 //                    try {
-//                        groupids = getGroupIds(getFileByIdent(this.ident));
+//                        groupids = this.getGroupIds();
 //                    } catch (DocumentException e) {
 //                        e.printStackTrace();
 //                        return;
+//                    } catch (FileNotFoundException e) {
+//                        e.printStackTrace();
+//                        return;
 //                    }
-                    groupids = new HashSet<String>();
-                    groupids.add(""+this.ident);
+                    //For the moment, but everything in a group of one.
+                    groupids = new ArrayList<String>();
                     
-                    if(groupids.size() > 1){
-                        log.error("Multiple groups for "+this.ident);
+                    groupids.add(""+this.getNCBIid());
+
+                    if (groupids.size() > 1) {
+                        log.error("Multiple groups for " + this.inFile);
                     }
-                        
-                    
+                    if (groupids.size() == 0) {
+                        log.error("No groups for " + this.inFile);
+                    }
+
                     for (String groupid : groupids) {
-                        Set<String> group;
-                        if (this.groupings.containsKey(groupid)) {
-                            group = this.groupings.get(groupid);
+                        Set<File> group;
+                        if (groupings.containsKey(groupid)) {
+                            group = groupings.get(groupid);
                         } else {
-                            group = new ConcurrentSkipListSet<String>();
-                            this.groupings.put(groupid, group);
+                            group = new ConcurrentSkipListSet<File>();
+                            groupings.put(groupid, group);
                         }
-                        group.add(""+this.ident);
+                        group.add(this.inFile);
                     }
                 }
             }
         }
-        
 
         int nocpus = Runtime.getRuntime().availableProcessors();
-        log.info("Using " + nocpus + " threads");
         ExecutorService pool = Executors.newFixedThreadPool(nocpus);
-        for (int i = 0; i < maxident; i++) {
-            pool.submit(new GroupIDsTask(i, groupings));
+        for (File file : inFiles) {
+            Runnable t = new GroupIDsTask(file);
+            if (threaded) {
+                pool.submit(t);
+            } else {
+                t.run();
+            }
         }
         log.info("All GroupIDsTask tasks submitted");
 
@@ -195,11 +223,11 @@ public class NCBISampleTabCombiner {
                 e.printStackTrace();
             }
         }
-        
+
         // at this point, subs is a mapping from the project name to a set of BioSample accessions
         // output them to a file
         File projout = new File("projects.tab.txt");
-        BufferedWriter projoutwrite = null; 
+        BufferedWriter projoutwrite = null;
         try {
             projoutwrite = new BufferedWriter(new FileWriter(projout));
             synchronized (groupings) {
@@ -210,10 +238,10 @@ public class NCBISampleTabCombiner {
 
                     projoutwrite.write(project);
                     projoutwrite.write("\t");
-                    List<String> accessions = new ArrayList<String>(groupings.get(project));
-                    Collections.sort(accessions);
-                    for (String accession : accessions) {
-                        projoutwrite.write(accession);
+                    List<File> files = new ArrayList<File>(groupings.get(project));
+                    Collections.sort(files);
+                    for (File file : files) {
+                        projoutwrite.write(file.toString());
                         projoutwrite.write("\t");
                     }
 
@@ -225,19 +253,16 @@ public class NCBISampleTabCombiner {
             e.printStackTrace();
             System.exit(1);
         } finally {
-            if (projoutwrite != null){
+            if (projoutwrite != null) {
                 try {
                     projoutwrite.close();
                 } catch (IOException e) {
-                    //failed within a fail so give up
+                    // failed within a fail so give up
                     log.error("Unable to close file writer " + projout);
-                    
+
                 }
             }
         }
-        
-        return groupings;
-
     }
 
     public SampleData combine(Collection<SampleData> indata) {
@@ -334,9 +359,9 @@ public class NCBISampleTabCombiner {
             sampleout.msi.publicationDOI.addAll(sampledata.msi.publicationDOI);
             sampleout.msi.publicationPubMedID.addAll(sampledata.msi.publicationPubMedID);
 
-            if (sampleout.msi.submissionDescription == null|| sampleout.msi.submissionDescription.trim().equals(""))
+            if (sampleout.msi.submissionDescription == null || sampleout.msi.submissionDescription.trim().equals(""))
                 sampleout.msi.submissionDescription = sampledata.msi.submissionDescription;
-            if (sampleout.msi.submissionTitle == null|| sampleout.msi.submissionTitle.trim().equals(""))
+            if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals(""))
                 sampleout.msi.submissionTitle = sampledata.msi.submissionTitle;
 
             if (sampledata.msi.submissionReleaseDate != null) {
@@ -365,19 +390,20 @@ public class NCBISampleTabCombiner {
                     }
                 }
             }
-            
+
             // add nodes from here to parent
             for (SCDNode node : sampledata.scd.getRootNodes()) {
                 try {
                     sampleout.scd.addNode(node);
-                    if (SampleNode.class.isInstance(node)){
-                        //apply node metainformation to msi if missing
-                        if (sampleout.msi.submissionDescription == null || sampleout.msi.submissionDescription.trim().equals(""))
+                    if (SampleNode.class.isInstance(node)) {
+                        // apply node metainformation to msi if missing
+                        if (sampleout.msi.submissionDescription == null
+                                || sampleout.msi.submissionDescription.trim().equals(""))
                             log.debug("Using description from sample");
-                            sampleout.msi.submissionDescription = ((SampleNode) node).sampleDescription;
+                        sampleout.msi.submissionDescription = ((SampleNode) node).sampleDescription;
                         if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals(""))
                             log.debug("Using title from sample");
-                            sampleout.msi.submissionTitle = ((SampleNode) node).getNodeName();
+                        sampleout.msi.submissionTitle = ((SampleNode) node).getNodeName();
                     }
                 } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e4) {
                     log.warn("Unable to add node " + node.getNodeName());
@@ -399,7 +425,7 @@ public class NCBISampleTabCombiner {
 
         return sampleout;
     }
-    
+
     public static void main(String[] args) throws IOException {
         new NCBISampleTabCombiner().doMain(args);
     }
@@ -422,14 +448,15 @@ public class NCBISampleTabCombiner {
             System.exit(1);
             return;
         }
-        
-        log.info("Starting combiner...");
 
-        Map<String, Set<String>> groups;
+        log.info("Starting combiner...");
+        log.info(inputFilename);
+        List<File> inFiles = FileUtils.getMatchesGlob(inputFilename);
+        log.info("Found "+inFiles.size()+" input files");
 
         try {
             log.debug("Getting groupings...");
-            groups = getGroupings();
+            makeGroupings(inFiles);
             log.debug("Got groupings...");
         } catch (DocumentException e) {
             log.error("Unable to group");
@@ -440,81 +467,80 @@ public class NCBISampleTabCombiner {
             e.printStackTrace();
             return;
         }
-        
-        
+
         class OutputTask implements Runnable {
-            private final Collection<String> group;
+            private final Collection<File> files;
             private final String groupname;
             private final File outFile;
             private final NCBIBiosampleToSampleTab converter;
-            
-            public OutputTask(Collection<String> group, String groupname, File outFile){
-                this.group = group;
+
+            public OutputTask(Set<File> files, String groupname, File outFile) {
+                this.files = files;
                 this.groupname = groupname;
                 this.converter = new NCBIBiosampleToSampleTab();
                 this.outFile = outFile;
             }
+
             public void run() {
 
-                //log.info("Size of group : " + group + " : " + groups.get(group).size());
+                // log.info("Size of group : " + group + " : " + groups.get(group).size());
 
-                //log.info("Group : " + group);
+                // log.info("Group : " + group);
                 Collection<SampleData> sampledatas = new ArrayList<SampleData>();
-                for (String ncbiaccession : this.group) {
-                    File xmlfile = getFileByIdent(new Integer(ncbiaccession));
-                    log.debug("converting "+xmlfile);
+                //TODO sort files?
+                for (File xmlFile : files) {
+                    log.info("converting " + xmlFile);
                     try {
-                        sampledatas.add(this.converter.convert(xmlfile));
+                        sampledatas.add(this.converter.convert(xmlFile));
                     } catch (ParseException e2) {
-                        log.warn("Unable to convert " + xmlfile);
+                        log.warn("Unable to convert " + xmlFile);
                         e2.printStackTrace();
                         continue;
                     } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e2) {
-                        log.warn("Unable to convert " + xmlfile);
+                        log.warn("Unable to convert " + xmlFile);
                         e2.printStackTrace();
                         continue;
                     } catch (DocumentException e2) {
-                        log.warn("Unable to convert " + xmlfile);
+                        log.warn("Unable to convert " + xmlFile);
                         e2.printStackTrace();
                         continue;
                     } catch (FileNotFoundException e2) {
-                        log.warn("Unable to convert " + xmlfile);
+                        log.warn("Unable to convert " + xmlFile);
                         e2.printStackTrace();
                         continue;
                     }
                 }
                 SampleData sampleout = combine(sampledatas);
-                
+
                 sampleout.msi.submissionIdentifier = "GNC-" + this.groupname;
-                log.debug("submissionIdentifier: "+sampleout.msi.submissionIdentifier);
-                
+                log.debug("submissionIdentifier: " + sampleout.msi.submissionIdentifier);
+
                 // more sanity checks
-                if (sampleout.scd.getRootNodes().size() != this.group.size()) {
-                    log.warn("unequal group size "+sampleout.msi.submissionIdentifier);
+                if (sampleout.scd.getRootNodes().size() != this.files.size()) {
+                    log.warn("unequal group size " + sampleout.msi.submissionIdentifier);
                 }
-                
+
                 SampleTabWriter writer;
                 try {
                     writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outFile)));
                     writer.write(sampleout);
                     writer.close();
+                    log.error("Wrote to " + outFile);
                 } catch (IOException e) {
                     log.error("Unable to write " + outFile);
                     e.printStackTrace();
                     return;
                 }
-                
+
             }
         }
-        
-        
+
         // sort them to put them in a sensible order
         List<String> projects = new ArrayList<String>(groupings.keySet());
         Collections.sort(projects);
-        
+
         int nocpus = Runtime.getRuntime().availableProcessors();
-        log.info("Using " + nocpus + " threads");
-        ExecutorService pool = Executors.newFixedThreadPool(nocpus*2);
+        ExecutorService pool = Executors.newFixedThreadPool(nocpus);
 
         for (String groupname : projects) {
 
@@ -522,21 +548,26 @@ public class NCBISampleTabCombiner {
                 log.info("Skipping empty group name");
                 continue;
             }
-            if (groups.get(groupname).size() < 1) {
+            if (groupings.get(groupname).size() < 1) {
                 continue;
             }
+            log.info("Using groupname " + groupname);
+
             
-            File outsubdir = new File(outputFilename, "GNC-"+groupname);
-            File outFile = new File(outsubdir, "sampletab.txt");
-            //TODO also compare file ages
-            //TODO also check output file is size > 0
-            if (!outFile.exists()){
+            File minFile = Collections.min(groupings.get(groupname));
+            File outFile = new File(minFile.getParentFile(), outputFilename);
+            // TODO also compare file ages
+            // TODO also check output file is size > 0
+            log.info("outfile " + outFile);
+            if (!outFile.exists()) {
                 outFile.getParentFile().mkdirs();
-                log.debug("outfile "+outFile);
-                //TODO make this operate on inputfiles and outputfiles
-                Runnable t = new OutputTask(groups.get(groupname), groupname, outFile);
-                pool.execute(t);
-                //t.run();        
+                // TODO make this operate on inputfiles and outputfiles
+                Runnable t = new OutputTask(groupings.get(groupname), groupname, outFile);
+                if (threaded) {
+                    pool.execute(t);
+                } else {
+                    t.run();
+                }
             }
         }
         log.info("All OutputTask tasks submitted");
