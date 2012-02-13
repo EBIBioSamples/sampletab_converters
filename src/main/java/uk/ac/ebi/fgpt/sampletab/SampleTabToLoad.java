@@ -38,7 +38,7 @@ public class SampleTabToLoad {
     @Option(name = "-i", aliases={"--input"}, usage = "input filename or glob")
     private String inputFilename;
 
-    @Option(name = "-o", aliases={"--output"}, usage = "output filename")
+    @Option(name = "-o", aliases={"--output"}, usage = "output filename relative to input")
     private String outputFilename;
 
     @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
@@ -299,7 +299,7 @@ public class SampleTabToLoad {
         Collections.sort(inputFiles);
 
         int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads * 2);
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
 
         for (File inputFile : inputFiles) {
             // System.out.println("Checking "+inputFile);
