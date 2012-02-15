@@ -109,7 +109,8 @@ public class PRIDEcronBulk {
             File target;
             
             target = sampletabpre;
-            if (!target.exists()) {
+            if (!target.exists()
+                    || target.lastModified() < xml.lastModified()) {
                 log.info("Processing " + target);
                 // convert xml to sampletab.pre.txt
                 File script = new File(scriptdir, "PRIDEXMLToSampleTab.sh");

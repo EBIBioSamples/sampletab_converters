@@ -83,19 +83,20 @@ public class ENASRAcronBulk {
         }
 
         public void run() {
-            String tabFilename = "study.xml";
-            File tabFile = new File(subdir, tabFilename);
+            String studyFilename = "study.xml";
+            File xmlFile = new File(subdir, studyFilename);
             File sampletabpre = new File(subdir, "sampletab.pre.txt");
             
             
-            if (!tabFile.exists()) {
+            if (!xmlFile.exists()) {
                 return;
             }
             
             File target;
             
             target = sampletabpre;
-            if (!target.exists()) {
+            if (!target.exists()
+                    || target.lastModified() < xmlFile.lastModified()) {
                 log.info("Processing " + target);
                 // convert raw.tab.txt to sampletab.pre.txt
                 File script = new File(scriptdir, "ENASRAXMLToSampleTab.sh");
@@ -103,7 +104,7 @@ public class ENASRAcronBulk {
                     log.error("Unable to find " + script);
                     return;
                 }
-                String bashcom = script + " " + tabFile + " " + sampletabpre;
+                String bashcom = script + " " + xmlFile + " " + sampletabpre;
                 log.info(bashcom);
                 File logfile = new File(subdir, "sampletab.pre.txt.log");
                 if (!doCommand(bashcom, logfile)) {

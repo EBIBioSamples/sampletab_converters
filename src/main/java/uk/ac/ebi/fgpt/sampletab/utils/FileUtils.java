@@ -65,50 +65,48 @@ public class FileUtils {
         return getMatchesRegex(globToRegex(glob));
     }
 
-    // TODO javadoc
+    private static void lookAt(File tolook, List<String> regparts, List<File> outfiles){
+        log.debug(tolook.getName());
+        log.debug(regparts.get(0));
+        log.debug(""+tolook.getName().matches(regparts.get(0)));
+        if (tolook.getName().matches(regparts.get(0))){
+            if (regparts.size() == 1){
+                outfiles.add(tolook);
+            } else {
+                if (tolook.isDirectory()) {
+                    File[] subfiles = tolook.listFiles();
+                    Arrays.sort(subfiles);
+                    for (File subfile : subfiles) {
+                        lookAt(subfile, regparts.subList(1, regparts.size()), outfiles);
+                    }
+                }
+            }
+        }
+    }
+    
     public static List<File> getMatchesRegex(String regex) {
         log.debug("regex = " + regex);
         List<File> outfiles = new ArrayList<File>();
+        
         File regfile = new File(regex);
-        log.debug("regfile = " + regfile);
-
-        List<File> regparents = getParentFiles(regfile);
-        log.debug("regparents = " + regparents);
-        int i;
-        for (i = 0; i < regparents.size(); i++) {
-            if (regparents.get(i).getName().contains(".*") || regparents.get(i).getName().contains("?")) {
-                break;
-            }
+        List<String> regparts = new ArrayList<String>();
+        regparts.add(regfile.getName());
+        File totest = regfile;
+        while (totest.getParentFile() != null) {
+            totest = totest.getParentFile();
+            regparts.add(0, totest.getName());
         }
-        if (i == regparents.size()){
-            //no things left
-            //therefore only one match
-            String filename = regex.replace("\\.", ".");
-            outfiles.add(new File(filename));
-        } else {
-            regex = joinFileList(regparents.subList(i, regparents.size())).toString();
-            log.debug("cleaned regex : " + regex);
-            File start = joinFileList(regparents.subList(0, i));
-            log.debug("cleaned start : " + start);
-            addMatches(start, regex, outfiles, 0);
+        
+        log.debug("regparts= " + regparts);
+        
+        File cwd = new File(".");
+        File[] subfiles = cwd.listFiles();
+        Arrays.sort(subfiles);
+        for (File subfile : subfiles) {
+            subfile = new File(subfile.getName());
+            lookAt(subfile, regparts, outfiles);
         }
-        Collections.sort(outfiles);
+        
         return outfiles;
-    }
-
-    // TODO javadoc
-    private static void addMatches(File file, String regex, Collection<File> outfiles, int depth) {
-        log.debug("checking " + file);
-        if (file.isDirectory()) {
-            File[] subfiles = file.listFiles();
-            Arrays.sort(subfiles);
-            for (File subfile : subfiles) {
-                addMatches(subfile, regex, outfiles, depth + 1);
-            }
-        } else {
-            if (file.getPath().matches(regex)) {
-                outfiles.add(file);
-            }
-        }
     }
 }

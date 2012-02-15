@@ -85,23 +85,29 @@ public class SampleTabcronBulk {
     private class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
+        private File sampletabpre;
+        private File sampletab;
+        private File sampletabtoload;
+        private File age;
         
         public DoProcessFile(File subdir, File scriptdir){
             this.subdir = subdir;
             this.scriptdir = scriptdir;
+            
+            sampletabpre = new File(subdir, "sampletab.pre.txt");
+            sampletab = new File(subdir, "sampletab.txt");
+            sampletabtoload = new File(subdir, "sampletab.toload.txt");
+            age = new File(subdir, "age");
         }
 
         public void run() {
-            File sampletabpre = new File(subdir, "sampletab.pre.txt");
-            File sampletab = new File(subdir, "sampletab.txt");
-            File sampletabtoload = new File(subdir, "sampletab.toload.txt");
-            File age = new File(subdir, "age");
                         
             File target;
             
             // accession sampletab.pre.txt to sampletab.txt
             target = sampletab;
-            if (!target.exists()) {
+            if (!target.exists()
+                    || sampletab.lastModified() < sampletabpre.lastModified()) {
                 log.info("Processing " + target);
                 File script = new File(scriptdir, "SampleTabAccessioner.sh");
                 if (!script.exists()) {
@@ -126,7 +132,8 @@ public class SampleTabcronBulk {
 
             // preprocess to load
             target = sampletabtoload;
-            if (!sampletabtoload.exists()) {
+            if (!target.exists()
+                    || sampletabtoload.lastModified() < sampletabtoload.lastModified()) {
                 log.info("Processing " + sampletabtoload);
                 File script = new File(scriptdir, "SampleTabToLoad.sh");
                 if (!script.exists()) {
@@ -150,7 +157,8 @@ public class SampleTabcronBulk {
 
             // convert to age
             target = age;
-            if (!age.exists()) {
+            if (!target.exists()) {
+                //TODO apply modificiation checks
                 log.info("Processing " + age);
                 File script = new File(scriptdir, "SampleTab-to-AGETAB.sh");
                 if (!script.exists()) {

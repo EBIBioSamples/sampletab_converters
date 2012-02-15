@@ -8,6 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -313,7 +315,8 @@ public class IMSRTabToSampleTab {
         st.msi.submissionTitle = "International Mouse Strain Resource - " + getSummary().facilities.get(index);
         st.msi.submissionDescription = "The IMSR is a searchable online database of mouse strains and stocks available worldwide, including inbred, mutant, and genetically engineered mice. The goal of the IMSR is to assist the international scientific community in locating and obtaining mouse resources for research. These samples are held by "
                 + getSummary().facilities.get(index);
-        st.msi.submissionReleaseDate = getSummary().updates.get(index);
+        st.msi.submissionReleaseDate = new GregorianCalendar(2011, 10, 10).getTime();
+        st.msi.submissionUpdateDate = getSummary().updates.get(index);
         st.msi.submissionIdentifier = "GMS-" + site;
         st.msi.submissionReferenceLayer = true;
 

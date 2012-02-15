@@ -95,7 +95,8 @@ public class IMSRTabcronBulk {
             File target;
             
             target = sampletabpre;
-            if (!target.exists()) {
+            if (!target.exists()
+                    || target.lastModified() < tabFile.lastModified()) {
                 log.info("Processing " + target);
                 // convert raw.tab.txt to sampletab.pre.txt
                 File script = new File(scriptdir, "IMSRTabToSampleTab.sh");
@@ -123,8 +124,6 @@ public class IMSRTabcronBulk {
     }
     
     public void run(File dir, File scriptdir) {
-        dir = dir.getAbsoluteFile();
-        scriptdir = scriptdir.getAbsoluteFile();
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);

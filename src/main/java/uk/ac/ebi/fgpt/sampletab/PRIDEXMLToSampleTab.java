@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +73,9 @@ public class PRIDEXMLToSampleTab {
             //PRIDE dont have submission description
             //actually maybe it does as a CVparam...
             st.msi.submissionReferenceLayer = false;
+            //PRIDE does not track dates :(
+            st.msi.submissionReleaseDate = new Date();
+            st.msi.submissionUpdateDate = new Date();
             
             
             for (Element contact : XMLUtils.getChildrenByName(admin, "contact")){

@@ -60,6 +60,9 @@ public class SampleTabAccessioner {
 
     @Option(name = "-p", aliases={"--password"}, usage = "server password")
     private String password;
+    
+    @Option(name = "--threaded", usage = "use multiple threads?")
+    private boolean threaded = false;
 
     // receives other command line parameters than options
     @Argument
@@ -281,7 +284,7 @@ public class SampleTabAccessioner {
         List<File> inputFiles = new ArrayList<File>();
         // TODO remove hardcoding
         inputFiles = FileUtils.getMatchesGlob(inputFilename);
-        log.info("Found " + inputFiles.size() + " input files");
+        log.info("Found " + inputFiles.size() + " input files from "+inputFilename);
         Collections.sort(inputFiles);
 
         class AccessionTask implements Runnable {
@@ -310,6 +313,8 @@ public class SampleTabAccessioner {
                     e.printStackTrace();
                     return;
                 }
+                
+                Corrector.correct(st);
 
                 FileWriter out = null;
                 try {
@@ -332,16 +337,19 @@ public class SampleTabAccessioner {
         }
 
         int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads * 2);
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
 
         for (File inputFile : inputFiles) {
             // System.out.println("Checking "+inputFile);
             File outputFile = new File(inputFile.getParentFile(), outputFilename);
-            // TODO also compare file ages
-            if (!outputFile.exists()) {
+            if (!outputFile.exists() 
+                    || outputFile.lastModified() < inputFile.lastModified()) {
                 Runnable t = new AccessionTask(inputFile, outputFile);
-                pool.execute(t);
-                // t.run();
+                if (threaded){
+                    pool.execute(t);
+                } else {
+                    t.run();
+                }
             }
         }
         // run the pool and then close it afterwards

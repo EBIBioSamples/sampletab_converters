@@ -305,7 +305,8 @@ public class SampleTabToLoad {
             // System.out.println("Checking "+inputFile);
             File outputFile = new File(inputFile.getParentFile(), outputFilename);
             // TODO also compare file ages
-            if (!outputFile.exists()) {
+            if (!outputFile.exists()
+                    || outputFile.lastModified() < inputFile.lastModified()) {
                 Runnable t = new ToLoadTask(inputFile, outputFile);
                 if (threaded) {
                     pool.execute(t);

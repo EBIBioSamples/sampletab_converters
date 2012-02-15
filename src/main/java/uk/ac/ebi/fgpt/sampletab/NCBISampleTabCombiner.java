@@ -545,20 +545,20 @@ public class NCBISampleTabCombiner {
         for (String groupname : projects) {
 
             if (groupname == null || groupname.equals("")) {
-                log.info("Skipping empty group name");
+                log.debug("Skipping empty group name");
                 continue;
             }
             if (groupings.get(groupname).size() < 1) {
                 continue;
             }
-            log.info("Using groupname " + groupname);
+            log.debug("Using groupname " + groupname);
 
             
             File minFile = Collections.min(groupings.get(groupname));
             File outFile = new File(minFile.getParentFile(), outputFilename);
             // TODO also compare file ages
             // TODO also check output file is size > 0
-            log.info("outfile " + outFile);
+            log.debug("outfile " + outFile);
             if (!outFile.exists()) {
                 outFile.getParentFile().mkdirs();
                 // TODO make this operate on inputfiles and outputfiles

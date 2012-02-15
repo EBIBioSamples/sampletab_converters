@@ -54,11 +54,23 @@ public class TestFileUtils extends TestCase {
         assertEquals(FA1A2, FileUtils.getMatchesRegex("First/.*\\.txt"));
         assertEquals(FA1A2, FileUtils.getMatchesGlob("First/*.txt"));
         
-
         List<File> FA1 = new ArrayList<File>();
         FA1.add(new File("First/A1.txt"));
         assertEquals(FA1, FileUtils.getMatchesRegex("First/A1.txt"));
         assertEquals(FA1, FileUtils.getMatchesGlob("First/A1.txt"));
+
+        List<File> FA1SA1 = new ArrayList<File>();
+        FA1SA1.add(new File("First/A1.txt"));
+        FA1SA1.add(new File("Second/A1.txt"));
+        assertEquals(FA1SA1, FileUtils.getMatchesGlob("*/A1.txt"));
+        
+        List<File> FA1A2SA1A2 = new ArrayList<File>();
+        FA1A2SA1A2.add(new File("First/A1.txt"));
+        FA1A2SA1A2.add(new File("First/A2.txt"));
+        FA1A2SA1A2.add(new File("Second/A1.txt"));
+        FA1A2SA1A2.add(new File("Second/A2.txt"));
+        assertEquals(FA1A2SA1A2, FileUtils.getMatchesGlob("*/A*.txt"));
+        
         
     }
 

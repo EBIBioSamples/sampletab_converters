@@ -14,6 +14,8 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+
 public class MageTabcronBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
@@ -111,9 +113,27 @@ public class MageTabcronBulk {
             File target;
             
             target = sampletabpre;
-            if (!target.exists()) {
+            if (!target.exists() 
+                    || target.lastModified() < idffile.lastModified() 
+                    || target.lastModified() < sdrffile.lastModified()) {
                 log.info("Processing " + target);
+                
+                
+//                try {
+//                    new MageTabToSampleTab().convert(idffile, sampletabpre);
+//                } catch (IOException e) {
+//                    log.error("Problem processing "+idffile);
+//                    e.printStackTrace();
+//                } catch (ParseException e) {
+//                    log.error("Problem processing "+idffile);
+//                    e.printStackTrace();
+//                } catch (RuntimeException e) {
+//                    log.error("Problem processing "+idffile);
+//                    e.printStackTrace();
+//                }
+                
                 // convert idf/sdrf to sampletab.pre.txt
+                
                 File script = new File(scriptdir, "MageTabToSampleTab.sh");
                 if (!script.exists()) {
                     log.error("Unable to find " + script);

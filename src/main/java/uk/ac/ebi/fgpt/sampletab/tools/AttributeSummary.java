@@ -45,25 +45,18 @@ public class AttributeSummary {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
 
-    @Option(name = "--comments", usage = "output comments rather than characteristics?")
-    private boolean docomments = false;
-
 	// logging
 	private Logger log = LoggerFactory.getLogger(getClass());
 	
-	private volatile Map<String, Map<String, Integer>> comments = Collections
+	private volatile Map<String, Map<String, Integer>> attributes = Collections
 			.synchronizedMap(new HashMap<String, Map<String, Integer>>());
-	private volatile Map<String, Map<String, Integer>> characteristics = Collections
-			.synchronizedMap(new HashMap<String, Map<String, Integer>>());
-	
-
 	
 	private class ProcessTask implements Runnable {
 		private File inFile;
 		ProcessTask(File inFile){
 			this.inFile = inFile;
 		}
-		@Override
+		
 		public void run() {
 			SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
 			SampleData sampledata;
@@ -77,27 +70,19 @@ public class AttributeSummary {
 			
 			for (SCDNode node : sampledata.scd.getAllNodes()) {
 				for (SCDNodeAttribute attribute : node.getAttributes()) {
-					Map<String, Map<String, Integer>> map = null;
-					if (CommentAttribute.class.isInstance(attribute)) {
-						map = comments;
-					} else if (CharacteristicAttribute.class.isInstance(attribute)) {
-						map = characteristics;
+					String key = attribute.getAttributeType();
+					String value = attribute.getAttributeValue();
+					if (!attributes.containsKey(key)) {
+					    attributes.put(key,
+								Collections
+										.synchronizedMap(new HashMap<String, Integer>()));
 					}
-					if (map != null) {
-						String key = attribute.getAttributeType();
-						String value = attribute.getAttributeValue();
-						if (!map.containsKey(key)) {
-							map.put(key,
-									Collections
-											.synchronizedMap(new HashMap<String, Integer>()));
-						}
-						if (map.get(key).containsKey(value)) {
-							int count = map.get(key).get(value).intValue();
-							map.get(key).put(value,
-									count + 1);
-						} else {
-							map.get(key).put(value, new Integer(1));
-						}
+					if (attributes.get(key).containsKey(value)) {
+						int count = attributes.get(key).get(value).intValue();
+						attributes.get(key).put(value,
+								count + 1);
+					} else {
+					    attributes.get(key).put(value, new Integer(1));
 					}
 				}
 			}
@@ -113,7 +98,6 @@ public class AttributeSummary {
 			this.map = map;
 		}
 		
-		@Override
 		public int compare(Object arg0, Object arg1) {
 			int firstval = 0;
 			for (Integer value : this.map.get(arg0).values()){
@@ -143,7 +127,6 @@ public class AttributeSummary {
 			this.map = map;
 		}
 		
-		@Override
 		public int compare(Object arg0, Object arg1) {
 			int firstval = this.map.get(arg0);
 			int secondval = this.map.get(arg1);
@@ -181,6 +164,7 @@ public class AttributeSummary {
             return;
         }
 
+        log.info("Looking for input files "+inputFilename);
         List<File> inputFiles = new ArrayList<File>();
         inputFiles = FileUtils.getMatchesGlob(inputFilename);
         log.info("Found " + inputFiles.size() + " input files");
@@ -215,15 +199,9 @@ public class AttributeSummary {
         //now to write back out
         Writer out = null;
     	
-    	Map<String, Map<String, Integer>> map;
-    	if (docomments){
-    		map = comments;
-    	} else {
-    		map = characteristics;
-    	}
-    	
-    	ArrayList<String> keys = new ArrayList<String>(map.keySet());
-    	Collections.sort(keys, new KeyComparator(map));
+    	ArrayList<String> keys = new ArrayList<String>(attributes.keySet());
+    	Collections.sort(keys, new KeyComparator(attributes));
+        Collections.reverse(keys);
         
         try {
         	out = new BufferedWriter(new FileWriter(new File(outputFilename)));
@@ -231,16 +209,17 @@ public class AttributeSummary {
         	
         	for (String key : keys){
 				int total = 0;
-				for (Integer value : map.get(key).values()){
+				for (Integer value : attributes.get(key).values()){
 					total += value;
 				}
         		out.write(key+" ("+total+")\t");
         		
-        		ArrayList<String> values = new ArrayList<String>(map.get(key).keySet());
-        		Collections.sort(values, new ValueComparator(map.get(key)));
+        		ArrayList<String> values = new ArrayList<String>(attributes.get(key).keySet());
+        		Collections.sort(values, new ValueComparator(attributes.get(key)));
+        		Collections.reverse(values);
         		
         		for (String value : values){
-        			out.write(value+" ("+map.get(key).get(value)+")\t");
+        			out.write(value+" ("+attributes.get(key).get(value)+")\t");
         		}
         		
         		out.write("\n");
