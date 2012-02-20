@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.dom4j.DocumentException;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -41,50 +42,6 @@ public class PRIDEcronBulk {
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public PRIDEcronBulk() {
-    }
-
-
-    //TODO move to utils
-    private boolean doCommand(String command, File logfile) {
-        log.debug(command);
-
-        ArrayList<String> bashcommand = new ArrayList<String>();
-        bashcommand.add("/bin/bash");
-        bashcommand.add("-c");
-        bashcommand.add(command);
-
-        ProcessBuilder pb = new ProcessBuilder();
-        pb.redirectErrorStream(true);// merge stderr to stdout
-        if (logfile != null)
-            pb.redirectOutput(logfile);
-        pb.command(bashcommand);
-        // pb.command(command.split(" "));
-
-        Process p;
-        try {
-            p = pb.start();
-            synchronized (p) {
-                p.waitFor();
-            }
-            if (p.exitValue() != 0) {
-                log.error("Error running " + command);
-                log.error("Exit code is " + p.exitValue());
-                return false;
-            }
-        } catch (IOException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
-            return false;
-        } catch (InterruptedException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-
-    }
-
     private class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
@@ -107,35 +64,53 @@ public class PRIDEcronBulk {
             }
             
             File target;
-            
+
+            // convert xml to sampletab.pre.txt
             target = sampletabpre;
             if (!target.exists()
                     || target.lastModified() < xml.lastModified()) {
                 log.info("Processing " + target);
-                // convert xml to sampletab.pre.txt
-                File script = new File(scriptdir, "PRIDEXMLToSampleTab.sh");
-                if (!script.exists()) {
-                    log.error("Unable to find " + script);
+                
+                PRIDEXMLToSampleTab c;
+                try {
+                    c = new PRIDEXMLToSampleTab(projectsFile.getAbsolutePath());
+                    log.info("Converting "+xml.getPath()+" to "+sampletabpre.getPath());
+                    c.convert(xml.getPath(), sampletabpre.getPath());
+                } catch (IOException e) {
+                    log.error("Problem processing "+sampletabpre);
+                    e.printStackTrace();
                     return;
-                }
-                String bashcom = script 
-                    + " -i " + xml 
-                    + " -o " + sampletabpre
-                    + " -p " + projectsFile;
-                log.info(bashcom);
-                File logfile = new File(subdir, "sampletab.pre.txt.log");
-                if (!doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + target);
-                    log.error("See logfile " + logfile);
-                    if (target.exists()){
-                        target.delete();
-                        log.error("cleaning partly produced file");
-                    }
+                } catch (DocumentException e) {
+                    log.error("Problem processing "+sampletabpre);
+                    e.printStackTrace();
                     return;
-                }
+                } 
+                
+//                File script = new File(scriptdir, "PRIDEXMLToSampleTab.sh");
+//                if (!script.exists()) {
+//                    log.error("Unable to find " + script);
+//                    return;
+//                }
+//                String bashcom = script 
+//                    + " -i " + xml 
+//                    + " -o " + sampletabpre
+//                    + " -p " + projectsFile;
+//                log.info(bashcom);
+//                File logfile = new File(subdir, "sampletab.pre.txt.log");
+//                if (!doCommand(bashcom, logfile)) {
+//                    log.error("Problem producing " + target);
+//                    log.error("See logfile " + logfile);
+//                    if (target.exists()){
+//                        target.delete();
+//                        log.error("cleaning partly produced file");
+//                    }
+//                    return;
+//                }
             }
             
-            new SampleTabcronBulk().process(subdir, scriptdir);
+            if (sampletabpre.exists()){
+                new SampleTabcronBulk().process(subdir, scriptdir);
+            }
         }
         
     }

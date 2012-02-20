@@ -32,49 +32,6 @@ public class MageTabcronBulk {
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public MageTabcronBulk() {
-    }
-
-    //TODO move to utils
-    private boolean doCommand(String command, File logfile) {
-        log.debug(command);
-
-        ArrayList<String> bashcommand = new ArrayList<String>();
-        bashcommand.add("/bin/bash");
-        bashcommand.add("-c");
-        bashcommand.add(command);
-
-        ProcessBuilder pb = new ProcessBuilder();
-        pb.redirectErrorStream(true);// merge stderr to stdout
-        if (logfile != null)
-            pb.redirectOutput(logfile);
-        pb.command(bashcommand);
-        // pb.command(command.split(" "));
-
-        Process p;
-        try {
-            p = pb.start();
-            synchronized (p) {
-                p.waitFor();
-            }
-            if (p.exitValue() != 0) {
-                log.error("Error running " + command);
-                log.error("Exit code is " + p.exitValue());
-                return false;
-            }
-        } catch (IOException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
-            return false;
-        } catch (InterruptedException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-
-    }
-
     private class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
@@ -93,25 +50,83 @@ public class MageTabcronBulk {
 
             //TODO fix the few files that cannot be processed
             if (idffilename.equals("E-GEOD-27923.idf.txt")){
-                log.warn("Skipping E-GEOD-27923 as it is too large");
+                log.warn("Skipping "+idffilename+" as it is too large");
+                return;
+            } else if (idffilename.equals("E-GEOD-21478.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is too large");
+                return;
+            } else if (idffilename.equals("E-GEOD-9376.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is too large");
+                return;
+            } else if (idffilename.equals("E-GEOD-14511.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-15443.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-15448.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-17067.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-17732.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-18069.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-19892.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-19986.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-20076.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-20418.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-20753.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-21068.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-21202.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-21671.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-21790.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-21978.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-22105.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-22341.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-7788.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
+            } else if (idffilename.equals("E-GEOD-9344.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
                 return;
             }
-            if (idffilename.equals("E-GEOD-21478.idf.txt")){
-                log.warn("Skipping E-GEOD-21478 as it is too large");
-                return;
-            }
-            if (idffilename.equals("E-GEOD-9376.idf.txt")){
-                log.warn("Skipping E-GEOD-9376 as it is too large");
-                return;
-            }
-            
             
             if (!idffile.exists() || !sdrffile.exists()) {
                 return;
             }
             
             File target;
-            
+
+            // convert idf/sdrf to sampletab.pre.txt
             target = sampletabpre;
             if (!target.exists() 
                     || target.lastModified() < idffile.lastModified() 
@@ -119,38 +134,40 @@ public class MageTabcronBulk {
                 log.info("Processing " + target);
                 
                 
-//                try {
-//                    new MageTabToSampleTab().convert(idffile, sampletabpre);
-//                } catch (IOException e) {
-//                    log.error("Problem processing "+idffile);
-//                    e.printStackTrace();
-//                } catch (ParseException e) {
-//                    log.error("Problem processing "+idffile);
-//                    e.printStackTrace();
-//                } catch (RuntimeException e) {
-//                    log.error("Problem processing "+idffile);
-//                    e.printStackTrace();
+                try {
+                    new MageTabToSampleTab().convert(idffile, sampletabpre);
+                } catch (IOException e) {
+                    log.error("Problem processing "+idffile);
+                    e.printStackTrace();
+                    return;
+                } catch (ParseException e) {
+                    log.error("Problem processing "+idffile);
+                    e.printStackTrace();
+                    return;
+                } catch (RuntimeException e) {
+                    log.error("Problem processing "+idffile);
+                    e.printStackTrace();
+                    return;
+                }
+                
+                
+//                File script = new File(scriptdir, "MageTabToSampleTab.sh");
+//                if (!script.exists()) {
+//                    log.error("Unable to find " + script);
+//                    return;
 //                }
-                
-                // convert idf/sdrf to sampletab.pre.txt
-                
-                File script = new File(scriptdir, "MageTabToSampleTab.sh");
-                if (!script.exists()) {
-                    log.error("Unable to find " + script);
-                    return;
-                }
-                String bashcom = script + " " + idffile + " " + sampletabpre;
-                log.info(bashcom);
-                File logfile = new File(subdir, "sampletab.pre.txt.log");
-                if (!doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + target);
-                    log.error("See logfile " + logfile);
-                    if (target.exists()){
-                        target.delete();
-                        log.error("cleaning partly produced file");
-                    }
-                    return;
-                }
+//                String bashcom = script + " " + idffile + " " + sampletabpre;
+//                log.info(bashcom);
+//                File logfile = new File(subdir, "sampletab.pre.txt.log");
+//                if (!doCommand(bashcom, logfile)) {
+//                    log.error("Problem producing " + target);
+//                    log.error("See logfile " + logfile);
+//                    if (target.exists()){
+//                        target.delete();
+//                        log.error("cleaning partly produced file");
+//                    }
+//                    return;
+//                }
             }
 
             new SampleTabcronBulk().process(subdir, scriptdir);

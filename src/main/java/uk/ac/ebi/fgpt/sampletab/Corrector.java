@@ -1,12 +1,18 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 
 public class Corrector {
+    // logging
+    private static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.Corrector");
 
     public static String getInitialCapitals(String in){
         StringBuilder sb = new StringBuilder();
@@ -32,9 +38,14 @@ public class Corrector {
     
     public static void correct(SampleData st) {
         for (SampleNode s : st.scd.getNodes(SampleNode.class)) {
-            for (SCDNodeAttribute a : s.getAttributes()) {
+            //convert to array so we can delete and add attributes if needed
+            for (Object a : s.getAttributes().toArray()) {
                 // tidy all characteristics
-                if (CharacteristicAttribute.class.isInstance(a)) {
+                boolean isCharacteristic = false;
+                synchronized(CharacteristicAttribute.class){
+                    isCharacteristic = CharacteristicAttribute.class.isInstance(a);
+                }
+                if (isCharacteristic) {
                     CharacteristicAttribute cha = (CharacteristicAttribute) a;
                     // remove not applicables
                     if (cha.getAttributeValue().toLowerCase().equals("n/a")
@@ -48,7 +59,10 @@ public class Corrector {
                     }
                     // make organism a separate attribute
                     if (cha.type.toLowerCase().equals("organism") 
-                            || cha.type.toLowerCase().equals("organi")) {
+                            || cha.type.toLowerCase().equals("organi") //from ArrayExpress
+                            || cha.type.toLowerCase().equals("arrayexpress-species") //from ENA SRA
+                            || cha.type.toLowerCase().equals("cell organism") //from ENA SRA
+                            ) {
                         s.removeAttribute(cha);
                         OrganismAttribute orga = new OrganismAttribute(cha.getAttributeValue());
                         orga.setTermSourceID(cha.termSourceID);
@@ -56,18 +70,38 @@ public class Corrector {
                         // TODO check use of NCBI Taxonomy
                         // TODO validate against taxonomy
                         s.addAttribute(orga);
+                        continue;
                     }
-                    // fix typos
-                    if (cha.type.toLowerCase().equals("gender") 
-                            || cha.type.toLowerCase().equals("sex")) {
-                        cha.type = "Sex";
+                    // make sex a separate attribute
+                    if (cha.type.toLowerCase().equals("sex") 
+                            || cha.type.toLowerCase().equals("gender")
+                            || cha.type.toLowerCase().equals("arrayexpress-sex") //from ENA SRA
+                            || cha.type.toLowerCase().equals("cell sex") //from ENA SRA
+                            ) {
+                        s.removeAttribute(cha);
+                        SexAttribute sexa = new SexAttribute();
                         if (cha.getAttributeValue().toLowerCase().equals("male")
-                                || cha.getAttributeValue().toLowerCase().equals("female")
-                                || cha.getAttributeValue().toLowerCase().equals("m")
-                                || cha.getAttributeValue().toLowerCase().equals("f")) {
-                            cha.setAttributeValue(cha.getAttributeValue().toLowerCase());
+                                || cha.getAttributeValue().toLowerCase().equals("m")) {
+                            sexa.setAttributeValue("male");
+                        } else if (cha.getAttributeValue().toLowerCase().equals("female")
+                                || cha.getAttributeValue().toLowerCase().equals("m")) {
+                            sexa.setAttributeValue("female");
+                        } else {
+                            sexa.setAttributeValue(cha.getAttributeValue());
                         }
-                    } else if (cha.type.toLowerCase().equals("age")) {
+                        sexa.setTermSourceID(cha.termSourceID);
+                        sexa.setTermSourceREF(cha.termSourceREF);
+                        // TODO check use of EFO
+                        // TODO validate against EFO
+                        s.addAttribute(sexa);
+                        continue;
+                    }
+                    
+                    
+                    //TODO make material a separate attribute
+                    
+                    // fix typos
+                    if (cha.type.toLowerCase().equals("age")) {
                         cha.type = getInitialCapitals(cha.type);
                     } else if (cha.type.toLowerCase().equals("cell line") 
                             || cha.type.toLowerCase().equals("cellline")) {
@@ -83,6 +117,7 @@ public class Corrector {
                     } else if (cha.type.toLowerCase().equals("ethnicity")) {
                         cha.type = getInitialCapitals(cha.type);
                         //TODO combine race with ethnicity in humans
+                        //TODO combine population with ethnicity in humans
                     } else if (cha.type.toLowerCase().equals("genotype")) {
                         cha.type = getInitialCapitals(cha.type);
                     } else if (cha.type.toLowerCase().equals("histology")) {
@@ -98,7 +133,8 @@ public class Corrector {
                     } else if (cha.type.toLowerCase().equals("stage")) {
                         cha.type = getInitialCapitals(cha.type);
                     } else if (cha.type.toLowerCase().equals("strain")
-                            ||cha.type.toLowerCase().equals("strainorline")) {
+                            ||cha.type.toLowerCase().equals("strainorline")
+                            ||cha.type.toLowerCase().equals("cultivar")) {
                         cha.type = "StrainOrLine";
                     } else if (cha.type.toLowerCase().equals("time")
                             || cha.type.toLowerCase().equals("time point")) {
@@ -108,11 +144,17 @@ public class Corrector {
                     } else if (cha.type.toLowerCase().equals("tissue")) {
                         cha.type = getInitialCapitals(cha.type);
                         if (cha.getAttributeValue().toLowerCase().equals("liver")
-                                || cha.getAttributeValue().toLowerCase().equals("blood")) {
+                                || cha.getAttributeValue().toLowerCase().equals("blood")
+                                || cha.getAttributeValue().toLowerCase().equals("breast")) {
                             cha.setAttributeValue(cha.getAttributeValue().toLowerCase());
                         }
                     } 
+                    //TODO HTML URL encoding e.g. %3E %apos; %quot;
+                    
+                    //TODO demote some characteristics to comments
                 }
+                //TODO comments
+                //TODO promote some comments to characteristics
             }
         }
     }

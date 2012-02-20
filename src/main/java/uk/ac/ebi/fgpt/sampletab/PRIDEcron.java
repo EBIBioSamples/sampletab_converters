@@ -134,7 +134,7 @@ public class PRIDEcron {
         Pattern regex = Pattern.compile("PRIDE_Exp_IdentOnly_Ac_([0-9]+)\\.xml\\.gz");
 
         int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads*2);
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
 
         for (FTPFile file : files) {
             String filename = file.getName();
@@ -147,7 +147,8 @@ public class PRIDEcron {
                 Calendar ftptime = file.getTimestamp();
                 Calendar outfiletime = new GregorianCalendar();
                 outfiletime.setTimeInMillis(outfile.lastModified());
-                if (!outfile.exists() || ftptime.after(outfiletime)) {
+                if (!outfile.exists() 
+                        || ftptime.after(outfiletime)) {
                     pool.execute(new PRIDEXMLFTPDownload(accession, outfile, false));
                 }
             }

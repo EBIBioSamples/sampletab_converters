@@ -41,6 +41,12 @@ public class AttributeSummary {
     
     @Option(name = "-o", aliases={"--output"}, usage = "output filename")
     private String outputFilename;
+    
+    @Option(name = "-r", aliases={"--rows"}, usage = "number of attributes")
+    private int rows = 100;
+    
+    @Option(name = "-c", aliases={"--columns"}, usage = "number of values of attributes")
+    private int cols = 100;
 
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
@@ -170,8 +176,7 @@ public class AttributeSummary {
         log.info("Found " + inputFiles.size() + " input files");
         Collections.sort(inputFiles);
 
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         for (File inputFile : inputFiles) {
             Runnable t = new ProcessTask(inputFile);
@@ -206,7 +211,7 @@ public class AttributeSummary {
         try {
         	out = new BufferedWriter(new FileWriter(new File(outputFilename)));
         	
-        	
+        	int rowcount = 0;
         	for (String key : keys){
 				int total = 0;
 				for (Integer value : attributes.get(key).values()){
@@ -214,15 +219,24 @@ public class AttributeSummary {
 				}
         		out.write(key+" ("+total+")\t");
         		
+        		int colcount = 0;
         		ArrayList<String> values = new ArrayList<String>(attributes.get(key).keySet());
         		Collections.sort(values, new ValueComparator(attributes.get(key)));
         		Collections.reverse(values);
         		
         		for (String value : values){
         			out.write(value+" ("+attributes.get(key).get(value)+")\t");
+        			colcount += 1;
+        			if (colcount > this.cols){
+        			    break;
+        			}
         		}
         		
         		out.write("\n");
+        		rowcount += 1;
+                if (rowcount > this.rows){
+                    break;
+                }
         	}
         	
         } catch (IOException e) {

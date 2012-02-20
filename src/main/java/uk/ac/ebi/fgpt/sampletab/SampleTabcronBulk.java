@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,7 +16,9 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 
 public class SampleTabcronBulk {
 
@@ -32,50 +35,6 @@ public class SampleTabcronBulk {
     private boolean threaded = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
-
-    public SampleTabcronBulk() {
-        
-    }
-
-    //TODO move to utils
-    private boolean doCommand(String command, File logfile) {
-        log.debug(command);
-
-        ArrayList<String> bashcommand = new ArrayList<String>();
-        bashcommand.add("/bin/bash");
-        bashcommand.add("-c");
-        bashcommand.add(command);
-
-        ProcessBuilder pb = new ProcessBuilder();
-        pb.redirectErrorStream(true);// merge stderr to stdout
-        if (logfile != null)
-            pb.redirectOutput(logfile);
-        pb.command(bashcommand);
-        // pb.command(command.split(" "));
-
-        Process p;
-        try {
-            p = pb.start();
-            synchronized (p) {
-                p.waitFor();
-            }
-            if (p.exitValue() != 0) {
-                log.error("Error running " + command);
-                log.error("Exit code is " + p.exitValue());
-                return false;
-            }
-        } catch (IOException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
-            return false;
-        } catch (InterruptedException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-
-    }
 
     public void process(File subdir, File scriptdir){
         Runnable t = new DoProcessFile(subdir, scriptdir);
@@ -109,57 +68,109 @@ public class SampleTabcronBulk {
             if (!target.exists()
                     || sampletab.lastModified() < sampletabpre.lastModified()) {
                 log.info("Processing " + target);
-                File script = new File(scriptdir, "SampleTabAccessioner.sh");
-                if (!script.exists()) {
-                    log.error("Unable to find " + script);
+                
+                try {
+                    // TODO hardcoding bad
+                    SampleTabAccessioner c = new SampleTabAccessioner("mysql-ae-autosubs-test.ebi.ac.uk", 
+                            4340, "autosubs_test", "admin", "edsK6BV6");
+                    c.convert(sampletabpre, sampletab);
+                } catch (ClassNotFoundException e) {
+                    log.error("Problem processing "+sampletabpre);
+                    e.printStackTrace();
+                    return;
+                } catch (IOException e) {
+                    log.error("Problem processing "+sampletabpre);
+                    e.printStackTrace();
+                    return;
+                } catch (ParseException e) {
+                    log.error("Problem processing "+sampletabpre);
+                    e.printStackTrace();
+                    return;
+                } catch (SQLException e) {
+                    log.error("Problem processing "+sampletabpre);
+                    e.printStackTrace();
+                    return;
+                } catch (RuntimeException e){
+                    log.error("Problem processing "+sampletabpre);
+                    e.printStackTrace();
                     return;
                 }
-                // TODO hardcoding bad
-                String bashcom = script + " --input " + sampletabpre + " --output sampletab.txt"
-                        + " --hostname mysql-ae-autosubs-test.ebi.ac.uk" + " --port 4340"
-                        + " --database autosubs_test" + " --username admin" + " --password edsK6BV6";
-                File logfile = new File(subdir, "sampletab.txt.log");
-                if (!doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + target);
-                    log.error("See logfile " + logfile);
-                    if (target.exists()){
-                        target.delete();
-                        log.error("cleaning partly produced file");
-                    }
-                    return;
-                }
+                
+//                File script = new File(scriptdir, "SampleTabAccessioner.sh");
+//                if (!script.exists()) {
+//                    log.error("Unable to find " + script);
+//                    return;
+//                }
+//                // TODO hardcoding bad
+//                String bashcom = script + " --input " + sampletabpre + " --output sampletab.txt"
+//                        + " --hostname mysql-ae-autosubs-test.ebi.ac.uk" + " --port 4340"
+//                        + " --database autosubs_test" + " --username admin" + " --password edsK6BV6";
+//                File logfile = new File(subdir, "sampletab.txt.log");
+//                if (!doCommand(bashcom, logfile)) {
+//                    log.error("Problem producing " + target);
+//                    log.error("See logfile " + logfile);
+//                    if (target.exists()){
+//                        target.delete();
+//                        log.error("cleaning partly produced file");
+//                    }
+//                    return;
+//                }
             }
 
             // preprocess to load
             target = sampletabtoload;
             if (!target.exists()
                     || sampletabtoload.lastModified() < sampletabtoload.lastModified()) {
-                log.info("Processing " + sampletabtoload);
-                File script = new File(scriptdir, "SampleTabToLoad.sh");
-                if (!script.exists()) {
-                    log.error("Unable to find " + script);
+                log.info("Processing " + target);
+
+                SampleTabToLoad c;
+                try {
+                    c = new SampleTabToLoad("mysql-ae-autosubs-test.ebi.ac.uk", 
+                            4340, "autosubs_test", "admin", "edsK6BV6");
+                    c.convert(sampletab, sampletabtoload);
+                } catch (ClassNotFoundException e) {
+                    log.error("Problem processing "+sampletab);
+                    e.printStackTrace();
+                    return;
+                } catch (IOException e) {
+                    log.error("Problem processing "+sampletab);
+                    e.printStackTrace();
+                    return;
+                } catch (ParseException e) {
+                    log.error("Problem processing "+sampletab);
+                    e.printStackTrace();
+                    return;
+                } catch (RuntimeException e){
+                    log.error("Problem processing "+sampletab);
+                    e.printStackTrace();
                     return;
                 }
-                String bashcom = script + " --input " + sampletab + " --output sampletab.toload.txt"
-                        + " --hostname mysql-ae-autosubs-test.ebi.ac.uk" + " --port 4340"
-                        + " --database autosubs_test" + " --username admin" + " --password edsK6BV6";
-                File logfile = new File(subdir, "sampletab.toload.txt.log");
-                if (!doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + sampletabtoload);
-                    log.error("See logfile " + logfile);
-                    if (target.exists()){
-                        target.delete();
-                        log.error("cleaning partly produced file");
-                    }
-                    return;
-                }
+                
+//                File script = new File(scriptdir, "SampleTabToLoad.sh");
+//                if (!script.exists()) {
+//                    log.error("Unable to find " + script);
+//                    return;
+//                }
+//                String bashcom = script + " --input " + sampletab + " --output sampletab.toload.txt"
+//                        + " --hostname mysql-ae-autosubs-test.ebi.ac.uk" + " --port 4340"
+//                        + " --database autosubs_test" + " --username admin" + " --password edsK6BV6";
+//                File logfile = new File(subdir, "sampletab.toload.txt.log");
+//                if (!doCommand(bashcom, logfile)) {
+//                    log.error("Problem producing " + sampletabtoload);
+//                    log.error("See logfile " + logfile);
+//                    if (target.exists()){
+//                        target.delete();
+//                        log.error("cleaning partly produced file");
+//                    }
+//                    return;
+//                }
             }
 
             // convert to age
             target = age;
             if (!target.exists()) {
-                //TODO apply modificiation checks
-                log.info("Processing " + age);
+                //TODO check modification time
+                log.info("Processing " + target);
                 File script = new File(scriptdir, "SampleTab-to-AGETAB.sh");
                 if (!script.exists()) {
                     log.error("Unable to find " + script);
@@ -167,7 +178,7 @@ public class SampleTabcronBulk {
                 }
                 String bashcom = script + " -o " + age + " " + sampletabtoload;
                 File logfile = new File(subdir, "age.log");
-                if (!doCommand(bashcom, logfile)) {
+                if (!ProcessUtils.doCommand(bashcom, logfile)) {
                     log.error("Problem producing " + age);
                     log.error("See logfile " + logfile);
                     if (target.exists()){

@@ -31,7 +31,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttrib
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class MageTabToSampleTab {
-	public static final MAGETABParser<MAGETABInvestigation> parser = new MAGETABParser<MAGETABInvestigation>();
+	private final MAGETABParser<MAGETABInvestigation> parser = new MAGETABParser<MAGETABInvestigation>();
 
 	private SimpleDateFormat magetabdateformat = new SimpleDateFormat(
 			"yyyy-MM-dd");
@@ -47,25 +47,15 @@ public class MageTabToSampleTab {
 	}
 
 	public SampleData convert(File idfFile) throws IOException, ParseException {
-        //a few idf files specify multiple sdrf files which may not all have been downloaded
-        //due to a bug in limpopo, this can cause limpopo to hang indefinately.
+        //A few idf files specify multiple sdrf files which may not all have been downloaded
+        //Due to a bug in Limpopo, this can cause Limpopo to hang indefinately.
         //therefore, first parse the idf only to see if this is something to avoid.
         
         IDFParser idfparser = new IDFParser();
         IDF idf = null;
-        try {
-            idf = idfparser.parse(idfFile);
-        } catch (ParseException e) {
-            System.err.println("Error parsing " + idfFile);
-            e.printStackTrace();
-            System.exit(1);
-            return null;
-        }
+        idf = idfparser.parse(idfFile);
         if (idf.sdrfFile.size() != 1){
-            System.err.println("Non-standard sdrf file references");
-            System.err.println(idf.sdrfFile);
-            System.exit(1);
-            return null;
+            throw new ParseException("Multiple sdrf file references");
         }
         
 		return convert(parser.parse(idfFile));
@@ -85,7 +75,7 @@ public class MageTabToSampleTab {
 				log.error("Unable to parse release date "+mt.IDF.publicReleaseDate);
 			}
 		}
-		//reuse the reelase date as update date
+		//reuse the relase date as update date
 		st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
 		st.msi.submissionIdentifier = "GA" + mt.IDF.accession;
 		st.msi.submissionReferenceLayer = false;
@@ -142,13 +132,13 @@ public class MageTabToSampleTab {
 			}
 		}
 
-		log.info("Creating node names");
+		log.debug("Creating node names");
 		// create a sample from each topmost node
 		for (SDRFNode sdrfnode : topnodes) {
 
 			SampleNode scdnode = new SampleNode();
 			String name = sdrfnode.getNodeName();
-			log.info("processing " + name);
+			log.debug("processing " + name);
 			scdnode.setNodeName(name);
 			// since some attributes only exist for some sub-classes, need to
 			// test
@@ -179,7 +169,7 @@ public class MageTabToSampleTab {
 				comments = sdrflabeledextractnode.comments;
 			}
 
-			log.info("got characteristics");
+			log.debug("got characteristics");
 			if (characteristics != null) {
 				for (CharacteristicsAttribute sdrfcharacteristic : characteristics) {
 					CharacteristicAttribute scdcharacteristic = new CharacteristicAttribute();
@@ -196,7 +186,7 @@ public class MageTabToSampleTab {
 					scdnode.addAttribute(scdcharacteristic);
 				}
 			}
-			log.info("got comments");
+			log.debug("got comments");
 			if (comments != null) {
 				for (String key : comments.keySet()) {
 					CommentAttribute comment = new CommentAttribute();
@@ -234,20 +224,11 @@ public class MageTabToSampleTab {
         log.info("Checking IDF");
         IDFParser idfparser = new IDFParser();
         IDF idf = null;
-        try {
-            idf = idfparser.parse(idfFile);
-        } catch (ParseException e) {
-            System.err.println("Error parsing " + idfFile);
-            e.printStackTrace();
-            System.exit(1);
-            return;
-        }
+        idf = idfparser.parse(idfFile);
         log.info("Checking IDF");
         if (idf.sdrfFile.size() != 1){
             log.error("Non-standard sdrf file references");
-            log.error(""+idf.sdrfFile);
-            System.exit(1);
-            return;
+            throw new ParseException();
         }
         
 		MAGETABInvestigation mt = parser.parse(idfFile);

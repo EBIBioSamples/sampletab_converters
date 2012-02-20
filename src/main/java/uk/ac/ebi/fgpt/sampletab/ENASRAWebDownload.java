@@ -45,7 +45,7 @@ public class ENASRAWebDownload {
 
         String url = "http://www.ebi.ac.uk/ena/data/view/" + accession + "&display=xml";
 
-        log.info("Prepared for download "+accession);
+        log.debug("Prepared for download "+accession);
 
         Document studyDoc = XMLUtils.getDocument(url);
         Element root = studyDoc.getRootElement();
@@ -66,7 +66,7 @@ public class ENASRAWebDownload {
             Document existStudyDoc = XMLUtils.getDocument(studyFile);
             NodeComparator c = new NodeComparator();
             if (c.compare(studyDoc, existStudyDoc) != 0){
-                log.info("Skipping "+accession);
+                log.debug("Skipping "+accession);
                 return;
             }
         }
@@ -88,7 +88,7 @@ public class ENASRAWebDownload {
         
         Set<String> sampleSRAAccessions = ENAUtils.getSamplesForStudy(root);
         // now there is a set of sample accessions they each need to be retrieved.
-        log.info("Prepared for ENA SRA sample XML download.");
+        log.debug("Prepared for ENA SRA sample XML download.");
         for (String sampleSRAAccession : sampleSRAAccessions) {
             String sampleURL = "http://www.ebi.ac.uk/ena/data/view/" + sampleSRAAccession + "&display=xml";
             File sampleFile = new File(outdir.getAbsoluteFile(), sampleSRAAccession + ".xml");
@@ -108,7 +108,7 @@ public class ENASRAWebDownload {
             }
             
         }
-        log.info("ENA SRA study download complete.");
+        log.debug("ENA SRA study download complete.");
 
     }
 

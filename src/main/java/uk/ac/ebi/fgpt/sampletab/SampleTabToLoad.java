@@ -63,12 +63,23 @@ public class SampleTabToLoad {
     @Argument
     private List<String> arguments = new ArrayList<String>();
 
-    public final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+    private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
 
     public SampleTabToLoad() {
         // do nothing
     }
 
+    public SampleTabToLoad(String host, int port, String database, String username, String password)
+            throws ClassNotFoundException {
+        this();
+        // Setup the connection with the DB
+        this.username = username;
+        this.password = password;
+        this.hostname = host;
+        this.port = port;
+        this.database = database;
+    }
+    
     public Logger getLog() {
         return log;
     }

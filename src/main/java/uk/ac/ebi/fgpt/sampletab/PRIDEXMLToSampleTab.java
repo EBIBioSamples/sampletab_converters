@@ -27,6 +27,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
@@ -48,22 +49,45 @@ public class PRIDEXMLToSampleTab {
     @Option(name = "-p", aliases={"--projects"}, usage = "projects filename")
     private String projectsFilename;
 
+
+    private Map<String, Set<String>> projects;
+    
+    
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
         
     public PRIDEXMLToSampleTab() {
+        
+    }
+    
+    public PRIDEXMLToSampleTab(String projectsFilename) {
+        this.projectsFilename = projectsFilename;
+        //read all the projects
+        try {
+            this.projects = PRIDEutils.loadProjects(new File(this.projectsFilename));
+        } catch (IOException e) {
+            log.error("Unable to read projects file "+projectsFilename);
+            e.printStackTrace();
+            this.projects = null;
+        }
+            
     }
     
 
     public SampleData convert(Set<File> infiles) throws DocumentException, FileNotFoundException {
         
         SampleData st = new SampleData();
+        st.msi.submissionReferenceLayer = false;
+        //PRIDE does not track dates :(
+        st.msi.submissionReleaseDate = new Date();
+        st.msi.submissionUpdateDate = new Date();
         
         for (File infile : infiles){
             Element expcollection = XMLUtils.getDocument(infile).getRootElement();
             Element exp = XMLUtils.getChildByName(expcollection, "Experiment");
             Element additional = XMLUtils.getChildByName(exp, "additional");
-            Element description = XMLUtils.getChildByName(exp, "description");
+            Element mzd = XMLUtils.getChildByName(exp, "mzData");
+            Element description = XMLUtils.getChildByName(mzd, "description");
             Element admin = XMLUtils.getChildByName(description, "admin");
             Element sampledescription = XMLUtils.getChildByName(admin, "sampleDescription");
             String accession = XMLUtils.getChildByName(exp, "ExperimentAccession").getTextTrim();
@@ -72,15 +96,11 @@ public class PRIDEXMLToSampleTab {
                 st.msi.submissionTitle = XMLUtils.getChildByName(exp, "Title").getTextTrim();
             //PRIDE dont have submission description
             //actually maybe it does as a CVparam...
-            st.msi.submissionReferenceLayer = false;
-            //PRIDE does not track dates :(
-            st.msi.submissionReleaseDate = new Date();
-            st.msi.submissionUpdateDate = new Date();
             
             
             for (Element contact : XMLUtils.getChildrenByName(admin, "contact")){
-                String name = XMLUtils.getChildByName(exp, "name").getTextTrim();
-                String institution = XMLUtils.getChildByName(exp, "institution").getTextTrim();
+                String name = XMLUtils.getChildByName(contact, "name").getTextTrim();
+                String institution = XMLUtils.getChildByName(contact, "institution").getTextTrim();
                 if (!st.msi.organizationName.contains(institution))
                     st.msi.organizationName.add(institution);
                 String[] splitnames = PRIDEutils.splitName(name);
@@ -118,6 +138,16 @@ public class PRIDEXMLToSampleTab {
             for (Element cvparam : XMLUtils.getChildrenByName(sampledescription, "cvParam")){
                 String name = cvparam.attributeValue("name").trim();
                 String value = cvparam.attributeValue("value");
+                String cvLabel = null;
+                if (cvparam.attributeValue("cvLabel") != null){
+                    cvLabel = cvparam.attributeValue("cvLabel").trim();
+                }
+                String cvAccession = null;
+                if (cvparam.attributeValue("accession") != null){
+                    cvAccession = cvparam.attributeValue("accession").trim();
+                }
+                
+                
                 if (value == null){
                     //some PRIDE attributes are boolean
                     //set their value to be their name
@@ -126,13 +156,21 @@ public class PRIDEXMLToSampleTab {
                     value = value.trim();
                 }
                 //TODO  use special attribute classes where appropriate
-                CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
-                if (cvparam.attributeValue("cvLabel") != null && cvparam.attributeValue("accession") != null){
-                    attr.termSourceREF = cvparam.attributeValue("cvLabel").trim();
+                if ("NEWT".equals(cvLabel)) {
+                    String termSourceREF = cvLabel;
                     //TODO make sure that this term source is then added to msi section
-                    attr.termSourceID = cvparam.attributeValue("accession").trim();
+                    Integer termSourceID = new Integer(cvAccession);
+                    OrganismAttribute attr = new OrganismAttribute(name, termSourceREF, termSourceID);
+                    sample.addAttribute(attr);
+                } else {
+                    CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
+                    if (cvLabel != null && cvAccession != null){
+                        attr.termSourceREF = cvLabel;
+                        //TODO make sure that this term source is then added to msi section
+                        attr.termSourceID = cvAccession;
+                    }
+                    sample.addAttribute(attr);
                 }
-                sample.addAttribute(attr);
             }
             
             for (Element cvparam : XMLUtils.getChildrenByName(additional, "cvParam")){
@@ -151,6 +189,20 @@ public class PRIDEXMLToSampleTab {
                     //TODO make sure that this term source is then added to msi section
                     attr.termSourceID = cvparam.attributeValue("accession").trim();
                 }
+                sample.addAttribute(attr);
+            }
+            
+            for (Element userparam : XMLUtils.getChildrenByName(sampledescription, "userParam")){
+                String name = userparam.attributeValue("name").trim();
+                String value = userparam.attributeValue("value");
+                if (value == null){
+                    //some PRIDE attributes are boolean
+                    //set their value to be their name
+                    value = name;
+                } else {
+                    value = value.trim();
+                }
+                CommentAttribute attr = new CommentAttribute(name, value);
                 sample.addAttribute(attr);
             }
             
@@ -234,7 +286,71 @@ public class PRIDEXMLToSampleTab {
 
         convert(infiles, new File(outfilename));
     }
+    
+    
+    public void convert(String inputFilename, String outputFilename) throws IOException, DocumentException {
 
+        //read the given input filename to determine accession
+        String accession;
+        File inputFile = new File(inputFilename);
+        try {
+            accession = "GPR-"+PRIDEutils.extractAccession(inputFile);
+        } catch (FileNotFoundException e1) {
+            log.warn("Unable to find accession of "+inputFilename);
+            return;
+        } catch (DocumentException e1) {
+            log.warn("Unable to find accession of "+inputFilename);
+            return;
+        }
+        
+        log.debug("accession = "+accession);
+
+        //find the project
+        String projectname = null;
+        for (String name: projects.keySet()){
+            //TODO handle where one accession is in multiple projects...
+            if (projects.get(name).contains(accession)){
+                if (projectname == null){
+                    projectname = name;
+                } else {
+                    log.warn("Multiple project names for "+accession+" : "+name);
+                }
+            }
+        }
+        
+        if (projectname == null){
+            log.warn("Unable to find project for "+accession);
+            projectname = accession;
+        }
+        log.debug("projectname = "+projectname);
+
+        HashSet<File> prideFiles = new HashSet<File>();
+        
+        if (projectsFilename != null){
+            //if a project filename was given, then we find the project that the provided input filename is part of
+            if (projects == null){
+                log.warn("No files of project "+projectname+" to process");
+                return;
+            }
+            
+            //now add all the files that are similar to the input filename but with the other accessions
+            Set<String> accessions = projects.get(projectname);
+            for (String subaccession : accessions){
+                prideFiles.add(new File(inputFilename.replace(accession, subaccession)));
+            }
+            
+        } else {
+            prideFiles.add(new File(inputFilename));
+        }
+        
+        if (!accession.equals(Collections.min(projects.get(projectname)))){
+            log.error("Accession is not minimum in project, aborting");
+            return;
+        }
+        
+        this.convert(prideFiles, outputFilename);
+        
+    }
 
     public static void main(String[] args) {
         new PRIDEXMLToSampleTab().doMain(args);
@@ -260,78 +376,16 @@ public class PRIDEXMLToSampleTab {
         }
         
         //TODO convert to using globs
-        
-        HashSet<File> prideFiles = new HashSet<File>();
-        
-        if (projectsFilename != null){
-            //if a project filename was given, then we find the project that the provided input filename is part of
-            
-            
-            //read the given input filename to determine accession
-            Element expcollection;
-            try {
-                expcollection = XMLUtils.getDocument(new File(inputFilename)).getRootElement();
-            } catch (FileNotFoundException e) {
-                System.out.println("Unable to read "+inputFilename);
-                System.exit(1);
-                return;
-            } catch (DocumentException e) {
-                System.out.println("Unable to parse "+inputFilename);
-                System.exit(1);
-                return;
-            }
-            Element exp = XMLUtils.getChildByName(expcollection, "Experiment");
-            String accession = "GPR-"+XMLUtils.getChildByName(exp, "ExperimentAccession").getTextTrim();
-
-            //read all the projects
-            Map<String, Set<String>> projects;
-            try {
-                projects = PRIDEutils.loadProjects(new File(projectsFilename));
-            } catch (IOException e) {
-                System.out.println("Unable to read projects file "+projectsFilename);
-                e.printStackTrace();
-                System.exit(1);
-                return;
-            }
-            //find the project
-            String projectname = null;
-            for (String name: projects.keySet()){
-                //TODO handle where one accession is in multiple projects...
-                if (projects.get(name).contains(accession)){
-                    projectname = name;
-                }
-            }
-            if (projectname != null){
-                //now add all the files that are similar to the input filename but with the other accessions
-                Set<String> accessions = projects.get(projectname);
-                if (accession.equals(Collections.min(accessions))){
-                    for (String subaccession : accessions){
-                        prideFiles.add(new File(inputFilename.replace(accession, subaccession)));
-                    }
-                } else {
-                    System.out.println("Accession is not minimum in project, terminating");
-                    System.exit(0);
-                    return;
-                }
-            } else {
-                System.out.println("Unable to find project of "+accession);
-                System.exit(1);
-                return;
-            }
-            
-        } else {
-            prideFiles.add(new File(inputFilename));
-        }
-        
+        log.info("Converting "+inputFilename+" to "+outputFilename);
         try {
-            convert(prideFiles, outputFilename);
+            convert(inputFilename, outputFilename);
         } catch (IOException e) {
-            System.out.println("Error converting " + prideFiles + " to " + outputFilename);
+            System.out.println("Error converting " + inputFilename + " to " + outputFilename);
             e.printStackTrace();
             System.exit(1);
             return;
         } catch (DocumentException e) {
-            System.out.println("Error converting " + prideFiles + " to " + outputFilename);
+            System.out.println("Error converting " + inputFilename + " to " + outputFilename);
             e.printStackTrace();
             System.exit(1);
             return;

@@ -68,7 +68,7 @@ public class SampleTabAccessioner {
     @Argument
     private List<String> arguments = new ArrayList<String>();
 
-    public final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+    private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -84,17 +84,16 @@ public class SampleTabAccessioner {
             throws ClassNotFoundException {
         this();
         // Setup the connection with the DB
-        // host:mysql-ae-autosubs.ebi.ac.uk port:4091 database:ae_autosubs
-        // username:curator password:troajsp
         this.username = username;
         this.password = password;
         this.hostname = host;
         this.port = port;
         this.database = database;
-
     }
 
     private Connection checkoutConnection() throws SQLException {
+        //TODO fix this so there is a separate queue for different parameters
+        //currently, it will mix and match freely if different params are used in the same VM
         Connection connect = connectionQueue.poll();
         if (connect == null) {
             String connectionStr = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
@@ -207,6 +206,8 @@ public class SampleTabAccessioner {
         } finally {
             returnConnection(connect);
         }
+        
+        Corrector.correct(sampleIn);
 
         return sampleIn;
     }
@@ -313,8 +314,6 @@ public class SampleTabAccessioner {
                     e.printStackTrace();
                     return;
                 }
-                
-                Corrector.correct(st);
 
                 FileWriter out = null;
                 try {

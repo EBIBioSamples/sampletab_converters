@@ -14,6 +14,8 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
+
 public class ENASRAcronBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
@@ -30,48 +32,6 @@ public class ENASRAcronBulk {
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public ENASRAcronBulk() {
-    }
-
-    //TODO move to utils
-    private boolean doCommand(String command, File logfile) {
-        log.debug(command);
-
-        ArrayList<String> bashcommand = new ArrayList<String>();
-        bashcommand.add("/bin/bash");
-        bashcommand.add("-c");
-        bashcommand.add(command);
-
-        ProcessBuilder pb = new ProcessBuilder();
-        pb.redirectErrorStream(true);// merge stderr to stdout
-        if (logfile != null)
-            pb.redirectOutput(logfile);
-        pb.command(bashcommand);
-        // pb.command(command.split(" "));
-
-        Process p;
-        try {
-            p = pb.start();
-            synchronized (p) {
-                p.waitFor();
-            }
-            if (p.exitValue() != 0) {
-                log.error("Error running " + command);
-                log.error("Exit code is " + p.exitValue());
-                return false;
-            }
-        } catch (IOException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
-            return false;
-        } catch (InterruptedException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-
-    }
 
     private class DoProcessFile implements Runnable {
         private final File subdir;
@@ -99,6 +59,7 @@ public class ENASRAcronBulk {
                     || target.lastModified() < xmlFile.lastModified()) {
                 log.info("Processing " + target);
                 // convert raw.tab.txt to sampletab.pre.txt
+                //TODO do this directly in this process
                 File script = new File(scriptdir, "ENASRAXMLToSampleTab.sh");
                 if (!script.exists()) {
                     log.error("Unable to find " + script);
@@ -107,7 +68,7 @@ public class ENASRAcronBulk {
                 String bashcom = script + " " + xmlFile + " " + sampletabpre;
                 log.info(bashcom);
                 File logfile = new File(subdir, "sampletab.pre.txt.log");
-                if (!doCommand(bashcom, logfile)) {
+                if (!ProcessUtils.doCommand(bashcom, logfile)) {
                     log.error("Problem producing " + target);
                     log.error("See logfile " + logfile);
                     if (target.exists()){

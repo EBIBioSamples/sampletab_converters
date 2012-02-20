@@ -65,6 +65,14 @@ public class PRIDEutils {
         return projects;
     }
     
+    public static String extractAccession(File xmlFile) throws FileNotFoundException, DocumentException{
+        Element expcollection = XMLUtils.getDocument(xmlFile).getRootElement();
+        Element exp = XMLUtils.getChildByName(expcollection, "Experiment");
+        String accession = XMLUtils.getChildByName(exp, "ExperimentAccession").getTextTrim();
+        return accession;
+        
+    }
+    
     public static String[] splitName(String name){
         //strip titles
         name = name.replace("Prof.", "");

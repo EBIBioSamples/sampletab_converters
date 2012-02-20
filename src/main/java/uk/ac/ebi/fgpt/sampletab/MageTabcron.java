@@ -3,7 +3,9 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -99,7 +101,7 @@ public class MageTabcron {
 		try {
 			ftp = FTPUtils.connect("ftp.ebi.ac.uk");
 		} catch (IOException e) {
-			System.err.println("Unable to connect to FTP");
+		    log.error("Unable to connect to FTP");
 			e.printStackTrace();
 			System.exit(1);
 			return;
@@ -109,7 +111,7 @@ public class MageTabcron {
 		try {
 			subdirs = ftp.listDirectories(root);
 		} catch (IOException e) {
-			System.err.println("Unable to connect to FTP");
+		    log.error("Unable to connect to FTP");
 			e.printStackTrace();
 		}
 
@@ -132,18 +134,49 @@ public class MageTabcron {
 				try {
 					subsubdirs = ftp.listDirectories(subdirpath);
 				} catch (IOException e) {
-					System.err.println("Unable to list subdirs " + subdirpath);
+				    log.error("Unable to list subdirs " + subdirpath);
 					e.printStackTrace();
+					continue;
 				}
 				if (subsubdirs != null) {
 					for (FTPFile subsubdir : subsubdirs) {
-						String subsubdirpath = subdirpath + subsubdir.getName()
-								+ "/";
-						String idfpath = subsubdirpath + subsubdir.getName()
-								+ ".idf.txt";
-						String sdrfpath = subsubdirpath + subsubdir.getName()
-								+ ".sdrf.txt";
 
+                        String subsubdirpath = subdirpath + subsubdir.getName()
+                                + "/";
+                        String idfpath = subsubdirpath + subsubdir.getName()
+                                + ".idf.txt";
+                        String sdrfpath = subsubdirpath + subsubdir.getName()
+                                + ".sdrf.txt";
+                        
+					    FTPFile idfFTPFile = null;
+                        FTPFile sdrfFTPFile = null;
+                        FTPFile[] testFTPFiles = null;
+                        try {
+                            testFTPFiles = ftp.listFiles(subsubdirpath);
+                        } catch (IOException e) {
+                            log.error("Unable to list files " + subsubdirpath);
+                            e.printStackTrace();
+                            continue;
+                        }
+                        for (FTPFile testFTPFile : testFTPFiles){
+                            if (testFTPFile.getName().equals(subsubdir.getName()+ ".idf.txt")){
+                                idfFTPFile = testFTPFile;
+                            }
+                            if (testFTPFile.getName().equals(subsubdir.getName()+ ".sdrf.txt")){
+                                sdrfFTPFile = testFTPFile;
+                            }
+                        }
+                        
+                        if (idfFTPFile == null){
+                            log.error("Unable to find file " + idfpath);
+                            continue;
+                        }
+                        if (sdrfFTPFile == null){
+                            log.error("Unable to find file " + sdrfpath);
+                            continue;
+                        }
+                        
+                        
 						File outsubdir = new File(outdir, "GA"
 								+ subsubdir.getName());
 						if (!outsubdir.exists())
@@ -153,18 +186,34 @@ public class MageTabcron {
 						File outsdrf = new File(outsubdir, subsubdir.getName()
 								+ ".sdrf.txt");
 
-						//rather than using the java FTP libraries - which seem to
-						//break quite often - use curl. Sacrifices multiplatformness
-						//for reliability.
-						Runnable t1 = new CurlDownload("ftp://ftp.ebi.ac.uk"+idfpath, outidf.getAbsolutePath());
-                        Runnable t2 = new CurlDownload("ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath());
-						if (threaded){
-    	                    pool.execute(t1);
-    	                    pool.execute(t2);
-						} else {
-						    t1.run();
-						    t2.run();
+						//TODO check file modification date before starting curl
+
+                        Calendar ftpidftime = idfFTPFile.getTimestamp();
+                        Calendar outidftime = new GregorianCalendar();
+                        outidftime.setTimeInMillis(outidf.lastModified());
+                        Calendar ftpsdrftime = sdrfFTPFile.getTimestamp();
+                        Calendar outsdrftime = new GregorianCalendar();
+                        outsdrftime.setTimeInMillis(outsdrf.lastModified());
+
+                        //rather than using the java FTP libraries - which seem to
+                        //break quite often - use curl. Sacrifices multiplatformness
+                        //for reliability.
+						if (!outidf.exists() || ftpidftime.after(outidftime)){
+	                        Runnable t = new CurlDownload("ftp://ftp.ebi.ac.uk"+idfpath, outidf.getAbsolutePath());
+	                        if (threaded){
+	                            pool.execute(t);
+	                        } else {
+	                            t.run();
+	                        }
 						}
+                        if (!outsdrf.exists() || ftpsdrftime.after(outsdrftime)){
+                            Runnable t = new CurlDownload("ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath());
+                            if (threaded){
+                                pool.execute(t);
+                            } else {
+                                t.run();
+                            }
+                        }
 					}
 				}
 				//restart the connection after each subdir
