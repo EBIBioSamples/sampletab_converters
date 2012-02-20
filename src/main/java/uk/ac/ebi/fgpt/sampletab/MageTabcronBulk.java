@@ -58,6 +58,15 @@ public class MageTabcronBulk {
             } else if (idffilename.equals("E-GEOD-9376.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it is too large");
                 return;
+            } else if (idffilename.equals("E-MEXP-1769.idf.txt")){
+                log.warn("Skipping "+idffilename+" as its sdrf requries merging which is not currently supported.");
+                return;
+            } else if (idffilename.equals("E-MEXP-2469.idf.txt")){
+                log.warn("Skipping "+idffilename+" as its sdrf requries merging which is not currently supported.");
+                return;
+            } else if (idffilename.equals("E-MEXP-2622.idf.txt")){
+                log.warn("Skipping "+idffilename+" as its sdrf requries merging which is not currently supported.");
+                return;
             } else if (idffilename.equals("E-GEOD-14511.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
                 return;
