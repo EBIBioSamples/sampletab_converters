@@ -3,8 +3,10 @@ package uk.ac.ebi.fgpt.sampletab;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.attribute.AbstractSDRFAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
@@ -40,13 +42,13 @@ public class Corrector {
         for (SampleNode s : st.scd.getNodes(SampleNode.class)) {
             //convert to array so we can delete and add attributes if needed
             for (Object a : s.getAttributes().toArray()) {
-                // tidy all characteristics
-                boolean isCharacteristic = false;
-                synchronized(CharacteristicAttribute.class){
-                    isCharacteristic = CharacteristicAttribute.class.isInstance(a);
+                // tidy things that apply to all attributes
+                boolean isAbstractSCDAttribute = false;
+                synchronized(AbstractNodeAttribute.class){
+                    isAbstractSCDAttribute = AbstractNodeAttribute.class.isInstance(a);
                 }
-                if (isCharacteristic) {
-                    CharacteristicAttribute cha = (CharacteristicAttribute) a;
+                if (isAbstractSCDAttribute) {
+                    AbstractNodeAttribute cha = (AbstractNodeAttribute) a;
                     // remove not applicables
                     if (cha.getAttributeValue().toLowerCase().equals("n/a")
                             || cha.getAttributeValue().toLowerCase().equals("na")
@@ -57,6 +59,15 @@ public class Corrector {
                         s.removeAttribute(cha);
                         continue;
                     }
+                }
+                
+                // tidy all characteristics
+                boolean isCharacteristic = false;
+                synchronized(CharacteristicAttribute.class){
+                    isCharacteristic = CharacteristicAttribute.class.isInstance(a);
+                }
+                if (isCharacteristic) {
+                    CharacteristicAttribute cha = (CharacteristicAttribute) a;
                     // make organism a separate attribute
                     if (cha.type.toLowerCase().equals("organism") 
                             || cha.type.toLowerCase().equals("organi") //from ArrayExpress
