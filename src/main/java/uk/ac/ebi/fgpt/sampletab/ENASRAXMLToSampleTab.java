@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -74,7 +75,8 @@ public class ENASRAXMLToSampleTab {
         SampleData st = new SampleData();
         // title
         Element descriptor = XMLUtils.getChildByName(study, "DESCRIPTOR");
-        st.msi.submissionTitle = XMLUtils.getChildByName(descriptor, "STUDY_TITLE").getTextTrim();
+        st.msi.submissionIdentifier = XMLUtils.getChildByName(descriptor, "STUDY_TITLE").getTextTrim();
+        st.msi.submissionTitle = "GEN-"+study.attributeValue("accession");
 
         // description
         String description = null;
@@ -115,9 +117,9 @@ public class ENASRAXMLToSampleTab {
         }
 
         // database link
-        st.msi.databaseName.add("ENA SRA");
-        st.msi.databaseID.add(study.attributeValue("accession"));
-        st.msi.databaseURI.add("http://www.ebi.ac.uk/ena/data/view/" + study.attributeValue("accession"));
+        st.msi.databases.add(new Database("ENA SRA", 
+                "http://www.ebi.ac.uk/ena/data/view/" + study.attributeValue("accession"),
+                study.attributeValue("accession")));
 
         // organization
         Element centerName = XMLUtils.getChildByName(descriptor, "CENTER_NAME");
@@ -186,9 +188,11 @@ public class ENASRAXMLToSampleTab {
             samplenode.setNodeName(sampleSRAAccession);
 
             // process any synonyms that may exist
+            // ignore species names and accession duplicates
             Element synonym;
             synonym = XMLUtils.getChildByName(sampleElement, "TITLE");
-            if (synonym != null && !synonym.getTextTrim().equals(sampleSRAAccession)) {
+            if (synonym != null && !synonym.getTextTrim().equals(sampleSRAAccession)
+                    && !synonym.getTextTrim().equals(XMLUtils.getChildByName(sampleName, "SCIENTIFIC_NAME").getTextTrim())) {
                 CommentAttribute synonymattrib = new CommentAttribute("Synonym", synonym.getTextTrim());
                 // insert all synonyms at position zero so they display next
                 // to name

@@ -280,10 +280,8 @@ public class SampleTabAccessioner {
             return;
         }
 
-        // TODO handle globs in filenames
         log.debug("Looking for input files");
         List<File> inputFiles = new ArrayList<File>();
-        // TODO remove hardcoding
         inputFiles = FileUtils.getMatchesGlob(inputFilename);
         log.info("Found " + inputFiles.size() + " input files from "+inputFilename);
         Collections.sort(inputFiles);
@@ -351,6 +349,7 @@ public class SampleTabAccessioner {
                 }
             }
         }
+        
         // run the pool and then close it afterwards
         // must synchronize on the pool object
         synchronized (pool) {

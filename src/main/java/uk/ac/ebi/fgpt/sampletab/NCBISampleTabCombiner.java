@@ -352,9 +352,7 @@ public class NCBISampleTabCombiner {
                 }
             }
 
-            sampleout.msi.databaseID.addAll(sampledata.msi.databaseID);
-            sampleout.msi.databaseName.addAll(sampledata.msi.databaseName);
-            sampleout.msi.databaseURI.addAll(sampledata.msi.databaseURI);
+            sampleout.msi.databases = sampledata.msi.databases;
 
             sampleout.msi.publicationDOI.addAll(sampledata.msi.publicationDOI);
             sampleout.msi.publicationPubMedID.addAll(sampledata.msi.publicationPubMedID);

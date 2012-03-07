@@ -158,25 +158,6 @@ public class MageTabcronBulk {
                     e.printStackTrace();
                     return;
                 }
-                
-                
-//                File script = new File(scriptdir, "MageTabToSampleTab.sh");
-//                if (!script.exists()) {
-//                    log.error("Unable to find " + script);
-//                    return;
-//                }
-//                String bashcom = script + " " + idffile + " " + sampletabpre;
-//                log.info(bashcom);
-//                File logfile = new File(subdir, "sampletab.pre.txt.log");
-//                if (!doCommand(bashcom, logfile)) {
-//                    log.error("Problem producing " + target);
-//                    log.error("See logfile " + logfile);
-//                    if (target.exists()){
-//                        target.delete();
-//                        log.error("cleaning partly produced file");
-//                    }
-//                    return;
-//                }
             }
 
             new SampleTabcronBulk().process(subdir, scriptdir);

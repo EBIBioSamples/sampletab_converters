@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -172,10 +173,10 @@ public class SampleTabToLoad {
                 group.addAttribute(new NamedAttribute("Term Source Version", sampledata.msi.termSourceVersion.get(i)));
             }
         }
-        for (int i = 0; i < sampledata.msi.databaseName.size(); i++) {
-            group.addAttribute(new NamedAttribute("Database Name", sampledata.msi.databaseName.get(i)));
-            group.addAttribute(new NamedAttribute("Database URI", sampledata.msi.databaseURI.get(i)));
-            group.addAttribute(new NamedAttribute("Database ID", sampledata.msi.databaseID.get(i)));
+        for (Database db : sampledata.msi.databases){
+            group.addAttribute(new NamedAttribute("Database Name", db.getName()));
+            group.addAttribute(new NamedAttribute("Database URI", db.getURI()));
+            group.addAttribute(new NamedAttribute("Database ID", db.getID()));
         }
 
         return sampledata;

@@ -24,6 +24,7 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.magetab.parser.IDFParser;
 import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -97,10 +98,9 @@ public class MageTabToSampleTab {
 		st.msi.organizationAddress = mt.IDF.personAddress;
 		// st.msi.organizationURI/Email/Role can't be mapped from ArrayExpress
 
-		st.msi.databaseName.add("ArrayExpress");
-		st.msi.databaseID.add(mt.IDF.accession);
-		st.msi.databaseURI.add("http://www.ebi.ac.uk/arrayexpress/experiments/"
-				+ mt.IDF.accession);
+		st.msi.databases.add(new Database("ArrayExpress", 
+		        "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
+		        mt.IDF.accession));
 
 		// TODO check and remove duplicates
 		st.msi.termSourceName = mt.IDF.termSourceName;

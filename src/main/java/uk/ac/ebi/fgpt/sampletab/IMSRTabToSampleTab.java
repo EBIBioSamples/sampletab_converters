@@ -43,11 +43,22 @@ public class IMSRTabToSampleTab {
     }
 
     private IMSRTabWebSummary getSummary() throws NumberFormatException, java.text.ParseException, IOException {
-        if (summary == null) {
-            summary = IMSRTabWebSummary.getInstance();
-            summary.get();
+        synchronized (summary){
+            if (summary == null) {
+                summary = IMSRTabWebSummary.getInstance();
+                try {
+                    summary.get();
+                } catch (IOException e){
+                    if (e.toString().contains("Server returned HTTP response code: 502 for URL")){
+                        //try again
+                        log.info("Retrying getting summary");
+                        summary.get();
+                    }
+                }
+                
+            }
+            return summary;
         }
-        return summary;
     }
 
     public static IMSRTabToSampleTab getInstance() {
@@ -332,10 +343,7 @@ public class IMSRTabToSampleTab {
         st.msi.organizationEmail.add("");
         st.msi.organizationRole.add("Biomaterial Provider");
 
-        // TODO need mapping between site name and site number to do this
-        st.msi.databaseName.add("IMSR");
-        st.msi.databaseID.add("");
-        st.msi.databaseURI.add("");
+        // TODO need mapping between site name and site number to do database
 
         st.msi.termSourceName.add("NEWT");
         st.msi.termSourceURI.add("http://www.ebi.ac.uk/newt/");
