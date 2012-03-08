@@ -136,10 +136,15 @@ public class MageTabToSampleTab {
 		// create a sample from each topmost node
 		for (SDRFNode sdrfnode : topnodes) {
 
+		    
 			SampleNode scdnode = new SampleNode();
 			String name = sdrfnode.getNodeName();
 			log.debug("processing " + name);
 			scdnode.setNodeName(name);
+			
+			//TODO cascade down related nodes of the same top-level node?
+			//e.g. extracts taken from samples
+			
 			// since some attributes only exist for some sub-classes, need to
 			// test
 			// for instanceof for each of those sub-classes, cast accordingly
@@ -178,11 +183,11 @@ public class MageTabToSampleTab {
 							.getAttributeValue());
 					if (sdrfcharacteristic.unit != null) {
 						scdcharacteristic.unit = new UnitAttribute();
-						scdcharacteristic.unit.termSourceREF = sdrfcharacteristic.unit.termSourceREF;
-						scdcharacteristic.unit.termSourceID = sdrfcharacteristic.unit.termAccessionNumber;
+						scdcharacteristic.unit.setTermSourceREF(sdrfcharacteristic.unit.termSourceREF);
+						scdcharacteristic.unit.setTermSourceID(sdrfcharacteristic.unit.termAccessionNumber);
 					}
-					scdcharacteristic.termSourceREF = sdrfcharacteristic.termSourceREF;
-					scdcharacteristic.termSourceID = sdrfcharacteristic.termAccessionNumber;
+					scdcharacteristic.setTermSourceREF(sdrfcharacteristic.termSourceREF);
+					scdcharacteristic.setTermSourceID(sdrfcharacteristic.termAccessionNumber);
 					scdnode.addAttribute(scdcharacteristic);
 				}
 			}

@@ -14,6 +14,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 
 public class ENASRAcronBulk {
@@ -58,25 +59,24 @@ public class ENASRAcronBulk {
             if (!target.exists()
                     || target.lastModified() < xmlFile.lastModified()) {
                 log.info("Processing " + target);
-                // convert raw.tab.txt to sampletab.pre.txt
-                //TODO do this directly in this process
-                File script = new File(scriptdir, "ENASRAXMLToSampleTab.sh");
-                if (!script.exists()) {
-                    log.error("Unable to find " + script);
+                // convert study.xml to sampletab.pre.txt
+
+                try {
+                    new ENASRAXMLToSampleTab().convert(xmlFile, sampletabpre);
+                } catch (IOException e) {
+                    log.error("Problem processing "+xmlFile);
+                    e.printStackTrace();
+                    return;
+                } catch (ParseException e) {
+                    log.error("Problem processing "+xmlFile);
+                    e.printStackTrace();
+                    return;
+                } catch (RuntimeException e) {
+                    log.error("Problem processing "+xmlFile);
+                    e.printStackTrace();
                     return;
                 }
-                String bashcom = script + " " + xmlFile + " " + sampletabpre;
-                log.info(bashcom);
-                File logfile = new File(subdir, "sampletab.pre.txt.log");
-                if (!ProcessUtils.doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + target);
-                    log.error("See logfile " + logfile);
-                    if (target.exists()){
-                        target.delete();
-                        log.error("cleaning partly produced file");
-                    }
-                    return;
-                }
+                
             }
 
             new SampleTabcronBulk().process(subdir, scriptdir);

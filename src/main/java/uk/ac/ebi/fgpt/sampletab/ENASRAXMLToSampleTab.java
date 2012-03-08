@@ -75,8 +75,8 @@ public class ENASRAXMLToSampleTab {
         SampleData st = new SampleData();
         // title
         Element descriptor = XMLUtils.getChildByName(study, "DESCRIPTOR");
-        st.msi.submissionIdentifier = XMLUtils.getChildByName(descriptor, "STUDY_TITLE").getTextTrim();
-        st.msi.submissionTitle = "GEN-"+study.attributeValue("accession");
+        st.msi.submissionTitle = XMLUtils.getChildByName(descriptor, "STUDY_TITLE").getTextTrim();
+        st.msi.submissionIdentifier = "GEN-"+study.attributeValue("accession");
 
         // description
         String description = null;
@@ -147,8 +147,8 @@ public class ENASRAXMLToSampleTab {
         //ENA SRA does not have explicit term sources
         //Put a couple on by default
         
-        st.msi.termSourceName.add("NEWT");
-        st.msi.termSourceURI.add("http://www.ebi.ac.uk/newt");
+        st.msi.termSourceName.add("NCBI Taxonomy");
+        st.msi.termSourceURI.add("http://www.ncbi.nlm.nih.gov/Taxonomy/");
         st.msi.termSourceVersion.add("");
         
         st.msi.termSourceName.add("EFO");
@@ -191,13 +191,13 @@ public class ENASRAXMLToSampleTab {
             // ignore species names and accession duplicates
             Element synonym;
             synonym = XMLUtils.getChildByName(sampleElement, "TITLE");
-            if (synonym != null && !synonym.getTextTrim().equals(sampleSRAAccession)
-                    && !synonym.getTextTrim().equals(XMLUtils.getChildByName(sampleName, "SCIENTIFIC_NAME").getTextTrim())) {
-                CommentAttribute synonymattrib = new CommentAttribute("Synonym", synonym.getTextTrim());
-                // insert all synonyms at position zero so they display next
-                // to name
-                samplenode.addAttribute(synonymattrib, 0);
-            }
+//            if (synonym != null && !synonym.getTextTrim().equals(sampleSRAAccession)
+//                    && !synonym.getTextTrim().equals(XMLUtils.getChildByName(sampleName, "SCIENTIFIC_NAME").getTextTrim())) {
+//                CommentAttribute synonymattrib = new CommentAttribute("Synonym", synonym.getTextTrim());
+//                // insert all synonyms at position zero so they display next
+//                // to name
+//                samplenode.addAttribute(synonymattrib, 0);
+//            }
             if (sampleName != null) {
                 synonym = XMLUtils.getChildByName(sampleName, "INDIVIDUAL_NAME");
                 if (synonym != null) {
@@ -239,7 +239,7 @@ public class ENASRAXMLToSampleTab {
 
                 OrganismAttribute organismAttribute = null;
                 if (taxName != null && taxid != null) {
-                    organismAttribute = new OrganismAttribute(taxName, "NEWT", taxid);
+                    organismAttribute = new OrganismAttribute(taxName, "NCBI Taxonomy", taxid);
                 } else if (taxName != null) {
                     organismAttribute = new OrganismAttribute(taxName);
                 }
@@ -337,6 +337,10 @@ public class ENASRAXMLToSampleTab {
     }
 
     public static void main(String[] args) {
+        new ENASRAXMLToSampleTab().doMain(args);
+    }
+
+    public void doMain(String[] args) {
         if (args.length < 2) {
             System.out.println("Must provide an ENA SRA study filename and a SampleTab output filename.");
             return;

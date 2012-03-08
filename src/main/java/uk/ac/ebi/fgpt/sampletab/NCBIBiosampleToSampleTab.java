@@ -202,8 +202,8 @@ public class NCBIBiosampleToSampleTab {
 			}
 		}
 
-		st.msi.termSourceName.add("NEWT");
-		st.msi.termSourceURI.add("http://www.uniprot.org/taxonomy/");
+		st.msi.termSourceName.add("NCBI Taxonomy");
+		st.msi.termSourceURI.add("http://www.ncbi.nlm.nih.gov/Taxonomy/");
 		st.msi.termSourceVersion.add("");
 
 		SampleNode scdnode = new SampleNode();
@@ -213,7 +213,7 @@ public class NCBIBiosampleToSampleTab {
 		OrganismAttribute organismAttrib = new OrganismAttribute();
 		organismAttrib.setAttributeValue(organism
 				.attributeValue("taxonomy_name"));
-		organismAttrib.setTermSourceREF("NEWT");
+		organismAttrib.setTermSourceREF("NCBI Taxonomy");
 		organismAttrib.setTermSourceID(organism.attributeValue("taxonomy_id"));
 		scdnode.addAttribute(organismAttrib);
 
@@ -238,8 +238,8 @@ public class NCBIBiosampleToSampleTab {
 			// TODO ensure that the dictionary name is included in the msi
 			// section
 			if (attribute.attributeValue("dictionary_name") != null) {
-				attrib.termSourceREF = attribute
-						.attributeValue("dictionary_name");
+				attrib.setTermSourceREF(attribute
+						.attributeValue("dictionary_name"));
 			}
 			scdnode.addAttribute(attrib);
 		}

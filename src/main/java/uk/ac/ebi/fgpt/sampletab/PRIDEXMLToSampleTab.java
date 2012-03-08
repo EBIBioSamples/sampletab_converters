@@ -157,7 +157,7 @@ public class PRIDEXMLToSampleTab {
                 }
                 //TODO  use special attribute classes where appropriate
                 if ("NEWT".equals(cvLabel)) {
-                    String termSourceREF = cvLabel;
+                    String termSourceREF = "NCBI Taxonomy";
                     //TODO make sure that this term source is then added to msi section
                     Integer termSourceID = new Integer(cvAccession);
                     OrganismAttribute attr = new OrganismAttribute(name, termSourceREF, termSourceID);
@@ -165,9 +165,9 @@ public class PRIDEXMLToSampleTab {
                 } else {
                     CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
                     if (cvLabel != null && cvAccession != null){
-                        attr.termSourceREF = cvLabel;
+                        attr.setTermSourceREF(cvLabel);
                         //TODO make sure that this term source is then added to msi section
-                        attr.termSourceID = cvAccession;
+                        attr.setTermSourceID(cvAccession);
                     }
                     sample.addAttribute(attr);
                 }
@@ -185,9 +185,9 @@ public class PRIDEXMLToSampleTab {
                 }
                 CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
                 if (cvparam.attributeValue("cvLabel") != null && cvparam.attributeValue("accession") != null){
-                    attr.termSourceREF = cvparam.attributeValue("cvLabel").trim();
+                    attr.setTermSourceREF(cvparam.attributeValue("cvLabel").trim());
                     //TODO make sure that this term source is then added to msi section
-                    attr.termSourceID = cvparam.attributeValue("accession").trim();
+                    attr.setTermSourceID(cvparam.attributeValue("accession").trim());
                 }
                 sample.addAttribute(attr);
             }

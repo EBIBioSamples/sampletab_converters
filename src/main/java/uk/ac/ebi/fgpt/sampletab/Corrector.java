@@ -40,11 +40,20 @@ public class Corrector {
         for (SampleNode s : st.scd.getNodes(SampleNode.class)) {
             //convert to array so we can delete and add attributes if needed
             for (Object a : s.getAttributes().toArray()) {
-                // tidy things that apply to all attributes
                 boolean isAbstractSCDAttribute = false;
                 synchronized(AbstractNodeAttribute.class){
                     isAbstractSCDAttribute = AbstractNodeAttribute.class.isInstance(a);
                 }
+                boolean isCharacteristic = false;
+                synchronized(CharacteristicAttribute.class){
+                    isCharacteristic = CharacteristicAttribute.class.isInstance(a);
+                }
+                boolean isSex = false;
+                synchronized(SexAttribute.class){
+                    isSex = SexAttribute.class.isInstance(a);
+                }
+
+                // tidy things that apply to all attributes
                 if (isAbstractSCDAttribute) {
                     AbstractNodeAttribute cha = (AbstractNodeAttribute) a;
                     // remove not applicables
@@ -57,15 +66,6 @@ public class Corrector {
                         s.removeAttribute(cha);
                         continue;
                     }
-                }
-                
-                boolean isCharacteristic = false;
-                synchronized(CharacteristicAttribute.class){
-                    isCharacteristic = CharacteristicAttribute.class.isInstance(a);
-                }
-                boolean isSex = false;
-                synchronized(SexAttribute.class){
-                    isSex = SexAttribute.class.isInstance(a);
                 }
                 
                 // tidy all characteristics
@@ -89,8 +89,8 @@ public class Corrector {
                             ) {
                         s.removeAttribute(cha);
                         OrganismAttribute orga = new OrganismAttribute(cha.getAttributeValue());
-                        orga.setTermSourceID(cha.termSourceID);
-                        orga.setTermSourceREF(cha.termSourceREF);
+                        orga.setTermSourceID(cha.getTermSourceID());
+                        orga.setTermSourceREF(cha.getTermSourceREF());
                         // TODO check use of NCBI Taxonomy
                         // TODO validate against taxonomy
                         s.addAttribute(orga);
@@ -114,8 +114,8 @@ public class Corrector {
                         } else {
                             sexa.setAttributeValue(cha.getAttributeValue());
                         }
-                        sexa.setTermSourceID(cha.termSourceID);
-                        sexa.setTermSourceREF(cha.termSourceREF);
+                        sexa.setTermSourceID(cha.getTermSourceID());
+                        sexa.setTermSourceREF(cha.getTermSourceREF());
                         // TODO check use of EFO
                         // TODO validate against EFO
                         s.addAttribute(sexa);

@@ -14,6 +14,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 
 public class IMSRTabcronBulk {
@@ -59,24 +60,31 @@ public class IMSRTabcronBulk {
                 log.info("Processing " + target);
                 
                 // convert raw.tab.txt to sampletab.pre.txt
-                //TODO do this directly in this process
-                File script = new File(scriptdir, "IMSRTabToSampleTab.sh");
-                if (!script.exists()) {
-                    log.error("Unable to find " + script);
+                IMSRTabToSampleTab c = new IMSRTabToSampleTab();
+                try {
+                    c.convert(tabFile, sampletabpre);
+                } catch (NumberFormatException e) {
+                    log.error("Problem processing "+tabFile);
+                    e.printStackTrace();
+                    return;
+                } catch (IOException e) {
+                    log.error("Problem processing "+tabFile);
+                    e.printStackTrace();
+                    return;
+                } catch (ParseException e) {
+                    log.error("Problem processing "+tabFile);
+                    e.printStackTrace();
+                    return;
+                } catch (java.text.ParseException e) {
+                    log.error("Problem processing "+tabFile);
+                    e.printStackTrace();
+                    return;
+                } catch (RuntimeException e) {
+                    log.error("Problem processing "+tabFile);
+                    e.printStackTrace();
                     return;
                 }
-                String bashcom = script + " " + tabFile + " " + sampletabpre;
-                log.info(bashcom);
-                File logfile = new File(subdir, "sampletab.pre.txt.log");
-                if (!ProcessUtils.doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + target);
-                    log.error("See logfile " + logfile);
-                    if (target.exists()){
-                        target.delete();
-                        log.error("cleaning partly produced file");
-                    }
-                    return;
-                }
+                
             }
 
             new SampleTabcronBulk().process(subdir, scriptdir);

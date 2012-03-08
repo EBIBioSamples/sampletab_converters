@@ -30,50 +30,43 @@ import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class IMSRTabToSampleTab {
 
-    // singlton instance
-    private static final IMSRTabToSampleTab instance = new IMSRTabToSampleTab();
-
     private static IMSRTabWebSummary summary = null;
 
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private IMSRTabToSampleTab() {
-        // private constructor to prevent accidental multiple initialisations
+    IMSRTabToSampleTab() {
     }
 
     private IMSRTabWebSummary getSummary() throws NumberFormatException, java.text.ParseException, IOException {
-        synchronized (summary){
-            if (summary == null) {
-                summary = IMSRTabWebSummary.getInstance();
+        if (summary == null) {
+            summary = IMSRTabWebSummary.getInstance();
+            synchronized (summary) {
                 try {
                     summary.get();
-                } catch (IOException e){
-                    if (e.toString().contains("Server returned HTTP response code: 502 for URL")){
-                        //try again
+                } catch (IOException e) {
+                    if (e.toString().contains("Server returned HTTP response code: 502 for URL")) {
+                        // try again
                         log.info("Retrying getting summary");
                         summary.get();
                     }
                 }
-                
             }
-            return summary;
         }
-    }
-
-    public static IMSRTabToSampleTab getInstance() {
-        return instance;
+        return summary;
     }
 
     public Logger getLog() {
         return log;
     }
 
-    public SampleData convert(String filename) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
+    public SampleData convert(String filename) throws IOException, ParseException, NumberFormatException,
+            java.text.ParseException {
         return convert(new File(filename));
     }
 
-    public SampleData convert(File infile) throws ParseException, IOException, NumberFormatException, java.text.ParseException {
+    public SampleData convert(File infile) throws ParseException, IOException, NumberFormatException,
+            java.text.ParseException {
 
         SampleData st = new SampleData();
 
@@ -240,7 +233,7 @@ public class IMSRTabToSampleTab {
             // all IMSR samples must be mice.
             OrganismAttribute organismattribute = new OrganismAttribute();
             organismattribute.setAttributeValue("Mus musculus (Mouse)");
-            organismattribute.setTermSourceREF("NEWT");
+            organismattribute.setTermSourceREF("NCBI Taxonomy");
             organismattribute.setTermSourceID(10090);
 
             if (mutations.containsKey(name)) {
@@ -274,7 +267,8 @@ public class IMSRTabToSampleTab {
         return st;
     }
 
-    public void convert(File file, Writer writer) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
+    public void convert(File file, Writer writer) throws IOException, ParseException, NumberFormatException,
+            java.text.ParseException {
         getLog().debug("recieved magetab, preparing to convert");
         SampleData st = convert(file);
 
@@ -286,12 +280,14 @@ public class IMSRTabToSampleTab {
 
     }
 
-    public void convert(File infile, String outfilename) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
+    public void convert(File infile, String outfilename) throws IOException, ParseException, NumberFormatException,
+            java.text.ParseException {
 
         convert(infile, new File(outfilename));
     }
 
-    public void convert(File infile, File outfile) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
+    public void convert(File infile, File outfile) throws IOException, ParseException, NumberFormatException,
+            java.text.ParseException {
 
         // create parent directories, if they dont exist
         outfile = outfile.getAbsoluteFile();
@@ -306,19 +302,23 @@ public class IMSRTabToSampleTab {
         convert(infile, new FileWriter(outfile));
     }
 
-    public void convert(String infilename, Writer writer) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
+    public void convert(String infilename, Writer writer) throws IOException, ParseException, NumberFormatException,
+            java.text.ParseException {
         convert(new File(infilename), writer);
     }
 
-    public void convert(String infilename, File outfile) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
+    public void convert(String infilename, File outfile) throws IOException, ParseException, NumberFormatException,
+            java.text.ParseException {
         convert(infilename, new FileWriter(outfile));
     }
 
-    public void convert(String infilename, String outfilename) throws IOException, ParseException, NumberFormatException, java.text.ParseException {
+    public void convert(String infilename, String outfilename) throws IOException, ParseException,
+            NumberFormatException, java.text.ParseException {
         convert(infilename, new File(outfilename));
     }
 
-    private void addSite(SampleData st, String site) throws NumberFormatException, java.text.ParseException, IOException {
+    private void addSite(SampleData st, String site) throws NumberFormatException, java.text.ParseException,
+            IOException {
         log.info("Adding site " + site);
         assert getSummary().sites.contains(site);
         int index = getSummary().sites.indexOf(site);
@@ -345,8 +345,8 @@ public class IMSRTabToSampleTab {
 
         // TODO need mapping between site name and site number to do database
 
-        st.msi.termSourceName.add("NEWT");
-        st.msi.termSourceURI.add("http://www.ebi.ac.uk/newt/");
+        st.msi.termSourceName.add("NCBI Taxonomy");
+        st.msi.termSourceURI.add("http://www.ncbi.nlm.nih.gov/Taxonomy/");
         st.msi.termSourceVersion.add("");
 
         st.msi.termSourceName.add("EFO");
@@ -362,7 +362,7 @@ public class IMSRTabToSampleTab {
         String imsrTabFilename = args[0];
         String sampleTabFilename = args[1];
 
-        IMSRTabToSampleTab converter = IMSRTabToSampleTab.getInstance();
+        IMSRTabToSampleTab converter = new IMSRTabToSampleTab();
 
         try {
             converter.convert(imsrTabFilename, sampleTabFilename);

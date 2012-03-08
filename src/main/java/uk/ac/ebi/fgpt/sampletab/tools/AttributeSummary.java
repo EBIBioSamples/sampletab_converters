@@ -26,6 +26,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.fgpt.sampletab.SampleTabToLoad;
@@ -47,6 +48,9 @@ public class AttributeSummary {
     
     @Option(name = "-c", aliases={"--columns"}, usage = "number of values of attributes")
     private int cols = 100;
+    
+    @Option(name = "--organism", aliases={"--organism"}, usage = "organism to use")
+    private String organism = null;
 
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
@@ -54,7 +58,7 @@ public class AttributeSummary {
 	// logging
 	private Logger log = LoggerFactory.getLogger(getClass());
 	
-	private volatile Map<String, Map<String, Integer>> attributes = Collections
+	protected volatile Map<String, Map<String, Integer>> attributes = Collections
 			.synchronizedMap(new HashMap<String, Map<String, Integer>>());
 	
 	private class ProcessTask implements Runnable {
@@ -75,27 +79,53 @@ public class AttributeSummary {
 			}
 			
 			for (SCDNode node : sampledata.scd.getAllNodes()) {
-				for (SCDNodeAttribute attribute : node.getAttributes()) {
-					String key = attribute.getAttributeType();
-					String value = attribute.getAttributeValue();
-					if (!attributes.containsKey(key)) {
-					    attributes.put(key,
-								Collections
-										.synchronizedMap(new HashMap<String, Integer>()));
-					}
-					if (attributes.get(key).containsKey(value)) {
-						int count = attributes.get(key).get(value).intValue();
-						attributes.get(key).put(value,
-								count + 1);
-					} else {
-					    attributes.get(key).put(value, new Integer(1));
-					}
-				}
+			    if (includeNode(node)) {
+    				for (SCDNodeAttribute attribute : node.getAttributes()) {
+    				    processAttribute(attribute);
+    				}
+			    }
 			}
 		}
 		
 	}
     
+	protected boolean includeNode(SCDNode node){
+	    if (organism == null){
+	        return true;
+	    } else {
+	        //get organism of node
+	        String nodeorganism = null;
+	        for (SCDNodeAttribute attr : node.getAttributes()){
+	            if (OrganismAttribute.class.isInstance(attr)){
+	                nodeorganism = attr.getAttributeValue();
+	            }
+	        }
+	        //compare to this.organism
+	        if (organism.equals(nodeorganism)){
+	            return true;
+	        }else {
+	            return false;
+	        }
+	    }
+	}
+	
+	protected void processAttribute(SCDNodeAttribute attribute){
+        String key = attribute.getAttributeType();
+        String value = attribute.getAttributeValue();
+        if (!attributes.containsKey(key)) {
+            attributes.put(key,
+                    Collections
+                            .synchronizedMap(new HashMap<String, Integer>()));
+        }
+        if (attributes.get(key).containsKey(value)) {
+            int count = attributes.get(key).get(value).intValue();
+            attributes.get(key).put(value,
+                    count + 1);
+        } else {
+            attributes.get(key).put(value, new Integer(1));
+        }
+	}
+	
 	class KeyComparator implements Comparator {
 		private final Map<String, Map<String, Integer>> map;
 		
