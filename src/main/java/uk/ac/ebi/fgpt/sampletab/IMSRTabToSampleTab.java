@@ -185,8 +185,7 @@ public class IMSRTabToSampleTab {
                 // if there are multiple materials
                 // create a strain sample and derive individual materials
 
-                MaterialAttribute matterialattribute = new MaterialAttribute();
-                matterialattribute.setAttributeValue("strain");
+                MaterialAttribute matterialattribute = new MaterialAttribute("strain");
                 newnode.addAttribute(matterialattribute);
 
                 // add the strain node to the st
@@ -196,8 +195,7 @@ public class IMSRTabToSampleTab {
                     SampleNode materialnode = new SampleNode();
                     materialnode.setNodeName(name + " " + material);
 
-                    matterialattribute = new MaterialAttribute();
-                    matterialattribute.setAttributeValue(material);
+                    matterialattribute = new MaterialAttribute(material);
                     materialnode.addAttribute(matterialattribute);
 
                     newnode.addChildNode(materialnode);
@@ -211,10 +209,8 @@ public class IMSRTabToSampleTab {
             } else if (states.containsKey(name) && (states.get(name).size() == 1)) {
                 // if there is only one material
                 // this is a for loop that only runs once because no easy way to access a member of a set
-                for (String materal : states.get(name)) {
-                    MaterialAttribute matterialattribute = new MaterialAttribute();
-                    matterialattribute.setAttributeValue(materal);
-                    newnode.addAttribute(matterialattribute);
+                for (String material : states.get(name)) {
+                    newnode.addAttribute(new MaterialAttribute(material));
                     break;
                 }
 

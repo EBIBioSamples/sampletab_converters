@@ -21,6 +21,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
@@ -174,6 +175,7 @@ public class ENASRAXMLToSampleTab {
             Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
             Element sampleName = XMLUtils.getChildByName(sampleElement, "SAMPLE_NAME");
             Element sampledescription = XMLUtils.getChildByName(sampleElement, "DESCRIPTION");
+            Element synonym = XMLUtils.getChildByName(sampleElement, "TITLE");
 
             // check that this actually is the sample we want
             if (sampleElement.attributeValue("accession") != null
@@ -186,66 +188,60 @@ public class ENASRAXMLToSampleTab {
             // create the actual sample node
             SampleNode samplenode = new SampleNode();
             samplenode.setNodeName(sampleSRAAccession);
+            
+            samplenode.addAttribute(new DatabaseAttribute("ENA SRA",
+                    study.attributeValue("accession"), 
+                    "http://www.ebi.ac.uk/ena/data/view/" + study.attributeValue("accession")));
 
             // process any synonyms that may exist
-            // ignore species names and accession duplicates
-            Element synonym;
-            synonym = XMLUtils.getChildByName(sampleElement, "TITLE");
-//            if (synonym != null && !synonym.getTextTrim().equals(sampleSRAAccession)
-//                    && !synonym.getTextTrim().equals(XMLUtils.getChildByName(sampleName, "SCIENTIFIC_NAME").getTextTrim())) {
-//                CommentAttribute synonymattrib = new CommentAttribute("Synonym", synonym.getTextTrim());
-//                // insert all synonyms at position zero so they display next
-//                // to name
-//                samplenode.addAttribute(synonymattrib, 0);
-//            }
             if (sampleName != null) {
-                synonym = XMLUtils.getChildByName(sampleName, "INDIVIDUAL_NAME");
-                if (synonym != null) {
-                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", synonym.getTextTrim());
-                    // insert all synonyms at position zero so they display next to name
+                Element taxon = XMLUtils.getChildByName(sampleName, "TAXON_ID");
+                Element indivname = XMLUtils.getChildByName(sampleName, "INDIVIDUAL_NAME");
+                Element scientificname = XMLUtils.getChildByName(sampleName, "SCIENTIFIC_NAME");
+                Element commonname = XMLUtils.getChildByName(sampleName, "COMMON_NAME");
+                Element annonname = XMLUtils.getChildByName(sampleName, "ANONYMIZED_NAME");
+                
+                // insert all synonyms at position zero so they display next to name
+                if (indivname != null) {
+                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", indivname.getTextTrim());
+                    samplenode.addAttribute(synonymattrib, 0);
+                }
+                if (annonname != null) {
+                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", annonname.getTextTrim());
                     samplenode.addAttribute(synonymattrib, 0);
                 }
 
-                synonym = XMLUtils.getChildByName(sampleName, "ANONYMIZED_NAME");
-                if (synonym != null) {
-                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", synonym.getTextTrim());
-                    samplenode.addAttribute(synonymattrib, 0);
+                // now process organism
+                if (taxon != null) {
+                    Integer taxid = new Integer(taxon.getTextTrim());
+                    // TODO get taxon name from id
+                    String taxName = null;
+                    if (scientificname != null ){
+                        taxName = scientificname.getTextTrim();
+                    } else {
+                        taxName = taxid.toString();
+                    }
+                    
+                    OrganismAttribute organismAttribute = null;
+                    if (taxName != null && taxid != null) {
+                        organismAttribute = new OrganismAttribute(taxName, "NCBI Taxonomy", taxid);
+                    } else if (taxName != null) {
+                        organismAttribute = new OrganismAttribute(taxName);
+                    }
+
+                    if (organismAttribute != null) {
+                        samplenode.addAttribute(organismAttribute);
+                    }
                 }
             }
+            
             if (sampledescription != null) {
+                // insert all synonyms at position zero so they display next to name
+                // do this after doing synonyms
                 if (sampledescription.attributeValue("alias") != null) {
                     CommentAttribute synonymattrib = new CommentAttribute("Synonym",
                             sampledescription.attributeValue("alias"));
                     samplenode.addAttribute(synonymattrib, 0);
-                }
-            }
-
-            // now process organism
-            if (sampleName != null) {
-                Element taxon = XMLUtils.getChildByName(sampleName, "TAXON_ID");
-                Element scientificname = XMLUtils.getChildByName(sampleName, "SCIENTIFIC_NAME");
-                Element commonname = XMLUtils.getChildByName(sampleName, "COMMON_NAME");
-                Integer taxid = null;
-                String taxName = null;
-                if (taxon != null) {
-                    taxid = new Integer(taxon.getTextTrim());
-                    // TODO get taxon name from id
-                }
-                if (scientificname != null) {
-                    taxName = scientificname.getTextTrim();
-                } else if (commonname != null) {
-                    taxName = commonname.getTextTrim();
-                }
-
-                OrganismAttribute organismAttribute = null;
-                if (taxName != null && taxid != null) {
-                    organismAttribute = new OrganismAttribute(taxName, "NCBI Taxonomy", taxid);
-                } else if (taxName != null) {
-                    organismAttribute = new OrganismAttribute(taxName);
-                }
-
-                if (organismAttribute != null) {
-                    samplenode.addAttribute(organismAttribute);
                 }
             }
 

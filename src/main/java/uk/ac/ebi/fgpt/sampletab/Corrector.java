@@ -219,8 +219,6 @@ public class Corrector {
                     } else if (sexa.getAttributeValue().toLowerCase().equals("female")
                             || sexa.getAttributeValue().toLowerCase().equals("f")) {
                         sexa.setAttributeValue("female");
-                    } else {
-                        sexa.setAttributeValue(sexa.getAttributeValue());
                     }
                 }
                 //TODO comments

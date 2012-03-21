@@ -55,6 +55,9 @@ public class AttributeSummary {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
 
+    @Option(name = "--totals", usage = "display total counts?")
+    private boolean totals = false;
+
 	// logging
 	private Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -280,6 +283,16 @@ public class AttributeSummary {
         			//do nothing
         		}
         	}
+        }
+        
+        if (totals){
+            int total = 0;
+            for (String key : keys){
+                for (Integer value : attributes.get(key).values()){
+                    total += value;
+                }
+            }
+            System.out.println("Total number of attributes: "+total);
         }
         
 	}
