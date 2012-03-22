@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
@@ -119,11 +120,8 @@ public class PRIDEXMLToSampleTab {
                             //some PubMed IDs have full URLs, strip them
                             String pubmedid = referenceaddpar.attributeValue("accession").trim();
                             pubmedid.replace("http://www.ncbi.nlm.nih.gov/pubmed/", "");
-                            //check to avoid duplicates
-                            if (!st.msi.publicationPubMedID.contains(pubmedid)){
-                                st.msi.publicationPubMedID.add(pubmedid);
-                                st.msi.publicationDOI.add("");
-                            }
+                            //TODO check to avoid duplicates
+                            st.msi.publications.add(new Publication(pubmedid, null));
                         }
                     }
                 }

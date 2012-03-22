@@ -22,6 +22,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
@@ -196,8 +197,7 @@ public class NCBIBiosampleToSampleTab {
 				if (link.attributeValue("type") == "db_xref"
 						&& link.attributeValue("target") == "pubmed") {
 					String PubMedID = link.getTextTrim();
-					st.msi.publicationPubMedID.add(PubMedID);
-					st.msi.publicationDOI.add("");
+					st.msi.publications.add(new Publication(PubMedID, null));
 				}
 			}
 		}

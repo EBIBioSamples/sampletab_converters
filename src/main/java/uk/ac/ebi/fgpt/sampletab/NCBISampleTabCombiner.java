@@ -353,9 +353,7 @@ public class NCBISampleTabCombiner {
             }
 
             sampleout.msi.databases = sampledata.msi.databases;
-
-            sampleout.msi.publicationDOI.addAll(sampledata.msi.publicationDOI);
-            sampleout.msi.publicationPubMedID.addAll(sampledata.msi.publicationPubMedID);
+            sampleout.msi.publications.addAll(sampledata.msi.publications);
 
             if (sampleout.msi.submissionDescription == null || sampleout.msi.submissionDescription.trim().equals(""))
                 sampleout.msi.submissionDescription = sampledata.msi.submissionDescription;

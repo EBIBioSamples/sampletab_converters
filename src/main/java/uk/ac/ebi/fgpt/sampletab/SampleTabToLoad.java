@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -157,11 +158,12 @@ public class SampleTabToLoad {
                 group.addAttribute(new NamedAttribute("Organization Role", sampledata.msi.organizationRole.get(i)));
             }
         }
-        for (int i = 0; i < sampledata.msi.publicationDOI.size(); i++) {
-            group.addAttribute(new NamedAttribute("Publication DOI", sampledata.msi.publicationDOI.get(i)));
-            if (i < sampledata.msi.publicationPubMedID.size()) {
-                group.addAttribute(new NamedAttribute("Publication PubMed ID", sampledata.msi.publicationPubMedID
-                        .get(i)));
+        for(Publication pub: sampledata.msi.publications){
+            if (pub.getDOI() != null){
+                group.addAttribute(new NamedAttribute("Publication DOI", pub.getDOI()));
+            }
+            if (pub.getPubMedID() != null){
+                group.addAttribute(new NamedAttribute("Publication PubMed ID", pub.getPubMedID()));
             }
         }
         for (int i = 0; i < sampledata.msi.termSourceName.size(); i++) {

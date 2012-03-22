@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
@@ -68,8 +69,7 @@ public class DGVaXMLToSampleTab {
         st.msi.submissionReferenceLayer = false;
         
         for (Element publication : XMLUtils.getChildrenByName(study, "PUBLICATION")){ 
-            st.msi.publicationPubMedID.add(publication.attributeValue("NCBI_pmid"));
-            st.msi.publicationDOI.add("");
+            st.msi.publications.add(new Publication(publication.attributeValue("NCBI_pmid"), null));
         }
         
         st.msi.personFirstName.add(submission.attributeValue("first_name"));

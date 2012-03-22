@@ -25,6 +25,7 @@ import uk.ac.ebi.arrayexpress2.magetab.parser.IDFParser;
 import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -80,9 +81,17 @@ public class MageTabToSampleTab {
 		st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
 		st.msi.submissionIdentifier = "GA" + mt.IDF.accession;
 		st.msi.submissionReferenceLayer = false;
-
-		st.msi.publicationDOI = mt.IDF.publicationDOI;
-		st.msi.publicationPubMedID = mt.IDF.pubMedId;
+		for (int i = 0; i < mt.IDF.publicationDOI.size() || i < mt.IDF.pubMedId.size(); i++){
+		    String doi = null;
+		    if (i < mt.IDF.publicationDOI.size()){
+		        doi = mt.IDF.publicationDOI.get(i);
+		    }
+            String pubmedid = null;
+            if (i < mt.IDF.pubMedId.size()){
+                pubmedid = mt.IDF.pubMedId.get(i);
+            }
+            st.msi.publications.add(new Publication(pubmedid, doi));
+		}
 
 		st.msi.personLastName = mt.IDF.personLastName;
 		st.msi.personInitials = mt.IDF.personMidInitials;
