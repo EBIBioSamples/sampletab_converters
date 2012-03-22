@@ -177,7 +177,7 @@ public class DGVaXMLToSampleTab {
                 group.addSample(sampleNode);  
             }
             
-            if (group.getChildNodes().size() != new Integer(sampleset.attribute("size").getText())){
+            if (group.getParentNodes().size() != new Integer(sampleset.attribute("size").getText())){
                 //misc samples are in this group
                 group.addAttribute(new CountAttribute(new Integer(sampleset.attribute("size").getText())));
             }
