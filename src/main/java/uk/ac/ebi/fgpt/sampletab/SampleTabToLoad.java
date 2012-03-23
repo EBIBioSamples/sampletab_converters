@@ -117,13 +117,13 @@ public class SampleTabToLoad {
         // also need to accession the new node
 
         // Copy msi information on to the group node
-        // group.addAttribute(new NamedAttribute("Submission Title", sampledata.msi.submissionTitle));
+        group.addAttribute(new NamedAttribute("Submission Title", sampledata.msi.submissionTitle));
         group.addAttribute(new NamedAttribute("Submission Description", sampledata.msi.submissionDescription));
-        // group.addAttribute(new NamedAttribute("Submission Identifier", sampledata.msi.submissionIdentifier));
-        // group.addAttribute(new NamedAttribute("Submission Release Date", sampledata.msi.getSubmissionReleaseDateAsString()));
-        // group.addAttribute(new NamedAttribute("Submission Update Date", sampledata.msi.getSubmissionUpdateDateAsString()));
-        // group.addAttribute(new NamedAttribute("Submission Version", sampledata.msi.submissionVersion));
-        // group.addAttribute(new NamedAttribute("Submission Reference Layer", sampledata.msi.submissionReferenceLayer.toString()));
+        group.addAttribute(new NamedAttribute("Submission Identifier", sampledata.msi.submissionIdentifier));
+        group.addAttribute(new NamedAttribute("Submission Release Date", sampledata.msi.getSubmissionReleaseDateAsString()));
+        group.addAttribute(new NamedAttribute("Submission Update Date", sampledata.msi.getSubmissionUpdateDateAsString()));
+        group.addAttribute(new NamedAttribute("Submission Version", sampledata.msi.submissionVersion));
+        group.addAttribute(new NamedAttribute("Submission Reference Layer", sampledata.msi.submissionReferenceLayer.toString()));
         // Have to do this for each group of tags (Person *, Database *, etc)
         // and complete each individual in each group before starting the next one
         // E.g. Person Last Name, Person First Name, Person Last Name, Person First Name
