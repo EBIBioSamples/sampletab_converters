@@ -72,7 +72,7 @@ public class MageTabToSampleTab {
 		st.msi.submissionDescription = mt.IDF.experimentDescription;
 		if (mt.IDF.publicReleaseDate != null && !mt.IDF.publicReleaseDate.trim().equals("")) {
 			try{
-			st.msi.submissionReleaseDate = magetabdateformat
+			    st.msi.submissionReleaseDate = magetabdateformat
 					.parse(mt.IDF.publicReleaseDate.trim());
 			} catch (java.text.ParseException e){
 				log.error("Unable to parse release date "+mt.IDF.publicReleaseDate);
@@ -127,7 +127,7 @@ public class MageTabToSampleTab {
             if (i < mt.IDF.termSourceVersion.size()){
                 version = mt.IDF.termSourceVersion.get(i);
             }
-            st.msi.termSources.add(new TermSource(uri, name, version));
+            st.msi.termSources.add(new TermSource(name, uri, version));
         }
 
 		// TODO add samples...
