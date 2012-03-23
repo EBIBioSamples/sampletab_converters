@@ -19,6 +19,7 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -147,14 +148,8 @@ public class ENASRAXMLToSampleTab {
 
         //ENA SRA does not have explicit term sources
         //Put a couple on by default
-        
-        st.msi.termSourceName.add("NCBI Taxonomy");
-        st.msi.termSourceURI.add("http://www.ncbi.nlm.nih.gov/Taxonomy/");
-        st.msi.termSourceVersion.add("");
-        
-        st.msi.termSourceName.add("EFO");
-        st.msi.termSourceURI.add("http://www.ebi.ac.uk/efo");
-        st.msi.termSourceVersion.add("");
+        st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/Taxonomy/", null));
+        st.msi.termSources.add(new TermSource("EFO", "http://www.ebi.ac.uk/efo", null));
         
         log.info("MSI section complete, starting SCD section.");
 

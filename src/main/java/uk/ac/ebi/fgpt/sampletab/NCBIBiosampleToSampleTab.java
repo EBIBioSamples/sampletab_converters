@@ -23,6 +23,7 @@ import org.kohsuke.args4j.Option;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
@@ -201,10 +202,8 @@ public class NCBIBiosampleToSampleTab {
 				}
 			}
 		}
-
-		st.msi.termSourceName.add("NCBI Taxonomy");
-		st.msi.termSourceURI.add("http://www.ncbi.nlm.nih.gov/Taxonomy/");
-		st.msi.termSourceVersion.add("");
+		
+		st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/Taxonomy/", null));
 
 		SampleNode scdnode = new SampleNode();
 		scdnode.setNodeName(st.msi.submissionTitle);

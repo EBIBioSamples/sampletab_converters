@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -340,14 +341,8 @@ public class IMSRTabToSampleTab {
         st.msi.organizationRole.add("Biomaterial Provider");
 
         // TODO need mapping between site name and site number to do database
-
-        st.msi.termSourceName.add("NCBI Taxonomy");
-        st.msi.termSourceURI.add("http://www.ncbi.nlm.nih.gov/Taxonomy/");
-        st.msi.termSourceVersion.add("");
-
-        st.msi.termSourceName.add("EFO");
-        st.msi.termSourceURI.add("http://www.ebi.ac.uk/efo/");
-        st.msi.termSourceVersion.add("2.13.1");
+        st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/Taxonomy/", null));
+        st.msi.termSources.add(new TermSource("EFO", "http://www.ebi.ac.uk/efo", "2.13.1"));
     }
 
     public static void main(String[] args) {

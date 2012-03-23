@@ -24,6 +24,7 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -166,15 +167,10 @@ public class SampleTabToLoad {
                 group.addAttribute(new NamedAttribute("Publication PubMed ID", pub.getPubMedID()));
             }
         }
-        for (int i = 0; i < sampledata.msi.termSourceName.size(); i++) {
-            group.addAttribute(new NamedAttribute("Term Source Name", sampledata.msi.termSourceName.get(i)));
-            // this is optional in MageTab. Should be enforce stricter here or not?
-            if (i < sampledata.msi.termSourceURI.size()) {
-                group.addAttribute(new NamedAttribute("Term Source URI", sampledata.msi.termSourceURI.get(i)));
-            }
-            if (i < sampledata.msi.termSourceVersion.size()) {
-                group.addAttribute(new NamedAttribute("Term Source Version", sampledata.msi.termSourceVersion.get(i)));
-            }
+        for (TermSource ts : sampledata.msi.termSources) {
+            group.addAttribute(new NamedAttribute("Term Source Name", ts.getName()));
+            group.addAttribute(new NamedAttribute("Term Source URI", ts.getURI()));
+            group.addAttribute(new NamedAttribute("Term Source Version", ts.getVersion()));
         }
         for (Database db : sampledata.msi.databases){
             group.addAttribute(new NamedAttribute("Database Name", db.getName()));

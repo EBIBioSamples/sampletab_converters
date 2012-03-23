@@ -332,26 +332,7 @@ public class NCBISampleTabCombiner {
                     }
                 }
             }
-
-            for (int i = 0; i < sampledata.msi.termSourceName.size(); i++) {
-                if (!sampleout.msi.termSourceName.contains(sampledata.msi.termSourceName.get(i))) {
-
-                    sampleout.msi.termSourceName.add(sampledata.msi.termSourceName.get(i));
-
-                    if (i >= sampledata.msi.termSourceURI.size()) {
-                        sampleout.msi.termSourceURI.add("");
-                    } else {
-                        sampleout.msi.termSourceURI.add(sampledata.msi.termSourceURI.get(i));
-                    }
-
-                    if (i >= sampledata.msi.termSourceVersion.size()) {
-                        sampleout.msi.termSourceVersion.add("");
-                    } else {
-                        sampleout.msi.termSourceVersion.add(sampledata.msi.termSourceVersion.get(i));
-                    }
-                }
-            }
-
+            sampleout.msi.termSources.addAll(sampledata.msi.termSources);
             sampleout.msi.databases.addAll(sampledata.msi.databases);
             sampleout.msi.publications.addAll(sampledata.msi.publications);
 

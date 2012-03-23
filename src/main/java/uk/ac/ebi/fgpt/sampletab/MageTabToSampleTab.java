@@ -26,6 +26,7 @@ import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -110,11 +111,24 @@ public class MageTabToSampleTab {
 		st.msi.databases.add(new Database("ArrayExpress", 
 		        "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
 		        mt.IDF.accession));
-
-		// TODO check and remove duplicates
-		st.msi.termSourceName = mt.IDF.termSourceName;
-		st.msi.termSourceURI = mt.IDF.termSourceFile;
-		st.msi.termSourceVersion = mt.IDF.termSourceVersion;
+		
+        for (int i = 0; i < mt.IDF.termSourceName.size() || 
+                            i < mt.IDF.termSourceFile.size() || 
+                            i < mt.IDF.termSourceVersion.size(); i++){
+            String name = null;
+            if (i < mt.IDF.termSourceName.size()){
+                name = mt.IDF.termSourceName.get(i);
+            }
+            String uri = null;
+            if (i < mt.IDF.termSourceFile.size()){
+                uri = mt.IDF.termSourceFile.get(i);
+            }
+            String version = null;
+            if (i < mt.IDF.termSourceVersion.size()){
+                version = mt.IDF.termSourceVersion.get(i);
+            }
+            st.msi.termSources.add(new TermSource(uri, name, version));
+        }
 
 		// TODO add samples...
 		// get the nodes that have relevant sample information
