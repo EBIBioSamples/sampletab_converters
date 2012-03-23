@@ -168,14 +168,22 @@ public class SampleTabToLoad {
             }
         }
         for (TermSource ts : sampledata.msi.termSources) {
-            group.addAttribute(new NamedAttribute("Term Source Name", ts.getName()));
-            group.addAttribute(new NamedAttribute("Term Source URI", ts.getURI()));
-            group.addAttribute(new NamedAttribute("Term Source Version", ts.getVersion()));
+            if (ts.getName() != null){
+                group.addAttribute(new NamedAttribute("Term Source Name", ts.getName()));
+                if (ts.getURI() != null){
+                    group.addAttribute(new NamedAttribute("Term Source URI", ts.getURI()));
+                }
+                if (ts.getVersion() != null){
+                    group.addAttribute(new NamedAttribute("Term Source Version", ts.getVersion()));
+                }
+            }
         }
         for (Database db : sampledata.msi.databases){
-            group.addAttribute(new NamedAttribute("Database Name", db.getName()));
-            group.addAttribute(new NamedAttribute("Database URI", db.getURI()));
-            group.addAttribute(new NamedAttribute("Database ID", db.getID()));
+            if (db.getName() != null){
+                group.addAttribute(new NamedAttribute("Database Name", db.getName()));
+                group.addAttribute(new NamedAttribute("Database URI", db.getURI()));
+                group.addAttribute(new NamedAttribute("Database ID", db.getID()));
+            }
         }
 
         return sampledata;
