@@ -127,7 +127,10 @@ public class MageTabToSampleTab {
             if (i < mt.IDF.termSourceVersion.size()){
                 version = mt.IDF.termSourceVersion.get(i);
             }
-            st.msi.termSources.add(new TermSource(name, uri, version));
+            TermSource ts = new TermSource(name, uri, version);
+            if (!st.msi.termSources.contains(ts)){
+                st.msi.termSources.add(ts);
+            }
         }
 
 		// TODO add samples...
