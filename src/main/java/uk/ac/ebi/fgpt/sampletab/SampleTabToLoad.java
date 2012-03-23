@@ -160,26 +160,26 @@ public class SampleTabToLoad {
             }
         }
         for(Publication pub: sampledata.msi.publications){
-            if (pub.getDOI() != null){
+            if (pub.getDOI() != null && pub.getDOI().trim().length() > 0){
                 group.addAttribute(new NamedAttribute("Publication DOI", pub.getDOI()));
             }
-            if (pub.getPubMedID() != null){
+            if (pub.getPubMedID() != null && pub.getPubMedID().trim().length() > 0){
                 group.addAttribute(new NamedAttribute("Publication PubMed ID", pub.getPubMedID()));
             }
         }
         for (TermSource ts : sampledata.msi.termSources) {
-            if (ts.getName() != null){
+            if (ts.getName() != null && ts.getName().trim().length() > 0){
                 group.addAttribute(new NamedAttribute("Term Source Name", ts.getName()));
-                if (ts.getURI() != null){
+                if (ts.getURI() != null && ts.getURI().trim().length() > 0){
                     group.addAttribute(new NamedAttribute("Term Source URI", ts.getURI()));
                 }
-                if (ts.getVersion() != null){
+                if (ts.getVersion() != null && ts.getVersion().trim().length() > 0){
                     group.addAttribute(new NamedAttribute("Term Source Version", ts.getVersion()));
                 }
             }
         }
         for (Database db : sampledata.msi.databases){
-            if (db.getName() != null){
+            if (db.getName() != null && db.getName().trim().length() > 0){
                 group.addAttribute(new NamedAttribute("Database Name", db.getName()));
                 group.addAttribute(new NamedAttribute("Database URI", db.getURI()));
                 group.addAttribute(new NamedAttribute("Database ID", db.getID()));
