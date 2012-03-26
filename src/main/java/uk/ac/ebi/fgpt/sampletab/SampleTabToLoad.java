@@ -110,6 +110,11 @@ public class SampleTabToLoad {
         sampledata.msi.publications = new ArrayList<Publication>(new HashSet<Publication>(sampledata.msi.publications));
         sampledata.msi.termSources = new ArrayList<TermSource>(new HashSet<TermSource>(sampledata.msi.termSources));
         
+        //must have a description
+        if (sampledata.msi.submissionDescription == null || sampledata.msi.submissionDescription.trim().length() == 0){
+            sampledata.msi.submissionDescription = sampledata.msi.submissionTitle;
+        }
+        
         // All samples must be in a group
         // so create a new group and add all samples to it
         // TODO check there is not an existing group first...
