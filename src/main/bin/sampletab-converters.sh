@@ -28,5 +28,9 @@ done
 #and other dependent jars
 classpath="$jars:$base/config";
 
+#Make sure files are group-writeable
+#mostly used when files are automatically generated, e.g. from cron
+umask 002
+
 #echo $java $args -classpath $classpath "$@"
 $java $args -classpath $classpath "$@"
