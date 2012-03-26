@@ -7,6 +7,7 @@ import java.io.Writer;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -103,7 +104,12 @@ public class SampleTabToLoad {
 
         // this is stuff for loading to BioSD
         // not actually part of SampleTab spec
-
+        
+        //make sure the msi contains no duplicates
+        sampledata.msi.databases = new ArrayList<Database>(new HashSet<Database>(sampledata.msi.databases));
+        sampledata.msi.publications = new ArrayList<Publication>(new HashSet<Publication>(sampledata.msi.publications));
+        sampledata.msi.termSources = new ArrayList<TermSource>(new HashSet<TermSource>(sampledata.msi.termSources));
+        
         // All samples must be in a group
         // so create a new group and add all samples to it
         // TODO check there is not an existing group first...
