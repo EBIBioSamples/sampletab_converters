@@ -63,6 +63,8 @@ public class SampleTabAccessioner {
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
+    
+    private int exitcode = 0;
 
     // receives other command line parameters than options
     @Argument
@@ -138,6 +140,7 @@ public class SampleTabAccessioner {
             prefix = "SAMEA";
             table = "sample_assay";
         } else {
+            exitcode = 1;
             throw new ParseException("Must specify a Submission Reference Layer MSI attribute.");
         }
 
@@ -302,14 +305,18 @@ public class SampleTabAccessioner {
                 } catch (ParseException e) {
                     System.err.println("ParseException converting " + this.inputFile);
                     e.printStackTrace();
+                    exitcode = 1;
                     return;
                 } catch (IOException e) {
                     System.err.println("IOException converting " + this.inputFile);
                     e.printStackTrace();
+                    exitcode = 1;
+                    System.exit(exitcode);
                     return;
                 } catch (SQLException e) {
                     System.err.println("SQLException converting " + this.inputFile);
                     e.printStackTrace();
+                    exitcode = 1;
                     return;
                 }
 
@@ -319,6 +326,7 @@ public class SampleTabAccessioner {
                 } catch (IOException e) {
                     System.out.println("Error opening " + this.outputFile);
                     e.printStackTrace();
+                    exitcode = 1;
                     return;
                 }
 
@@ -328,6 +336,7 @@ public class SampleTabAccessioner {
                 } catch (IOException e) {
                     System.out.println("Error writing " + this.outputFile);
                     e.printStackTrace();
+                    exitcode = 1;
                     return;
                 }
             }
@@ -360,9 +369,12 @@ public class SampleTabAccessioner {
             } catch (InterruptedException e) {
                 log.error("Interuppted awaiting thread pool termination");
                 e.printStackTrace();
+                exitcode = 1;
+                return;
             }
         }
         log.info("Finished processing");
 
+        System.exit(exitcode);
     }
 }
