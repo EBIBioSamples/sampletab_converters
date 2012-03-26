@@ -91,7 +91,10 @@ public class MageTabToSampleTab {
             if (i < mt.IDF.pubMedId.size()){
                 pubmedid = mt.IDF.pubMedId.get(i);
             }
-            st.msi.publications.add(new Publication(pubmedid, doi));
+            Publication pub = new Publication(pubmedid, doi);
+            if (!st.msi.publications.contains(pub)){
+                st.msi.publications.add(pub);
+            }
 		}
 
 		st.msi.personLastName = mt.IDF.personLastName;
