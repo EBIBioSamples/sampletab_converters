@@ -33,6 +33,21 @@ public class SampleTabcronBulk {
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
+
+    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
+    private String hostname;
+
+    @Option(name = "-t", aliases={"--port"}, usage = "server port")
+    private int port = 3306;
+
+    @Option(name = "-d", aliases={"--database"}, usage = "server database")
+    private String database;
+
+    @Option(name = "-u", aliases={"--username"}, usage = "server username")
+    private String username;
+
+    @Option(name = "-p", aliases={"--password"}, usage = "server password")
+    private String password;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -60,7 +75,15 @@ public class SampleTabcronBulk {
         }
 
         public void run() {
-                        
+
+            // TODO hardcoding bad
+            String accessionServer = "mysql-ae-autosubs-test.ebi.ac.uk";
+            int accessionPort = 4340;
+            String accessionDB = "autosubs_test";
+            String accessionUser = "admin";
+            String accessionPassword = "edsK6BV6";
+            
+            
             File target;
             
             // accession sampletab.pre.txt to sampletab.txt
@@ -70,9 +93,8 @@ public class SampleTabcronBulk {
                 log.info("Processing " + target);
                 
                 try {
-                    // TODO hardcoding bad
-                    SampleTabAccessioner c = new SampleTabAccessioner("mysql-ae-autosubs-test.ebi.ac.uk", 
-                            4340, "autosubs_test", "admin", "edsK6BV6");
+                    SampleTabAccessioner c = new SampleTabAccessioner(accessionServer, 
+                            accessionPort, accessionDB, accessionUser, accessionPassword);
                     c.convert(sampletabpre, sampletab);
                 } catch (ClassNotFoundException e) {
                     log.error("Problem processing "+sampletabpre);
@@ -105,8 +127,8 @@ public class SampleTabcronBulk {
 
                 SampleTabToLoad c;
                 try {
-                    c = new SampleTabToLoad("mysql-ae-autosubs-test.ebi.ac.uk", 
-                            4340, "autosubs_test", "admin", "edsK6BV6");
+                    c = new SampleTabToLoad(accessionServer, 
+                            accessionPort, accessionDB, accessionUser, accessionPassword);
                     c.convert(sampletab, sampletabtoload);
                 } catch (ClassNotFoundException e) {
                     log.error("Problem processing "+sampletab);
@@ -125,6 +147,7 @@ public class SampleTabcronBulk {
                     e.printStackTrace();
                     return;
                 }
+                log.info("Finished " + target);
             }
 
             // convert to age
@@ -151,6 +174,7 @@ public class SampleTabcronBulk {
                     }
                     return;
                 }
+                log.info("Finished " + target);
             }
             
         }

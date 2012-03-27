@@ -22,6 +22,8 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -166,27 +168,37 @@ public class NCBIBiosampleToSampleTab {
 					Element last = XMLUtils.getChildByName(name, "Last");
 					Element first = XMLUtils.getChildByName(name, "First");
 					Element middle = XMLUtils.getChildByName(name, "Middle");
-					st.msi.personLastName.add(last.getTextTrim());
-					if (first != null) {
-						st.msi.personFirstName.add(first.getTextTrim());
+					
+					
+					String lastname = last.getTextTrim();
+					String initials = null;
+                    // TODO fix middlename == initials assumption
+                    if (middle != null) {
+                        initials = middle.getTextTrim();
+                    }
+					String firstname = null;
+                    if (first != null) {
+                        firstname = first.getTextTrim();
+                    }
+					String email = contact.attributeValue("email");
+					String role = null;
+					Person per = new Person(lastname, initials, firstname, email, role);
+					if (!st.msi.persons.contains(per)){
+					    st.msi.persons.add(per);
 					}
-					// TODO fix middlename == initials assumption
-					if (middle != null) {
-						st.msi.personInitials.add(middle.getTextTrim());
-					}
-					st.msi.personEmail.add(contact.attributeValue("email"));
 				} else {
 					// no name of this contact, therefore it is an
 					// Organisation
-					st.msi.organizationName.add(organizationName);
-					st.msi.organizationAddress.add(addressToString(address));
-					st.msi.organizationEmail.add(contact
-							.attributeValue("email"));
-					// NCBI doesn't have roles or URIs
-					// Also, NCBI only allows one organisation per
-					// sample
-					st.msi.organizationRole.add("");
-					st.msi.organizationURI.add("");
+
+                    // NCBI doesn't have roles or URIs
+                    // Also, NCBI only allows one organisation per
+                    // sample
+					Organization org = new Organization(organizationName, addressToString(address), null, contact
+                            .attributeValue("email"), null);
+
+                    if (!st.msi.organizations.contains(org)){
+                        st.msi.organizations.add(org);
+                    }
 				}
 			}
 		}

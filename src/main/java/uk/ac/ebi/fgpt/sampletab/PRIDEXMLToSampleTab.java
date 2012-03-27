@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -102,15 +104,17 @@ public class PRIDEXMLToSampleTab {
             for (Element contact : XMLUtils.getChildrenByName(admin, "contact")){
                 String name = XMLUtils.getChildByName(contact, "name").getTextTrim();
                 String institution = XMLUtils.getChildByName(contact, "institution").getTextTrim();
-                if (!st.msi.organizationName.contains(institution))
-                    st.msi.organizationName.add(institution);
+                
+                Organization org = new Organization(institution, null, null, null, null);
+                if (!st.msi.organizations.contains(org)){
+                    st.msi.organizations.add(org);
+                }
+                
                 String[] splitnames = PRIDEutils.splitName(name);
-                //TODO check does not already exist?
-                st.msi.personFirstName.add(splitnames[0]);
-                st.msi.personInitials.add(splitnames[1]);
-                st.msi.personLastName.add(splitnames[2]);
-                st.msi.personEmail.add("");
-                st.msi.personRole.add("Submitter");
+                Person per = new Person(splitnames[2], splitnames[1], splitnames[0], "", "Submitter");
+                if (!st.msi.persons.contains(per)){
+                    st.msi.persons.add(per);
+                }
             }
             
             for (Element reference : XMLUtils.getChildrenByName(exp, "Reference")){

@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
@@ -126,7 +128,7 @@ public class SampleTabToLoad {
         }
 
         sampledata.scd.addNode(group);
-        log.debug("Added group node");
+        log.info("Added group node");
         // also need to accession the new node
 
         // Copy msi information on to the group node
@@ -137,40 +139,48 @@ public class SampleTabToLoad {
         group.addAttribute(new NamedAttribute("Submission Update Date", sampledata.msi.getSubmissionUpdateDateAsString()));
         group.addAttribute(new NamedAttribute("Submission Version", sampledata.msi.submissionVersion));
         group.addAttribute(new NamedAttribute("Submission Reference Layer", sampledata.msi.submissionReferenceLayer.toString()));
+        
+        log.info("Added group attributes");
+        
         // Have to do this for each group of tags (Person *, Database *, etc)
         // and complete each individual in each group before starting the next one
         // E.g. Person Last Name, Person First Name, Person Last Name, Person First Name
         // not E.g. Person Last Name, Person Last Name, Person First Name, Person First Name
-        for (int i = 0; i < sampledata.msi.personLastName.size(); i++) {
-            if (i < sampledata.msi.personInitials.size()) {
-                group.addAttribute(new NamedAttribute("Person First Name", sampledata.msi.personFirstName.get(i)));
+        for(Person per : sampledata.msi.persons){
+            group.addAttribute(new NamedAttribute("Person Last Name", per.getLastName()));
+            if (per.getInitials() != null && per.getInitials().trim().length() > 0){
+                group.addAttribute(new NamedAttribute("Person Initials", per.getInitials()));
             }
-            if (i < sampledata.msi.personInitials.size()) {
-                group.addAttribute(new NamedAttribute("Person Initials", sampledata.msi.personInitials.get(i)));
+            if (per.getFirstName() != null && per.getFirstName().trim().length() > 0){
+                group.addAttribute(new NamedAttribute("Person First Name", per.getFirstName()));
             }
-            group.addAttribute(new NamedAttribute("Person Last Name", sampledata.msi.personLastName.get(i)));
-            if (i < sampledata.msi.personEmail.size()) {
-                group.addAttribute(new NamedAttribute("Person Email", sampledata.msi.personEmail.get(i)));
+            if (per.getEmail() != null && per.getEmail().trim().length() > 0){
+                group.addAttribute(new NamedAttribute("Person Email", per.getEmail()));
             }
-            if (i < sampledata.msi.personRole.size()) {
-                group.addAttribute(new NamedAttribute("Person Role", sampledata.msi.personRole.get(i)));
-            }
-        }
-        for (int i = 0; i < sampledata.msi.organizationName.size(); i++) {
-            group.addAttribute(new NamedAttribute("Organization Name", sampledata.msi.organizationName.get(i)));
-            if (i < sampledata.msi.organizationURI.size()) {
-                group.addAttribute(new NamedAttribute("Organization Address", sampledata.msi.organizationAddress.get(i)));
-            }
-            if (i < sampledata.msi.organizationURI.size()) {
-                group.addAttribute(new NamedAttribute("Organization URI", sampledata.msi.organizationURI.get(i)));
-            }
-            if (i < sampledata.msi.organizationEmail.size()) {
-                group.addAttribute(new NamedAttribute("Organization Email", sampledata.msi.organizationEmail.get(i)));
-            }
-            if (i < sampledata.msi.organizationRole.size()) {
-                group.addAttribute(new NamedAttribute("Organization Role", sampledata.msi.organizationRole.get(i)));
+            if (per.getRole() != null && per.getRole().trim().length() > 0){
+                group.addAttribute(new NamedAttribute("Person Role", per.getRole()));
             }
         }
+        
+        log.info("Added persons");
+        
+        for(Organization org : sampledata.msi.organizations){
+            group.addAttribute(new NamedAttribute("Organization Name", org.getName()));
+            if (org.getAddress() != null && org.getAddress().trim().length() > 0){
+                group.addAttribute(new NamedAttribute("Organization Address", org.getAddress()));
+            }
+            if (org.getURI() != null && org.getURI().trim().length() > 0){
+                group.addAttribute(new NamedAttribute("Organization URI", org.getURI()));
+            }
+            if (org.getEmail() != null && org.getEmail().trim().length() > 0){
+                group.addAttribute(new NamedAttribute("Organization Email", org.getEmail()));
+            }
+            if (org.getRole() != null && org.getRole().trim().length() > 0){
+                group.addAttribute(new NamedAttribute("Organization Role", org.getRole()));
+            }
+        }
+        log.info("Added organizations");
+        
         for(Publication pub: sampledata.msi.publications){
             if (pub.getDOI() != null && pub.getDOI().trim().length() > 0){
                 group.addAttribute(new NamedAttribute("Publication DOI", pub.getDOI()));
@@ -179,6 +189,8 @@ public class SampleTabToLoad {
                 group.addAttribute(new NamedAttribute("Publication PubMed ID", pub.getPubMedID()));
             }
         }
+        log.info("Added publications");
+        
         for (TermSource ts : sampledata.msi.termSources) {
             if (ts.getName() != null && ts.getName().trim().length() > 0){
                 group.addAttribute(new NamedAttribute("Term Source Name", ts.getName()));
@@ -190,6 +202,8 @@ public class SampleTabToLoad {
                 }
             }
         }
+        log.info("Added termsources");
+        
         for (Database db : sampledata.msi.databases){
             if (db.getName() != null && db.getName().trim().length() > 0){
                 group.addAttribute(new NamedAttribute("Database Name", db.getName()));
@@ -197,6 +211,7 @@ public class SampleTabToLoad {
                 group.addAttribute(new NamedAttribute("Database ID", db.getID()));
             }
         }
+        log.info("Added databases");
 
         return sampledata;
     }
@@ -253,6 +268,8 @@ public class SampleTabToLoad {
                 return;
             }
 
+            log.info("completed initial conversion, re-accessioning...");
+            
             // get an accessioner and connect to database
             SampleTabAccessioner accessioner;
             try {

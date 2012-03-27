@@ -25,6 +25,8 @@ import uk.ac.ebi.arrayexpress2.magetab.parser.IDFParser;
 import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -96,20 +98,62 @@ public class MageTabToSampleTab {
                 st.msi.publications.add(pub);
             }
 		}
-
-		st.msi.personLastName = mt.IDF.personLastName;
-		st.msi.personInitials = mt.IDF.personMidInitials;
-		st.msi.personFirstName = mt.IDF.personFirstName;
-		st.msi.personEmail = mt.IDF.personEmail;
-		// TODO fix minor spec mismatch when there are multiple roles for the
-		// same person
-		st.msi.personRole = mt.IDF.personRoles;
+		
+        for (int i = 0; i < mt.IDF.personLastName.size() || 
+            i < mt.IDF.personMidInitials.size() || 
+            i < mt.IDF.personFirstName.size() || 
+            i < mt.IDF.personEmail.size() || 
+            i < mt.IDF.personRoles.size(); i++){
+            String lastname = null;
+            if (i < mt.IDF.personLastName.size()){
+                lastname = mt.IDF.personLastName.get(i);
+            }
+            String initials = null;
+            if (i < mt.IDF.personMidInitials.size()){
+                initials = mt.IDF.personMidInitials.get(i);
+            }
+            String firstname = null;
+            if (i < mt.IDF.personFirstName.size()){
+                firstname = mt.IDF.personFirstName.get(i);
+            }
+            String email = null;
+            if (i < mt.IDF.personEmail.size()){
+                email = mt.IDF.personEmail.get(i);
+            }
+            // TODO fix minor spec mismatch when there are multiple roles for the
+            // same person
+            String role = null;
+            if (i < mt.IDF.personRoles.size()){
+                role = mt.IDF.personRoles.get(i);
+            }
+            Person org = new Person(lastname, initials, firstname, email, role);
+            if (!st.msi.persons.contains(org)){
+                st.msi.persons.add(org);
+            }
+        }
 
 		// AE doesn't really have organisations, but does have affiliations
-		// TODO check and remove duplicates
-		st.msi.organizationName = mt.IDF.personAffiliation;
-		st.msi.organizationAddress = mt.IDF.personAddress;
-		// st.msi.organizationURI/Email/Role can't be mapped from ArrayExpress
+		// st.msi.organizationURI/Email can't be mapped from ArrayExpress
+        for (int i = 0; i < mt.IDF.personAffiliation.size() || 
+                            i < mt.IDF.personAddress.size() || 
+                            i < mt.IDF.personRoles.size(); i++){
+            String name = null;
+            if (i < mt.IDF.personAffiliation.size()){
+                name = mt.IDF.personAffiliation.get(i);
+            }
+            String uri = null;
+            if (i < mt.IDF.personAddress.size()){
+                uri = mt.IDF.personAddress.get(i);
+            }
+            String role = null;
+            if (i < mt.IDF.personRoles.size()){
+                role = mt.IDF.personRoles.get(i);
+            }
+            Organization org = new Organization(name, null, uri, null, role);
+            if (!st.msi.organizations.contains(org)){
+                st.msi.organizations.add(org);
+            }
+        }
 
 		st.msi.databases.add(new Database("ArrayExpress", 
 		        "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,

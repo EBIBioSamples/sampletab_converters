@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -72,18 +74,14 @@ public class DGVaXMLToSampleTab {
             st.msi.publications.add(new Publication(publication.attributeValue("NCBI_pmid"), null));
         }
         
-        st.msi.personFirstName.add(submission.attributeValue("first_name"));
-        st.msi.personInitials.add("");
-        st.msi.personLastName.add(submission.attributeValue("last_name"));
-        st.msi.personEmail.add(submission.attributeValue("email"));
-        st.msi.personRole.add("submitter");
-        st.msi.organizationName.add(submission.attributeValue("affiliation"));
-        st.msi.organizationAddress.add("");
-        st.msi.organizationEmail.add("");
-        st.msi.organizationURI.add("");
-        st.msi.organizationRole.add("submitter");
-        
-        st.msi.databases.add(new Database("DGVa", null, study.attributeValue("study_accession")));
+
+        st.msi.persons.add(new Person(submission.attributeValue("first_name"), 
+                null, submission.attributeValue("last_name"), 
+                submission.attributeValue("email"), "submitter"));
+        st.msi.organizations.add(new Organization(submission.attributeValue("affiliation"), 
+                null, null, null, "submitter"));
+        st.msi.databases.add(new Database("DGVa", 
+                null, study.attributeValue("study_accession")));
         
         
         //now actually add the samples

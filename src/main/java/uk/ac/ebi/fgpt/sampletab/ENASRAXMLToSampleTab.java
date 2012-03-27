@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -90,9 +91,6 @@ public class ENASRAXMLToSampleTab {
                 description = studyAbstract.getTextTrim();
             } else if (studyDescription != null) {
                 description = studyDescription.getTextTrim();
-                // } else if (pmids.size() > 0){
-                // log.warn("no STUDY_ABSTRACT or STUDY_DESCRIPTION, falling back to PubMedID");
-                // //TODO implement
             } else {
                 log.warn("no STUDY_ABSTRACT or STUDY_DESCRIPTION");
             }
@@ -129,22 +127,16 @@ public class ENASRAXMLToSampleTab {
         Element centerProjectName = XMLUtils.getChildByName(descriptor, "CENTER_PROJECT_NAME");
 
         if (centerName != null) {
-            st.msi.organizationName.add(centerName.getTextTrim());
+            st.msi.organizations.add(new Organization(centerName.getTextTrim(), null, null, null, "Submitter"));
         } else if (centerTitle != null) {
-            st.msi.organizationName.add(centerTitle.getTextTrim());
+            st.msi.organizations.add(new Organization(centerTitle.getTextTrim(), null, null, null, "Submitter"));
         } else if (study.attributeValue("center_name") != null) {
-            st.msi.organizationName.add(study.attributeValue("center_name"));
+            st.msi.organizations.add(new Organization(study.attributeValue("center_name"), null, null, null, "Submitter"));
         } else if (centerProjectName != null) {
-            st.msi.organizationName.add(centerProjectName.getTextTrim());
+            st.msi.organizations.add(new Organization(centerProjectName.getTextTrim(), null, null, null, "Submitter"));
         } else {
             throw new ParseException("Unable to find organization name.");
         }
-
-        st.msi.organizationRole.add("Submitter");
-        // ENA SRA does not make emails available
-        st.msi.organizationEmail.add("");
-        // ENA SRA does not make web sites available
-        st.msi.organizationURI.add("");
 
         //ENA SRA does not have explicit term sources
         //Put a couple on by default

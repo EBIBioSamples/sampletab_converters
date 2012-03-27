@@ -269,69 +269,9 @@ public class NCBISampleTabCombiner {
 
         SampleData sampleout = new SampleData();
         for (SampleData sampledata : indata) {
-
-            for (int i = 0; i < sampledata.msi.organizationName.size(); i++) {
-                if (!sampleout.msi.organizationName.contains(sampledata.msi.organizationName.get(i))) {
-
-                    sampleout.msi.organizationName.add(sampledata.msi.organizationName.get(i));
-
-                    if (i >= sampledata.msi.organizationAddress.size()) {
-                        sampleout.msi.organizationAddress.add("");
-                    } else {
-                        sampleout.msi.organizationAddress.add(sampledata.msi.organizationAddress.get(i));
-                    }
-
-                    if (i >= sampledata.msi.organizationEmail.size()) {
-                        sampleout.msi.organizationEmail.add("");
-                    } else {
-                        sampleout.msi.organizationEmail.add(sampledata.msi.organizationEmail.get(i));
-                    }
-
-                    if (i >= sampledata.msi.organizationRole.size()) {
-                        sampleout.msi.organizationRole.add("");
-                    } else {
-                        sampleout.msi.organizationRole.add(sampledata.msi.organizationRole.get(i));
-                    }
-
-                    if (i >= sampledata.msi.organizationURI.size()) {
-                        sampleout.msi.organizationURI.add("");
-                    } else {
-                        sampleout.msi.organizationURI.add(sampledata.msi.organizationURI.get(i));
-                    }
-                }
-            }
-
-            for (int i = 0; i < sampledata.msi.personLastName.size(); i++) {
-                // TODO this assumes no same surnamed people
-                if (!sampleout.msi.personLastName.contains(sampledata.msi.personLastName.get(i))) {
-
-                    sampleout.msi.personLastName.add(sampledata.msi.personLastName.get(i));
-
-                    if (i >= sampledata.msi.personInitials.size()) {
-                        sampleout.msi.personInitials.add("");
-                    } else {
-                        sampleout.msi.personInitials.add(sampledata.msi.personInitials.get(i));
-                    }
-
-                    if (i >= sampledata.msi.personFirstName.size()) {
-                        sampleout.msi.personFirstName.add("");
-                    } else {
-                        sampleout.msi.personFirstName.add(sampledata.msi.personFirstName.get(i));
-                    }
-
-                    if (i >= sampledata.msi.personEmail.size()) {
-                        sampleout.msi.personEmail.add("");
-                    } else {
-                        sampleout.msi.personEmail.add(sampledata.msi.personEmail.get(i));
-                    }
-
-                    if (i >= sampledata.msi.personRole.size()) {
-                        sampleout.msi.personRole.add("");
-                    } else {
-                        sampleout.msi.personRole.add(sampledata.msi.personRole.get(i));
-                    }
-                }
-            }
+            
+            sampleout.msi.persons.addAll(sampledata.msi.persons);
+            sampleout.msi.organizations.addAll(sampledata.msi.organizations);
             sampleout.msi.termSources.addAll(sampledata.msi.termSources);
             sampleout.msi.databases.addAll(sampledata.msi.databases);
             sampleout.msi.publications.addAll(sampledata.msi.publications);
