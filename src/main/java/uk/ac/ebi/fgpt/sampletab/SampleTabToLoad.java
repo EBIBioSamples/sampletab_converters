@@ -95,15 +95,15 @@ public class SampleTabToLoad {
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public SampleData convert(String sampleTabFilename) throws IOException, ParseException {
+    public SampleData convert(String sampleTabFilename) throws IOException, ParseException, ClassNotFoundException, SQLException {
         return convert(new File(sampleTabFilename));
     }
 
-    public SampleData convert(File sampleTabFile) throws IOException, ParseException {
+    public SampleData convert(File sampleTabFile) throws IOException, ParseException, ClassNotFoundException, SQLException {
         return convert(parser.parse(sampleTabFile));
     }
 
-    public SampleData convert(SampleData sampledata) throws ParseException {
+    public SampleData convert(SampleData sampledata) throws ParseException, SQLException, ClassNotFoundException {
 
         // this is stuff for loading to BioSD
         // not actually part of SampleTab spec
@@ -213,10 +213,19 @@ public class SampleTabToLoad {
         }
         log.info("Added databases");
 
+
+        log.info("completed initial conversion, re-accessioning...");
+        
+        // get an accessioner and connect to database
+        SampleTabAccessioner accessioner = new SampleTabAccessioner(hostname, port, database, username, password);
+
+        // assign accession to any created groups
+        sampledata = accessioner.convert(sampledata);
+        
         return sampledata;
     }
 
-    public void convert(SampleData st, Writer writer) throws IOException, ParseException {
+    public void convert(SampleData st, Writer writer) throws IOException, ParseException, ClassNotFoundException, SQLException {
         st = convert(st);
         getLog().debug("sampletab converted, preparing to output");
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
@@ -225,19 +234,19 @@ public class SampleTabToLoad {
         sampletabwriter.close();
     }
 
-    public void convert(SampleData st, String ouputfilename) throws IOException, ParseException {
+    public void convert(SampleData st, String ouputfilename) throws IOException, ParseException, ClassNotFoundException, SQLException {
         convert(st, new File(ouputfilename));
     }
 
-    public void convert(SampleData st, File outfile) throws IOException, ParseException {
+    public void convert(SampleData st, File outfile) throws IOException, ParseException, ClassNotFoundException, SQLException {
         convert(st, new FileWriter(outfile));
     }
 
-    public void convert(File infile, File outfile) throws IOException, ParseException {
+    public void convert(File infile, File outfile) throws IOException, ParseException, ClassNotFoundException, SQLException {
         convert(parser.parse(infile), outfile);
     }
 
-    public void convert(String infilename, String outfilename) throws IOException, ParseException {
+    public void convert(String infilename, String outfilename) throws IOException, ParseException, ClassNotFoundException, SQLException {
         convert(new File(infilename), new File(outfilename));
     }
 
@@ -266,25 +275,8 @@ public class SampleTabToLoad {
                 System.err.println("IOException converting " + inputFile);
                 e.printStackTrace();
                 return;
-            }
-
-            log.info("completed initial conversion, re-accessioning...");
-            
-            // get an accessioner and connect to database
-            SampleTabAccessioner accessioner;
-            try {
-                accessioner = new SampleTabAccessioner(hostname, port, database, username, password);
             } catch (ClassNotFoundException e) {
-                log.error("ClassNotFoundException connecting to " + hostname + ":" + port + "/" + database);
-                e.printStackTrace();
-                return;
-            }
-
-            // assign accession to any created groups
-            try {
-                st = accessioner.convert(st);
-            } catch (ParseException e) {
-                System.err.println("ParseException converting " + inputFile);
+                System.err.println("ClassNotFoundException converting " + inputFile);
                 e.printStackTrace();
                 return;
             } catch (SQLException e) {

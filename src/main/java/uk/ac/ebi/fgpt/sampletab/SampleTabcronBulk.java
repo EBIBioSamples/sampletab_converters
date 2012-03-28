@@ -146,6 +146,10 @@ public class SampleTabcronBulk {
                     log.error("Problem processing "+sampletab);
                     e.printStackTrace();
                     return;
+                } catch (SQLException e) {
+                    log.error("Problem processing "+sampletab);
+                    e.printStackTrace();
+                    return;
                 }
                 log.info("Finished " + target);
             }
