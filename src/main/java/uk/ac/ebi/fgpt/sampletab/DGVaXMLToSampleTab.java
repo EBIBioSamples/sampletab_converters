@@ -75,8 +75,8 @@ public class DGVaXMLToSampleTab {
         }
         
 
-        st.msi.persons.add(new Person(submission.attributeValue("first_name"), 
-                null, submission.attributeValue("last_name"), 
+        st.msi.persons.add(new Person(submission.attributeValue("last_name"), 
+                null, submission.attributeValue("first_name"), 
                 submission.attributeValue("email"), "submitter"));
         st.msi.organizations.add(new Organization(submission.attributeValue("affiliation"), 
                 null, null, null, "submitter"));
@@ -97,7 +97,7 @@ public class DGVaXMLToSampleTab {
             if (dgvasample.attributeValue("sex") != null) {
                 sampleNode.addAttribute(new SexAttribute(dgvasample.attributeValue("sex")));
             }
-            if (dgvasample.attributeValue("enthnicity") != null) { 
+            if (dgvasample.attributeValue("ethnicity") != null) { 
                 sampleNode.addAttribute(new CharacteristicAttribute("Ethnicity", dgvasample.attributeValue("ethnicity")));
             }
             if (dgvasample.attributeValue("NCBI_tax_id") != null) {
@@ -108,17 +108,21 @@ public class DGVaXMLToSampleTab {
                 sampleNode.addAttribute(new CommentAttribute("Source", XMLUtils.getChildByName(dgvasample, "SOURCE").getTextTrim()));
             }
             //add any other mappings here
+            //now the sample node can be added to scd
             st.scd.addNode(sampleNode);
         }
 
+        //now add samples, deriving from subjects as appropriate
         for (Element dgvasample : XMLUtils.getChildrenByName(submission, "SAMPLE")){
             SampleNode sampleNode = new SampleNode();
             sampleNode.setNodeName(dgvasample.attributeValue("sample_id"));
             log.info("Adding "+dgvasample.attributeValue("sample_id"));
             
+            //derive this sample from its parent
             String parentName = "Subject "+dgvasample.attributeValue("subject_id");
             SampleNode parentNode = st.scd.getNode(parentName, SampleNode.class);
             assert parentNode != null: parentName;
+            //make sure to do both of these!
             sampleNode.addParentNode(parentNode);
             parentNode.addChildNode(sampleNode);
             
@@ -128,7 +132,7 @@ public class DGVaXMLToSampleTab {
             if (dgvasample.attributeValue("sex") != null) {
                 sampleNode.addAttribute(new SexAttribute(dgvasample.attributeValue("sex")));
             }
-            if (dgvasample.attributeValue("enthnicity") != null) { 
+            if (dgvasample.attributeValue("ethnicity") != null) { 
                 sampleNode.addAttribute(new CharacteristicAttribute("Ethnicity", dgvasample.attributeValue("ethnicity")));
             }
             if (dgvasample.attributeValue("strain") != null) { 
@@ -150,6 +154,7 @@ public class DGVaXMLToSampleTab {
                 sampleNode.addAttribute(new CommentAttribute("Source", XMLUtils.getChildByName(dgvasample, "SOURCE").getTextTrim()));
             }
             //add any other mappings here
+            //now the sample node can be added to scd
             st.scd.addNode(sampleNode);
         }
         
@@ -183,7 +188,7 @@ public class DGVaXMLToSampleTab {
             if (sampleset.attributeValue("sex") != null) {
                 group.addAttribute(new SexAttribute(sampleset.attributeValue("sex")));
             }
-            if (sampleset.attributeValue("enthnicity") != null) { 
+            if (sampleset.attributeValue("ethnicity") != null) { 
                 group.addAttribute(new CharacteristicAttribute("Ethnicity", sampleset.attributeValue("ethnicity")));
             }
             if (sampleset.attributeValue("NCBI_tax_id") != null) {

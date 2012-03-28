@@ -3,9 +3,11 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -35,22 +37,34 @@ public class SampleTabcronBulk {
     private boolean threaded = false;
 
     @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
-    private String hostname;
+    private String hostname = "mysql-ae-autosubs-test.ebi.ac.uk";
 
     @Option(name = "-t", aliases={"--port"}, usage = "server port")
-    private int port = 3306;
+    private int port = 4340;
 
     @Option(name = "-d", aliases={"--database"}, usage = "server database")
-    private String database;
+    private String database = "autosubs_test";
 
     @Option(name = "-u", aliases={"--username"}, usage = "server username")
-    private String username;
+    private String username = "admin";
 
     @Option(name = "-p", aliases={"--password"}, usage = "server password")
-    private String password;
+    private String password = "edsK6BV6";
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
+    public SampleTabcronBulk(){
+        
+    }
+    
+    public SampleTabcronBulk(String hostname, int port, String database, String username, String password){
+        this.hostname = hostname;
+        this.port = port;
+        this.database = database;
+        this.username = username;
+        this.password = password;
+    }
+    
     public void process(File subdir, File scriptdir){
         Runnable t = new DoProcessFile(subdir, scriptdir);
         t.run();
@@ -62,7 +76,8 @@ public class SampleTabcronBulk {
         private File sampletabpre;
         private File sampletab;
         private File sampletabtoload;
-        private File age;
+        private File agedir;
+        private File agefile;
         
         public DoProcessFile(File subdir, File scriptdir){
             this.subdir = subdir;
@@ -71,18 +86,11 @@ public class SampleTabcronBulk {
             sampletabpre = new File(subdir, "sampletab.pre.txt");
             sampletab = new File(subdir, "sampletab.txt");
             sampletabtoload = new File(subdir, "sampletab.toload.txt");
-            age = new File(subdir, "age");
+            agedir = new File(subdir, "age");
+            agefile = new File(agedir, subdir.getName()+".age.txt");
         }
 
         public void run() {
-
-            // TODO hardcoding bad
-            String accessionServer = "mysql-ae-autosubs-test.ebi.ac.uk";
-            int accessionPort = 4340;
-            String accessionDB = "autosubs_test";
-            String accessionUser = "admin";
-            String accessionPassword = "edsK6BV6";
-            
             
             File target;
             
@@ -93,8 +101,8 @@ public class SampleTabcronBulk {
                 log.info("Processing " + target);
                 
                 try {
-                    SampleTabAccessioner c = new SampleTabAccessioner(accessionServer, 
-                            accessionPort, accessionDB, accessionUser, accessionPassword);
+                    SampleTabAccessioner c = new SampleTabAccessioner(hostname, 
+                            port, database, username, password);
                     c.convert(sampletabpre, sampletab);
                 } catch (ClassNotFoundException e) {
                     log.error("Problem processing "+sampletabpre);
@@ -127,8 +135,8 @@ public class SampleTabcronBulk {
 
                 SampleTabToLoad c;
                 try {
-                    c = new SampleTabToLoad(accessionServer, 
-                            accessionPort, accessionDB, accessionUser, accessionPassword);
+                    c = new SampleTabToLoad(hostname, 
+                            port, database, username, password);
                     c.convert(sampletab, sampletabtoload);
                 } catch (ClassNotFoundException e) {
                     log.error("Problem processing "+sampletab);
@@ -155,7 +163,7 @@ public class SampleTabcronBulk {
             }
 
             // convert to age
-            target = age;
+            target = agefile;
             if (!target.exists()) {
                 //TODO check modification time
                 log.info("Processing " + target);
@@ -164,10 +172,13 @@ public class SampleTabcronBulk {
                     log.error("Unable to find " + script);
                     return;
                 }
-                String bashcom = script + " -o " + age + " " + sampletabtoload;
-                File logfile = new File(subdir, "age.log");
+                String bashcom = script + " -o " + agedir + " " + sampletabtoload;
+                
+                SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+                File logfile = new File(subdir, "age_"+simpledateformat.format(new Date())+".log");
+                
                 if (!ProcessUtils.doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + age);
+                    log.error("Problem producing " + agedir);
                     log.error("See logfile " + logfile);
                     if (target.exists()){
                         for (File todel: target.listFiles()){
@@ -180,6 +191,8 @@ public class SampleTabcronBulk {
                 }
                 log.info("Finished " + target);
             }
+            
+            //TODO load
             
         }
         

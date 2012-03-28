@@ -39,6 +39,21 @@ public class PRIDEcronBulk {
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
+
+    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
+    private String hostname = "mysql-ae-autosubs-test.ebi.ac.uk";
+
+    @Option(name = "-t", aliases={"--port"}, usage = "server port")
+    private int port = 4340;
+
+    @Option(name = "-d", aliases={"--database"}, usage = "server database")
+    private String database = "autosubs_test";
+
+    @Option(name = "-u", aliases={"--username"}, usage = "server username")
+    private String username = "admin";
+
+    @Option(name = "-p", aliases={"--password"}, usage = "server password")
+    private String password = "edsK6BV6";
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -56,7 +71,6 @@ public class PRIDEcronBulk {
         public void run() {
             File xml = new File(subdir, "trimmed.xml");
             File sampletabpre = new File(subdir, "sampletab.pre.txt");
-            
             
             if (!xml.exists()) {
                 log.warn("xml does not exist ("+xml+")");
@@ -85,32 +99,9 @@ public class PRIDEcronBulk {
                     e.printStackTrace();
                     return;
                 } 
-                
-//                File script = new File(scriptdir, "PRIDEXMLToSampleTab.sh");
-//                if (!script.exists()) {
-//                    log.error("Unable to find " + script);
-//                    return;
-//                }
-//                String bashcom = script 
-//                    + " -i " + xml 
-//                    + " -o " + sampletabpre
-//                    + " -p " + projectsFile;
-//                log.info(bashcom);
-//                File logfile = new File(subdir, "sampletab.pre.txt.log");
-//                if (!doCommand(bashcom, logfile)) {
-//                    log.error("Problem producing " + target);
-//                    log.error("See logfile " + logfile);
-//                    if (target.exists()){
-//                        target.delete();
-//                        log.error("cleaning partly produced file");
-//                    }
-//                    return;
-//                }
             }
             
-            if (sampletabpre.exists()){
-                new SampleTabcronBulk().process(subdir, scriptdir);
-            }
+            new SampleTabcronBulk(hostname, port, database, username, password).process(subdir, scriptdir);
         }
         
     }

@@ -30,6 +30,21 @@ public class IMSRTabcronBulk {
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
+
+    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
+    private String hostname = "mysql-ae-autosubs-test.ebi.ac.uk";
+
+    @Option(name = "-t", aliases={"--port"}, usage = "server port")
+    private int port = 4340;
+
+    @Option(name = "-d", aliases={"--database"}, usage = "server database")
+    private String database = "autosubs_test";
+
+    @Option(name = "-u", aliases={"--username"}, usage = "server username")
+    private String username = "admin";
+
+    @Option(name = "-p", aliases={"--password"}, usage = "server password")
+    private String password = "edsK6BV6";
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -87,7 +102,7 @@ public class IMSRTabcronBulk {
                 
             }
 
-            new SampleTabcronBulk().process(subdir, scriptdir);
+            new SampleTabcronBulk(hostname, port, database, username, password).process(subdir, scriptdir);
         }
         
     }
