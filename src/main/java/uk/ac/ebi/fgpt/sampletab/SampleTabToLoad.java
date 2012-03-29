@@ -73,6 +73,13 @@ public class SampleTabToLoad {
 
     private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
 
+
+    // logging
+    private Logger log = LoggerFactory.getLogger(getClass());
+
+    private int exitcode = 0;
+    
+    
     public SampleTabToLoad() {
         // do nothing
     }
@@ -91,9 +98,6 @@ public class SampleTabToLoad {
     public Logger getLog() {
         return log;
     }
-
-    // logging
-    private Logger log = LoggerFactory.getLogger(getClass());
 
     public SampleData convert(String sampleTabFilename) throws IOException, ParseException, ClassNotFoundException, SQLException {
         return convert(new File(sampleTabFilename));
@@ -270,18 +274,22 @@ public class SampleTabToLoad {
             } catch (ParseException e) {
                 System.err.println("ParseException converting " + inputFile);
                 e.printStackTrace();
+                exitcode = 1;
                 return;
             } catch (IOException e) {
                 System.err.println("IOException converting " + inputFile);
                 e.printStackTrace();
+                exitcode = 2;
                 return;
             } catch (ClassNotFoundException e) {
                 System.err.println("ClassNotFoundException converting " + inputFile);
                 e.printStackTrace();
+                exitcode = 3;
                 return;
             } catch (SQLException e) {
                 System.err.println("SQLException converting " + inputFile);
                 e.printStackTrace();
+                exitcode = 4;
                 return;
             }
 
@@ -292,6 +300,7 @@ public class SampleTabToLoad {
             } catch (IOException e) {
                 System.out.println("Error opening " + outputFile);
                 e.printStackTrace();
+                exitcode = 5;
                 return;
             }
 
@@ -301,6 +310,7 @@ public class SampleTabToLoad {
             } catch (IOException e) {
                 System.out.println("Error writing " + outputFile);
                 e.printStackTrace();
+                exitcode = 6;
                 return;
             }
 
@@ -365,8 +375,10 @@ public class SampleTabToLoad {
             } catch (InterruptedException e) {
                 log.error("Interupted awaiting thread pool termination");
                 e.printStackTrace();
+                exitcode = 7;
             }
         }
         log.info("Finished processing");
+        System.exit(exitcode);
     }
 }
