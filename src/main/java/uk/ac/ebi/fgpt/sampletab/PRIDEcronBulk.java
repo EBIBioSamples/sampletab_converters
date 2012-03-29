@@ -26,7 +26,7 @@ public class PRIDEcronBulk {
     private boolean help;
 
     //TODO make required
-    @Option(name = "-i", aliases={"--input"}, usage = "input filename")
+    @Option(name = "-i", aliases={"--input"}, usage = "input directory")
     private String inputFilename;
 
     //TODO make required
@@ -34,7 +34,7 @@ public class PRIDEcronBulk {
     private String scriptDirname;
 
     //TODO make required
-    @Option(name = "-p", aliases={"--projects"}, usage = "projects filename")
+    @Option(name = "-j", aliases={"--projects"}, usage = "projects filename")
     private String projectsFilename;
     
     @Option(name = "--threaded", usage = "use multiple threads?")
