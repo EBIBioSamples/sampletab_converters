@@ -89,7 +89,7 @@ public class DGVaXMLToSampleTab {
         for (Element dgvasample : XMLUtils.getChildrenByName(submission, "SUBJECT")){
             SampleNode sampleNode = new SampleNode();
             sampleNode.setNodeName("Subject "+dgvasample.attributeValue("subject_id"));
-            log.info("Adding Subject "+dgvasample.attributeValue("subject_id"));
+            log.debug("Adding Subject "+dgvasample.attributeValue("subject_id"));
             
             if (dgvasample.attributeValue("sample_type") != null) {
                 sampleNode.addAttribute(new MaterialAttribute(dgvasample.attributeValue("sample_type")));
@@ -116,7 +116,7 @@ public class DGVaXMLToSampleTab {
         for (Element dgvasample : XMLUtils.getChildrenByName(submission, "SAMPLE")){
             SampleNode sampleNode = new SampleNode();
             sampleNode.setNodeName(dgvasample.attributeValue("sample_id"));
-            log.info("Adding "+dgvasample.attributeValue("sample_id"));
+            log.debug("Adding "+dgvasample.attributeValue("sample_id"));
             
             //derive this sample from its parent
             String parentName = "Subject "+dgvasample.attributeValue("subject_id");
