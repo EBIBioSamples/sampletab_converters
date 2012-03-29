@@ -129,9 +129,6 @@ public class Corrector {
                     if (cha.type.toLowerCase().equals("age")) {
                         cha.type = getInitialCapitals(cha.type);
                         //TODO some simple regex expansions, e.g. 5W to 5 weeks
-                    } else if (cha.type.toLowerCase().equals("cell line") 
-                            || cha.type.toLowerCase().equals("cellline")) {
-                        cha.type = "Cell Line";
                     } else if (cha.type.toLowerCase().equals("developmental stage")
                             || cha.type.toLowerCase().equals("developmentalstage")) {
                         cha.type = "Developmental Stage";
@@ -184,6 +181,7 @@ public class Corrector {
                     } else if (cha.type.toLowerCase().equals("strain")
                             || cha.type.toLowerCase().equals("strainorline")
                             || cha.type.toLowerCase().equals("cell line")
+                            || cha.type.toLowerCase().equals("cellline")
                             || cha.type.toLowerCase().equals("arrayexpress-strainorline")) {
                         //Leave alone cultivate and ecotype
                         cha.type = "StrainOrLine";
