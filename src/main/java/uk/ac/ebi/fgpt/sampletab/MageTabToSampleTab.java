@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,7 @@ import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SDRFNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SourceNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.attribute.CharacteristicsAttribute;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
 import uk.ac.ebi.arrayexpress2.magetab.parser.IDFParser;
 import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
@@ -36,7 +38,8 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttrib
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class MageTabToSampleTab {
-	private final MAGETABParser<MAGETABInvestigation> parser = new MAGETABParser<MAGETABInvestigation>();
+	private final MAGETABParser<MAGETABInvestigation> parser;
+    private final List<ErrorItem> errorItems;
 
 	private SimpleDateFormat magetabdateformat = new SimpleDateFormat(
 			"yyyy-MM-dd");
@@ -45,6 +48,16 @@ public class MageTabToSampleTab {
 	public Logger log = LoggerFactory.getLogger(getClass());
 
 	public MageTabToSampleTab() {
+	    parser = new MAGETABParser<MAGETABInvestigation>();
+        errorItems = new ArrayList<ErrorItem>();
+
+        parser.addErrorItemListener(new ErrorItemListener() {
+
+            public void errorOccurred(ErrorItem item) {
+                errorItems.add(item);
+            }
+        });
+	    
 	}
 
 	public SampleData convert(String idfFilename) throws IOException, ParseException {
@@ -62,8 +75,17 @@ public class MageTabToSampleTab {
         if (idf.sdrfFile.size() != 1){
             throw new ParseException("Multiple sdrf file references");
         }
-        
-		return convert(parser.parse(idfFile));
+
+        errorItems.clear();
+        MAGETABInvestigation mt = parser.parse(idfFile);
+        if (!errorItems.isEmpty()) {
+            // there are error items, print them and fail
+            for (ErrorItem error : errorItems){
+                log.error(error.toString());
+            }
+            throw new ParseException();
+        }
+		return convert(mt);
 	}
 
 	public SampleData convert(MAGETABInvestigation mt)
@@ -312,7 +334,7 @@ public class MageTabToSampleTab {
         //due to a bug in limpopo, this can cause limpopo to hang indefinately.
         //therefore, first parse the idf only to see if this is something to avoid.
 
-        log.info("Checking IDF");
+        log.info("Parsing IDF");
         IDFParser idfparser = new IDFParser();
         IDF idf = null;
         idf = idfparser.parse(idfFile);
@@ -322,7 +344,16 @@ public class MageTabToSampleTab {
             throw new ParseException();
         }
         
+        errorItems.clear();
 		MAGETABInvestigation mt = parser.parse(idfFile);
+        if (!errorItems.isEmpty()) {
+            // there are error items, print them and fail
+            for (ErrorItem error : errorItems){
+                log.error(error.toString());
+            }
+            throw new ParseException();
+        }
+		
 		convert(mt, writer);
 	}
 
