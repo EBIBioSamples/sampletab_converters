@@ -267,7 +267,16 @@ public class SampleTabToLoad {
             log.debug("Processing " + inputFile);
 
             SampleData st = null;
-            SampleTabToLoad toloader = new SampleTabToLoad();
+            SampleTabToLoad toloader;
+            try {
+                toloader = new SampleTabToLoad(hostname, port, database, username, password);
+            } catch (ClassNotFoundException e) {
+                System.err.println("ClassNotFoundException converting " + inputFile);
+                e.printStackTrace();
+                exitcode = 1;
+                return;
+            }
+            
             // do initial parsing and conversion
             try {
                 st = toloader.convert(inputFile);
