@@ -7,6 +7,9 @@
 base=${0%/*}/..;
 current=`pwd`;
 
+#ensure files are group writable
+umask 002
+
 #If a java environment variable is not provided, then use a default
 if [ -z $java ]
 then
