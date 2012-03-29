@@ -174,9 +174,22 @@ public class MageTabToSampleTab {
             if (i < mt.IDF.termSourceVersion.size()){
                 version = mt.IDF.termSourceVersion.get(i);
             }
+            
             TermSource ts = new TermSource(name, uri, version);
-            if (!st.msi.termSources.contains(ts)){
-                st.msi.termSources.add(ts);
+            if (ts.getName() != null){
+                if (!st.msi.termSources.contains(ts)){
+                    //also check if the name is a duplicate
+                    boolean dup = false;
+                    for (TermSource tstest: st.msi.termSources){
+                        if (tstest.getName().equals(ts.getName())){
+                            dup = true;
+                        }
+                    }
+                    if (!dup){
+                        //TODO check if one or other has a null version and update accordingly
+                        st.msi.termSources.add(ts);
+                    }
+                }
             }
         }
 
