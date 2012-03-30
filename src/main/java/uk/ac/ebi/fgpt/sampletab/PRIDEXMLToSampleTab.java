@@ -95,7 +95,7 @@ public class PRIDEXMLToSampleTab {
             Element sampledescription = XMLUtils.getChildByName(admin, "sampleDescription");
             String accession = XMLUtils.getChildByName(exp, "ExperimentAccession").getTextTrim();
             
-            if (st.msi.submissionTitle == null)
+            if (st.msi.submissionTitle == null || st.msi.submissionTitle.length() == 0)
                 st.msi.submissionTitle = XMLUtils.getChildByName(exp, "Title").getTextTrim();
             //PRIDE dont have submission description
             //actually maybe it does as a CVparam...
@@ -111,7 +111,7 @@ public class PRIDEXMLToSampleTab {
                 }
                 
                 String[] splitnames = PRIDEutils.splitName(name);
-                Person per = new Person(splitnames[2], splitnames[1], splitnames[0], "", "Submitter");
+                Person per = new Person(splitnames[2], splitnames[1], splitnames[0], null, "Submitter");
                 if (!st.msi.persons.contains(per)){
                     st.msi.persons.add(per);
                 }
@@ -229,8 +229,6 @@ public class PRIDEXMLToSampleTab {
                 e.printStackTrace();
                 continue;
             }
-            
-            
             
         }
         //these can only be calculated after all other steps
