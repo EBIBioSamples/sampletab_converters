@@ -147,6 +147,10 @@ public class ENASRAXMLToSampleTab {
 
         // start on the samples
         Set<String> sampleSRAAccessions = ENAUtils.getSamplesForStudy(root);
+        if (sampleSRAAccessions.size()== 0){
+            throw new ParseException("Zero samples found.");
+        }
+        
         File indir = infile.getParentFile();
         for (String sampleSRAAccession : sampleSRAAccessions) {
             File sampleFile = new File(indir, sampleSRAAccession + ".xml");

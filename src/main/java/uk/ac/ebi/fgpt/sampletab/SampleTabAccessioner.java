@@ -98,6 +98,7 @@ public class SampleTabAccessioner {
         //currently, it will mix and match freely if different params are used in the same VM
         Connection connect = connectionQueue.poll();
         if (connect == null) {
+            log.info("Creating new connection");
             String connectionStr = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
             connect = DriverManager.getConnection(connectionStr, this.username, this.password);
         }
@@ -105,9 +106,16 @@ public class SampleTabAccessioner {
     }
 
     private void returnConnection(Connection connect) {
-        if (!connectionQueue.contains(connect)) {
-            connectionQueue.add(connect);
+        try {
+            connect.close();
+        } catch (SQLException e) {
+            //do nothing
         }
+        return;
+//        if (!connectionQueue.contains(connect)) {
+//            log.info("Returning connection");
+//            connectionQueue.add(connect);
+//        }
     }
 
     public Logger getLog() {
