@@ -2,12 +2,14 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -37,41 +39,76 @@ public class SampleTabcronBulk {
     private boolean threaded = false;
 
     @Option(name = "-n", aliases={"--hostname"}, usage = "MySQL server hostname")
-    private String hostname = "mysql-ae-autosubs-test.ebi.ac.uk";
+    private String hostname;
 
     @Option(name = "-t", aliases={"--port"}, usage = "MySQL server port")
-    private int port = 4340;
+    private Integer port = null;
 
     @Option(name = "-d", aliases={"--database"}, usage = "MySQL server database")
-    private String database = "autosubs_test";
+    private String database = null;
 
     @Option(name = "-u", aliases={"--username"}, usage = "MySQL server username")
-    private String username = "admin";
+    private String username = null;
 
     @Option(name = "-p", aliases={"--password"}, usage = "MySQL server password")
-    private String password = "edsK6BV6";
+    private String password  = null;
 
-    @Option(name = "-a", aliases={"--agename"}, usage = "Age server hostname")
-    private String agename = "wwwdev.ebi.ac.uk/biosamples";
+    @Option(name = "--agename", usage = "Age server hostname")
+    private String agename = null;
 
-    @Option(name = "-u", aliases={"--ageusername"}, usage = "Age server username")
-    private String ageusername = "faulcon";
+    @Option(name = "--ageusername", usage = "Age server username")
+    private String ageusername = null;
 
-    @Option(name = "-p", aliases={"--agepassword"}, usage = "Age server password")
-    private String agepassword = "faulcon";
+    @Option(name = "--agepassword", usage = "Age server password")
+    private String agepassword = null;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
+    
     public SampleTabcronBulk(){
-        
+        Properties mysqlProperties = new Properties();
+        try {
+            InputStream is = SampleTabcronBulk.class.getResourceAsStream("/mysql.properties");
+            mysqlProperties.load(is);
+        } catch (IOException e) {
+            log.error("Unable to read resource mysql.properties");
+            e.printStackTrace();
+        }
+        Properties ageProperties = new Properties();
+        try {
+            ageProperties.load(SampleTabcronBulk.class.getResourceAsStream("/age.properties"));
+        } catch (IOException e) {
+            log.error("Unable to read resource age.properties");
+            e.printStackTrace();
+        }
+        this.hostname = mysqlProperties.getProperty("hostname");
+        this.port = new Integer(mysqlProperties.getProperty("port"));
+        this.database = mysqlProperties.getProperty("database");
+        this.username = mysqlProperties.getProperty("username");
+        this.password = mysqlProperties.getProperty("password");
+        this.agename = ageProperties.getProperty("hostname");
+        this.ageusername = ageProperties.getProperty("username");
+        this.agepassword = ageProperties.getProperty("password");
     }
     
-    public SampleTabcronBulk(String hostname, int port, String database, String username, String password){
-        this.hostname = hostname;
-        this.port = port;
-        this.database = database;
-        this.username = username;
-        this.password = password;
+    public SampleTabcronBulk(String hostname, Integer port, String database, String username, String password, String agename, String ageusername, String agepassword){
+        this();
+        if (hostname != null)
+            this.hostname = hostname;
+        if (port != null)
+            this.port = port;
+        if (database != null)
+            this.database = database;
+        if (username != null)
+            this.username = username;
+        if (password != null)
+            this.password = password;
+        if (agename != null)
+            this.agename = agename;
+        if (ageusername != null)
+            this.ageusername = ageusername;
+        if (agepassword != null)
+            this.agepassword = agepassword;
     }
     
     public void process(File subdir, File scriptdir){
@@ -216,7 +253,8 @@ public class SampleTabcronBulk {
                     log.error("Unable to find " + script);
                     return;
                 }
-                String bashcom = script + "-s -m -i -e -o "+loaddir+" -u "+ageusername+" -p "+agepassword+" -h \""+agename+"\" " +agedir;
+                String bashcom = script + " -s -m -i -e -o \""+loaddir+"\" -h \""+agename+"\" -u "+ageusername+" -p "+agepassword+" \""+agedir+"\"";
+                log.info(bashcom);
                 SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyyMMdd_HHmmss");
                 File logfile = new File(subdir, "load_"+simpledateformat.format(new Date())+".log");
                 

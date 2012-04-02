@@ -30,20 +30,29 @@ public class MageTabcronBulk {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
 
-    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
-    private String hostname = "mysql-ae-autosubs-test.ebi.ac.uk";
+    @Option(name = "-n", aliases={"--hostname"}, usage = "MySQL server hostname")
+    private String hostname = null;
 
-    @Option(name = "-t", aliases={"--port"}, usage = "server port")
-    private int port = 4340;
+    @Option(name = "-t", aliases={"--port"}, usage = "MySQL server port")
+    private Integer port = null;
 
-    @Option(name = "-d", aliases={"--database"}, usage = "server database")
-    private String database = "autosubs_test";
+    @Option(name = "-d", aliases={"--database"}, usage = "MySQL server database")
+    private String database = null;
 
-    @Option(name = "-u", aliases={"--username"}, usage = "server username")
-    private String username = "admin";
+    @Option(name = "-u", aliases={"--username"}, usage = "MySQL server username")
+    private String username = null;
 
-    @Option(name = "-p", aliases={"--password"}, usage = "server password")
-    private String password = "edsK6BV6";
+    @Option(name = "-p", aliases={"--password"}, usage = "MySQL server password")
+    private String password = null;
+
+    @Option(name = "--agename", usage = "Age server hostname")
+    private String agename = null;
+
+    @Option(name = "--ageusername", usage = "Age server username")
+    private String ageusername = null;
+
+    @Option(name = "--agepassword", usage = "Age server password")
+    private String agepassword = null;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -175,7 +184,7 @@ public class MageTabcronBulk {
                 }
             }
 
-            new SampleTabcronBulk(hostname, port, database, username, password).process(subdir, scriptdir);
+            new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword).process(subdir, scriptdir);
         }
         
     }
