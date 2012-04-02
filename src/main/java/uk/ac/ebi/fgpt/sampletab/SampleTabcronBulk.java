@@ -130,7 +130,7 @@ public class SampleTabcronBulk {
             // preprocess to load
             target = sampletabtoload;
             if (!target.exists()
-                    || sampletabtoload.lastModified() < sampletabtoload.lastModified()) {
+                    || sampletabtoload.lastModified() < sampletab.lastModified()) {
                 log.info("Processing " + target);
 
                 SampleTabToLoad c;
