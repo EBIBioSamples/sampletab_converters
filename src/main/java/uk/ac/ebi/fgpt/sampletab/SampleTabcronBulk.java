@@ -143,13 +143,10 @@ public class SampleTabcronBulk {
 
         public void run() {
             
-            File target;
-            
             // accession sampletab.pre.txt to sampletab.txt
-            target = sampletab;
-            if (!target.exists()
+            if (!sampletab.exists()
                     || sampletab.lastModified() < sampletabpre.lastModified()) {
-                log.info("Processing " + target);
+                log.info("Processing " + sampletab);
                 
                 try {
                     SampleTabAccessioner c = new SampleTabAccessioner(hostname, 
@@ -179,10 +176,9 @@ public class SampleTabcronBulk {
             }
 
             // preprocess to load
-            target = sampletabtoload;
-            if (!target.exists()
+            if (!sampletabtoload.exists()
                     || sampletabtoload.lastModified() < sampletab.lastModified()) {
-                log.info("Processing " + target);
+                log.info("Processing " + sampletabtoload);
 
                 SampleTabToLoad c;
                 try {
@@ -210,13 +206,13 @@ public class SampleTabcronBulk {
                     e.printStackTrace();
                     return;
                 }
-                log.info("Finished " + target);
+                log.info("Finished " + sampletabtoload);
             }
 
             // convert to age
             if (!agefile.exists()
                     || agefile.lastModified() < sampletabtoload.lastModified()) {
-                log.info("Processing " + target);
+                log.info("Processing " + agefile);
                 File script = new File(scriptdir, "SampleTab-to-AGETAB.sh");
                 if (!script.exists()) {
                     log.error("Unable to find " + script);
@@ -231,15 +227,15 @@ public class SampleTabcronBulk {
                     log.error("Problem producing " + agefile);
                     log.error("See logfile " + logfile);
                     if (agedir.exists()){
-                        for (File todel: target.listFiles()){
+                        for (File todel: agedir.listFiles()){
                             todel.delete();
                         }
-                        target.delete();
+                        agedir.delete();
                         log.error("cleaning partly produced file");
                     }
                     return;
                 }
-                log.info("Finished " + target);
+                log.info("Finished " + agefile);
             }
             
             //TODO load
@@ -247,7 +243,7 @@ public class SampleTabcronBulk {
             if (!loadfile.exists()
                     || loadfile.lastModified() < agefile.lastModified()) {
                 //TODO check modification time
-                log.info("Processing " + target);
+                log.info("Processing " + loadfile);
                 File script = new File(scriptdir, "AgeTab-Loader.sh");
                 if (!script.exists()) {
                     log.error("Unable to find " + script);
@@ -263,7 +259,7 @@ public class SampleTabcronBulk {
                     log.error("See logfile " + logfile);
                     return;
                 }
-                log.info("Finished " + target);
+                log.info("Finished " + loadfile);
             }
         }
         
