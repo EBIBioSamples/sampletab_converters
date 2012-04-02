@@ -148,7 +148,7 @@ public class PRIDEcronBulk {
             return;
         }
         
-        log.info("Parsing projects file");
+        log.info("Parsing projects file "+projectsFilename);
         
         File projectsFile = new File(projectsFilename);
 

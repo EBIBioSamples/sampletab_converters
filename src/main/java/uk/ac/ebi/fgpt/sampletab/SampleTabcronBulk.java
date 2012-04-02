@@ -36,20 +36,29 @@ public class SampleTabcronBulk {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
 
-    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
+    @Option(name = "-n", aliases={"--hostname"}, usage = "MySQL server hostname")
     private String hostname = "mysql-ae-autosubs-test.ebi.ac.uk";
 
-    @Option(name = "-t", aliases={"--port"}, usage = "server port")
+    @Option(name = "-t", aliases={"--port"}, usage = "MySQL server port")
     private int port = 4340;
 
-    @Option(name = "-d", aliases={"--database"}, usage = "server database")
+    @Option(name = "-d", aliases={"--database"}, usage = "MySQL server database")
     private String database = "autosubs_test";
 
-    @Option(name = "-u", aliases={"--username"}, usage = "server username")
+    @Option(name = "-u", aliases={"--username"}, usage = "MySQL server username")
     private String username = "admin";
 
-    @Option(name = "-p", aliases={"--password"}, usage = "server password")
+    @Option(name = "-p", aliases={"--password"}, usage = "MySQL server password")
     private String password = "edsK6BV6";
+
+    @Option(name = "-a", aliases={"--agename"}, usage = "Age server hostname")
+    private String agename = "wwwdev.ebi.ac.uk/biosamples";
+
+    @Option(name = "-u", aliases={"--ageusername"}, usage = "Age server username")
+    private String ageusername = "faulcon";
+
+    @Option(name = "-p", aliases={"--agepassword"}, usage = "Age server password")
+    private String agepassword = "faulcon";
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -78,6 +87,9 @@ public class SampleTabcronBulk {
         private File sampletabtoload;
         private File agedir;
         private File agefile;
+        private File loaddir;
+        private File loadfile;
+        
         
         public DoProcessFile(File subdir, File scriptdir){
             this.subdir = subdir;
@@ -88,6 +100,8 @@ public class SampleTabcronBulk {
             sampletabtoload = new File(subdir, "sampletab.toload.txt");
             agedir = new File(subdir, "age");
             agefile = new File(agedir, subdir.getName()+".age.txt");
+            loaddir = new File(subdir, "load");
+            loadfile = new File(loaddir, subdir.getName()+".SUCCESS");
         }
 
         public void run() {
@@ -163,9 +177,8 @@ public class SampleTabcronBulk {
             }
 
             // convert to age
-            target = agefile;
-            if (!target.exists()) {
-                //TODO check modification time
+            if (!agefile.exists()
+                    || agefile.lastModified() < sampletabtoload.lastModified()) {
                 log.info("Processing " + target);
                 File script = new File(scriptdir, "SampleTab-to-AGETAB.sh");
                 if (!script.exists()) {
@@ -178,9 +191,9 @@ public class SampleTabcronBulk {
                 File logfile = new File(subdir, "age_"+simpledateformat.format(new Date())+".log");
                 
                 if (!ProcessUtils.doCommand(bashcom, logfile)) {
-                    log.error("Problem producing " + agedir);
+                    log.error("Problem producing " + agefile);
                     log.error("See logfile " + logfile);
-                    if (target.exists()){
+                    if (agedir.exists()){
                         for (File todel: target.listFiles()){
                             todel.delete();
                         }
@@ -194,6 +207,26 @@ public class SampleTabcronBulk {
             
             //TODO load
             
+            if (!loadfile.exists()
+                    || loadfile.lastModified() < agefile.lastModified()) {
+                //TODO check modification time
+                log.info("Processing " + target);
+                File script = new File(scriptdir, "AgeTab-Loader.sh");
+                if (!script.exists()) {
+                    log.error("Unable to find " + script);
+                    return;
+                }
+                String bashcom = script + "-s -m -i -e -o "+loaddir+" -u "+ageusername+" -p "+agepassword+" -h \""+agename+"\" " +agedir;
+                SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+                File logfile = new File(subdir, "load_"+simpledateformat.format(new Date())+".log");
+                
+                if (!ProcessUtils.doCommand(bashcom, logfile)) {
+                    log.error("Problem producing " + loadfile);
+                    log.error("See logfile " + logfile);
+                    return;
+                }
+                log.info("Finished " + target);
+            }
         }
         
     }

@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.dbcp.BasicDataSource;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -73,14 +74,32 @@ public class SampleTabAccessioner {
     private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
 
     private Logger log = LoggerFactory.getLogger(getClass());
-
-    // shared queue to cache instances in
-    private static ConcurrentLinkedQueue<Connection> connectionQueue = new ConcurrentLinkedQueue<Connection>();
+    
+    private BasicDataSource ds;
 
     public SampleTabAccessioner() throws ClassNotFoundException {
         // This will load the MySQL driver, each DB has its own driver
         Class.forName("com.mysql.jdbc.Driver");
+
     }
+    
+    
+    private synchronized BasicDataSource getDataSource() {
+        //NB this uses one data source for any connections
+        //this means that if you try to connect with different usernames and passwords
+        //in the same VM, it will go wrong
+        //TODO improve this
+        if (ds == null){
+            ds = new BasicDataSource();
+            ds.setDriverClassName("com.mysql.jdbc.Driver");
+            ds.setUsername(username);
+            ds.setPassword(password);
+            String connectionStr = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
+            ds.setUrl(connectionStr);
+        }
+        return ds;
+    }
+    
 
     public SampleTabAccessioner(String host, int port, String database, String username, String password)
             throws ClassNotFoundException {
@@ -91,31 +110,6 @@ public class SampleTabAccessioner {
         this.hostname = host;
         this.port = port;
         this.database = database;
-    }
-
-    private Connection checkoutConnection() throws SQLException {
-        //TODO fix this so there is a separate queue for different parameters
-        //currently, it will mix and match freely if different params are used in the same VM
-        Connection connect = connectionQueue.poll();
-        if (connect == null) {
-            log.info("Creating new connection");
-            String connectionStr = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
-            connect = DriverManager.getConnection(connectionStr, this.username, this.password);
-        }
-        return connect;
-    }
-
-    private void returnConnection(Connection connect) {
-        try {
-            connect.close();
-        } catch (SQLException e) {
-            //do nothing
-        }
-        return;
-//        if (!connectionQueue.contains(connect)) {
-//            log.info("Returning connection");
-//            connectionQueue.add(connect);
-//        }
     }
 
     public Logger getLog() {
@@ -152,18 +146,22 @@ public class SampleTabAccessioner {
             throw new ParseException("Must specify a Submission Reference Layer MSI attribute.");
         }
 
-        String name;
-        String submission = sampleIn.msi.submissionIdentifier;
-        PreparedStatement statement;
-        ResultSet results;
-        int accessionID;
-        String accession;
 
         Collection<SampleNode> samples = sampleIn.scd.getNodes(SampleNode.class);
 
         getLog().debug("got " + samples.size() + " samples.");
-        Connection connect = checkoutConnection();
+        String name;
+        String submission = sampleIn.msi.submissionIdentifier;
+        int accessionID;
+        String accession;
+        
+        Connection connect = null;
+        PreparedStatement statement = null;
+        ResultSet results = null;
+        
         try {
+            connect = getDataSource().getConnection();
+            
             for (SampleNode sample : samples) {
                 if (sample.sampleAccession == null) {
                     name = sample.getNodeName();
@@ -174,6 +172,7 @@ public class SampleTabAccessioner {
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     statement.executeUpdate();
+                    statement.close();
 
                     statement = connect.prepareStatement("SELECT accession FROM " + table
                             + " WHERE user_accession = ? AND submission_accession = ?");
@@ -183,6 +182,8 @@ public class SampleTabAccessioner {
                     results.first();
                     accessionID = results.getInt(1);
                     accession = prefix + accessionID;
+                    statement.close();
+                    results.close();
 
                     getLog().debug("Assigning " + accession + " to " + name);
                     sample.sampleAccession = accession;
@@ -200,6 +201,7 @@ public class SampleTabAccessioner {
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     statement.executeUpdate();
+                    statement.close();
 
                     statement = connect
                             .prepareStatement("SELECT accession FROM sample_groups WHERE user_accession = ? AND submission_accession = ?");
@@ -209,13 +211,32 @@ public class SampleTabAccessioner {
                     results.first();
                     accessionID = results.getInt(1);
                     accession = "SAMEG" + accessionID;
+                    statement.close();
+                    results.close();
 
                     getLog().debug("Assigning " + accession + " to " + name);
                     group.groupAccession = accession;
                 }
             }
         } finally {
-            returnConnection(connect);
+            try {
+                if (results != null)
+                    results.close();
+            } catch (Exception e) {
+                //do nothing
+            }
+            try {
+                if (statement != null)
+                    statement.close();
+            } catch (Exception e) {
+                //do nothing
+            }
+            try {
+                if (connect != null)
+                    connect.close();
+            } catch (Exception e) {
+                //do nothing
+            }
         }
         
         Corrector.correct(sampleIn);
