@@ -163,7 +163,7 @@ public class SampleTabAccessioner {
             connect = getDataSource().getConnection();
             
             for (SampleNode sample : samples) {
-                if (sample.sampleAccession == null) {
+                if (sample.getSampleAccession() == null) {
                     name = sample.getNodeName();
                     statement = connect
                             .prepareStatement("INSERT IGNORE INTO "
@@ -186,7 +186,7 @@ public class SampleTabAccessioner {
                     results.close();
 
                     getLog().debug("Assigning " + accession + " to " + name);
-                    sample.sampleAccession = accession;
+                    sample.setSampleAccession(accession);
                 }
             }
 
@@ -194,7 +194,7 @@ public class SampleTabAccessioner {
 
             getLog().debug("got " + groups.size() + " groups.");
             for (GroupNode group : groups) {
-                if (group.groupAccession == null) {
+                if (group.getGroupAccession() == null) {
                     name = group.getNodeName();
                     statement = connect
                             .prepareStatement("INSERT IGNORE INTO sample_groups (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
@@ -215,7 +215,7 @@ public class SampleTabAccessioner {
                     results.close();
 
                     getLog().debug("Assigning " + accession + " to " + name);
-                    group.groupAccession = accession;
+                    group.setGroupAccession(accession);
                 }
             }
         } finally {

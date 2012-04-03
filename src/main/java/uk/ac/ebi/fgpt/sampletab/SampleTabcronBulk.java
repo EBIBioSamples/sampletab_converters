@@ -238,11 +238,8 @@ public class SampleTabcronBulk {
                 log.info("Finished " + agefile);
             }
             
-            //TODO load
-            
             if (!loadfile.exists()
                     || loadfile.lastModified() < agefile.lastModified()) {
-                //TODO check modification time
                 log.info("Processing " + loadfile);
                 File script = new File(scriptdir, "AgeTab-Loader.sh");
                 if (!script.exists()) {

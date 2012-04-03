@@ -171,7 +171,7 @@ public class DGVaXMLToSampleTab {
             group.setNodeName(groupName);
             
             if (XMLUtils.getChildByName(sampleset, "DESCRIPTION") != null){
-                group.groupDescription = XMLUtils.getChildByName(sampleset, "DESCRIPTION").getTextTrim();
+                group.setGroupDescription(XMLUtils.getChildByName(sampleset, "DESCRIPTION").getTextTrim());
             }
             
             for (Element dgvasample : XMLUtils.getChildrenByName(sampleset, "SAMPLE")){

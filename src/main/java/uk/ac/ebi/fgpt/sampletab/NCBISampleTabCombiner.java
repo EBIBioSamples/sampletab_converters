@@ -315,12 +315,14 @@ public class NCBISampleTabCombiner {
                     if (SampleNode.class.isInstance(node)) {
                         // apply node metainformation to msi if missing
                         if (sampleout.msi.submissionDescription == null
-                                || sampleout.msi.submissionDescription.trim().equals(""))
+                                || sampleout.msi.submissionDescription.trim().equals("")){
                             log.debug("Using description from sample");
-                        sampleout.msi.submissionDescription = ((SampleNode) node).sampleDescription;
-                        if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals(""))
+                            sampleout.msi.submissionDescription = ((SampleNode) node).getSampleDescription();
+                        }
+                        if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals("")){
                             log.debug("Using title from sample");
-                        sampleout.msi.submissionTitle = ((SampleNode) node).getNodeName();
+                            sampleout.msi.submissionTitle = ((SampleNode) node).getNodeName();
+                        }
                     }
                 } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e4) {
                     log.warn("Unable to add node " + node.getNodeName());

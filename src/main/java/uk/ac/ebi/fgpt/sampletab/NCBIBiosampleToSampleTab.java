@@ -219,8 +219,8 @@ public class NCBIBiosampleToSampleTab {
 
 		SampleNode scdnode = new SampleNode();
 		scdnode.setNodeName(st.msi.submissionTitle);
-		scdnode.sampleDescription = st.msi.submissionDescription;
-		scdnode.sampleAccession = "SAMN" + root.attributeValue("id");
+		scdnode.setSampleDescription(st.msi.submissionDescription);
+		scdnode.setSampleAccession("SAMN" + root.attributeValue("id"));
 		OrganismAttribute organismAttrib = new OrganismAttribute();
 		organismAttrib.setAttributeValue(organism
 				.attributeValue("taxonomy_name"));

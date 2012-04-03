@@ -126,7 +126,7 @@ public class SampleTabToLoad {
         // so create a new group and add all samples to it
         // TODO check there is not an existing group first...
         GroupNode othergroup = new GroupNode("Other Group");
-        for (SCDNode sample : sampledata.scd.getNodes(SampleNode.class)) {
+        for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
             log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
             othergroup.addSample(sample);
         }

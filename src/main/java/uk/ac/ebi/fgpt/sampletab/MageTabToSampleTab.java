@@ -262,22 +262,22 @@ public class MageTabToSampleTab {
 			if (sdrfnode instanceof uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode) {
 				// horribly long class references due to namespace collision
 				uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode sdrfsamplenode = (uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode) sdrfnode;
-				scdnode.sampleDescription = sdrfsamplenode.description;
+				scdnode.setSampleDescription(sdrfsamplenode.description);
 				characteristics = sdrfsamplenode.characteristics;
 				comments = sdrfsamplenode.comments;
 			} else if (sdrfnode instanceof SourceNode) {
 				SourceNode sdrfsourcenode = (SourceNode) sdrfnode;
-				scdnode.sampleDescription = sdrfsourcenode.description;
+				scdnode.setSampleDescription(sdrfsourcenode.description);
 				characteristics = sdrfsourcenode.characteristics;
 				comments = sdrfsourcenode.comments;
 			} else if (sdrfnode instanceof ExtractNode) {
 				ExtractNode sdrfextractnode = (ExtractNode) sdrfnode;
-				scdnode.sampleDescription = sdrfextractnode.description;
+				scdnode.setSampleDescription(sdrfextractnode.description);
 				characteristics = sdrfextractnode.characteristics;
 				comments = sdrfextractnode.comments;
 			} else if (sdrfnode instanceof LabeledExtractNode) {
 				LabeledExtractNode sdrflabeledextractnode = (LabeledExtractNode) sdrfnode;
-				scdnode.sampleDescription = sdrflabeledextractnode.description;
+				scdnode.setSampleDescription(sdrflabeledextractnode.description);
 				characteristics = sdrflabeledextractnode.characteristics;
 				comments = sdrflabeledextractnode.comments;
 			}
