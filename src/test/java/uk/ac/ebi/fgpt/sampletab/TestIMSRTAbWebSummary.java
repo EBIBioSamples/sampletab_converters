@@ -15,6 +15,17 @@ public class TestIMSRTAbWebSummary extends TestCase {
 
     public void testIMSRTabWebSummary() {
     //this fails in bamboo at all times, need to investigate further
+        System.out.println(System.getenv("http_proxy"));
+        System.out.println(System.getenv("HTTP_PROXY"));
+        System.out.println(System.getProperty("http.proxyHost"));
+        System.out.println(System.getProperty("http.proxyPort"));
+        System.out.println(System.getProperty("http.nonProxyHosts"));
+        System.out.println(System.getProperty("proxyHost"));
+        System.out.println(System.getProperty("proxyPort"));
+        System.out.println(System.getProperty("nonProxyHosts"));
+        System.out.println(System.getProperty("proxySet"));
+        
+        
 //        IMSRTabWebSummary sum = IMSRTabWebSummary.getInstance();
 //
 //        try {
