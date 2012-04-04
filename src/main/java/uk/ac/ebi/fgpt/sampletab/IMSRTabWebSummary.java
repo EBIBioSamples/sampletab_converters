@@ -72,7 +72,7 @@ public class IMSRTabWebSummary {
 	    
 	}
 	 
-    public static IMSRTabWebSummary getInstance() {
+    public static synchronized IMSRTabWebSummary getInstance() {
     	if (instance == null){
     		instance = new IMSRTabWebSummary();
     	}
