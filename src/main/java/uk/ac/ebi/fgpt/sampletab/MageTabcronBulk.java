@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 
-public class MageTabcronBulk extends SampleTabcronBulk {
+public class MageTabcronBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
