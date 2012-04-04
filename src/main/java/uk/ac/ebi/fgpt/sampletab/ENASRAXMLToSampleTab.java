@@ -107,7 +107,11 @@ public class ENASRAXMLToSampleTab {
                     Element db = XMLUtils.getChildByName(xrefLink, "DB");
                     Element id = XMLUtils.getChildByName(xrefLink, "ID");
                     if (db.getTextTrim().equals("PUBMED")) {
-                        pmids.add(new Integer(id.getTextTrim()));
+                        try {
+                            pmids.add(new Integer(id.getTextTrim()));
+                        } catch (NumberFormatException e){
+                            log.warn("Unable to parsed PubMedID "+id.getTextTrim());
+                        }
                     }
                 }
             }
@@ -181,8 +185,8 @@ public class ENASRAXMLToSampleTab {
             samplenode.setNodeName(sampleSRAAccession);
             
             samplenode.addAttribute(new DatabaseAttribute("ENA SRA",
-                    study.attributeValue("accession"), 
-                    "http://www.ebi.ac.uk/ena/data/view/" + study.attributeValue("accession")));
+                    sampleSRAAccession, 
+                    "http://www.ebi.ac.uk/ena/data/view/" + sampleSRAAccession));
 
             // process any synonyms that may exist
             if (sampleName != null) {

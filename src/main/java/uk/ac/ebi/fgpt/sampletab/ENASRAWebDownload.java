@@ -50,11 +50,20 @@ public class ENASRAWebDownload {
         Document studyDoc = XMLUtils.getDocument(url);
         Element root = studyDoc.getRootElement();
         
+        
         //if this is a blank study, abort
         if (XMLUtils.getChildrenByName(root, "STUDY").size() == 0) {
+            log.debug("Blank study, skipping");
             return;
         }
 
+        //check there is at least 1 sample in the study
+        if (ENAUtils.getSamplesForStudy(root).size() == 0){
+            log.debug("No samples in study, skipping");
+            return;
+        }
+            
+            
         // create parent directories, if they dont exist
         File studyFile = new File(outdir.getAbsoluteFile(), "study.xml");
         if (!studyFile.getParentFile().exists()) {
