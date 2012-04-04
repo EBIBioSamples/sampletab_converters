@@ -168,7 +168,7 @@ public class SampleTabToLoad {
                 }
             }
             
-            log.info("Added persons");
+            log.debug("Added persons");
             
             for(Organization org : sampledata.msi.organizations){
                 group.addAttribute(new NamedAttribute("Organization Name", org.getName()));
@@ -185,7 +185,7 @@ public class SampleTabToLoad {
                     group.addAttribute(new NamedAttribute("Organization Role", org.getRole()));
                 }
             }
-            log.info("Added organizations");
+            log.debug("Added organizations");
             
             for(Publication pub: sampledata.msi.publications){
                 if (pub.getDOI() != null && pub.getDOI().trim().length() > 0){
@@ -195,7 +195,7 @@ public class SampleTabToLoad {
                     group.addAttribute(new NamedAttribute("Publication PubMed ID", pub.getPubMedID()));
                 }
             }
-            log.info("Added publications");
+            log.debug("Added publications");
             
             for (TermSource ts : sampledata.msi.termSources) {
                 if (ts.getName() != null && ts.getName().trim().length() > 0){
@@ -208,7 +208,7 @@ public class SampleTabToLoad {
                     }
                 }
             }
-            log.info("Added termsources");
+            log.debug("Added termsources");
             
             for (Database db : sampledata.msi.databases){
                 if (db.getName() != null && db.getName().trim().length() > 0){
@@ -217,7 +217,7 @@ public class SampleTabToLoad {
                     group.addAttribute(new NamedAttribute("Database ID", db.getID()));
                 }
             }
-            log.info("Added databases");
+            log.debug("Added databases");
         }
 
         log.info("completed initial conversion, re-accessioning...");

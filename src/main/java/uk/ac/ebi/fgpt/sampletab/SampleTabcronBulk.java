@@ -61,6 +61,9 @@ public class SampleTabcronBulk {
 
     @Option(name = "--agepassword", usage = "Age server password")
     private String agepassword = null;
+
+    @Option(name = "--no-load", usage = "Do not load into Age")
+    private boolean noload = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -91,7 +94,7 @@ public class SampleTabcronBulk {
         this.agepassword = ageProperties.getProperty("password");
     }
     
-    public SampleTabcronBulk(String hostname, Integer port, String database, String username, String password, String agename, String ageusername, String agepassword){
+    public SampleTabcronBulk(String hostname, Integer port, String database, String username, String password, String agename, String ageusername, String agepassword, Boolean noload){
         this();
         if (hostname != null)
             this.hostname = hostname;
@@ -109,6 +112,8 @@ public class SampleTabcronBulk {
             this.ageusername = ageusername;
         if (agepassword != null)
             this.agepassword = agepassword;
+        if (noload != null)
+            this.noload = noload;
     }
     
     public void process(File subdir, File scriptdir){
@@ -238,8 +243,9 @@ public class SampleTabcronBulk {
                 log.info("Finished " + agefile);
             }
             
-            if (!loadfile.exists()
-                    || loadfile.lastModified() < agefile.lastModified()) {
+            if (!noload 
+                    && (!loadfile.exists()
+                            || loadfile.lastModified() < agefile.lastModified())) {
                 log.info("Processing " + loadfile);
                 File script = new File(scriptdir, "AgeTab-Loader.sh");
                 if (!script.exists()) {

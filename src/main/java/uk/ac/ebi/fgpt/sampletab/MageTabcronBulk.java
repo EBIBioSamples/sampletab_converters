@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 
-public class MageTabcronBulk {
+public class MageTabcronBulk extends SampleTabcronBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
@@ -53,6 +53,9 @@ public class MageTabcronBulk {
 
     @Option(name = "--agepassword", usage = "Age server password")
     private String agepassword = null;
+
+    @Option(name = "--no-load", usage = "Do not load into Age")
+    private boolean noload = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -184,7 +187,7 @@ public class MageTabcronBulk {
                 }
             }
 
-            new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword).process(subdir, scriptdir);
+            new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload).process(subdir, scriptdir);
         }
         
     }

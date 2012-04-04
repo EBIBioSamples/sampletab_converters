@@ -54,6 +54,9 @@ public class ENASRAcronBulk {
 
     @Option(name = "--agepassword", usage = "Age server password")
     private String agepassword = null;
+
+    @Option(name = "--no-load", usage = "Do not load into Age")
+    private boolean noload = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -103,7 +106,7 @@ public class ENASRAcronBulk {
                 
             }
             
-            new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword).process(subdir, scriptdir);
+            new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload).process(subdir, scriptdir);
         }
         
     }
