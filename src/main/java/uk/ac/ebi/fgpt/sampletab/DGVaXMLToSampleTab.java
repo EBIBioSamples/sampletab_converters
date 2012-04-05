@@ -119,7 +119,7 @@ public class DGVaXMLToSampleTab {
             log.debug("Adding "+dgvasample.attributeValue("sample_id"));
             
             //derive this sample from its parent
-            String parentName = "Subject "+dgvasample.attributeValue("subject_id");
+            String parentName = "subject "+dgvasample.attributeValue("subject_id");
             SampleNode parentNode = st.scd.getNode(parentName, SampleNode.class);
             assert parentNode != null: parentName;
             //make sure to do both of these!
@@ -165,7 +165,7 @@ public class DGVaXMLToSampleTab {
             String groupName = null;
             groupName = sampleset.elementTextTrim("sampleset_name");
             if (groupName == null){
-                groupName = "Group "+groupCounter;
+                groupName = "G"+groupCounter;
                 groupCounter += 1;
             }
             group.setNodeName(groupName);

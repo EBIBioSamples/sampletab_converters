@@ -22,6 +22,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.datamodel.graph.Node;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
@@ -123,17 +124,27 @@ public class SampleTabToLoad {
         }
         
         // All samples must be in a group
-        // so create a new group and add all samples to it
-        // TODO check there is not an existing group first...
+        // so create a new group and add all non-grouped samples to it
         GroupNode othergroup = new GroupNode("Other Group");
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
-            log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
-            othergroup.addSample(sample);
+            // check there is not an existing group first...
+            boolean inGroup = false;
+            for (Node n : sample.getChildNodes()){
+                if (GroupNode.class.isInstance(n)){
+                    inGroup = true;
+                }
+            }
+            if (!inGroup){
+                log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
+                othergroup.addSample(sample);
+            }
         }
-
-        sampledata.scd.addNode(othergroup);
-        log.info("Added Other group node");
-        // also need to accession the new node
+        //only add the new group if it has any samples
+        if (othergroup.getParentNodes().size() > 0){
+            sampledata.scd.addNode(othergroup);
+            log.info("Added Other group node");
+            // also need to accession the new node
+        }
 
         // Copy msi information on to each group node
 
@@ -318,6 +329,7 @@ public class SampleTabToLoad {
             SampleTabWriter sampletabwriter = new SampleTabWriter(out);
             try {
                 sampletabwriter.write(st);
+                sampletabwriter.close();
             } catch (IOException e) {
                 System.out.println("Error writing " + outputFile);
                 e.printStackTrace();

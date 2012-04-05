@@ -353,6 +353,7 @@ public class NCBIBiosampleToSampleTab {
 			out = new FileWriter(outputFilename);
 	        SampleTabWriter sampletabwriter = new SampleTabWriter(out);
             sampletabwriter.write(st);
+            sampletabwriter.close();
 		} catch (IOException e) {
 			System.out.println("Error writing " + outputFilename);
 			e.printStackTrace();
