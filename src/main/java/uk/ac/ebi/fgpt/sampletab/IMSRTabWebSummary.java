@@ -2,7 +2,9 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -41,7 +43,9 @@ public class IMSRTabWebSummary {
         log.info("Retrieving IMSR summary information");
         try {
             //setup the input as buffered characters
-            input = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
+            URL u = new URL(url);
+            InputStream is = u.openStream();
+            input = new BufferedReader(new InputStreamReader(is));
             //no go through each line in turn
             while ((line = input.readLine()) != null){
                 if (lineid <= 2){

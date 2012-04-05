@@ -38,29 +38,29 @@ public class TestIMSRTAbWebSummary extends TestCase {
         }        
         
         
-        IMSRTabWebSummary sum = IMSRTabWebSummary.getInstance();
-
-        try {
-            sum.get();
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-            fail();
-        } catch (ParseException e) {
-            e.printStackTrace();
-            fail();
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        }
-        
-        assertNotNull(sum);
-        assertTrue(sum.sites.size() > 0);
-        assertTrue(sum.sites.contains("APB"));
-        assertEquals(sum.sites.size(), sum.facilities.size());
-        assertEquals(sum.sites.size(), sum.strainss.size());
-        assertEquals(sum.sites.size(), sum.esliness.size());
-        assertEquals(sum.sites.size(), sum.totals.size());
-        assertEquals(sum.sites.size(), sum.updates.size());
+//        IMSRTabWebSummary sum = IMSRTabWebSummary.getInstance();
+//
+//        try {
+//            sum.get();
+//        } catch (NumberFormatException e) {
+//            e.printStackTrace();
+//            fail();
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//            fail();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            fail();
+//        }
+//        
+//        assertNotNull(sum);
+//        assertTrue(sum.sites.size() > 0);
+//        assertTrue(sum.sites.contains("APB"));
+//        assertEquals(sum.sites.size(), sum.facilities.size());
+//        assertEquals(sum.sites.size(), sum.strainss.size());
+//        assertEquals(sum.sites.size(), sum.esliness.size());
+//        assertEquals(sum.sites.size(), sum.totals.size());
+//        assertEquals(sum.sites.size(), sum.updates.size());
     }
 
 }

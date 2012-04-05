@@ -21,6 +21,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp.ConnectionFactory;
+import org.apache.commons.dbcp.DriverManagerConnectionFactory;
+import org.apache.commons.dbcp.PoolableConnectionFactory;
+import org.apache.commons.dbcp.PoolingDataSource;
+import org.apache.commons.dbcp.PoolingDriver;
+import org.apache.commons.pool.ObjectPool;
+import org.apache.commons.pool.impl.GenericObjectPool;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -66,6 +73,8 @@ public class SampleTabAccessioner {
     private boolean threaded = false;
     
     private int exitcode = 0;
+    
+    private static boolean setup = false;
 
     // receives other command line parameters than options
     @Argument
@@ -77,32 +86,35 @@ public class SampleTabAccessioner {
     
     private BasicDataSource ds;
 
-    public SampleTabAccessioner() throws ClassNotFoundException {
-        // This will load the MySQL driver, each DB has its own driver
-        Class.forName("com.mysql.jdbc.Driver");
-
+    public SampleTabAccessioner() {
     }
     
-    
-    private synchronized BasicDataSource getDataSource() {
-        //NB this uses one data source for any connections
-        //this means that if you try to connect with different usernames and passwords
-        //in the same VM, it will go wrong
-        //TODO improve this
-        if (ds == null){
-            ds = new BasicDataSource();
-            ds.setDriverClassName("com.mysql.jdbc.Driver");
-            ds.setUsername(username);
-            ds.setPassword(password);
-            String connectionStr = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
-            ds.setUrl(connectionStr);
+    private void doSetup() throws ClassNotFoundException, SQLException{
+        //this will only setup for the first instance
+        //therefore do not try to mix and match different connections in the same VM
+        if (setup){
+            return;
         }
-        return ds;
+
+        String connectURI = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
+        
+        ObjectPool connectionPool = new GenericObjectPool(null);
+        ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI, username, password);
+        PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(connectionFactory, connectionPool, null, null, false, true);
+        Class.forName("com.mysql.jdbc.Driver");
+        Class.forName("org.apache.commons.dbcp.PoolingDriver");
+        PoolingDriver driver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
+        driver.registerPool("accessioner", connectionPool);
+
+        //
+        // Now we can just use the connect string "jdbc:apache:commons:dbcp:example"
+        // to access our pool of Connections.
+        //        
+        
     }
-    
 
     public SampleTabAccessioner(String host, int port, String database, String username, String password)
-            throws ClassNotFoundException {
+            throws ClassNotFoundException, SQLException {
         this();
         // Setup the connection with the DB
         this.username = username;
@@ -110,6 +122,8 @@ public class SampleTabAccessioner {
         this.hostname = host;
         this.port = port;
         this.database = database;
+        
+        doSetup();
     }
 
     public Logger getLog() {
@@ -151,7 +165,10 @@ public class SampleTabAccessioner {
 
         getLog().debug("got " + samples.size() + " samples.");
         String name;
-        String submission = sampleIn.msi.submissionIdentifier;
+        final String submission = sampleIn.msi.submissionIdentifier;
+        if (submission == null){
+            throw new ParseException("Submission Identifier cannot be null");
+        }
         int accessionID;
         String accession;
         
@@ -160,7 +177,7 @@ public class SampleTabAccessioner {
         ResultSet results = null;
         
         try {
-            connect = getDataSource().getConnection();
+            connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
             
             for (SampleNode sample : samples) {
                 if (sample.getSampleAccession() == null) {
@@ -171,6 +188,7 @@ public class SampleTabAccessioner {
                                     + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
                     statement.setString(1, name);
                     statement.setString(2, submission);
+                    log.trace(statement.toString());
                     statement.executeUpdate();
                     statement.close();
 
@@ -178,6 +196,7 @@ public class SampleTabAccessioner {
                             + " WHERE user_accession = ? AND submission_accession = ?");
                     statement.setString(1, name);
                     statement.setString(2, submission);
+                    log.trace(statement.toString());
                     results = statement.executeQuery();
                     results.first();
                     accessionID = results.getInt(1);
@@ -200,6 +219,7 @@ public class SampleTabAccessioner {
                             .prepareStatement("INSERT IGNORE INTO sample_groups (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
                     statement.setString(1, name);
                     statement.setString(2, submission);
+                    log.trace(statement.toString());
                     statement.executeUpdate();
                     statement.close();
 
@@ -207,6 +227,7 @@ public class SampleTabAccessioner {
                             .prepareStatement("SELECT accession FROM sample_groups WHERE user_accession = ? AND submission_accession = ?");
                     statement.setString(1, name);
                     statement.setString(2, submission);
+                    log.trace(statement.toString());
                     results = statement.executeQuery();
                     results.first();
                     accessionID = results.getInt(1);
@@ -284,12 +305,7 @@ public class SampleTabAccessioner {
     }
 
     public static void main(String[] args) {
-        try {
-            new SampleTabAccessioner().doMain(args);
-        } catch (ClassNotFoundException e) {
-            System.err.println("Unable to find com.mysql.jdbc.Driver");
-            e.printStackTrace();
-        }
+        new SampleTabAccessioner().doMain(args);
     }
 
     public void doMain(String[] args) {

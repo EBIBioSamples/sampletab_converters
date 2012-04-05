@@ -1,0 +1,300 @@
+[MSI]
+Submission Title	Redon et al 2006
+Submission Identifier	GVA-estd1
+Submission Description	We have constructed a first-generation CNV map of the human genome through the study of 270 individuals from four populations with ancestry in Europe, Africa or Asia (the HapMap collection). DNA from these individuals was screened for CNV using two complementary technologies: single-nucleotide polymorphism (SNP) genotyping arrays, and clone-based comparative genomic hybridization.
+Submission Version	1.0
+Submission Reference Layer	false
+Submission Release Date	2012/03/22
+Submission Update Date	2012/03/22
+Organization Name	Wellcome Trust Sanger Institute
+Organization Address	
+Organization URI	
+Organization Email	
+Organization Role	submitter
+Person Last Name	Redon
+Person Initials	
+Person First Name	Richard
+Person Email	rr2@sanger.ac.uk
+Person Role	submitter
+Publication DOI	
+Publication PubMed ID	17122850
+Term Source Name
+Term Source URI
+Term Source Version
+Database Name	DGVa	
+Database ID	estd1	
+Database URI		
+
+[SCD]
+Sample Name	Organism	Sex	Sample Name	Material	Comment[Source]	Group Name	Group Description	Organism	
+Subject GM15510	9606		NA15510	DNA					
+Subject NA06985	9606	Female	NA06985	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA06991	9606	Female	NA06991	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA06993	9606	Male	NA06993	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA06994	9606	Male	NA06994	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07000	9606	Female	NA07000	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07019	9606	Female	NA07019	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07022	9606	Male	NA07022	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07029	9606	Male	NA07029	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07034	9606	Male	NA07034	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07048	9606	Male	NA07048	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07055	9606	Female	NA07055	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07056	9606	Female	NA07056	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07345	9606	Female	NA07345	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07348	9606	Female	NA07348	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA07357	9606	Male	NA07357	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10830	9606	Male	NA10830	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10831	9606	Female	NA10831	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10835	9606	Male	NA10835	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10838	9606	Male	NA10838	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10839	9606	Female	NA10839	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10846	9606	Male	NA10846	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10847	9606	Female	NA10847	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10851	9606	Male	NA10851	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10854	9606	Female	NA10854	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10855	9606	Female	NA10855	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10856	9606	Male	NA10856	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10857	9606	Male	NA10857	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10859	9606	Female	NA10859	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10860	9606	Male	NA10860	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10861	9606	Female	NA10861	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA10863	9606	Female	NA10863	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11829	9606	Male	NA11829	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11830	9606	Female	NA11830	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11831	9606	Male	NA11831	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11832	9606	Female	NA11832	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11839	9606	Male	NA11839	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11840	9606	Female	NA11840	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11881	9606	Male	NA11881	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11882	9606	Female	NA11882	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11992	9606	Male	NA11992	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11993	9606	Female	NA11993	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11994	9606	Male	NA11994	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA11995	9606	Female	NA11995	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12003	9606	Male	NA12003	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12004	9606	Female	NA12004	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12005	9606	Male	NA12005	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12006	9606	Female	NA12006	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12043	9606	Male	NA12043	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12044	9606	Female	NA12044	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12056	9606	Male	NA12056	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12057	9606	Female	NA12057	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12144	9606	Male	NA12144	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12145	9606	Female	NA12145	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12146	9606	Male	NA12146	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12154	9606	Male	NA12154	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12155	9606	Male	NA12155	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12156	9606	Female	NA12156	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12234	9606	Female	NA12234	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12236	9606	Female	NA12236	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12239	9606	Female	NA12239	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12248	9606	Male	NA12248	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12249	9606	Female	NA12249	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12264	9606	Male	NA12264	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12707	9606	Male	NA12707	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12716	9606	Male	NA12716	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12717	9606	Female	NA12717	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12740	9606	Female	NA12740	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12750	9606	Male	NA12750	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12751	9606	Female	NA12751	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12752	9606	Male	NA12752	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12753	9606	Female	NA12753	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12760	9606	Male	NA12760	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12761	9606	Female	NA12761	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12762	9606	Male	NA12762	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12763	9606	Female	NA12763	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12801	9606	Male	NA12801	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12802	9606	Female	NA12802	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12812	9606	Male	NA12812	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12813	9606	Female	NA12813	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12814	9606	Male	NA12814	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12815	9606	Female	NA12815	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12864	9606	Male	NA12864	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12865	9606	Female	NA12865	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12872	9606	Male	NA12872	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12873	9606	Female	NA12873	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12874	9606	Male	NA12874	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12875	9606	Female	NA12875	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12878	9606	Female	NA12878	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12891	9606	Male	NA12891	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA12892	9606	Female	NA12892	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18500	9606	Male	NA18500	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18501	9606	Male	NA18501	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18502	9606	Female	NA18502	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18503	9606	Male	NA18503	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18504	9606	Male	NA18504	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18505	9606	Female	NA18505	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18506	9606	Male	NA18506	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18507	9606	Male	NA18507	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18508	9606	Female	NA18508	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18515	9606	Male	NA18515	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18516	9606	Male	NA18516	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18517	9606	Female	NA18517	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18521	9606	Male	NA18521	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18522	9606	Male	NA18522	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18523	9606	Female	NA18523	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18524	9606	Male	NA18524	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18526	9606	Female	NA18526	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18529	9606	Female	NA18529	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18532	9606	Female	NA18532	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18537	9606	Female	NA18537	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18540	9606	Female	NA18540	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18542	9606	Female	NA18542	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18545	9606	Female	NA18545	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18547	9606	Female	NA18547	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18550	9606	Female	NA18550	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18552	9606	Female	NA18552	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18555	9606	Female	NA18555	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18558	9606	Male	NA18558	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18561	9606	Male	NA18561	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18562	9606	Male	NA18562	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18563	9606	Male	NA18563	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18564	9606	Female	NA18564	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18566	9606	Female	NA18566	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18570	9606	Female	NA18570	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18571	9606	Female	NA18571	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18572	9606	Male	NA18572	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18573	9606	Female	NA18573	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18576	9606	Female	NA18576	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18577	9606	Female	NA18577	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18579	9606	Female	NA18579	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18582	9606	Female	NA18582	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18592	9606	Female	NA18592	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18593	9606	Female	NA18593	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18594	9606	Female	NA18594	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18603	9606	Male	NA18603	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18605	9606	Male	NA18605	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18608	9606	Male	NA18608	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18609	9606	Male	NA18609	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18611	9606	Male	NA18611	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18612	9606	Male	NA18612	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18620	9606	Male	NA18620	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18621	9606	Male	NA18621	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18622	9606	Male	NA18622	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18623	9606	Male	NA18623	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18624	9606	Male	NA18624	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18632	9606	Male	NA18632	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18633	9606	Male	NA18633	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18635	9606	Male	NA18635	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18636	9606	Male	NA18636	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18637	9606	Male	NA18637	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18852	9606	Female	NA18852	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18853	9606	Male	NA18853	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18854	9606	Male	NA18854	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18855	9606	Female	NA18855	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18856	9606	Male	NA18856	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18857	9606	Male	NA18857	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18858	9606	Female	NA18858	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18859	9606	Male	NA18859	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18860	9606	Male	NA18860	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18861	9606	Female	NA18861	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18862	9606	Male	NA18862	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18863	9606	Male	NA18863	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18870	9606	Female	NA18870	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18871	9606	Male	NA18871	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18872	9606	Male	NA18872	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18912	9606	Female	NA18912	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18913	9606	Male	NA18913	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18914	9606	Male	NA18914	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18940	9606	Male	NA18940	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18942	9606	Female	NA18942	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18943	9606	Male	NA18943	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18944	9606	Male	NA18944	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18945	9606	Male	NA18945	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18947	9606	Female	NA18947	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18948	9606	Male	NA18948	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18949	9606	Female	NA18949	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18951	9606	Female	NA18951	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18952	9606	Male	NA18952	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18953	9606	Male	NA18953	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18956	9606	Female	NA18956	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18959	9606	Male	NA18959	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18960	9606	Male	NA18960	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18961	9606	Male	NA18961	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18964	9606	Female	NA18964	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18965	9606	Male	NA18965	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18966	9606	Male	NA18966	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18967	9606	Male	NA18967	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18968	9606	Female	NA18968	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18969	9606	Female	NA18969	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18970	9606	Male	NA18970	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18971	9606	Male	NA18971	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18972	9606	Female	NA18972	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18973	9606	Female	NA18973	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18974	9606	Male	NA18974	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18975	9606	Female	NA18975	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18976	9606	Female	NA18976	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18978	9606	Female	NA18978	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18980	9606	Female	NA18980	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18981	9606	Female	NA18981	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18987	9606	Female	NA18987	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18990	9606	Male	NA18990	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18991	9606	Female	NA18991	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18992	9606	Female	NA18992	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18994	9606	Male	NA18994	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18995	9606	Male	NA18995	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18997	9606	Female	NA18997	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18998	9606	Female	NA18998	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA18999	9606	Female	NA18999	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19000	9606	Male	NA19000	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19003	9606	Female	NA19003	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19005	9606	Male	NA19005	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19007	9606	Male	NA19007	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19012	9606	Male	NA19012	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19092	9606	Male	NA19092	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19093	9606	Female	NA19093	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19094	9606	Female	NA19094	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19098	9606	Male	NA19098	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19099	9606	Female	NA19099	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19100	9606	Female	NA19100	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19101	9606	Male	NA19101	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19102	9606	Female	NA19102	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19103	9606	Male	NA19103	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19116	9606	Female	NA19116	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19119	9606	Male	NA19119	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19120	9606	Male	NA19120	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19127	9606	Female	NA19127	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19128	9606	Male	NA19128	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19129	9606	Female	NA19129	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19130	9606	Male	NA19130	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19131	9606	Female	NA19131	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19132	9606	Female	NA19132	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19137	9606	Female	NA19137	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19138	9606	Male	NA19138	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19139	9606	Male	NA19139	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19140	9606	Female	NA19140	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19141	9606	Male	NA19141	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19142	9606	Male	NA19142	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19143	9606	Female	NA19143	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19144	9606	Male	NA19144	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19145	9606	Male	NA19145	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19152	9606	Female	NA19152	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19153	9606	Male	NA19153	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19154	9606	Male	NA19154	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19159	9606	Female	NA19159	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19160	9606	Male	NA19160	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19161	9606	Male	NA19161	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19171	9606	Male	NA19171	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19172	9606	Female	NA19172	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19173	9606	Male	NA19173	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19192	9606	Male	NA19192	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19193	9606	Female	NA19193	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19194	9606	Male	NA19194	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19200	9606	Male	NA19200	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19201	9606	Female	NA19201	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19202	9606	Female	NA19202	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19203	9606	Male	NA19203	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19204	9606	Female	NA19204	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19205	9606	Male	NA19205	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19206	9606	Female	NA19206	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19207	9606	Male	NA19207	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19208	9606	Male	NA19208	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19209	9606	Female	NA19209	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19210	9606	Male	NA19210	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19211	9606	Male	NA19211	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19221	9606	Female	NA19221	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19222	9606	Female	NA19222	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19223	9606	Male	NA19223	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19238	9606	Female	NA19238	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19239	9606	Male	NA19239	DNA		Group 1	Hapmap 270 samples	9606	
+Subject NA19240	9606	Female	NA19240	DNA		Group 1	Hapmap 270 samples	9606	
