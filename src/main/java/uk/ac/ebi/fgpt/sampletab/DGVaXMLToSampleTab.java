@@ -33,6 +33,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class DGVaXMLToSampleTab {
@@ -42,6 +43,17 @@ public class DGVaXMLToSampleTab {
     
     public SampleData convert(String filename) throws IOException, ParseException {
         return convert(new File(filename));
+    }
+    
+    public static OrganismAttribute fromTaxID(int taxID){
+
+        String sciName;
+        try {
+            sciName = TaxonUtils.getTaononOfID(taxID);
+        } catch (DocumentException e) {
+            throw new RuntimeException("Unable to retrieve taxonomy of "+taxID);
+        }
+        return new OrganismAttribute(sciName, "NCBI Taxonomy", taxID);
     }
 
     public SampleData convert(File infile) throws ParseException, IOException {
@@ -101,11 +113,11 @@ public class DGVaXMLToSampleTab {
                 sampleNode.addAttribute(new CharacteristicAttribute("Ethnicity", dgvasample.attributeValue("ethnicity")));
             }
             if (dgvasample.attributeValue("NCBI_tax_id") != null) {
-                sampleNode.addAttribute(new OrganismAttribute(dgvasample.attributeValue("NCBI_tax_id")));
-                //TODO go from tax id to organism name
+                sampleNode.addAttribute(fromTaxID(new Integer(dgvasample.attributeValue("NCBI_tax_id"))));
             }
             if (XMLUtils.getChildByName(dgvasample, "SOURCE") != null){
-                sampleNode.addAttribute(new CommentAttribute("Source", XMLUtils.getChildByName(dgvasample, "SOURCE").getTextTrim()));
+                Element source = XMLUtils.getChildByName(dgvasample, "SOURCE");
+                sampleNode.addAttribute(new CommentAttribute("Source", source.elementText("name")));
             }
             //add any other mappings here
             //now the sample node can be added to scd
@@ -150,11 +162,11 @@ public class DGVaXMLToSampleTab {
                 //TODO imply that maternal subject has sex female
             }
             if (dgvasample.attributeValue("NCBI_tax_id") != null) {
-                sampleNode.addAttribute(new OrganismAttribute(dgvasample.attributeValue("NCBI_tax_id")));
-                //TODO go from tax id to organism name
+                sampleNode.addAttribute(fromTaxID(new Integer(dgvasample.attributeValue("NCBI_tax_id"))));
             }
             if (XMLUtils.getChildByName(dgvasample, "SOURCE") != null){
-                sampleNode.addAttribute(new CommentAttribute("Source", XMLUtils.getChildByName(dgvasample, "SOURCE").getTextTrim()));
+                Element source = XMLUtils.getChildByName(dgvasample, "SOURCE");
+                sampleNode.addAttribute(new CommentAttribute("Source", source.elementText("name")));
             }
             //add any other mappings here
             //now the sample node can be added to scd
@@ -195,11 +207,11 @@ public class DGVaXMLToSampleTab {
                 group.addAttribute(new CharacteristicAttribute("Ethnicity", sampleset.attributeValue("ethnicity")));
             }
             if (sampleset.attributeValue("NCBI_tax_id") != null) {
-                group.addAttribute(new OrganismAttribute(sampleset.attributeValue("NCBI_tax_id")));
-                //TODO go from tax id to organism name
+                group.addAttribute(fromTaxID(new Integer(sampleset.attributeValue("NCBI_tax_id"))));
             }
             if (XMLUtils.getChildByName(sampleset, "SOURCE") != null){
-                group.addAttribute(new CommentAttribute("Source", XMLUtils.getChildByName(sampleset, "SOURCE").getTextTrim()));
+                Element source = XMLUtils.getChildByName(sampleset, "SOURCE");
+                group.addAttribute(new CommentAttribute("Source", source.elementText("name")));
             }
 
             st.scd.addNode(group);

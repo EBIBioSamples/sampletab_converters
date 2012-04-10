@@ -126,10 +126,6 @@ public class SampleTabAccessioner {
         doSetup();
     }
 
-    public Logger getLog() {
-        return log;
-    }
-
     public SampleData convert(String sampleTabFilename) throws IOException, ParseException, SQLException {
         return convert(new File(sampleTabFilename));
     }
@@ -163,7 +159,7 @@ public class SampleTabAccessioner {
 
         Collection<SampleNode> samples = sampleIn.scd.getNodes(SampleNode.class);
 
-        getLog().debug("got " + samples.size() + " samples.");
+        log.debug("got " + samples.size() + " samples.");
         String name;
         final String submission = sampleIn.msi.submissionIdentifier;
         if (submission == null){
@@ -178,6 +174,8 @@ public class SampleTabAccessioner {
         
         try {
             connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+            
+            log.info("Starting accessioning");
             
             for (SampleNode sample : samples) {
                 if (sample.getSampleAccession() == null) {
@@ -204,14 +202,14 @@ public class SampleTabAccessioner {
                     statement.close();
                     results.close();
 
-                    getLog().debug("Assigning " + accession + " to " + name);
+                    log.debug("Assigning " + accession + " to " + name);
                     sample.setSampleAccession(accession);
                 }
             }
 
             Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
 
-            getLog().debug("got " + groups.size() + " groups.");
+            log.debug("got " + groups.size() + " groups.");
             for (GroupNode group : groups) {
                 if (group.getGroupAccession() == null) {
                     name = group.getNodeName();
@@ -235,7 +233,7 @@ public class SampleTabAccessioner {
                     statement.close();
                     results.close();
 
-                    getLog().debug("Assigning " + accession + " to " + name);
+                    log.debug("Assigning " + accession + " to " + name);
                     group.setGroupAccession(accession);
                 }
             }
@@ -266,20 +264,20 @@ public class SampleTabAccessioner {
     }
 
     public void convert(SampleData sampleIn, Writer writer) throws IOException, ParseException, SQLException {
-        getLog().debug("recieved magetab, preparing to convert");
+        log.info("recieved magetab, preparing to convert");
         SampleData sampleOut = convert(sampleIn);
-        getLog().debug("sampletab converted, preparing to output");
+        log.info("sampletab converted, preparing to output");
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
-        getLog().debug("created SampleTabWriter");
+        log.info("created SampleTabWriter");
         sampletabwriter.write(sampleOut);
         sampletabwriter.close();
 
     }
 
     public void convert(File sampletabFile, Writer writer) throws IOException, ParseException, SQLException {
-        getLog().debug("preparing to load SampleData");
+        log.info("preparing to load SampleData");
         SampleTabParser<SampleData> stparser = new SampleTabParser<SampleData>();
-        getLog().debug("created MAGETABParser<SampleData>");
+        log.info("created MAGETABParser<SampleData>, beginning parse");
         SampleData st = stparser.parse(sampletabFile);
         convert(st, writer);
     }
