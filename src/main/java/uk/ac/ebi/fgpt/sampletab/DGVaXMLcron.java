@@ -222,8 +222,9 @@ public class DGVaXMLcron {
 		if (!outdir.exists())
 			outdir.mkdirs();
 
-		this.run(outdir);
-		// tidy up ftp connection
-		this.close();
+		run(outdir);
+        
+        // tidy up ftp connection
+        close();
 	}
 }

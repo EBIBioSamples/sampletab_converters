@@ -174,12 +174,34 @@ public class SampleTabAccessioner {
         
         try {
             connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
-            
             log.info("Starting accessioning");
             
+            
+            //first do one query to retrieve all that have already got accessions
+            statement = connect.prepareStatement("SELECT user_accession, accession FROM " + table
+                    + " WHERE submission_accession = ?");
+            statement.setString(1, submission);
+            log.trace(statement.toString());
+            results = statement.executeQuery();
+            while (results.next()){
+                String samplename = results.getString(1);
+                accessionID = results.getInt(2);
+                accession = prefix + accessionID;
+                SampleNode sample = sampleIn.scd.getNode(samplename, SampleNode.class);
+                if (sample != null){
+                    sample.setSampleAccession(accession);
+                }
+            }
+            results.close();
+            
+            //now assign and retrieve accessions for samples that do not have them
             for (SampleNode sample : samples) {
                 if (sample.getSampleAccession() == null) {
                     name = sample.getNodeName();
+
+                    log.info("Assigning new accession for "+submission+" : "+name);
+                    
+                    //insert it if not exists
                     statement = connect
                             .prepareStatement("INSERT IGNORE INTO "
                                     + table
@@ -191,12 +213,13 @@ public class SampleTabAccessioner {
                     statement.close();
 
                     statement = connect.prepareStatement("SELECT accession FROM " + table
-                            + " WHERE user_accession = ? AND submission_accession = ?");
+                            + " WHERE user_accession = ? AND submission_accession = ? LIMIT 1");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.trace(statement.toString());
                     results = statement.executeQuery();
                     results.first();
+                    
                     accessionID = results.getInt(1);
                     accession = prefix + accessionID;
                     statement.close();
@@ -238,23 +261,26 @@ public class SampleTabAccessioner {
                 }
             }
         } finally {
-            try {
-                if (results != null)
+            if (results != null){
+                try {
                     results.close();
-            } catch (Exception e) {
-                //do nothing
+                } catch (Exception e) {
+                    //do nothing
+                }
             }
-            try {
-                if (statement != null)
+            if (statement != null) {
+                try {
                     statement.close();
-            } catch (Exception e) {
-                //do nothing
+                } catch (Exception e) {
+                    //do nothing
+                }
             }
-            try {
-                if (connect != null)
+            if (connect != null) {
+                try {
                     connect.close();
-            } catch (Exception e) {
-                //do nothing
+                } catch (Exception e) {
+                    //do nothing
+                }
             }
         }
         

@@ -49,6 +49,7 @@ public class PRIDEcron {
     private FTPClient ftp = null;
 
     private PRIDEcron() {
+        
     }
 
 
@@ -149,7 +150,12 @@ public class PRIDEcron {
                 outfiletime.setTimeInMillis(outfile.lastModified());
                 if (!outfile.exists() 
                         || ftptime.after(outfiletime)) {
-                    pool.execute(new PRIDEXMLFTPDownload(accession, outfile, false));
+                    Runnable t = new PRIDEXMLFTPDownload(accession, outfile, false);
+                    if (threaded){
+                        pool.execute(t);
+                    } else {
+                        t.run();
+                    }
                 }
             }
         }

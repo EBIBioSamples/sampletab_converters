@@ -26,11 +26,31 @@ public class TestSampleTabAccessioner extends TestCase {
 	
 	private URL resource;
     private SampleTabParser parser;
-	
+
+    private String host;
+    private int port;
+    private String database;
+    private String username;
+    private String password;
 
     public void setUp() {
         resource = getClass().getClassLoader().getResource("GVA-estd1/sampletab.pre.txt");
         parser = new SampleTabParser();
+        Properties mysqlProperties = new Properties();
+        try {
+            InputStream is = getClass().getResourceAsStream("/mysql.properties");
+            mysqlProperties.load(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+            return;
+        }
+        
+        host = mysqlProperties.getProperty("hostname");
+        port = new Integer(mysqlProperties.getProperty("port"));
+        database = mysqlProperties.getProperty("database");
+        username = mysqlProperties.getProperty("username");
+        password = mysqlProperties.getProperty("password");
     }
 
     public void tearDown() {
@@ -40,22 +60,6 @@ public class TestSampleTabAccessioner extends TestCase {
 
     public void testAccessioning() {
     	try {
-            Properties mysqlProperties = new Properties();
-            try {
-                InputStream is = getClass().getResourceAsStream("/mysql.properties");
-                mysqlProperties.load(is);
-            } catch (IOException e) {
-                e.printStackTrace();
-                fail();
-                return;
-            }
-            
-            String host = mysqlProperties.getProperty("hostname");
-            int port = new Integer(mysqlProperties.getProperty("port"));
-            String database = mysqlProperties.getProperty("database");
-            String username = mysqlProperties.getProperty("username");
-            String password = mysqlProperties.getProperty("password");
-            
             SampleTabAccessioner accessioner;
             try {
                 accessioner = new SampleTabAccessioner(host, port, database, username, password);

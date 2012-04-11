@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractRelationshipAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
@@ -51,6 +52,10 @@ public class Corrector {
                 boolean isSex = false;
                 synchronized(SexAttribute.class){
                     isSex = SexAttribute.class.isInstance(a);
+                }
+                boolean isRelationship = false;
+                synchronized(AbstractRelationshipAttribute.class){
+                    isRelationship = AbstractRelationshipAttribute.class.isInstance(a);
                 }
 
                 // tidy things that apply to all attributes
@@ -221,6 +226,17 @@ public class Corrector {
                 }
                 //TODO comments
                 //TODO promote some comments to characteristics
+                
+                if (isRelationship){
+                    //Relationships may refer to other samples in the same submission by name
+                    //It is better to refer by BioSD accession.
+                    AbstractRelationshipAttribute rela = (AbstractRelationshipAttribute) a;
+                    String targetName = rela.getAttributeValue();
+                    SampleNode target = st.scd.getNode(targetName, SampleNode.class);
+                    if (target != null && target.getSampleAccession() != null){
+                        rela.setAttributeValue(target.getSampleAccession());
+                    }
+                }
             }
         }
     }
