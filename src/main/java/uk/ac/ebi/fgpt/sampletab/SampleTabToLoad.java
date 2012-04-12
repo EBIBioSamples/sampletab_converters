@@ -315,6 +315,8 @@ public class SampleTabToLoad {
                 return;
             }
 
+            getLog().debug("sampletab converted, preparing to output");
+            
             // write back out
             FileWriter out = null;
             try {
