@@ -178,11 +178,14 @@ public class SampleTabAccessioner {
             
             
             //first do one query to retrieve all that have already got accessions
+            long start = System.currentTimeMillis();
             statement = connect.prepareStatement("SELECT user_accession, accession FROM " + table
-                    + " WHERE submission_accession = ?");
+                    + " WHERE submission_accession = ? AND is_deleted = 0");
             statement.setString(1, submission);
             log.trace(statement.toString());
             results = statement.executeQuery();
+            long end = System.currentTimeMillis();
+            log.info("Time elapsed = "+(end-start)+"ms");
             while (results.next()){
                 String samplename = results.getString(1);
                 accessionID = results.getInt(2);
@@ -202,8 +205,9 @@ public class SampleTabAccessioner {
                     log.info("Assigning new accession for "+submission+" : "+name);
                     
                     //insert it if not exists
+                    start = System.currentTimeMillis();
                     statement = connect
-                            .prepareStatement("INSERT IGNORE INTO "
+                            .prepareStatement("INSERT INTO "
                                     + table
                                     + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
                     statement.setString(1, name);
@@ -211,6 +215,8 @@ public class SampleTabAccessioner {
                     log.trace(statement.toString());
                     statement.executeUpdate();
                     statement.close();
+                    end = System.currentTimeMillis();
+                    log.info("Time elapsed = "+(end-start)+"ms");
 
                     statement = connect.prepareStatement("SELECT accession FROM " + table
                             + " WHERE user_accession = ? AND submission_accession = ? LIMIT 1");
