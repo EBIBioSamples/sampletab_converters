@@ -185,7 +185,7 @@ public class SampleTabAccessioner {
             log.trace(statement.toString());
             results = statement.executeQuery();
             long end = System.currentTimeMillis();
-            log.info("Time elapsed = "+(end-start)+"ms");
+            log.debug("Time elapsed = "+(end-start)+"ms");
             while (results.next()){
                 String samplename = results.getString(1);
                 accessionID = results.getInt(2);

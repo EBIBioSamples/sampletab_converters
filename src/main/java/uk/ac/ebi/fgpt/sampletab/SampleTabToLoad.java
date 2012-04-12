@@ -157,7 +157,7 @@ public class SampleTabToLoad {
             group.addAttribute(new NamedAttribute("Submission Version", sampledata.msi.submissionVersion));
             group.addAttribute(new NamedAttribute("Submission Reference Layer", sampledata.msi.submissionReferenceLayer.toString()));
             
-            log.info("Added group attributes");
+            log.info("Added attributes to group "+group.getNodeName());
             
             // Have to do this for each group of tags (Person *, Database *, etc)
             // and complete each individual in each group before starting the next one
@@ -244,9 +244,9 @@ public class SampleTabToLoad {
 
     public void convert(SampleData st, Writer writer) throws IOException, ParseException, ClassNotFoundException, SQLException {
         st = convert(st);
-        getLog().debug("sampletab converted, preparing to output");
+        getLog().info("sampletab converted, preparing to output");
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
-        getLog().debug("created SampleTabWriter");
+        getLog().info("created SampleTabWriter, preparing to write");
         sampletabwriter.write(st);
         sampletabwriter.close();
     }
@@ -277,7 +277,7 @@ public class SampleTabToLoad {
         }
 
         public void run() {
-            log.debug("Processing " + inputFile);
+            log.info("Processing " + inputFile);
 
             SampleData st = null;
             SampleTabToLoad toloader;
@@ -315,7 +315,7 @@ public class SampleTabToLoad {
                 return;
             }
 
-            getLog().debug("sampletab converted, preparing to output");
+            getLog().info("sampletab converted, preparing to output");
             
             // write back out
             FileWriter out = null;
