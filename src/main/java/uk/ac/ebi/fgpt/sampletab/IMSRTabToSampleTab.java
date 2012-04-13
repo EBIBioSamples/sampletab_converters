@@ -77,8 +77,6 @@ public class IMSRTabToSampleTab {
         String state = null;
         String synonym = null;
         String type = null;
-        String chr = null;
-        String mutation = null;
         String alleleSymbol = null;
         String alleleName = null;
         String geneName = null;
@@ -105,21 +103,39 @@ public class IMSRTabToSampleTab {
                     continue;
                 }
                 String[] entries = line.split("\t");
-                // Strain/Stock Site State Synonyms Type Chr Mutation Allele
-                // Symbol Allele Name Gene Name
+                
+                // Strain/Stock Site State Synonyms Type Allele Symbol Allele Name Gene Name
                 stock = entries[0];
                 if (site == null) {
                     site = entries[1];
                     addSite(st, site);
                 }
                 state = entries[2];
-                synonym = entries[3];
-                type = entries[4];
-                chr = entries[5];
-                mutation = entries[6];
-                alleleSymbol = entries[7];
-                alleleName = entries[8];
-                geneName = entries[9];
+                if (entries.length > 3){
+                    synonym = entries[3];
+                } else {
+                    synonym = "";
+                }
+                if (entries.length > 4){
+                    type = entries[4];
+                } else {
+                    type = "";
+                }
+                if (entries.length > 5){
+                    alleleSymbol = entries[5];
+                } else {
+                    alleleSymbol = "";
+                }
+                if (entries.length > 6){
+                    alleleName = entries[6];
+                } else {
+                    alleleName = "";
+                }
+                if (entries.length > 7){
+                    geneName = entries[7];
+                } else {
+                    geneName = "";
+                }
 
                 // always store stock in synonyms to pull them back out later
                 if (!synonyms.containsKey(stock)) {
@@ -145,8 +161,6 @@ public class IMSRTabToSampleTab {
 
                 if (geneName.length() > 0) {
                     List<String> mutantlist = new ArrayList<String>();
-                    mutantlist.add(chr);
-                    mutantlist.add(mutation);
                     mutantlist.add(alleleSymbol);
                     mutantlist.add(alleleName);
                     mutantlist.add(geneName);
@@ -236,19 +250,9 @@ public class IMSRTabToSampleTab {
 
             if (mutations.containsKey(name)) {
                 for (List<String> thismutation : mutations.get(name)) {
-                    chr = thismutation.get(0);
-                    mutation = thismutation.get(1);
-                    alleleSymbol = thismutation.get(2);
-                    alleleName = thismutation.get(3);
-                    geneName = thismutation.get(4);
-
-                    if (chr.length() > 0) {
-                        newnode.addAttribute(new CharacteristicAttribute("Mutation Chromosome", chr));
-                    }
-                    if (mutation.length() > 0) {
-                        newnode.addAttribute(new CharacteristicAttribute("Mutation Type", mutation));
-                        // TODO add EFO mappings
-                    }
+                    alleleSymbol = thismutation.get(0);
+                    alleleName = thismutation.get(1);
+                    geneName = thismutation.get(2);
                     if (alleleSymbol.length() > 0) {
                         newnode.addAttribute(new CharacteristicAttribute("Allele Symbol", alleleSymbol));
                     }

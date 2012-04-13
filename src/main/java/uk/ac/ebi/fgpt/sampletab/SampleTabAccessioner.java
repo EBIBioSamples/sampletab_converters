@@ -75,6 +75,7 @@ public class SampleTabAccessioner {
     private int exitcode = 0;
     
     private static boolean setup = false;
+    private static ObjectPool connectionPool = new GenericObjectPool();
 
     // receives other command line parameters than options
     @Argument
@@ -97,8 +98,6 @@ public class SampleTabAccessioner {
         }
 
         String connectURI = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
-        
-        ObjectPool connectionPool = new GenericObjectPool(null);
         ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI, username, password);
         PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(connectionFactory, connectionPool, null, null, false, true);
         Class.forName("com.mysql.jdbc.Driver");
@@ -111,6 +110,7 @@ public class SampleTabAccessioner {
         // to access our pool of Connections.
         //        
         
+        setup = true;
     }
 
     public SampleTabAccessioner(String host, int port, String database, String username, String password)

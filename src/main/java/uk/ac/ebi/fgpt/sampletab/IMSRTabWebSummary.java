@@ -22,7 +22,7 @@ public class IMSRTabWebSummary {
 	//Singleton instance
 	private static IMSRTabWebSummary instance = null;
 
-	private final String url = "http://www.findmice.org/fetch?page=imsrReport&report=siteCounts&print=data";
+	private final String url = "http://www.findmice.org/report/providerSummary.txt";
 			
 	public final List<String> sites = new ArrayList<String>();
 	public final List<String> facilities = new ArrayList<String>();
@@ -48,7 +48,7 @@ public class IMSRTabWebSummary {
             input = new BufferedReader(new InputStreamReader(is));
             //no go through each line in turn
             while ((line = input.readLine()) != null){
-                if (lineid <= 2){
+                if (lineid == 0){
                     //read headers
                     lineid ++;
                     continue;

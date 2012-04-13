@@ -129,7 +129,7 @@ public class AttributeSummary {
         }
 	}
 	
-	class KeyComparator implements Comparator {
+	private class KeyComparator implements Comparator {
 		private final Map<String, Map<String, Integer>> map;
 		
 		public KeyComparator(Map<String, Map<String, Integer>> map){

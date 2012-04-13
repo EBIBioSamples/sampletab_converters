@@ -21,70 +21,15 @@ public class IMSRTabWebDownload {
 
 	}
 	
-	public int getAccessionID(String accession){
-        //IMSR web interface takes a number, not the site code
-        //However, this is not a straightforward lookup on the summary.
-        //For the moment, it is hardcoded here.
-        //TODO unhardcode this
-        int accessionid = 0;
-        /*
-        GMS-JAX
-        GMS-HAR
-        GMS-MMRRC
-        GMS-ORNL
-        GMS-CARD
-        GMS-EM
-        GMS-NMICE
-        GMS-RBRC
-        GMS-NCIMR
-        GMS-CMMR
-        GMS-APB
-        GMS-EMS
-        GMS-HLB
-        GMS-NIG
-        GMS-TAC
-        GMS-MUGEN
-        GMS-TIGM
-        GMS-KOMP
-        GMS-RMRC-NLAC
-        GMS-OBS
-        GMS-WTSI
-         */
-        
-        if      (accession.equals("GMS-JAX")) accessionid = 1;
-        else if (accession.equals("GMS-HAR")) accessionid = 2;
-        else if (accession.equals("GMS-MMRRC")) accessionid = 3;
-        else if (accession.equals("GMS-ORNL")) accessionid = 4;
-        else if (accession.equals("GMS-CARD")) accessionid = 5;
-        else if (accession.equals("GMS-EM")) accessionid = 6;
-        else if (accession.equals("GMS-NMICE")) accessionid = 7;
-        else if (accession.equals("GMS-RBRC")) accessionid = 9;
-        else if (accession.equals("GMS-NCIMR")) accessionid = 10;
-        else if (accession.equals("GMS-CMMR")) accessionid = 11;
-        else if (accession.equals("GMS-APB")) accessionid = 12;
-        else if (accession.equals("GMS-EMS")) accessionid = 13;
-        else if (accession.equals("GMS-HLB")) accessionid = 14;
-        else if (accession.equals("GMS-NIG")) accessionid = 17;
-        else if (accession.equals("GMS-TAC")) accessionid = 20;
-        else if (accession.equals("GMS-MUGEN")) accessionid = 21;
-        else if (accession.equals("GMS-TIGM")) accessionid = 22; //This is the really big one
-        else if (accession.equals("GMS-KOMP")) accessionid = 23;
-        else if (accession.equals("GMS-RMRC-NLAC")) accessionid = 24;
-        else if (accession.equals("GMS-OBS")) accessionid = 25;
-        else if (accession.equals("GMS-WTSI")) accessionid = 26;
-    
-        return accessionid;
-	}
-
 	public void download(String accession, String outdir) {
 		this.download(accession, new File(outdir));
 	}
 
 	public void download(String accession, File outfile) {
 
-		int ident = getAccessionID(accession);
-		String url = "http://www.findmice.org/fetch?page=imsrReport&report=repository&site="
-				+ ident + "&print=data";
+		String code = accession.substring(4);
+		//results needs to be a value otherwise it only gets a small number
+		String url = "http://www.findmice.org/report.txt?repositories="+code+"&results=1000000";
 
 		// setup the input as buffered characters
 		// setup the output as a buffered file
