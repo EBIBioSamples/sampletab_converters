@@ -7,4 +7,4 @@
 #ensure files are group writable
 umask 002
 
-${0%/*}/sampletab-converters.sh uk.ac.ebi.fgpt.sampletab.DGVaXMLcron "$@"
+${0%/*}/sampletab-converters.sh uk.ac.ebi.fgpt.sampletab.dgva.DGVaXMLcron "$@"

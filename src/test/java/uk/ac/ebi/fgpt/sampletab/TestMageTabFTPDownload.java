@@ -1,5 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import uk.ac.ebi.fgpt.sampletab.arrayexpress.MageTabFTPDownload;
 import junit.framework.TestCase;
 
 

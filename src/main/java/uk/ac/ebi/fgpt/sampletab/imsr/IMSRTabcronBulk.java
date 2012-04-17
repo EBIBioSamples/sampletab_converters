@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.imsr;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,18 +15,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.fgpt.sampletab.SampleTabcronBulk;
 import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 
-public class DGVaXMLcronBulk {
+public class IMSRTabcronBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
-    //TODO make required
     @Option(name = "-i", aliases={"--input"}, usage = "input filename")
     private String inputFilename;
 
-    //TODO make required
     @Option(name = "-s", aliases={"--scripts"}, usage = "script directory")
     private String scriptDirname;
     
@@ -62,7 +61,6 @@ public class DGVaXMLcronBulk {
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
-
     private class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
@@ -73,12 +71,12 @@ public class DGVaXMLcronBulk {
         }
 
         public void run() {
-            String studyFilename = "raw.xml";
-            File xmlFile = new File(subdir, studyFilename);
+            String tabFilename = "raw.tab.txt";
+            File tabFile = new File(subdir, tabFilename);
             File sampletabpre = new File(subdir, "sampletab.pre.txt");
             
             
-            if (!xmlFile.exists()) {
+            if (!tabFile.exists()) {
                 return;
             }
             
@@ -86,37 +84,43 @@ public class DGVaXMLcronBulk {
             
             target = sampletabpre;
             if (!target.exists()
-                    || target.lastModified() < xmlFile.lastModified()) {
+                    || target.lastModified() < tabFile.lastModified()) {
                 log.info("Processing " + target);
-                // convert study.xml to sampletab.pre.txt
-
+                
+                // convert raw.tab.txt to sampletab.pre.txt
+                IMSRTabToSampleTab c = new IMSRTabToSampleTab();
                 try {
-                    new DGVaXMLToSampleTab().convert(xmlFile, sampletabpre);
+                    c.convert(tabFile, sampletabpre);
+                } catch (NumberFormatException e) {
+                    log.error("Problem processing "+tabFile);
+                    e.printStackTrace();
+                    return;
                 } catch (IOException e) {
-                    log.error("Problem processing "+xmlFile);
+                    log.error("Problem processing "+tabFile);
                     e.printStackTrace();
                     return;
                 } catch (ParseException e) {
-                    log.error("Problem processing "+xmlFile);
+                    log.error("Problem processing "+tabFile);
+                    e.printStackTrace();
+                    return;
+                } catch (java.text.ParseException e) {
+                    log.error("Problem processing "+tabFile);
                     e.printStackTrace();
                     return;
                 } catch (RuntimeException e) {
-                    log.error("Problem processing "+xmlFile);
+                    log.error("Problem processing "+tabFile);
                     e.printStackTrace();
                     return;
                 }
                 
             }
 
-            //now run the other SampleTab processes
             new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload).process(subdir, scriptdir);
         }
         
     }
     
     public void run(File dir, File scriptdir) {
-        dir = dir.getAbsoluteFile();
-        scriptdir = scriptdir.getAbsoluteFile();
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
@@ -149,7 +153,7 @@ public class DGVaXMLcronBulk {
     }
 
     public static void main(String[] args) {
-        new DGVaXMLcronBulk().doMain(args);
+        new IMSRTabcronBulk().doMain(args);
     }
 
     public void doMain(String[] args) {

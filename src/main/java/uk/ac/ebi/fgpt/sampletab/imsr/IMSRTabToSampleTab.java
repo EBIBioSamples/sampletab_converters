@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.imsr;
 
 import java.io.BufferedReader;
 import java.io.File;

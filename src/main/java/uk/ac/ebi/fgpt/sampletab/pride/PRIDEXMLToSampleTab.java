@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.pride;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -60,9 +60,9 @@ public class TestSampleTabAccessioner extends TestCase {
 
     public void testAccessioning() {
     	try {
-            SampleTabAccessioner accessioner;
+            Accessioner accessioner;
             try {
-                accessioner = new SampleTabAccessioner(host, port, database, username, password);
+                accessioner = new Accessioner(host, port, database, username, password);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 fail();

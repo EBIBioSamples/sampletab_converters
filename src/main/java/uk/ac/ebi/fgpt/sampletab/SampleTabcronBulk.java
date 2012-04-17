@@ -154,7 +154,7 @@ public class SampleTabcronBulk {
                 log.info("Processing " + sampletab);
                 
                 try {
-                    SampleTabAccessioner c = new SampleTabAccessioner(hostname, 
+                    Accessioner c = new Accessioner(hostname, 
                             port, database, username, password);
                     c.convert(sampletabpre, sampletab);
                 } catch (ClassNotFoundException e) {

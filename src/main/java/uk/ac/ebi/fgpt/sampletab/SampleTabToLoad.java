@@ -234,7 +234,7 @@ public class SampleTabToLoad {
         log.info("completed initial conversion, re-accessioning...");
         
         // get an accessioner and connect to database
-        SampleTabAccessioner accessioner = new SampleTabAccessioner(hostname, port, database, username, password);
+        Accessioner accessioner = new Accessioner(hostname, port, database, username, password);
 
         // assign accession to any created groups
         sampledata = accessioner.convert(sampledata);

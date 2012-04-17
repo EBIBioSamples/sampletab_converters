@@ -43,7 +43,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
-public class SampleTabAccessioner {
+public class Accessioner {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
@@ -87,7 +87,7 @@ public class SampleTabAccessioner {
     
     private BasicDataSource ds;
 
-    public SampleTabAccessioner() {
+    public Accessioner() {
     }
     
     private void doSetup() throws ClassNotFoundException, SQLException{
@@ -113,7 +113,7 @@ public class SampleTabAccessioner {
         setup = true;
     }
 
-    public SampleTabAccessioner(String host, int port, String database, String username, String password)
+    public Accessioner(String host, int port, String database, String username, String password)
             throws ClassNotFoundException, SQLException {
         this();
         // Setup the connection with the DB
@@ -187,12 +187,15 @@ public class SampleTabAccessioner {
             long end = System.currentTimeMillis();
             log.debug("Time elapsed = "+(end-start)+"ms");
             while (results.next()){
-                String samplename = results.getString(1);
+                String samplename = results.getString(1).trim();
                 accessionID = results.getInt(2);
                 accession = prefix + accessionID;
                 SampleNode sample = sampleIn.scd.getNode(samplename, SampleNode.class);
+                log.trace(samplename+" : "+accession);
                 if (sample != null){
                     sample.setSampleAccession(accession);
+                } else {
+                    log.warn("Unable to find sample "+samplename);
                 }
             }
             results.close();
@@ -335,7 +338,7 @@ public class SampleTabAccessioner {
     }
 
     public static void main(String[] args) {
-        new SampleTabAccessioner().doMain(args);
+        new Accessioner().doMain(args);
     }
 
     public void doMain(String[] args) {

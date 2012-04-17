@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.File;
 import java.io.FileWriter;

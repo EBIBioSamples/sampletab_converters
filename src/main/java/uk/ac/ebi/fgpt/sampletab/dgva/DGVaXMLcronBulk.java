@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.dgva;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,16 +15,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.fgpt.sampletab.SampleTabcronBulk;
 import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 
-public class ENASRAcronBulk {
+public class DGVaXMLcronBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
+    //TODO make required
     @Option(name = "-i", aliases={"--input"}, usage = "input filename")
     private String inputFilename;
 
+    //TODO make required
     @Option(name = "-s", aliases={"--scripts"}, usage = "script directory")
     private String scriptDirname;
     
@@ -71,7 +74,7 @@ public class ENASRAcronBulk {
         }
 
         public void run() {
-            String studyFilename = "study.xml";
+            String studyFilename = "raw.xml";
             File xmlFile = new File(subdir, studyFilename);
             File sampletabpre = new File(subdir, "sampletab.pre.txt");
             
@@ -89,7 +92,7 @@ public class ENASRAcronBulk {
                 // convert study.xml to sampletab.pre.txt
 
                 try {
-                    new ENASRAXMLToSampleTab().convert(xmlFile, sampletabpre);
+                    new DGVaXMLToSampleTab().convert(xmlFile, sampletabpre);
                 } catch (IOException e) {
                     log.error("Problem processing "+xmlFile);
                     e.printStackTrace();
@@ -105,7 +108,8 @@ public class ENASRAcronBulk {
                 }
                 
             }
-            
+
+            //now run the other SampleTab processes
             new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload).process(subdir, scriptdir);
         }
         
@@ -146,7 +150,7 @@ public class ENASRAcronBulk {
     }
 
     public static void main(String[] args) {
-        new ENASRAcronBulk().doMain(args);
+        new DGVaXMLcronBulk().doMain(args);
     }
 
     public void doMain(String[] args) {

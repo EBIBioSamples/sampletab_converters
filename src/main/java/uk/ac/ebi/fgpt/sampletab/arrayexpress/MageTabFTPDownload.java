@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.arrayexpress;
 
 import java.io.File;
 import java.io.FileOutputStream;
