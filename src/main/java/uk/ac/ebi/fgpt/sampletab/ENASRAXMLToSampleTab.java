@@ -41,6 +41,7 @@ public class ENASRAXMLToSampleTab {
         characteristicsIgnore = new TreeSet<String>();
         characteristicsIgnore.add("ENA-SPOT-COUNT");
         characteristicsIgnore.add("ENA-BASE-COUNT");
+        characteristicsIgnore.add("ENA-SUBMISSION-TOOL");
         characteristicsIgnore = Collections.unmodifiableCollection(characteristicsIgnore);
     }
     

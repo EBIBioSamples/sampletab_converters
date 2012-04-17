@@ -71,6 +71,7 @@ public class ENASRAWebDownload {
         }
         
         //check that it does not already exist
+        //TODO handle updates
         if (studyFile.exists()){
             Document existStudyDoc = XMLUtils.getDocument(studyFile);
             NodeComparator c = new NodeComparator();
