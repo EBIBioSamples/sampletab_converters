@@ -66,7 +66,9 @@ public class Corrector {
                             || cha.getAttributeValue().toLowerCase().equals("na")
                             || cha.getAttributeValue().toLowerCase().equals("none")
                             || cha.getAttributeValue().toLowerCase().equals("unknown")
-                            || cha.getAttributeValue().toLowerCase().equals("--")) {
+                            || cha.getAttributeValue().toLowerCase().equals("--")
+                            || cha.getAttributeValue().toLowerCase().equals("not applicable")
+                            || cha.getAttributeValue().toLowerCase().equals("null")) {
                         //leave unknown-sex as is. implies it has been looked at and is non-determinate
                         s.removeAttribute(cha);
                         continue;
@@ -111,10 +113,12 @@ public class Corrector {
                         SexAttribute sexa = new SexAttribute();
                         //NB these are also done below in the section dealing directly with SexAttribute
                         if (cha.getAttributeValue().toLowerCase().equals("male")
-                                || cha.getAttributeValue().toLowerCase().equals("m")) {
+                                || cha.getAttributeValue().toLowerCase().equals("m")
+                                || cha.getAttributeValue().toLowerCase().equals("man")) {
                             sexa.setAttributeValue("male");
                         } else if (cha.getAttributeValue().toLowerCase().equals("female")
-                                || cha.getAttributeValue().toLowerCase().equals("f")) {
+                                || cha.getAttributeValue().toLowerCase().equals("f")
+                                || cha.getAttributeValue().toLowerCase().equals("woman")) {
                             sexa.setAttributeValue("female");
                         } else {
                             sexa.setAttributeValue(cha.getAttributeValue());
@@ -187,8 +191,18 @@ public class Corrector {
                             || cha.type.toLowerCase().equals("strainorline")
                             || cha.type.toLowerCase().equals("cell line")
                             || cha.type.toLowerCase().equals("cellline")
-                            || cha.type.toLowerCase().equals("arrayexpress-strainorline")) {
-                        //Leave alone cultivate and ecotype
+                            || cha.type.toLowerCase().equals("arrayexpress-strainorline")
+                            || cha.type.toLowerCase().equals("coriell id")
+                            || cha.type.toLowerCase().equals("coriell catalog id")
+                            || cha.type.toLowerCase().equals("coriell cell line")
+                            || cha.type.toLowerCase().equals("cell line (coriell id)")
+                            || cha.type.toLowerCase().equals("coriell cell culture id")
+                            || cha.type.toLowerCase().equals("coriell cell line repository identifier")
+                            || cha.type.toLowerCase().equals("coriell dna id")
+                            || cha.type.toLowerCase().equals("fibroblast cell strain") //TODO add cell type too
+                            || cha.type.toLowerCase().equals("hapmap sample id")
+                            ) {
+                        //Leave cultivar and ecotype alone
                         cha.type = "StrainOrLine";
                     } else if (cha.type.toLowerCase().equals("time")
                             || cha.type.toLowerCase().equals("time point")) {
@@ -211,16 +225,19 @@ public class Corrector {
                             cha.setAttributeValue(cha.getAttributeValue().toLowerCase());
                         }
                     }
+                    
                     //TODO HTML URL encoding e.g. %3E %apos; %quot;
                     
                     //TODO demote some characteristics to comments
                 } else if (isSex) {
                     SexAttribute sexa = (SexAttribute) a;
                     if (sexa.getAttributeValue().toLowerCase().equals("male")
-                            || sexa.getAttributeValue().toLowerCase().equals("m")) {
+                            || sexa.getAttributeValue().toLowerCase().equals("m")
+                            || sexa.getAttributeValue().toLowerCase().equals("man")) {
                         sexa.setAttributeValue("male");
                     } else if (sexa.getAttributeValue().toLowerCase().equals("female")
-                            || sexa.getAttributeValue().toLowerCase().equals("f")) {
+                            || sexa.getAttributeValue().toLowerCase().equals("f")
+                            || sexa.getAttributeValue().toLowerCase().equals("woman")) {
                         sexa.setAttributeValue("female");
                     }
                 }
