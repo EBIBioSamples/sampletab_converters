@@ -95,8 +95,7 @@
 				<dependency>
 					<groupId>uk.ac.ebi.arrayexpress2</groupId>
 					<artifactId>limpopo-sampletab</artifactId>
-					<!-- TODO fix this version number -->
-					<version>0.0.1-SNAPSHOT</version>
+					<version>1.1.2</version>
 				</dependency>
             </dependencies>
 		</profile>
@@ -118,7 +117,7 @@
 				<dependency>
 					<groupId>uk.ac.ebi.arrayexpress2</groupId>
 					<artifactId>limpopo-sampletab</artifactId>
-					<version>0.0.1-SNAPSHOT</version>
+					<version>1.1.3-SNAPSHOT</version>
 				</dependency>
             </dependencies>
 		</profile>
