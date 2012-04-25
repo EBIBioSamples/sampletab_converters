@@ -161,10 +161,11 @@ public class Accessioner {
 
         log.debug("got " + samples.size() + " samples.");
         String name;
-        final String submission = sampleIn.msi.submissionIdentifier;
+        String submission = sampleIn.msi.submissionIdentifier;
         if (submission == null){
             throw new ParseException("Submission Identifier cannot be null");
         }
+        submission = submission.trim();
         int accessionID;
         String accession;
         
@@ -180,7 +181,7 @@ public class Accessioner {
             //first do one query to retrieve all that have already got accessions
             long start = System.currentTimeMillis();
             statement = connect.prepareStatement("SELECT user_accession, accession FROM " + table
-                    + " WHERE submission_accession = ? AND is_deleted = 0");
+                    + " WHERE submission_accession LIKE ? AND is_deleted = 0");
             statement.setString(1, submission);
             log.trace(statement.toString());
             results = statement.executeQuery();
@@ -195,7 +196,7 @@ public class Accessioner {
                 if (sample != null){
                     sample.setSampleAccession(accession);
                 } else {
-                    log.warn("Unable to find sample "+samplename);
+                    log.warn("Unable to find SCD sample node "+samplename);
                 }
             }
             results.close();
@@ -203,7 +204,7 @@ public class Accessioner {
             //now assign and retrieve accessions for samples that do not have them
             for (SampleNode sample : samples) {
                 if (sample.getSampleAccession() == null) {
-                    name = sample.getNodeName();
+                    name = sample.getNodeName().trim();
 
                     log.info("Assigning new accession for "+submission+" : "+name);
                     
@@ -222,7 +223,7 @@ public class Accessioner {
                     log.info("Time elapsed = "+(end-start)+"ms");
 
                     statement = connect.prepareStatement("SELECT accession FROM " + table
-                            + " WHERE user_accession = ? AND submission_accession = ? LIMIT 1");
+                            + " WHERE user_accession LIKE ? AND submission_accession LIKE ? LIMIT 1");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.trace(statement.toString());
@@ -293,7 +294,8 @@ public class Accessioner {
             }
         }
         
-        Corrector.correct(sampleIn);
+        Corrector c = new Corrector();
+        c.correct(sampleIn);
 
         return sampleIn;
     }

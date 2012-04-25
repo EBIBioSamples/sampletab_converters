@@ -1,5 +1,8 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.util.ArrayList;
+
+import org.dom4j.DocumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,13 +12,16 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNo
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractRelationshipAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
+import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
+import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 
 public class Corrector {
     // logging
-    private static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.Corrector");
+    private Logger log = LoggerFactory.getLogger(getClass());
 
-    public static String getInitialCapitals(String in){
+    public String getInitialCapitals(String in){
         StringBuilder sb = new StringBuilder();
         boolean space = true;
         for (Character currentChar : in.toCharArray()) {
@@ -37,25 +43,225 @@ public class Corrector {
         return sb.toString();
     }
     
-    public static void correct(SampleData st) {
+    private SCDNodeAttribute correctSex(SexAttribute attr){
+        if (attr.getAttributeValue().toLowerCase().equals("male")
+                || attr.getAttributeValue().toLowerCase().equals("m")
+                || attr.getAttributeValue().toLowerCase().equals("man")) {
+            attr.setAttributeValue("male");
+            attr.setTermSourceREF("EFO");
+            attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001266");
+        } else if (attr.getAttributeValue().toLowerCase().equals("female")
+                || attr.getAttributeValue().toLowerCase().equals("f")
+                || attr.getAttributeValue().toLowerCase().equals("woman")) {
+            attr.setAttributeValue("female");
+            attr.setTermSourceREF("EFO");
+            attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001265");
+        }
+        return attr;
+    }
+    
+    private SCDNodeAttribute correctOrganism(OrganismAttribute attr){
+
+        if (attr.getTermSourceREF() == null){
+            if (attr.getAttributeValue().matches("[0-9]+")){
+                Integer taxid = new Integer(attr.getAttributeValue());
+                try {
+                    String taxonName = TaxonUtils.getTaononOfID(taxid);
+                    attr.setAttributeValue(taxonName);
+                    attr.setTermSourceREF("NCBI Taxonomy");
+                    attr.setTermSourceID(taxid);
+                } catch (TaxonException e) {
+                    log.warn("Unable to find taxon #"+taxid);
+                    //e.printStackTrace();
+                }
+            } else {
+                Integer taxid = null;
+                String speciesName = attr.getAttributeValue();
+                                
+                try {
+                    taxid = TaxonUtils.findTaxon(speciesName);
+                } catch (TaxonException e) {
+                    log.warn("Unable to find taxid for "+speciesName);
+                    //e.printStackTrace();
+                }
+                if (taxid != null){
+                    attr.setTermSourceREF("NCBI Taxonomy");
+                    attr.setTermSourceID(taxid);
+                }
+            }
+        } else if (attr.getTermSourceID().startsWith("http://purl.org/obo/owl/NCBITaxon#NCBITaxon_")){
+            Integer taxid = new Integer(attr.getTermSourceID().substring("http://purl.org/obo/owl/NCBITaxon#NCBITaxon_".length(), attr.getTermSourceID().length()));
+            attr.setTermSourceID(taxid);
+            attr.setTermSourceREF("NCBI Taxonomy");
+        }
+        
+        return attr;
+    }
+    
+    private SCDNodeAttribute correctCharacteristic(CharacteristicAttribute attr){        
+        //bulk replace underscore with space in types
+        attr.type = attr.type.replace("_", " ");
+
+        //remove technical attributes
+        if (attr.type.toLowerCase().equals("channel")){
+            return null;
+        }
+                            
+        // make organism a separate attribute
+        if (attr.type.toLowerCase().equals("organism") 
+                || attr.type.toLowerCase().equals("organi") //from ArrayExpress
+                || attr.type.toLowerCase().equals("arrayexpress-species") //from ENA SRA
+                || attr.type.toLowerCase().equals("cell organism") //from ENA SRA
+                ) {
+            return correctOrganism(new OrganismAttribute(attr.getAttributeValue()));
+        }
+        
+        // make sex a separate attribute
+        if (attr.type.toLowerCase().equals("sex") 
+                || attr.type.toLowerCase().equals("gender")
+                || attr.type.toLowerCase().equals("arrayexpress-sex") //from ENA SRA
+                || attr.type.toLowerCase().equals("cell sex") //from ENA SRA
+                ) {
+            //this will handle the real corrections
+            return correctSex(new SexAttribute(attr.getAttributeValue()));
+        }
+        
+        
+        //TODO make material a separate attribute
+        
+        // fix typos
+        if (attr.type.toLowerCase().equals("age")) {
+            attr.type = "age";
+            //TODO some simple regex expansions, e.g. 5W to 5 weeks
+        } else if (attr.type.toLowerCase().equals("developmental stage")
+                || attr.type.toLowerCase().equals("developmentalstage")) {
+            attr.type = "developmental stage";
+        } else if (attr.type.toLowerCase().equals("disease state")
+                || attr.type.toLowerCase().equals("diseasestate")) {
+            attr.type = "disease state";
+        } else if (attr.type.toLowerCase().equals("ecotype")) {
+            attr.type = "ecotype";
+            if (attr.getAttributeValue().toLowerCase().equals("col-0")
+                    || attr.getAttributeValue().toLowerCase().equals("columbia-0")
+                    || attr.getAttributeValue().toLowerCase().equals("columbia (col0) ")){
+                    attr.setAttributeValue("Columbia-0");
+            } else if (attr.getAttributeValue().toLowerCase().equals("columbia")
+                    || attr.getAttributeValue().toLowerCase().equals("col")) {
+                attr.setAttributeValue("Columbia");
+            }
+        } else if (attr.type.toLowerCase().equals("ethnicity")) {
+            attr.type = "ethnicity";
+            //ethnicity, population, race are a mess, leave alone
+        } else if (attr.type.toLowerCase().equals("genotype")
+                ||attr.type.toLowerCase().equals("individualgeneticcharacteristics")
+                ||attr.type.toLowerCase().equals("genotype/variation") ) {
+            attr.type = "genotype";
+            if (attr.getAttributeValue().toLowerCase().equals("wildtype")
+                    || attr.getAttributeValue().toLowerCase().equals("wild type")
+                    || attr.getAttributeValue().toLowerCase().equals("wild-type")
+                    || attr.getAttributeValue().toLowerCase().equals("wild_type")
+                    || attr.getAttributeValue().toLowerCase().equals("wt")) {
+                attr.setAttributeValue("wild type");
+            }
+        } else if (attr.type.toLowerCase().equals("histology")) {
+            attr.type = getInitialCapitals(attr.type);
+        } else if (attr.type.toLowerCase().equals("individual")) {
+            //TODO investigate
+            attr.type = getInitialCapitals(attr.type);
+        } else if (attr.type.toLowerCase().equals("organism part") 
+                ||attr.type.toLowerCase().equals("organismpart")) {
+            attr.type = "organism part";
+            if (attr.getAttributeValue().toLowerCase().equals("blood")){
+                attr.setAttributeValue("blood");
+                attr.setTermSourceREF("EFO");
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
+            } else if (attr.getAttributeValue().toLowerCase().equals("skin")){
+                attr.setAttributeValue("skin");
+                attr.setTermSourceREF("EFO");
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000962");
+            } else if (attr.getAttributeValue().toLowerCase().equals("bone marrow")){
+                attr.setAttributeValue("bone marrow");
+                attr.setTermSourceREF("EFO");
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000868");
+            }
+        } else if (attr.type.toLowerCase().equals("phenotype")) {
+            attr.type = getInitialCapitals(attr.type);
+        } else if (attr.type.toLowerCase().equals("stage")) {
+            attr.type = getInitialCapitals(attr.type);
+        } else if (attr.type.toLowerCase().equals("strain")
+                || attr.type.toLowerCase().equals("strainorline")
+                || attr.type.toLowerCase().equals("cell line")
+                || attr.type.toLowerCase().equals("cellline")
+                || attr.type.toLowerCase().equals("arrayexpress-strainorline")
+                || attr.type.toLowerCase().equals("coriell id")
+                || attr.type.toLowerCase().equals("coriell catalog id")
+                || attr.type.toLowerCase().equals("coriell cell line")
+                || attr.type.toLowerCase().equals("cell line (coriell id)")
+                || attr.type.toLowerCase().equals("coriell cell culture id")
+                || attr.type.toLowerCase().equals("coriell cell line repository identifier")
+                || attr.type.toLowerCase().equals("coriell dna id")
+                || attr.type.toLowerCase().equals("fibroblast cell strain") //TODO add cell type too
+                || attr.type.toLowerCase().equals("hapmap sample id")
+                || attr.type.toLowerCase().equals("breed")
+                ) {
+            //Leave cultivar and ecotype alone
+            attr.type = "strain";
+        } else if (attr.type.toLowerCase().equals("time")
+                || attr.type.toLowerCase().equals("time point")) {
+            attr.type = "time point";
+            //TODO fix "Time Unit" being a separate characteristic
+            //TODO fix embedding of units in the string (e.g. 24h) 
+        } else if (attr.type.toLowerCase().equals("tissue")) {
+            attr.type = getInitialCapitals(attr.type);
+            if (attr.getAttributeValue().toLowerCase().equals("liver")) {
+                attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
+                attr.setTermSourceREF("EFO");
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
+            } else if (attr.getAttributeValue().toLowerCase().equals("blood")) {
+                attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
+                attr.setTermSourceREF("EFO");
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
+            } else if (attr.getAttributeValue().toLowerCase().equals("breast")
+                    || attr.getAttributeValue().toLowerCase().equals("mammary gland")) {
+                attr.setAttributeValue("mammary gland");
+                attr.setTermSourceREF("EFO");
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
+            } 
+        } else if (attr.type.toLowerCase().equals("cell type")
+                || attr.type.toLowerCase().equals("celltype")) {
+            attr.type = "cell type";
+            //TODO clarify some of these as tissue or cell type
+            if (attr.getAttributeValue().toLowerCase().equals("liver")) {
+                attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
+                attr.setTermSourceREF("EFO");
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
+            } else if (attr.getAttributeValue().toLowerCase().equals("blood")) {
+                attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
+                attr.setTermSourceREF("EFO");
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
+            } else if (attr.getAttributeValue().toLowerCase().equals("breast")
+                    || attr.getAttributeValue().toLowerCase().equals("mammary gland")) {
+                attr.setAttributeValue("mammary gland");
+                attr.setTermSourceREF("EFO");
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
+            } 
+        }
+        
+        //TODO HTML URL encoding e.g. %3E %apos; %quot;
+        
+        //TODO demote some characteristics to comments
+        
+        return attr;
+    }
+    
+    
+    public void correct(SampleData st) {
         for (SampleNode s : st.scd.getNodes(SampleNode.class)) {
             //convert to array so we can delete and add attributes if needed
-            for (Object a : s.getAttributes().toArray()) {
+            for (SCDNodeAttribute a : new ArrayList<SCDNodeAttribute>(s.getAttributes())) {
                 boolean isAbstractSCDAttribute = false;
                 synchronized(AbstractNodeAttribute.class){
                     isAbstractSCDAttribute = AbstractNodeAttribute.class.isInstance(a);
-                }
-                boolean isCharacteristic = false;
-                synchronized(CharacteristicAttribute.class){
-                    isCharacteristic = CharacteristicAttribute.class.isInstance(a);
-                }
-                boolean isSex = false;
-                synchronized(SexAttribute.class){
-                    isSex = SexAttribute.class.isInstance(a);
-                }
-                boolean isRelationship = false;
-                synchronized(AbstractRelationshipAttribute.class){
-                    isRelationship = AbstractRelationshipAttribute.class.isInstance(a);
                 }
 
                 // tidy things that apply to all attributes
@@ -74,175 +280,37 @@ public class Corrector {
                         continue;
                     }
                 }
+
+                SCDNodeAttribute updated = a;
                 
+                boolean isCharacteristic = false;
+                synchronized(CharacteristicAttribute.class){
+                    isCharacteristic = CharacteristicAttribute.class.isInstance(a);
+                }
+                boolean isSex = false;
+                synchronized(SexAttribute.class){
+                    isSex = SexAttribute.class.isInstance(a);
+                }
+                boolean isOrganism = false;
+                synchronized(OrganismAttribute.class){
+                    isOrganism = OrganismAttribute.class.isInstance(a);
+                }
                 // tidy all characteristics
                 if (isCharacteristic) {
-                    CharacteristicAttribute cha = (CharacteristicAttribute) a;
-                    
-                    //bulk replace underscore with space in types
-                    cha.type = cha.type.replace("_", " ");
-
-                    //remove technical attributes
-                    if (cha.type.toLowerCase().equals("channel")){
-                        s.removeAttribute(cha);
-                        continue;
-                    }
-                                        
-                    // make organism a separate attribute
-                    if (cha.type.toLowerCase().equals("organism") 
-                            || cha.type.toLowerCase().equals("organi") //from ArrayExpress
-                            || cha.type.toLowerCase().equals("arrayexpress-species") //from ENA SRA
-                            || cha.type.toLowerCase().equals("cell organism") //from ENA SRA
-                            ) {
-                        s.removeAttribute(cha);
-                        OrganismAttribute orga = new OrganismAttribute(cha.getAttributeValue());
-                        orga.setTermSourceID(cha.getTermSourceID());
-                        orga.setTermSourceREF(cha.getTermSourceREF());
-                        // TODO check use of NCBI Taxonomy
-                        // TODO validate against taxonomy
-                        s.addAttribute(orga);
-                        continue;
-                    }
-                    // make sex a separate attribute
-                    if (cha.type.toLowerCase().equals("sex") 
-                            || cha.type.toLowerCase().equals("gender")
-                            || cha.type.toLowerCase().equals("arrayexpress-sex") //from ENA SRA
-                            || cha.type.toLowerCase().equals("cell sex") //from ENA SRA
-                            ) {
-                        s.removeAttribute(cha);
-                        SexAttribute sexa = new SexAttribute();
-                        //NB these are also done below in the section dealing directly with SexAttribute
-                        if (cha.getAttributeValue().toLowerCase().equals("male")
-                                || cha.getAttributeValue().toLowerCase().equals("m")
-                                || cha.getAttributeValue().toLowerCase().equals("man")) {
-                            sexa.setAttributeValue("male");
-                        } else if (cha.getAttributeValue().toLowerCase().equals("female")
-                                || cha.getAttributeValue().toLowerCase().equals("f")
-                                || cha.getAttributeValue().toLowerCase().equals("woman")) {
-                            sexa.setAttributeValue("female");
-                        } else {
-                            sexa.setAttributeValue(cha.getAttributeValue());
-                        }
-                        sexa.setTermSourceID(cha.getTermSourceID());
-                        sexa.setTermSourceREF(cha.getTermSourceREF());
-                        // TODO check use of EFO
-                        // TODO validate against EFO
-                        s.addAttribute(sexa);
-                        continue;
-                    }
-                    
-                    
-                    //TODO make material a separate attribute
-                    
-                    // fix typos
-                    if (cha.type.toLowerCase().equals("age")) {
-                        cha.type = getInitialCapitals(cha.type);
-                        //TODO some simple regex expansions, e.g. 5W to 5 weeks
-                    } else if (cha.type.toLowerCase().equals("developmental stage")
-                            || cha.type.toLowerCase().equals("developmentalstage")) {
-                        cha.type = "Developmental Stage";
-                    } else if (cha.type.toLowerCase().equals("disease state")
-                            || cha.type.toLowerCase().equals("diseasestate")) {
-                        cha.type = "Disease State";
-                    } else if (cha.type.toLowerCase().equals("ecotype")) {
-                        cha.type = getInitialCapitals(cha.type);
-                        if (cha.getAttributeValue().toLowerCase().equals("col-0")
-                                || cha.getAttributeValue().toLowerCase().equals("columbia-0")
-                                || cha.getAttributeValue().toLowerCase().equals("columbia (col0) ")){
-                                cha.setAttributeValue("Columbia-0");
-                        } else if (cha.getAttributeValue().toLowerCase().equals("columbia")
-                                || cha.getAttributeValue().toLowerCase().equals("col")) {
-                            cha.setAttributeValue("Columbia");
-                        }
-                    } else if (cha.type.toLowerCase().equals("ethnicity")) {
-                        cha.type = getInitialCapitals(cha.type);
-                        //ethnicity, population, race are a mess, leave alone
-                    } else if (cha.type.toLowerCase().equals("genotype")
-                            ||cha.type.toLowerCase().equals("individualgeneticcharacteristics")
-                            ||cha.type.toLowerCase().equals("genotype/variation") ) {
-                        cha.type = "Genotype";
-                        if (cha.getAttributeValue().toLowerCase().equals("wildtype")
-                                || cha.getAttributeValue().toLowerCase().equals("wild type")
-                                || cha.getAttributeValue().toLowerCase().equals("wild-type")
-                                || cha.getAttributeValue().toLowerCase().equals("wild_type")
-                                || cha.getAttributeValue().toLowerCase().equals("wt")) {
-                            cha.setAttributeValue("wild type");
-                        }
-                    } else if (cha.type.toLowerCase().equals("histology")) {
-                        cha.type = getInitialCapitals(cha.type);
-                    } else if (cha.type.toLowerCase().equals("individual")) {
-                        //TODO investigate
-                        cha.type = getInitialCapitals(cha.type);
-                    } else if (cha.type.toLowerCase().equals("organism part") 
-                            ||cha.type.toLowerCase().equals("organismpart")) {
-                        cha.type = "Organism Part";
-                        if (cha.getAttributeValue().toLowerCase().equals("blood")){
-                            cha.setAttributeValue("blood");
-                        } else if (cha.getAttributeValue().toLowerCase().equals("skin")){
-                            cha.setAttributeValue("skin");
-                        } else if (cha.getAttributeValue().toLowerCase().equals("bone marrow")){
-                            cha.setAttributeValue("bone marrow");
-                        }
-                    } else if (cha.type.toLowerCase().equals("phenotype")) {
-                        cha.type = getInitialCapitals(cha.type);
-                    } else if (cha.type.toLowerCase().equals("stage")) {
-                        cha.type = getInitialCapitals(cha.type);
-                    } else if (cha.type.toLowerCase().equals("strain")
-                            || cha.type.toLowerCase().equals("strainorline")
-                            || cha.type.toLowerCase().equals("cell line")
-                            || cha.type.toLowerCase().equals("cellline")
-                            || cha.type.toLowerCase().equals("arrayexpress-strainorline")
-                            || cha.type.toLowerCase().equals("coriell id")
-                            || cha.type.toLowerCase().equals("coriell catalog id")
-                            || cha.type.toLowerCase().equals("coriell cell line")
-                            || cha.type.toLowerCase().equals("cell line (coriell id)")
-                            || cha.type.toLowerCase().equals("coriell cell culture id")
-                            || cha.type.toLowerCase().equals("coriell cell line repository identifier")
-                            || cha.type.toLowerCase().equals("coriell dna id")
-                            || cha.type.toLowerCase().equals("fibroblast cell strain") //TODO add cell type too
-                            || cha.type.toLowerCase().equals("hapmap sample id")
-                            ) {
-                        //Leave cultivar and ecotype alone
-                        cha.type = "StrainOrLine";
-                    } else if (cha.type.toLowerCase().equals("time")
-                            || cha.type.toLowerCase().equals("time point")) {
-                        cha.type = "Time Point";
-                        //TODO fix "Time Unit" being a separate characteristic
-                        //TODO fix embedding of units in the string (e.g. 24h) 
-                    } else if (cha.type.toLowerCase().equals("tissue")) {
-                        cha.type = getInitialCapitals(cha.type);
-                        if (cha.getAttributeValue().toLowerCase().equals("liver")
-                                || cha.getAttributeValue().toLowerCase().equals("blood")
-                                || cha.getAttributeValue().toLowerCase().equals("breast")) {
-                            cha.setAttributeValue(cha.getAttributeValue().toLowerCase());
-                        }
-                    } else if (cha.type.toLowerCase().equals("cell type")
-                            || cha.type.toLowerCase().equals("celltype")) {
-                        cha.type = "Cell Type";
-                        if (cha.getAttributeValue().toLowerCase().equals("liver")
-                                || cha.getAttributeValue().toLowerCase().equals("blood")
-                                || cha.getAttributeValue().toLowerCase().equals("breast")) {
-                            cha.setAttributeValue(cha.getAttributeValue().toLowerCase());
-                        }
-                    }
-                    
-                    //TODO HTML URL encoding e.g. %3E %apos; %quot;
-                    
-                    //TODO demote some characteristics to comments
+                    updated = correctCharacteristic((CharacteristicAttribute) a);
                 } else if (isSex) {
-                    SexAttribute sexa = (SexAttribute) a;
-                    if (sexa.getAttributeValue().toLowerCase().equals("male")
-                            || sexa.getAttributeValue().toLowerCase().equals("m")
-                            || sexa.getAttributeValue().toLowerCase().equals("man")) {
-                        sexa.setAttributeValue("male");
-                    } else if (sexa.getAttributeValue().toLowerCase().equals("female")
-                            || sexa.getAttributeValue().toLowerCase().equals("f")
-                            || sexa.getAttributeValue().toLowerCase().equals("woman")) {
-                        sexa.setAttributeValue("female");
-                    }
+                    updated = correctSex((SexAttribute) a);
+                } else if (isOrganism) {
+                    updated = correctOrganism((OrganismAttribute) a);
                 }
+                
                 //TODO comments
                 //TODO promote some comments to characteristics
+
+                boolean isRelationship = false;
+                synchronized(AbstractRelationshipAttribute.class){
+                    isRelationship = AbstractRelationshipAttribute.class.isInstance(a);
+                }
                 
                 if (isRelationship){
                     //Relationships may refer to other samples in the same submission by name
@@ -252,6 +320,16 @@ public class Corrector {
                     SampleNode target = st.scd.getNode(targetName, SampleNode.class);
                     if (target != null && target.getSampleAccession() != null){
                         rela.setAttributeValue(target.getSampleAccession());
+                    }
+                }
+
+                //comparison by identity
+                //replace in same position
+                if (updated != a){
+                    int i = s.getAttributes().indexOf(a);
+                    s.removeAttribute(a);
+                    if (updated != null){
+                        s.addAttribute(updated, i);
                     }
                 }
             }

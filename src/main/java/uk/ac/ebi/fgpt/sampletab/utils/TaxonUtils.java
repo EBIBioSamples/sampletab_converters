@@ -1,23 +1,104 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.concurrent.ExecutionException;
+
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class TaxonUtils {
-    
-    public static  String getTaononOfID(int taxID) throws DocumentException{
-        //TODO add meta information identifying this tool
-        //TODO add caching
-        String URL = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=taxonomy&id="+taxID;
-        Document doc = XMLUtils.getDocument(URL);
-        Element root = doc.getRootElement();
-        Element docsum = XMLUtils.getChildByName(root, "DocSum");
-        for (Element item : XMLUtils.getChildrenByName(docsum, "Item")){
-            if ("ScientificName".equals(item.attributeValue("Name"))){
-                return item.getTextTrim();
-            }
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+
+public class TaxonUtils {    
+    private static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils");
+   
+
+    private static LoadingCache<Integer, String> taxIDCache = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build(new CacheLoader<Integer, String>() {
+                public String load(Integer taxID) throws TaxonException {
+                 // TODO add meta information identifying this tool
+                    String URL = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=taxonomy&id=" + taxID;
+                    Document doc = null;
+                    try {
+                        doc = XMLUtils.getDocument(URL);
+                    } catch (DocumentException e) {
+                        throw new TaxonException(e);
+                    }
+                    Element root = doc.getRootElement();
+                    if (root == null)
+                        throw new TaxonException("Unable to find document root of taxid "+taxID);
+                    Element docsum = XMLUtils.getChildByName(root, "DocSum");
+                    if (docsum == null)
+                        throw new TaxonException("Unable to find DocSum element of taxid "+taxID);
+                    for (Element item : XMLUtils.getChildrenByName(docsum, "Item")) {
+                        if ("ScientificName".equals(item.attributeValue("Name"))) {
+                            return item.getTextTrim();
+                        }
+                    }
+                    //if we got here, we could not find a match
+                    throw new TaxonException("Unable to find ScientificName for "+taxID);
+                }
+            });
+
+    private static LoadingCache<String, Integer> taxNameCache = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build(new CacheLoader<String, Integer>() {
+                public Integer load(String taxName) throws TaxonException {
+                 // TODO add meta information identifying this tool
+                    String URL;
+                    try {
+                        URL = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=taxonomy&term="
+                                + URLEncoder.encode(taxName, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        throw new TaxonException(e);
+                    }
+                    Document doc;
+                    try {
+                        doc = XMLUtils.getDocument(URL);
+                    } catch (DocumentException e) {
+                        throw new TaxonException(e);
+                    }
+                    Element root = doc.getRootElement();
+                    if (root == null)
+                        throw new TaxonException("Unable to find document root for "+taxName);
+                    Element idlist = XMLUtils.getChildByName(root, "IdList");
+                    if (idlist == null)
+                        throw new TaxonException("Unable to find IdList element for "+taxName);
+                    Element id = XMLUtils.getChildByName(idlist, "Id");
+                    if (id == null)
+                        throw new TaxonException("Unable to find Id element for "+taxName);
+                    return new Integer(id.getTextTrim());
+                }
+            });
+
+    public static String getTaononOfID(int taxID) throws TaxonException {
+        if (taxID < 0){
+            throw new IllegalArgumentException();
         }
-        return null;
+        
+        try {
+            return taxIDCache.get(taxID);
+        } catch (ExecutionException e) {
+            throw new TaxonException(e);
+        }
+    }
+
+
+    public static Integer findTaxon(String species) throws TaxonException {
+        species = species.trim();
+        if (species == null || species.length() == 0) {
+            throw new IllegalArgumentException();
+        }
+        try {
+            return taxNameCache.get(species);    
+        } catch (ExecutionException e) {
+            throw new TaxonException(e);
+        }
     }
 }

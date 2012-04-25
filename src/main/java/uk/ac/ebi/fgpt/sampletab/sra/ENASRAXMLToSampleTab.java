@@ -26,6 +26,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.Characteri
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
@@ -269,8 +270,10 @@ public class ENASRAXMLToSampleTab {
                         }
                         CharacteristicAttribute characteristicAttribute = new CharacteristicAttribute(tagtext,
                                 valuetext);
+                        
                         if (units != null) {
-                            // TODO deal with units on characteristics
+                            characteristicAttribute.unit = new UnitAttribute();
+                            characteristicAttribute.unit.setAttributeValue(units.getTextTrim());
                         }
 
                         samplenode.addAttribute(characteristicAttribute);

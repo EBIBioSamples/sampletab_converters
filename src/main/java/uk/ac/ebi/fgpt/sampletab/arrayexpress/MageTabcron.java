@@ -145,6 +145,8 @@ public class MageTabcron {
                                 + "/";
                         String idfpath = subsubdirpath + subsubdir.getName()
                                 + ".idf.txt";
+                        //TODO fix this for cases where there are multiple or unusually names sdrf files
+                        //e.g. E-GEOD-11395
                         String sdrfpath = subsubdirpath + subsubdir.getName()
                                 + ".sdrf.txt";
                         

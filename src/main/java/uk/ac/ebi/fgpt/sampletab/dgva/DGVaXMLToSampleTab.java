@@ -33,6 +33,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
@@ -50,8 +51,9 @@ public class DGVaXMLToSampleTab {
         String sciName;
         try {
             sciName = TaxonUtils.getTaononOfID(taxID);
-        } catch (DocumentException e) {
-            throw new RuntimeException("Unable to retrieve taxonomy of "+taxID);
+        } catch (TaxonException e) {
+            e.printStackTrace();
+            return new OrganismAttribute(new Integer(taxID).toString());
         }
         return new OrganismAttribute(sciName, "NCBI Taxonomy", taxID);
     }
