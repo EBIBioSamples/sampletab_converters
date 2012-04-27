@@ -259,8 +259,6 @@ public class ENASRAXMLToSampleTab {
                             continue;
                         }
                         
-                        //TODO deal with Sex correctly
-                        
                         String valuetext;
                         if (value == null) {
                             // some ENA SRA attributes are boolean
@@ -272,6 +270,7 @@ public class ENASRAXMLToSampleTab {
                                 valuetext);
                         
                         if (units != null) {
+                            log.info("Added unit "+units.getTextTrim());
                             characteristicAttribute.unit = new UnitAttribute();
                             characteristicAttribute.unit.setAttributeValue(units.getTextTrim());
                         }

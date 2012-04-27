@@ -301,7 +301,6 @@ public class Coriell {
             }
         }
         
-        
         for (String[] row : masterProductList.data) {
             String typeCode = row[1];
             if (typeCode.equals("DNA")
@@ -458,6 +457,9 @@ public class Coriell {
             
             Database coriellDatabase = new Database("Coriell Cell Repositories", collectionURLs.get(collections.get(collection)), null);
             toWriter.msi.databases.add(coriellDatabase);
+            
+            CoriellFamily family = new CoriellFamily();
+            family.process(toWriter);
             
             SampleTabWriter writer = null;
             try {

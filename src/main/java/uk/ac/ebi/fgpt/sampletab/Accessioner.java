@@ -391,7 +391,6 @@ public class Accessioner {
                     System.err.println("IOException converting " + this.inputFile);
                     e.printStackTrace();
                     exitcode = 1;
-                    System.exit(exitcode);
                     return;
                 } catch (SQLException e) {
                     System.err.println("SQLException converting " + this.inputFile);
