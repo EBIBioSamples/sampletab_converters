@@ -102,7 +102,7 @@ public class DGVaXMLToSampleTab {
         //start with the "subjects", then add their "samples", then put them in "groups"
         for (Element dgvasample : XMLUtils.getChildrenByName(submission, "SUBJECT")){
             SampleNode sampleNode = new SampleNode();
-            sampleNode.setNodeName("subject "+dgvasample.attributeValue("subject_id"));
+            sampleNode.setNodeName("Subject "+dgvasample.attributeValue("subject_id"));
             log.debug("Adding Subject "+dgvasample.attributeValue("subject_id"));
             
             if (dgvasample.attributeValue("sample_type") != null) {
@@ -133,7 +133,7 @@ public class DGVaXMLToSampleTab {
             log.debug("Adding "+dgvasample.attributeValue("sample_id"));
             
             //derive this sample from its parent
-            String parentName = "subject "+dgvasample.attributeValue("subject_id");
+            String parentName = "Subject "+dgvasample.attributeValue("subject_id");
             SampleNode parentNode = st.scd.getNode(parentName, SampleNode.class);
             if (parentNode == null){
                 log.error("unable to find "+parentName);
