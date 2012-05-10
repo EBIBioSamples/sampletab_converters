@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +19,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
 public class MageTabcron {
@@ -119,6 +122,10 @@ public class MageTabcron {
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
         
+        
+        Set<String> conanProcess = new HashSet<String>();
+        
+        
 		if (subdirs != null) {
 			//convert the subdir FTPFile objects to string names
 			//otherwise the time it takes to process GEOD causes problems.
@@ -141,6 +148,8 @@ public class MageTabcron {
 				if (subsubdirs != null) {
 					for (FTPFile subsubdir : subsubdirs) {
 
+					    String submissionIdentifier = "GA"+subsubdir.getName();
+					    
                         String subsubdirpath = subdirpath + subsubdir.getName()
                                 + "/";
                         String idfpath = subsubdirpath + subsubdir.getName()
@@ -179,16 +188,13 @@ public class MageTabcron {
                         }
                         
                         
-						File outsubdir = new File(outdir, "GA"
-								+ subsubdir.getName());
+						File outsubdir = new File(outdir, submissionIdentifier);
 						if (!outsubdir.exists())
 							outsubdir.mkdirs();
 						File outidf = new File(outsubdir, subsubdir.getName()
 								+ ".idf.txt");
 						File outsdrf = new File(outsubdir, subsubdir.getName()
 								+ ".sdrf.txt");
-
-						//TODO check file modification date before starting curl
 
                         Calendar ftpidftime = idfFTPFile.getTimestamp();
                         Calendar outidftime = new GregorianCalendar();
@@ -207,27 +213,20 @@ public class MageTabcron {
 	                        } else {
 	                            t.run();
 	                        }
+	                        conanProcess.add(submissionIdentifier);
 						}
                         if (!outsdrf.exists() || ftpsdrftime.after(outsdrftime)){
+                            //TODO fix where SDRF does not match this file pattern
                             Runnable t = new CurlDownload("ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath());
                             if (threaded){
                                 pool.execute(t);
                             } else {
                                 t.run();
                             }
+                            conanProcess.add(submissionIdentifier);
                         }
 					}
 				}
-				//restart the connection after each subdir
-				//otherwise we hit some sort of limit?
-//				try {
-//					ftp = FTPUtils.connect("ftp.ebi.ac.uk");
-//				} catch (IOException e) {
-//					System.err.println("Unable to connect to FTP");
-//					e.printStackTrace();
-//					System.exit(1);
-//					return;
-//				}
 			}
 		}
 		
@@ -244,6 +243,18 @@ public class MageTabcron {
             }
         }
 
+        
+        //tell conan to process those files that have changed
+        
+        for (String submissionIdentifier : conanProcess){
+            try {
+                ConanUtils.submit(submissionIdentifier, "BioSamples (AE) and load");
+            } catch (IOException e) {
+                log.warn("Problem submitting "+submissionIdentifier);
+                e.printStackTrace();
+            }
+        }
+        
         
 		// TODO hide files that have disappeared from the FTP site.
 	}

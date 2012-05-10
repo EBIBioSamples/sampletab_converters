@@ -16,6 +16,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
 public class ENASRAcron {
@@ -46,8 +47,9 @@ public class ENASRAcron {
         public void run() {
             //TODO recycle these in a queue
             ENASRAWebDownload downloader = new ENASRAWebDownload();
+            boolean newOrUpdate = false;
             try {
-                downloader.download(this.identStudy, this.subdir);
+                newOrUpdate = downloader.download(this.identStudy, this.subdir);
             } catch (DocumentException e) {
                 log.error("Unable to download "+this.identStudy+" to "+this.subdir);
                 e.printStackTrace();
@@ -56,6 +58,15 @@ public class ENASRAcron {
                 log.error("Unable to download "+this.identStudy+" to "+this.subdir);
                 e.printStackTrace();
                 return;
+            }
+            if (newOrUpdate) {
+                String submissionIdentifier = "GEN-"+identStudy;
+                try {
+                    ConanUtils.submit(submissionIdentifier, "BioSamples (SRA) and load");
+                } catch (IOException e) {
+                    log.warn("Problem submitting "+submissionIdentifier);
+                    e.printStackTrace();
+                }
             }
         }
     }

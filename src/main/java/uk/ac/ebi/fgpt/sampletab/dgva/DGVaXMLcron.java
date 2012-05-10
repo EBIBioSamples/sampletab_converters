@@ -17,6 +17,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
 public class DGVaXMLcron {
@@ -52,17 +53,19 @@ public class DGVaXMLcron {
 
 	}
 	
-	private class CurlDownload implements Runnable {
+	private class DGVaDownload implements Runnable {
 		private final String url;
 		private final String filename;
         private final String username;
         private final String password;
+        private final String submissionIdentifier;
 		
-        public CurlDownload(String url, String filename, String username, String password){
+        public DGVaDownload(String url, String filename, String username, String password, String submissionIdentifier){
             this.url = url;
             this.filename = filename;
             this.username = username;
             this.password = password;
+            this.submissionIdentifier = submissionIdentifier;
         }
         
         public void run(){
@@ -96,7 +99,14 @@ public class DGVaXMLcron {
 				e.printStackTrace();
 				return;
 			}
-        	
+			
+			//submit the update to conan for processing
+            try {
+                ConanUtils.submit(submissionIdentifier, "BioSamples (DGVa) and load");
+            } catch (IOException e) {
+                log.warn("Problem submitting "+submissionIdentifier);
+                e.printStackTrace();
+            }
         }
 	}
 
@@ -144,9 +154,10 @@ public class DGVaXMLcron {
                     log.info("Skipping "+subid);
 				    continue;
 				}
-                        
-				File outsubdir = new File(outdir, "GVA-"
-						+ subid);
+                
+				String submissionIdentifier = "GVA-"+subid;
+				
+				File outsubdir = new File(outdir, submissionIdentifier);
 				if (!outsubdir.exists())
 					outsubdir.mkdirs();
 			
@@ -161,7 +172,7 @@ public class DGVaXMLcron {
                 //for reliability.
 				if (!outstudy.exists() || ftptime.after(outtime)){
 				    String url = "ftp://"+server+"/"+ftpfile.getName();
-                    Runnable t = new CurlDownload(url, outstudy.getAbsolutePath(), username, password);
+                    Runnable t = new DGVaDownload(url, outstudy.getAbsolutePath(), username, password, submissionIdentifier);
                     if (threaded){
                         pool.execute(t);
                     } else {

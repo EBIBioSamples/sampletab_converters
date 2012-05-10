@@ -84,8 +84,48 @@ public class CoriellFamily {
             if (familyID != null && familyID.length() > 0 && probands.containsKey(familyID)){
                 String probandName = probands.get(familyID);
                 //TODO only bother for a very specific sub-set of relationships
-                sample.addAttribute(new CharacteristicAttribute(relationship, probandName));  
-                log.info("Adding "+relationship+" of "+probandName+" to "+sample.getNodeName());
+                if (relationship == null) {
+                    // do nothing
+                } else if(relationship.equals("daughter") 
+                        || relationship.equals("son") 
+                        || relationship.equals("child")) {
+                    relationship = "child";
+                } else if (relationship.equals("brother")
+                        || relationship.equals("sister") 
+                        || relationship.equals("sibling")) {
+                    relationship = "sibling";
+                } else if (relationship.equals("half-brother")
+                        || relationship.equals("half-sister") 
+                        || relationship.equals("half-sibling")) {
+                    relationship = "half-sibling";
+                } else if (relationship.equals("twin brother")
+                        || relationship.equals("twin sister") 
+                        || relationship.equals("twin")) {
+                    relationship = "twin";
+                } else if (relationship.equals("identical twin brother")
+                        || relationship.equals("identical twin sister") 
+                        || relationship.equals("identical twin")) {
+                    relationship = "identical twin";
+                } else if (relationship.equals("father")
+                        || relationship.equals("mother") 
+                        || relationship.equals("parent")) {
+                    relationship = "parent";
+                } else if (relationship.equals("step-father")
+                        || relationship.equals("step-mother") 
+                        || relationship.equals("step-parent")) {
+                    relationship = "step-parent";
+                } else if (relationship.equals("husband")
+                        || relationship.equals("wife") 
+                        || relationship.equals("unaffected spouse")
+                        || relationship.equals("spouse")) {
+                    relationship = "spouse";
+                } else {
+                    relationship = null;
+                }
+                if (relationship != null){
+                    sample.addAttribute(new CharacteristicAttribute(relationship, probandName));  
+                    log.info("Adding "+relationship+" of "+probandName+" to "+sample.getNodeName());
+                }
             }
         }
     }

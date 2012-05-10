@@ -36,11 +36,11 @@ public class ENASRAWebDownload {
     }
 
 
-    public void download(String accession, String outdir) throws DocumentException, IOException {
-        this.download(accession, new File(outdir));
+    public boolean download(String accession, String outdir) throws DocumentException, IOException {
+        return this.download(accession, new File(outdir));
     }
 
-    public void download(String accession, File outdir) throws DocumentException, IOException {
+    public boolean download(String accession, File outdir) throws DocumentException, IOException {
         // TODO check accession is actually an ENA SRA study accession
 
         String url = "http://www.ebi.ac.uk/ena/data/view/" + accession + "&display=xml";
@@ -54,13 +54,13 @@ public class ENASRAWebDownload {
         //if this is a blank study, abort
         if (XMLUtils.getChildrenByName(root, "STUDY").size() == 0) {
             log.debug("Blank study, skipping");
-            return;
+            return false;
         }
 
         //check there is at least 1 sample in the study
         if (ENAUtils.getSamplesForStudy(root).size() == 0){
             log.debug("No samples in study, skipping");
-            return;
+            return false;
         }
             
             
@@ -77,9 +77,11 @@ public class ENASRAWebDownload {
             NodeComparator c = new NodeComparator();
             if (c.compare(studyDoc, existStudyDoc) != 0){
                 log.debug("Skipping "+accession);
-                return;
+                return false;
             }
         }
+        
+        log.info("Downloading "+accession+" to disk");
         
         //write the study file to disk
         OutputStream os = null;
@@ -119,6 +121,7 @@ public class ENASRAWebDownload {
             
         }
         log.debug("ENA SRA study download complete.");
+        return true;
 
     }
 

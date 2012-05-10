@@ -293,9 +293,6 @@ public class Accessioner {
                 }
             }
         }
-        
-        Corrector c = new Corrector();
-        c.correct(sampleIn);
 
         return sampleIn;
     }

@@ -237,7 +237,7 @@ public class Coriell {
                                     age.unit.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001788");
                                 } else if (sampleDisplayRow[11].equals("FW")) {
                                     age.unit.setAttributeValue("fetal week");
-                                    //TODO get ontology terms
+                                    //TODO set development stage accordingly
                                 } else if (sampleDisplayRow[11].equals("DA")) {
                                     age.unit.setAttributeValue("day");
                                     age.unit.setTermSourceREF("EFO");

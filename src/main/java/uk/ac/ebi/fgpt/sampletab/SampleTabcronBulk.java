@@ -1,8 +1,10 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -21,6 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
+import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 
@@ -64,6 +69,11 @@ public class SampleTabcronBulk {
 
     @Option(name = "--no-load", usage = "Do not load into Age")
     private boolean noload = false;
+
+
+    private Corrector corrector = new Corrector();
+    private DerivedFrom derivedFrom = new DerivedFrom();
+    private SameAs sameAs = new SameAs();
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -117,11 +127,11 @@ public class SampleTabcronBulk {
     }
     
     public void process(File subdir, File scriptdir){
-        Runnable t = new DoProcessFile(subdir, scriptdir);
+        Runnable t = new DoProcessFile(subdir, scriptdir, hostname, port, database, username, password, agename, ageusername, agepassword, noload, corrector, sameAs, derivedFrom);
         t.run();
     }
     
-    private class DoProcessFile implements Runnable {
+    private static class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
         private File sampletabpre;
@@ -131,9 +141,25 @@ public class SampleTabcronBulk {
         private File agefile;
         private File loaddir;
         private File loadfile;
+
+        private String hostname; 
+        private int port;
+        private String database;
+        private String username;
+        private String password;
         
+        private String agename;
+        private String ageusername;
+        private String agepassword;
+        private boolean noLoad;
         
-        public DoProcessFile(File subdir, File scriptdir){
+        private Corrector corrector;
+        private SameAs sameAs;
+        private DerivedFrom derivedFrom;
+        
+        private Logger log = LoggerFactory.getLogger(getClass());
+        
+        public DoProcessFile(File subdir, File scriptdir, String hostname, int port, String database, String username, String password, String agename, String ageusername, String agepassword, boolean noLoad, Corrector corrector, SameAs sameAs, DerivedFrom derivedFrom){
             this.subdir = subdir;
             this.scriptdir = scriptdir;
             
@@ -144,6 +170,21 @@ public class SampleTabcronBulk {
             agefile = new File(agedir, subdir.getName()+".age.txt");
             loaddir = new File(subdir, "load");
             loadfile = new File(loaddir, subdir.getName()+".SUCCESS");
+            
+            this.hostname = hostname;
+            this.port = port;
+            this.database = database;
+            this.username = username;
+            this.password = password;
+            
+            this.agename = agename;
+            this.ageusername = ageusername;
+            this.agepassword = agepassword;
+            this.noLoad = noLoad;
+            
+            this.corrector = corrector;
+            this.sameAs = sameAs;
+            this.derivedFrom = derivedFrom;
         }
 
         public void run() {
@@ -152,16 +193,23 @@ public class SampleTabcronBulk {
             if (!sampletab.exists()
                     || sampletab.lastModified() < sampletabpre.lastModified()) {
                 log.info("Processing " + sampletab);
-                
+
+                SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+                SampleData st;
                 try {
-                    Accessioner c = new Accessioner(hostname, 
-                            port, database, username, password);
-                    c.convert(sampletabpre, sampletab);
-                } catch (ClassNotFoundException e) {
+                    st = parser.parse(sampletabpre);
+                } catch (ParseException e) {
                     log.error("Problem processing "+sampletabpre);
                     e.printStackTrace();
                     return;
-                } catch (IOException e) {
+                }
+                
+                
+                try {
+                    Accessioner accessioner = new Accessioner(hostname, 
+                            port, database, username, password);
+                    accessioner.convert(st);
+                } catch (ClassNotFoundException e) {
                     log.error("Problem processing "+sampletabpre);
                     e.printStackTrace();
                     return;
@@ -178,6 +226,50 @@ public class SampleTabcronBulk {
                     e.printStackTrace();
                     return;
                 }
+
+                log.info("Applying corrections...");
+                corrector.correct(st);
+
+                log.info("Detecting derived from...");
+                try {
+                    derivedFrom.convert(st);
+                } catch (IOException e) {
+                    log.error("Unable to find derived from relationships due to error");
+                    e.printStackTrace();
+                    return;
+                }
+
+                log.info("Detecting same as...");
+                try {
+                    sameAs.convert(st);
+                } catch (IOException e) {
+                    log.error("Unable to find derived from relationships due to error");
+                    e.printStackTrace();
+                    return;
+                }
+                
+                //write it back out
+                Writer writer = null;
+                try {
+                    writer = new FileWriter(sampletab);
+                    SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
+                    log.info("created SampleTabWriter");
+                    sampletabwriter.write(st);
+                    sampletabwriter.close();
+                } catch (IOException e) {
+                    log.error("Problem processing "+sampletabpre);
+                    e.printStackTrace();
+                    return;
+                } finally {
+                    if (writer != null){
+                        try {
+                            writer.close();
+                        } catch (IOException e2) {
+                            //do nothing
+                        }
+                    }
+                }
+                
             }
 
             // preprocess to load
@@ -243,7 +335,7 @@ public class SampleTabcronBulk {
                 log.info("Finished " + agefile);
             }
             
-            if (!noload 
+            if (!noLoad 
                     && (!loadfile.exists()
                             || loadfile.lastModified() < agefile.lastModified())) {
                 log.info("Processing " + loadfile);
@@ -278,7 +370,7 @@ public class SampleTabcronBulk {
                 subdir = subdir.getParentFile();
             }
             log.info("Processing "+subdir);
-            Runnable t = new DoProcessFile(subdir, scriptdir);
+            Runnable t = new DoProcessFile(subdir, scriptdir, hostname, port, database, username, password, agename, ageusername, agepassword, noload, corrector, sameAs, derivedFrom);
             if (threaded) {
                 pool.execute(t);
             } else {
@@ -322,8 +414,6 @@ public class SampleTabcronBulk {
             System.exit(1);
             return;
         }
-        
-        //TODO handle globs
         
         File scriptdir = new File(scriptDirname);
         

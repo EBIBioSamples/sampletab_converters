@@ -68,8 +68,13 @@ public class PRIDEcronBulk {
     @Option(name = "--no-load", usage = "Do not load into Age")
     private boolean noload = false;
     
+    
     private Logger log = LoggerFactory.getLogger(getClass());
 
+
+    private SampleTabcronBulk stcb = null;
+    
+    
     private class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
@@ -114,7 +119,10 @@ public class PRIDEcronBulk {
                 } 
             }
             
-            new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload).process(subdir, scriptdir);
+            if (stcb == null){
+                stcb = new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload);
+            }
+            stcb.process(subdir, scriptdir);
         }
         
     }

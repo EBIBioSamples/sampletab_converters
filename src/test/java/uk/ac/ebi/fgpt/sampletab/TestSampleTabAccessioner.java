@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Properties;
 
 import org.mged.magetab.error.ErrorItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
@@ -32,6 +34,8 @@ public class TestSampleTabAccessioner extends TestCase {
     private String database;
     private String username;
     private String password;
+    
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     public void setUp() {
         resource = getClass().getClassLoader().getResource("GVA-estd1/sampletab.pre.txt");
@@ -89,6 +93,7 @@ public class TestSampleTabAccessioner extends TestCase {
             e.printStackTrace();
             fail();
 		} catch (SQLException e) {
+		    log.error(e.getSQLState());
             e.printStackTrace();
             fail();
         } 

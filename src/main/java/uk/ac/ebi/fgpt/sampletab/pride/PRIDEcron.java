@@ -52,7 +52,6 @@ public class PRIDEcron {
         
     }
 
-
     private void close() {
         try {
             ftp.logout();

@@ -17,6 +17,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
 public class IMSRTabcron {
@@ -36,6 +37,15 @@ public class IMSRTabcron {
 	public static void main(String[] args) {
         new IMSRTabcron().doMain(args);
     }
+	
+	private void submitConan(String submissionIdentifier){
+        try {
+            ConanUtils.submit(submissionIdentifier, "BioSamples (IMSR) and load");
+        } catch (IOException e) {
+            log.warn("Problem submitting "+submissionIdentifier);
+            e.printStackTrace();
+        }
+	}
 
     public void doMain(String[] args) {
         CmdLineParser parser = new CmdLineParser(this);
@@ -94,10 +104,12 @@ public class IMSRTabcron {
             File raw = new File(new File(outdir, subID), "raw.tab.txt");
             if (!raw.exists()){
                 downloader.download(subID, raw);
+                submitConan(subID);
             } else {
                 Date fileDate = new Date(raw.lastModified());
                 if (summary.updates.get(i).after(fileDate)){
                     downloader.download(subID, raw);
+                    submitConan(subID);
                 }
             }
         }

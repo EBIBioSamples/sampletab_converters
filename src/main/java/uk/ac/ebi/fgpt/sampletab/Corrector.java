@@ -14,6 +14,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.Characteri
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 
@@ -43,19 +44,24 @@ public class Corrector {
         return sb.toString();
     }
     
+    private UnitAttribute correctUnit(UnitAttribute unit){
+        //TODO correct unit
+        return unit;
+    }
+    
     private SCDNodeAttribute correctSex(SexAttribute attr){
         if (attr.getAttributeValue().toLowerCase().equals("male")
                 || attr.getAttributeValue().toLowerCase().equals("m")
                 || attr.getAttributeValue().toLowerCase().equals("man")) {
             attr.setAttributeValue("male");
-            attr.setTermSourceREF("EFO");
             attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001266");
+            attr.setTermSourceREF("EFO");
         } else if (attr.getAttributeValue().toLowerCase().equals("female")
                 || attr.getAttributeValue().toLowerCase().equals("f")
                 || attr.getAttributeValue().toLowerCase().equals("woman")) {
             attr.setAttributeValue("female");
-            attr.setTermSourceREF("EFO");
             attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001265");
+            attr.setTermSourceREF("EFO");
         }
         return attr;
     }
