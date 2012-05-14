@@ -355,11 +355,22 @@ public class Accessioner {
         if (help) {
             // print the list of available options
             parser.printUsage(System.err);
-            System.err.println();
             System.exit(1);
             return;
         }
 
+        try {
+            doSetup();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            System.exit(1);
+            return;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.exit(1);
+            return;
+        }
+        
         log.debug("Looking for input files");
         List<File> inputFiles = new ArrayList<File>();
         inputFiles = FileUtils.getMatchesGlob(inputFilename);
