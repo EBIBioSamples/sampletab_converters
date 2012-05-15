@@ -201,7 +201,7 @@ public class DerivedFrom {
     public void convert(File sampletabFile, Writer writer) throws ParseException, IOException {
         log.info("preparing to load SampleData");
         SampleTabParser<SampleData> stparser = new SampleTabParser<SampleData>();
-        log.info("created MAGETABParser<SampleData>, beginning parse");
+        log.info("created SampleTabParser<SampleData>, beginning parse");
         SampleData st = stparser.parse(sampletabFile);
         convert(st, writer);
     }
