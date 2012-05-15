@@ -334,7 +334,7 @@ public class IMSRTabToSampleTab {
         st.msi.submissionReferenceLayer = true;
 
         st.msi.organizations.add(new Organization("International Mouse Strain Resource", null, "http://www.findmice.org/", null, null));
-        st.msi.organizations.add(new Organization("getSummary().facilities.get(index)", null, "http://www.findmice.org/", null, "Biomaterial Provider"));
+        st.msi.organizations.add(new Organization(getSummary().facilities.get(index), null, "http://www.findmice.org/", null, "Biomaterial Provider"));
         
         // TODO need mapping between site name and site number to do database
         st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/Taxonomy/", null));
