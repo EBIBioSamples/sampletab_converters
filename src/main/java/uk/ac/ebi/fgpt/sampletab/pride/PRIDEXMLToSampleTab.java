@@ -134,7 +134,7 @@ public class PRIDEXMLToSampleTab {
             SampleNode sample = new SampleNode();
             sample.setNodeName("GPR-"+accession);
             
-            DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, "http://www.ebi.ac.uk/pride/showExperiment.do?value="+accession);
+            DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, "http://www.ebi.ac.uk/pride/showExperiment.do?experimentAccessionNumber="+accession);
             sample.addAttribute(dbattr);
 
             for (Element cvparam : XMLUtils.getChildrenByName(sampledescription, "cvParam")){
