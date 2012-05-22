@@ -45,7 +45,110 @@ public class Corrector {
     }
     
     private UnitAttribute correctUnit(UnitAttribute unit){
-        //TODO correct unit
+        String lcval = unit.getAttributeValue().toLowerCase();
+        if (lcval.equals("alphanumeric")
+                || lcval.equals("na")
+                || lcval.equals("censored/uncensored")
+                || lcval.equals("m/f")
+                || lcval.equals("test/control")
+                || lcval.equals("yes/no")
+                || lcval.equals("y/n")
+                || lcval.equals("na")){
+            return null;
+        } else if (lcval.equals("meter")
+                || lcval.equals("meters")) {
+            unit.setAttributeValue("meter");
+        } else if (lcval.equals("cellsperliter")
+                || lcval.equals("cells per liter")
+                || lcval.equals("cellperliter")
+                || lcval.equals("cell per liter")
+                || lcval.equals("cellsperlitre")
+                || lcval.equals("cells per litre")
+                || lcval.equals("cellperlitre")
+                || lcval.equals("cell per litre")) {
+            unit.setAttributeValue("cell per liter");
+        } else if (lcval.equals("cellspermilliliter")
+                || lcval.equals("cells per milliliter")
+                || lcval.equals("cellpermilliliter")
+                || lcval.equals("cell per milliliter")
+                ||lcval.equals("cellspermillilitre")
+                || lcval.equals("cells per millilitre")
+                || lcval.equals("cellpermillilitre")
+                || lcval.equals("cell per millilitre")) {
+            unit.setAttributeValue("cell per millilitre");
+        } else if (lcval.equals("micromolesperliter")
+                || lcval.equals("micromoleperliter")
+                || lcval.equals("micromole per liter")
+                || lcval.equals("micromoles per liter")
+                || lcval.equals("micromolesperlitre")
+                || lcval.equals("micromoleperlitre")
+                || lcval.equals("micromole per litre")
+                || lcval.equals("micromoles per litre")) {
+            unit.setAttributeValue("micromole per liter");
+        } else if (lcval.equals("microgramsperliter")
+                || lcval.equals("microgramperliter")
+                || lcval.equals("microgram per liter")
+                || lcval.equals("micrograms per liter")
+                || lcval.equals("microgramsperlitre")
+                || lcval.equals("microgramperlitre")
+                || lcval.equals("microgram per litre")
+                || lcval.equals("micrograms per litre")) {
+            unit.setAttributeValue("microgram per liter");
+        } else if (lcval.equals("micromolesperkilogram")
+                || lcval.equals("micromoles per kilogram")
+                || lcval.equals("micromoleperkilogram")
+                || lcval.equals("micromole per kilogram")) {
+            unit.setAttributeValue("micromole per kilogram");
+        } else if (lcval.equals("psu")
+                || lcval.equals("practicalsalinityunit")
+                || lcval.equals("practical salinity unit")
+                || lcval.equals("practical salinity units")
+                || lcval.equals("pss-78")
+                || lcval.equals("practicalsalinityscale1978 ")) {
+            //technically, this is not a unit since its dimensionless..
+            unit.setAttributeValue("practical salinity unit");
+        } else if (lcval.equals("micromoles")
+                || lcval.equals("micromole")) {
+            unit.setAttributeValue("micromole");
+        } else if (lcval.equals("decimalhours")
+                || lcval.equals("decimalhour")
+                || lcval.equals("hours")
+                || lcval.equals("hour")) {
+            unit.setAttributeValue("hour");
+        } else if (lcval.equals("day")
+                || lcval.equals("days")) {
+            unit.setAttributeValue("day");
+        } else if (lcval.equals("week")
+                || lcval.equals("weeks")) {
+            unit.setAttributeValue("week");
+        } else if (lcval.equals("month")
+                || lcval.equals("months")) {
+            unit.setAttributeValue("month");
+        } else if (lcval.equals("year")
+                || lcval.equals("years")) {
+            unit.setAttributeValue("year");
+        } else if (lcval.equals("percentage")) {
+            unit.setAttributeValue("percent");
+        } else if (lcval.equals("decimal degrees")
+                || lcval.equals("decimal degree")
+                || lcval.equals("decimaldegrees")
+                || lcval.equals("decimaldegree")) {
+            unit.setAttributeValue("decimal degree");
+        } else if (lcval.equals("celcius")
+                || lcval.equals("degree celcius")
+                || lcval.equals("degrees celcius")
+                || lcval.equals("degreecelcius")
+                || lcval.equals("centigrade")
+                || lcval.equals("degree centigrade")
+                || lcval.equals("degrees centigrade")
+                || lcval.equals("degreecentigrade")
+                || lcval.equals("c")
+                || lcval.equals("??c")
+                || lcval.equals("degree c")
+                || lcval.equals("internationaltemperaturescale1990")
+                || lcval.equals("iternationaltemperaturescale1990")) {
+            unit.setAttributeValue("Celcius");
+        } 
         return unit;
     }
     
@@ -256,6 +359,11 @@ public class Corrector {
         //TODO HTML URL encoding e.g. %3E %apos; %quot;
         
         //TODO demote some characteristics to comments
+        
+        
+        if (attr.unit != null){
+            attr.unit = correctUnit(attr.unit);
+        }
         
         return attr;
     }
