@@ -71,15 +71,15 @@ public class Accessioner {
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
+
+    // receives other command line parameters than options
+    @Argument
+    private List<String> arguments = new ArrayList<String>();
     
     private int exitcode = 0;
     
     private static boolean setup = false;
     private static ObjectPool connectionPool = new GenericObjectPool();
-
-    // receives other command line parameters than options
-    @Argument
-    private List<String> arguments = new ArrayList<String>();
 
     private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
 
@@ -334,139 +334,5 @@ public class Accessioner {
 
     public void convert(String inputFilename, String outputFilename) throws IOException, ParseException, SQLException {
         convert(inputFilename, new File(outputFilename));
-    }
-
-    public static void main(String[] args) {
-        new Accessioner().doMain(args);
-    }
-
-    public void doMain(String[] args) {
-
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments.
-            parser.parseArgument(args);
-            // TODO check for extra arguments?
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.exit(1);
-            return;
-        }
-
-        try {
-            doSetup();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.exit(1);
-            return;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.exit(1);
-            return;
-        }
-        
-        log.debug("Looking for input files");
-        List<File> inputFiles = new ArrayList<File>();
-        inputFiles = FileUtils.getMatchesGlob(inputFilename);
-        log.info("Found " + inputFiles.size() + " input files from "+inputFilename);
-        Collections.sort(inputFiles);
-
-        class AccessionTask implements Runnable {
-            private final File inputFile;
-            private final File outputFile;
-
-            public AccessionTask(File inputFile, File outputFile) {
-                this.inputFile = inputFile;
-                this.outputFile = outputFile;
-            }
-
-            public void run() {
-                SampleData st = null;
-                try {
-                    st = convert(this.inputFile);
-                } catch (ParseException e) {
-                    System.err.println("ParseException converting " + this.inputFile);
-                    e.printStackTrace();
-                    exitcode = 1;
-                    return;
-                } catch (IOException e) {
-                    System.err.println("IOException converting " + this.inputFile);
-                    e.printStackTrace();
-                    exitcode = 1;
-                    return;
-                } catch (SQLException e) {
-                    System.err.println("SQLException converting " + this.inputFile);
-                    e.printStackTrace();
-                    exitcode = 1;
-                    return;
-                }
-                
-                Corrector c = new Corrector();
-                c.correct(st);
-                
-                //TODO add derived from detector here
-
-                FileWriter out = null;
-                try {
-                    out = new FileWriter(this.outputFile);
-                } catch (IOException e) {
-                    System.out.println("Error opening " + this.outputFile);
-                    e.printStackTrace();
-                    exitcode = 1;
-                    return;
-                }
-
-                SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-                try {
-                    sampletabwriter.write(st);
-                } catch (IOException e) {
-                    System.out.println("Error writing " + this.outputFile);
-                    e.printStackTrace();
-                    exitcode = 1;
-                    return;
-                }
-            }
-        }
-
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
-
-        for (File inputFile : inputFiles) {
-            // System.out.println("Checking "+inputFile);
-            File outputFile = new File(inputFile.getParentFile(), outputFilename);
-            if (!outputFile.exists() 
-                    || outputFile.lastModified() < inputFile.lastModified()) {
-                Runnable t = new AccessionTask(inputFile, outputFile);
-                if (threaded){
-                    pool.execute(t);
-                } else {
-                    t.run();
-                }
-            }
-        }
-        
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
-                exitcode = 1;
-                return;
-            }
-        }
-        log.info("Finished processing");
-
-        System.exit(exitcode);
     }
 }
