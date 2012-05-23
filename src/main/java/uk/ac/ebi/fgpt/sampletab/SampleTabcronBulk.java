@@ -230,22 +230,26 @@ public class SampleTabcronBulk {
                 log.info("Applying corrections...");
                 corrector.correct(st);
 
-                log.info("Detecting derived from...");
-                try {
-                    derivedFrom.convert(st);
-                } catch (IOException e) {
-                    log.error("Unable to find derived from relationships due to error");
-                    e.printStackTrace();
-                    return;
-                }
-
-                log.info("Detecting same as...");
-                try {
-                    sameAs.convert(st);
-                } catch (IOException e) {
-                    log.error("Unable to find derived from relationships due to error");
-                    e.printStackTrace();
-                    return;
+                //dont detect relationships for reference samples
+                //these will be done manually
+                if (!st.msi.submissionReferenceLayer) {
+                    log.info("Detecting derived from...");
+                    try {
+                        derivedFrom.convert(st);
+                    } catch (IOException e) {
+                        log.error("Unable to find derived from relationships due to error");
+                        e.printStackTrace();
+                        return;
+                    }
+    
+                    log.info("Detecting same as...");
+                    try {
+                        sameAs.convert(st);
+                    } catch (IOException e) {
+                        log.error("Unable to find derived from relationships due to error");
+                        e.printStackTrace();
+                        return;
+                    }
                 }
                 
                 //write it back out
