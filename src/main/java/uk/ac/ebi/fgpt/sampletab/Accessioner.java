@@ -406,6 +406,11 @@ public class Accessioner {
                     exitcode = 1;
                     return;
                 }
+                
+                Corrector c = new Corrector();
+                c.correct(st);
+                
+                //TODO add derived from detector here
 
                 FileWriter out = null;
                 try {
