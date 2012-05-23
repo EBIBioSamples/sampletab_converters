@@ -45,38 +45,15 @@ import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class Accessioner {
 
-    @Option(name = "-h", aliases={"--help"}, usage = "display help")
-    private boolean help;
-
-    @Option(name = "-i", aliases={"--input"}, usage = "input filename or glob")
-    private String inputFilename;
-
-    @Option(name = "-o", aliases={"--output"}, usage = "output filename")
-    private String outputFilename;
-
-    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
     private String hostname;
 
-    @Option(name = "-t", aliases={"--port"}, usage = "server port")
     private int port = 3306;
 
-    @Option(name = "-d", aliases={"--database"}, usage = "server database")
     private String database;
 
-    @Option(name = "-u", aliases={"--username"}, usage = "server username")
     private String username;
 
-    @Option(name = "-p", aliases={"--password"}, usage = "server password")
     private String password;
-    
-    @Option(name = "--threaded", usage = "use multiple threads?")
-    private boolean threaded = false;
-
-    // receives other command line parameters than options
-    @Argument
-    private List<String> arguments = new ArrayList<String>();
-    
-    private int exitcode = 0;
     
     private static boolean setup = false;
     private static ObjectPool connectionPool = new GenericObjectPool();
@@ -87,8 +64,19 @@ public class Accessioner {
     
     private BasicDataSource ds;
 
-    public Accessioner() {
+
+    public Accessioner(String host, int port, String database, String username, String password)
+            throws ClassNotFoundException, SQLException {
+        // Setup the connection with the DB
+        this.username = username;
+        this.password = password;
+        this.hostname = host;
+        this.port = port;
+        this.database = database;
+        
+        doSetup();
     }
+
     
     private void doSetup() throws ClassNotFoundException, SQLException{
         //this will only setup for the first instance
@@ -112,20 +100,6 @@ public class Accessioner {
         
         setup = true;
     }
-
-    public Accessioner(String host, int port, String database, String username, String password)
-            throws ClassNotFoundException, SQLException {
-        this();
-        // Setup the connection with the DB
-        this.username = username;
-        this.password = password;
-        this.hostname = host;
-        this.port = port;
-        this.database = database;
-        
-        doSetup();
-    }
-
     public SampleData convert(String sampleTabFilename) throws IOException, ParseException, SQLException {
         return convert(new File(sampleTabFilename));
     }
@@ -152,7 +126,6 @@ public class Accessioner {
             prefix = "SAMEA";
             table = "sample_assay";
         } else {
-            exitcode = 1;
             throw new ParseException("Must specify a Submission Reference Layer MSI attribute.");
         }
 
