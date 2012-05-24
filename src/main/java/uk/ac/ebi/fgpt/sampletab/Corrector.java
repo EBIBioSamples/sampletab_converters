@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractRelationshipAttribute;
@@ -21,6 +22,9 @@ import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 public class Corrector {
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
+    
+    private TermSource efo = new TermSource("EFO", "http://www.ebi.ac.uk/efo/", null);
+    private TermSource ncbiTaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
 
     public String getInitialCapitals(String in){
         StringBuilder sb = new StringBuilder();
@@ -152,24 +156,24 @@ public class Corrector {
         return unit;
     }
     
-    private SCDNodeAttribute correctSex(SexAttribute attr){
+    private SCDNodeAttribute correctSex(SexAttribute attr, SampleData sampledata){
         if (attr.getAttributeValue().toLowerCase().equals("male")
                 || attr.getAttributeValue().toLowerCase().equals("m")
                 || attr.getAttributeValue().toLowerCase().equals("man")) {
             attr.setAttributeValue("male");
             attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001266");
-            attr.setTermSourceREF("EFO");
+            attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
         } else if (attr.getAttributeValue().toLowerCase().equals("female")
                 || attr.getAttributeValue().toLowerCase().equals("f")
                 || attr.getAttributeValue().toLowerCase().equals("woman")) {
             attr.setAttributeValue("female");
             attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001265");
-            attr.setTermSourceREF("EFO");
+            attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
         }
         return attr;
     }
     
-    private SCDNodeAttribute correctOrganism(OrganismAttribute attr){
+    private SCDNodeAttribute correctOrganism(OrganismAttribute attr, SampleData sampledata){
 
         if (attr.getTermSourceREF() == null){
             if (attr.getAttributeValue().matches("[0-9]+")){
@@ -194,20 +198,22 @@ public class Corrector {
                     //e.printStackTrace();
                 }
                 if (taxid != null){
-                    attr.setTermSourceREF("NCBI Taxonomy");
                     attr.setTermSourceID(taxid);
+                    String ncbiTaxonomyName = sampledata.msi.getOrAddTermSource(ncbiTaxonomy);
+                    attr.setTermSourceREF(ncbiTaxonomyName);
                 }
             }
         } else if (attr.getTermSourceID().startsWith("http://purl.org/obo/owl/NCBITaxon#NCBITaxon_")){
             Integer taxid = new Integer(attr.getTermSourceID().substring("http://purl.org/obo/owl/NCBITaxon#NCBITaxon_".length(), attr.getTermSourceID().length()));
             attr.setTermSourceID(taxid);
-            attr.setTermSourceREF("NCBI Taxonomy");
+            String ncbiTaxonomyName = sampledata.msi.getOrAddTermSource(ncbiTaxonomy);
+            attr.setTermSourceREF(ncbiTaxonomyName);
         }
         
         return attr;
     }
     
-    private SCDNodeAttribute correctCharacteristic(CharacteristicAttribute attr){        
+    private SCDNodeAttribute correctCharacteristic(CharacteristicAttribute attr, SampleData sampledata){        
         //bulk replace underscore with space in types
         attr.type = attr.type.replace("_", " ");
 
@@ -222,7 +228,7 @@ public class Corrector {
                 || attr.type.toLowerCase().equals("arrayexpress-species") //from ENA SRA
                 || attr.type.toLowerCase().equals("cell organism") //from ENA SRA
                 ) {
-            return correctOrganism(new OrganismAttribute(attr.getAttributeValue()));
+            return correctOrganism(new OrganismAttribute(attr.getAttributeValue()), sampledata);
         }
         
         // make sex a separate attribute
@@ -232,7 +238,7 @@ public class Corrector {
                 || attr.type.toLowerCase().equals("cell sex") //from ENA SRA
                 ) {
             //this will handle the real corrections
-            return correctSex(new SexAttribute(attr.getAttributeValue()));
+            return correctSex(new SexAttribute(attr.getAttributeValue()), sampledata);
         }
         
         
@@ -282,15 +288,15 @@ public class Corrector {
             attr.type = "organism part";
             if (attr.getAttributeValue().toLowerCase().equals("blood")){
                 attr.setAttributeValue("blood");
-                attr.setTermSourceREF("EFO");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
             } else if (attr.getAttributeValue().toLowerCase().equals("skin")){
                 attr.setAttributeValue("skin");
-                attr.setTermSourceREF("EFO");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000962");
             } else if (attr.getAttributeValue().toLowerCase().equals("bone marrow")){
                 attr.setAttributeValue("bone marrow");
-                attr.setTermSourceREF("EFO");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000868");
             }
         } else if (attr.type.toLowerCase().equals("phenotype")) {
@@ -324,16 +330,16 @@ public class Corrector {
             attr.type = getInitialCapitals(attr.type);
             if (attr.getAttributeValue().toLowerCase().equals("liver")) {
                 attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
-                attr.setTermSourceREF("EFO");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
             } else if (attr.getAttributeValue().toLowerCase().equals("blood")) {
                 attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
-                attr.setTermSourceREF("EFO");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
             } else if (attr.getAttributeValue().toLowerCase().equals("breast")
                     || attr.getAttributeValue().toLowerCase().equals("mammary gland")) {
                 attr.setAttributeValue("mammary gland");
-                attr.setTermSourceREF("EFO");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
             } 
         } else if (attr.type.toLowerCase().equals("cell type")
@@ -342,16 +348,16 @@ public class Corrector {
             //TODO clarify some of these as tissue or cell type
             if (attr.getAttributeValue().toLowerCase().equals("liver")) {
                 attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
-                attr.setTermSourceREF("EFO");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
             } else if (attr.getAttributeValue().toLowerCase().equals("blood")) {
                 attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
-                attr.setTermSourceREF("EFO");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
             } else if (attr.getAttributeValue().toLowerCase().equals("breast")
                     || attr.getAttributeValue().toLowerCase().equals("mammary gland")) {
                 attr.setAttributeValue("mammary gland");
-                attr.setTermSourceREF("EFO");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
             } 
         }
@@ -369,8 +375,8 @@ public class Corrector {
     }
     
     
-    public void correct(SampleData st) {
-        for (SampleNode s : st.scd.getNodes(SampleNode.class)) {
+    public void correct(SampleData sampledata) {
+        for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
             //convert to array so we can delete and add attributes if needed
             for (SCDNodeAttribute a : new ArrayList<SCDNodeAttribute>(s.getAttributes())) {
                 boolean isAbstractSCDAttribute = false;
@@ -411,11 +417,11 @@ public class Corrector {
                 }
                 // tidy all characteristics
                 if (isCharacteristic) {
-                    updated = correctCharacteristic((CharacteristicAttribute) a);
+                    updated = correctCharacteristic((CharacteristicAttribute) a, sampledata);
                 } else if (isSex) {
-                    updated = correctSex((SexAttribute) a);
+                    updated = correctSex((SexAttribute) a, sampledata);
                 } else if (isOrganism) {
-                    updated = correctOrganism((OrganismAttribute) a);
+                    updated = correctOrganism((OrganismAttribute) a, sampledata);
                 }
                 
                 //TODO comments
@@ -431,7 +437,7 @@ public class Corrector {
                     //It is better to refer by BioSD accession.
                     AbstractRelationshipAttribute rela = (AbstractRelationshipAttribute) a;
                     String targetName = rela.getAttributeValue();
-                    SampleNode target = st.scd.getNode(targetName, SampleNode.class);
+                    SampleNode target = sampledata.scd.getNode(targetName, SampleNode.class);
                     if (target != null && target.getSampleAccession() != null){
                         rela.setAttributeValue(target.getSampleAccession());
                     }
