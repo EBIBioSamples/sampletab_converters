@@ -13,7 +13,8 @@ umask 002
 #If a java environment variable is not provided, then use a default
 if [ -z $java ]
 then
-  java="/ebi/research/software/Linux_x86_64/opt/java/jdk1.7.0/bin/java"
+  #java="/ebi/research/software/Linux_x86_64/opt/java/jdk1.7.0/bin/java"
+  java="/ebi/research/software/Linux_x86_64/opt/java/jdk1.6.0_22/bin/java"
 fi
 
 #args environment variable can be used to provide java arguments
