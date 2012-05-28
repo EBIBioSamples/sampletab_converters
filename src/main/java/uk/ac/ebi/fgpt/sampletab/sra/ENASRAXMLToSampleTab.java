@@ -146,7 +146,7 @@ public class ENASRAXMLToSampleTab {
 
         //ENA SRA does not have explicit term sources
         //Put a couple on by default
-        st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/Taxonomy/", null));
+        st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null));
         st.msi.termSources.add(new TermSource("EFO", "http://www.ebi.ac.uk/efo", null));
         
         log.info("MSI section complete, starting SCD section.");

@@ -215,7 +215,7 @@ public class NCBIBiosampleToSampleTab {
 			}
 		}
 		
-		st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/Taxonomy/", null));
+		st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null));
 
 		SampleNode scdnode = new SampleNode();
 		scdnode.setNodeName(st.msi.submissionTitle);
