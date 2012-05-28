@@ -25,6 +25,7 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
 import uk.ac.ebi.arrayexpress2.magetab.parser.IDFParser;
 import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
+import uk.ac.ebi.arrayexpress2.magetab.validator.Validator;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
@@ -36,6 +37,8 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.Characteri
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
+import uk.ac.ebi.fgpt.sampletab.CorrectorTermSource;
 
 public class MageTabToSampleTab {
 	private final MAGETABParser<MAGETABInvestigation> parser;
@@ -87,30 +90,13 @@ public class MageTabToSampleTab {
         }
 		return convert(mt);
 	}
-
-	public SampleData convert(MAGETABInvestigation mt)
-			throws ParseException {
-
-		SampleData st = new SampleData();
-		st.msi.submissionTitle = mt.IDF.investigationTitle;
-		st.msi.submissionDescription = mt.IDF.experimentDescription;
-		if (mt.IDF.publicReleaseDate != null && !mt.IDF.publicReleaseDate.trim().equals("")) {
-			try{
-			    st.msi.submissionReleaseDate = magetabdateformat
-					.parse(mt.IDF.publicReleaseDate.trim());
-			} catch (java.text.ParseException e){
-				log.error("Unable to parse release date "+mt.IDF.publicReleaseDate);
-			}
-		}
-		//reuse the release date as update date
-		st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
-		st.msi.submissionIdentifier = "GA" + mt.IDF.accession;
-		st.msi.submissionReferenceLayer = false;
-		for (int i = 0; i < mt.IDF.publicationDOI.size() || i < mt.IDF.pubMedId.size(); i++){
-		    String doi = null;
-		    if (i < mt.IDF.publicationDOI.size()){
-		        doi = mt.IDF.publicationDOI.get(i);
-		    }
+	
+	private void convertPublications(MAGETABInvestigation mt, SampleData st){
+        for (int i = 0; i < mt.IDF.publicationDOI.size() || i < mt.IDF.pubMedId.size(); i++){
+            String doi = null;
+            if (i < mt.IDF.publicationDOI.size()){
+                doi = mt.IDF.publicationDOI.get(i);
+            }
             String pubmedid = null;
             if (i < mt.IDF.pubMedId.size()){
                 pubmedid = mt.IDF.pubMedId.get(i);
@@ -119,8 +105,10 @@ public class MageTabToSampleTab {
             if (!st.msi.publications.contains(pub)){
                 st.msi.publications.add(pub);
             }
-		}
-		
+        }
+	}
+	
+    private void convertPeople(MAGETABInvestigation mt, SampleData st){
         for (int i = 0; i < mt.IDF.personLastName.size() || 
             i < mt.IDF.personMidInitials.size() || 
             i < mt.IDF.personFirstName.size() || 
@@ -152,10 +140,13 @@ public class MageTabToSampleTab {
             if (!st.msi.persons.contains(org)){
                 st.msi.persons.add(org);
             }
-        }
+        }   
+    }
 
-		// AE doesn't really have organisations, but does have affiliations
-		// st.msi.organizationURI/Email can't be mapped from ArrayExpress
+    private void convertOrganizations(MAGETABInvestigation mt, SampleData st){
+
+        // AE doesn't really have organisations, but does have affiliations
+        // st.msi.organizationURI/Email can't be mapped from ArrayExpress
         for (int i = 0; i < mt.IDF.personAffiliation.size() || 
                             i < mt.IDF.personAddress.size() || 
                             i < mt.IDF.personRoles.size(); i++){
@@ -176,45 +167,57 @@ public class MageTabToSampleTab {
                 st.msi.organizations.add(org);
             }
         }
+    }
+    
+    private String convertTermSource(String name, MAGETABInvestigation mt, SampleData st){
+        for (int i = 0; i < mt.IDF.termSourceName.size(); i++){
+            String tsname = null;
+            if (i < mt.IDF.termSourceName.size()){
+                tsname = mt.IDF.termSourceName.get(i);
+            }
+            if (tsname.equals(name)){
+                String uri = null;
+                if (i < mt.IDF.termSourceFile.size()){
+                    uri = mt.IDF.termSourceFile.get(i);
+                }
+                String version = null;
+                if (i < mt.IDF.termSourceVersion.size()){
+                    version = mt.IDF.termSourceVersion.get(i);
+                }
+                TermSource ts = new TermSource(name, uri, version);
+                return st.msi.getOrAddTermSource(ts);
+            }
+        }
+        throw new IllegalArgumentException("Unable to find term source "+name);
+    }
+    
+	public SampleData convert(MAGETABInvestigation mt)
+			throws ParseException {
+
+		SampleData st = new SampleData();
+		st.msi.submissionTitle = mt.IDF.investigationTitle;
+		st.msi.submissionDescription = mt.IDF.experimentDescription;
+		if (mt.IDF.publicReleaseDate != null && !mt.IDF.publicReleaseDate.trim().equals("")) {
+			try{
+			    st.msi.submissionReleaseDate = magetabdateformat
+					.parse(mt.IDF.publicReleaseDate.trim());
+			} catch (java.text.ParseException e){
+				log.error("Unable to parse release date "+mt.IDF.publicReleaseDate);
+			}
+		}
+		//reuse the release date as update date
+		st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
+		st.msi.submissionIdentifier = "GA" + mt.IDF.accession;
+		st.msi.submissionReferenceLayer = false;
+		
+		convertPublications(mt, st);
+		convertPeople(mt, st);
+		convertOrganizations(mt,st);
 
 		st.msi.databases.add(new Database("ArrayExpress", 
 		        "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
 		        mt.IDF.accession));
 		
-        for (int i = 0; i < mt.IDF.termSourceName.size() || 
-                            i < mt.IDF.termSourceFile.size() || 
-                            i < mt.IDF.termSourceVersion.size(); i++){
-            String name = null;
-            if (i < mt.IDF.termSourceName.size()){
-                name = mt.IDF.termSourceName.get(i);
-            }
-            String uri = null;
-            if (i < mt.IDF.termSourceFile.size()){
-                uri = mt.IDF.termSourceFile.get(i);
-            }
-            String version = null;
-            if (i < mt.IDF.termSourceVersion.size()){
-                version = mt.IDF.termSourceVersion.get(i);
-            }
-            
-            TermSource ts = new TermSource(name, uri, version);
-            if (ts.getName() != null){
-                if (!st.msi.termSources.contains(ts)){
-                    //also check if the name is a duplicate
-                    boolean dup = false;
-                    for (TermSource tstest: st.msi.termSources){
-                        if (tstest.getName().equals(ts.getName())){
-                            dup = true;
-                        }
-                    }
-                    if (!dup){
-                        //TODO check if one or other has a null version and update accordingly
-                        st.msi.termSources.add(ts);
-                    }
-                }
-            }
-        }
-
 		// TODO add samples...
 		// get the nodes that have relevant sample information
 		// e.g. characteristics
@@ -285,18 +288,27 @@ public class MageTabToSampleTab {
 			log.debug("got characteristics");
 			if (characteristics != null) {
 				for (CharacteristicsAttribute sdrfcharacteristic : characteristics) {
-					CharacteristicAttribute scdcharacteristic = new CharacteristicAttribute();
-					scdcharacteristic.type = sdrfcharacteristic.type;
-					scdcharacteristic.setAttributeValue(sdrfcharacteristic
-							.getAttributeValue());
-					if (sdrfcharacteristic.unit != null) {
-						scdcharacteristic.unit = new UnitAttribute();
-						scdcharacteristic.unit.setTermSourceREF(sdrfcharacteristic.unit.termSourceREF);
-						scdcharacteristic.unit.setTermSourceID(sdrfcharacteristic.unit.termAccessionNumber);
+					
+					if (sdrfcharacteristic.getAttributeValue() != null && sdrfcharacteristic.getAttributeValue().trim().length() > 0){
+	                    CharacteristicAttribute scdcharacteristic = new CharacteristicAttribute();
+					
+    					scdcharacteristic.type = sdrfcharacteristic.type;
+    					scdcharacteristic.setAttributeValue(sdrfcharacteristic
+    							.getAttributeValue());
+    					if (sdrfcharacteristic.unit != null) {
+    						scdcharacteristic.unit = new UnitAttribute();
+    						if (sdrfcharacteristic.unit.termSourceREF != null && sdrfcharacteristic.unit.termSourceREF.length() > 0){
+        						scdcharacteristic.unit.setTermSourceREF(convertTermSource(sdrfcharacteristic.unit.termSourceREF, mt, st));
+        						scdcharacteristic.unit.setTermSourceID(sdrfcharacteristic.unit.termAccessionNumber);
+    						}
+    					} else {
+    					    if (sdrfcharacteristic.termSourceREF != null && sdrfcharacteristic.termSourceREF.length() > 0){
+            					scdcharacteristic.setTermSourceREF(convertTermSource(sdrfcharacteristic.termSourceREF, mt, st));
+            					scdcharacteristic.setTermSourceID(sdrfcharacteristic.termAccessionNumber);
+        					}
+    					}
+    					scdnode.addAttribute(scdcharacteristic);
 					}
-					scdcharacteristic.setTermSourceREF(sdrfcharacteristic.termSourceREF);
-					scdcharacteristic.setTermSourceID(sdrfcharacteristic.termAccessionNumber);
-					scdnode.addAttribute(scdcharacteristic);
 				}
 			}
 			
@@ -312,7 +324,11 @@ public class MageTabToSampleTab {
 
 			st.scd.addNode(scdnode);
 		}
-
+		
+		//correct any term source issues here first
+        CorrectorTermSource cts = new CorrectorTermSource();
+        cts.correct(st);
+		
 		log.info("Finished convert()");
 		return st;
 	}
@@ -398,7 +414,7 @@ public class MageTabToSampleTab {
 		String sampleTabFilename = args[1];
 		
         //a few idf files specify multiple sdrf files which may not all have been downloaded
-        //due to a bug in limpopo, this can cause limpopo to hang indefinately.
+        //due to a bug in limpopo, this can cause limpopo to hang indefinitely.
         //therefore, first parse the idf only to see if this is something to avoid.
 
         IDFParser idfparser = new IDFParser();
