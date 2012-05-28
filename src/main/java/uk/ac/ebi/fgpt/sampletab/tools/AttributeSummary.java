@@ -260,14 +260,14 @@ public class AttributeSummary {
         		for (String value : values){
         			out.write(value+" ("+attributes.get(key).get(value)+")\t");
         			colcount += 1;
-        			if (colcount > this.cols){
+        			if (this.cols > 0 && colcount > this.cols){
         			    break;
         			}
         		}
         		
         		out.write("\n");
         		rowcount += 1;
-                if (rowcount > this.rows){
+                if (this.rows > 0 && rowcount > this.rows){
                     break;
                 }
         	}
