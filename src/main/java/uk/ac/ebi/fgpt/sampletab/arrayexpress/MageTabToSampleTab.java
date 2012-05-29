@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
@@ -197,7 +200,14 @@ public class MageTabToSampleTab {
 		SampleData st = new SampleData();
 		st.msi.submissionTitle = mt.IDF.investigationTitle;
 		st.msi.submissionDescription = mt.IDF.experimentDescription;
-		if (mt.IDF.publicReleaseDate != null && !mt.IDF.publicReleaseDate.trim().equals("")) {
+		if (mt.IDF.publicReleaseDate == null){
+		    //null release date
+		    //ArrayExpress defaults to private
+		    //so set a date in the far future
+		    Calendar cal = new GregorianCalendar();
+		    cal.set(3000, 1, 1);
+		    st.msi.submissionReleaseDate = cal.getTime();
+		} else if (mt.IDF.publicReleaseDate != null && !mt.IDF.publicReleaseDate.trim().equals("")) {
 			try{
 			    st.msi.submissionReleaseDate = magetabdateformat
 					.parse(mt.IDF.publicReleaseDate.trim());
