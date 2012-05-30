@@ -8,3 +8,4 @@ ${0%/*}/sampletab-converters.sh uk.ac.ebi.fgpt.sampletab.sra.ENASRAXMLToSampleTa
 
 
 exit $?
+
