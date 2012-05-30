@@ -7,6 +7,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -175,11 +176,25 @@ public class DerivedFrom {
                 }
             }
             //now we should have removed multi-parent derived from in favor of the most child-like
+
+            //check its not a self-hit
+            for (Iterator<String> it = hits.iterator(); it.hasNext(); ){
+                String hit = it.next();
+                if (hit.equals(sample.getSampleAccession())){
+                    it.remove();
+                }
+            }
             //can actually add attributes now
-            for(String hit : hits){
-                //check its not a self-hit
-                if (!hit.equals(sample.getSampleAccession())){
-                    sample.addAttribute(new DerivedFromAttribute(hit));
+            //only add one derived from per sample at the moment
+            if (hits.size() == 1){
+                for(String hit : hits){
+                        sample.addAttribute(new DerivedFromAttribute(hit));
+                }
+            } else if (hits.size() == 0){
+                //do nothing
+            } else  if (hits.size() > 1){
+                for(String hit : hits){
+                    log.warn("Multiple derived from detected "+sample.getSampleAccession()+" <- "+hit);
                 }
             }
         }
