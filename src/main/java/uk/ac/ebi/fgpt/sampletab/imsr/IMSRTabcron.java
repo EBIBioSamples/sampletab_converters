@@ -27,6 +27,9 @@ public class IMSRTabcron {
 
     @Option(name = "-o", aliases={"--output"}, usage = "output directory")
     private String outputDirName;
+
+    @Option(name = "--no-conan", usage = "do not trigger conan loads?")
+    private boolean noconan = false;
         
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -109,7 +112,8 @@ public class IMSRTabcron {
                 Date fileDate = new Date(raw.lastModified());
                 if (summary.updates.get(i).after(fileDate)){
                     downloader.download(subID, raw);
-                    submitConan(subID);
+                    if (!noconan)
+                        submitConan(subID);
                 }
             }
         }

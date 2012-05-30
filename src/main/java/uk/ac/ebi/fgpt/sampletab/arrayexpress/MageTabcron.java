@@ -32,6 +32,9 @@ public class MageTabcron {
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
+
+    @Option(name = "--no-conan", usage = "do not trigger conan loads?")
+    private boolean noconan = false;
     
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -223,7 +226,8 @@ public class MageTabcron {
                             } else {
                                 t.run();
                             }
-                            conanProcess.add(submissionIdentifier);
+                            if (!noconan)
+                                conanProcess.add(submissionIdentifier);
                         }
 					}
 				}

@@ -30,6 +30,9 @@ public class ENASRAcron {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
 
+    @Option(name = "--no-conan", usage = "do not trigger conan loads?")
+    private boolean noconan = false;
+
     private Logger log = LoggerFactory.getLogger(getClass());
 
     private ENASRAcron() {
@@ -59,7 +62,7 @@ public class ENASRAcron {
                 e.printStackTrace();
                 return;
             }
-            if (newOrUpdate) {
+            if (!noconan && newOrUpdate) {
                 String submissionIdentifier = "GEN-"+identStudy;
                 try {
                     ConanUtils.submit(submissionIdentifier, "BioSamples (SRA) and load");
