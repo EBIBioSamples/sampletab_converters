@@ -5,3 +5,6 @@
 #and installed by http://coconut.ebi.ac.uk:9081/browse/BSD-CONVS
 
 ${0%/*}/sampletab-converters.sh uk.ac.ebi.fgpt.sampletab.pride.PRIDEXMLToSampleTab "$@"
+
+
+exit $?

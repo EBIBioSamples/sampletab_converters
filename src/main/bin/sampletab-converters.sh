@@ -38,3 +38,5 @@ umask 002
 
 #echo $java $args -classpath $classpath "$@"
 $java $args -classpath $classpath "$@"
+
+exit $?
