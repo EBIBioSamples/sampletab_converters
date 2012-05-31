@@ -183,9 +183,10 @@ public class Corrector {
             if (attr.getAttributeValue().matches("[0-9]+")){
                 Integer taxid = new Integer(attr.getAttributeValue());
                 try {
-                    String taxonName = TaxonUtils.getTaononOfID(taxid);
+                    String taxonName = TaxonUtils.getTaxonOfID(taxid);
                     attr.setAttributeValue(taxonName);
-                    attr.setTermSourceREF("NCBI Taxonomy");
+                    String ncbiTaxonomyName = sampledata.msi.getOrAddTermSource(ncbiTaxonomy);
+                    attr.setTermSourceREF(ncbiTaxonomyName);
                     attr.setTermSourceID(taxid);
                 } catch (TaxonException e) {
                     log.warn("Unable to find taxon #"+taxid);
@@ -288,7 +289,8 @@ public class Corrector {
             //TODO investigate
             attr.type = getInitialCapitals(attr.type);
         } else if (attr.type.toLowerCase().equals("organism part") 
-                ||attr.type.toLowerCase().equals("organismpart")) {
+                ||attr.type.toLowerCase().equals("organismpart")
+                ||attr.type.toLowerCase().equals("tissue")) {
             attr.type = "organism part";
             if (attr.getAttributeValue().toLowerCase().equals("blood")){
                 attr.setAttributeValue("blood");
@@ -302,7 +304,16 @@ public class Corrector {
                 attr.setAttributeValue("bone marrow");
                 attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000868");
-            }
+            } else if (attr.getAttributeValue().toLowerCase().equals("liver")) {
+                attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
+            } else if (attr.getAttributeValue().toLowerCase().equals("breast")
+                    || attr.getAttributeValue().toLowerCase().equals("mammary gland")) {
+                attr.setAttributeValue("mammary gland");
+                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
+            } 
         } else if (attr.type.toLowerCase().equals("phenotype")) {
             attr.type = getInitialCapitals(attr.type);
         } else if (attr.type.toLowerCase().equals("stage")) {
@@ -330,22 +341,6 @@ public class Corrector {
             attr.type = "time point";
             //TODO fix "Time Unit" being a separate characteristic
             //TODO fix embedding of units in the string (e.g. 24h) 
-        } else if (attr.type.toLowerCase().equals("tissue")) {
-            attr.type = getInitialCapitals(attr.type);
-            if (attr.getAttributeValue().toLowerCase().equals("liver")) {
-                attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
-            } else if (attr.getAttributeValue().toLowerCase().equals("blood")) {
-                attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
-            } else if (attr.getAttributeValue().toLowerCase().equals("breast")
-                    || attr.getAttributeValue().toLowerCase().equals("mammary gland")) {
-                attr.setAttributeValue("mammary gland");
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
-            } 
         } else if (attr.type.toLowerCase().equals("cell type")
                 || attr.type.toLowerCase().equals("celltype")) {
             attr.type = "cell type";

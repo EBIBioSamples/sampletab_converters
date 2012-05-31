@@ -50,7 +50,7 @@ public class DGVaXMLToSampleTab {
 
         String sciName;
         try {
-            sciName = TaxonUtils.getTaononOfID(taxID);
+            sciName = TaxonUtils.getTaxonOfID(taxID);
         } catch (TaxonException e) {
             e.printStackTrace();
             return new OrganismAttribute(new Integer(taxID).toString());

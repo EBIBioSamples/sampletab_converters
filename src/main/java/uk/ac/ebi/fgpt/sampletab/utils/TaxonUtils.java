@@ -77,7 +77,7 @@ public class TaxonUtils {
                 }
             });
 
-    public static String getTaononOfID(int taxID) throws TaxonException {
+    public static String getTaxonOfID(int taxID) throws TaxonException {
         if (taxID < 0){
             throw new IllegalArgumentException();
         }
