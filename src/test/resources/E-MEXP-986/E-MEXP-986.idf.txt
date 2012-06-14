@@ -43,5 +43,5 @@ Protocol Software
 Protocol Contact		
 Protocol Term Source REF		mo		
 SDRF File	E-MEXP-986.sdrf.txt	
-Term Source Name	mo		ncbitax	The MGED Ontology	ArrayExpress	mo	
-Term Source File	http://mged.sourceforge.net/ontologies/MGEDontology.php		http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html	http://mged.sourceforge.net/ontologies/MGEDontology.php	http://www.ebi.ac.uk/arrayexpress	http://mged.sourceforge.net/ontologies/MGEDontology.php	
+Term Source Name	mo	ncbitax	
+Term Source File	http://mged.sourceforge.net/ontologies/MGEDontology.php	http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html	
