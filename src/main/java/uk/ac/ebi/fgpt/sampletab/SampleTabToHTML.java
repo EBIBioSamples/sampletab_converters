@@ -62,10 +62,6 @@ public class SampleTabToHTML {
         
         return d;
     }
-    
-    public static void main(String[] args) {
-        new SampleTabToHTML().doMain(args);
-    }
 
     private class HTMLTask implements Runnable{
         private final File inputFile;
@@ -102,6 +98,10 @@ public class SampleTabToHTML {
         }
         
     }
+    
+    public static void main(String[] args) {
+        new SampleTabToHTML().doMain(args);
+    }
 
     public void doMain(String[] args) {
 
@@ -123,10 +123,8 @@ public class SampleTabToHTML {
             return;
         }
 
-        // TODO handle globs in filenames
         log.debug("Looking for input files");
         List<File> inputFiles = new ArrayList<File>();
-        // TODO remove hardcoding
         inputFiles = FileUtils.getMatchesGlob(inputFilename);
         log.info("Found " + inputFiles.size() + " input files from "+inputFilename);
         Collections.sort(inputFiles);
