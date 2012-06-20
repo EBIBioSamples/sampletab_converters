@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
-import uk.ac.ebi.fgpt.sampletab.SampleTabcronBulk;
+import uk.ac.ebi.fgpt.sampletab.SampleTabBulk;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class MageTabBulk {
@@ -66,7 +66,7 @@ public class MageTabBulk {
     private Logger log = LoggerFactory.getLogger(getClass());
 
 
-    private SampleTabcronBulk stcb = null;
+    private SampleTabBulk stcb = null;
     
     
     private class DoProcessFile implements Runnable {
@@ -198,7 +198,7 @@ public class MageTabBulk {
             }
             
             if (stcb == null){
-                stcb = new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload);
+                stcb = new SampleTabBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload);
             }
             stcb.process(subdir, scriptdir);
         }

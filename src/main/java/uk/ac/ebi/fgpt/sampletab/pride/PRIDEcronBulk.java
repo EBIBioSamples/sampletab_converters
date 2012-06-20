@@ -18,7 +18,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.fgpt.sampletab.SampleTabcronBulk;
+import uk.ac.ebi.fgpt.sampletab.SampleTabBulk;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 
 public class PRIDEcronBulk {
@@ -72,7 +72,7 @@ public class PRIDEcronBulk {
     private Logger log = LoggerFactory.getLogger(getClass());
 
 
-    private SampleTabcronBulk stcb = null;
+    private SampleTabBulk stcb = null;
     
     
     private class DoProcessFile implements Runnable {
@@ -120,7 +120,7 @@ public class PRIDEcronBulk {
             }
             
             if (stcb == null){
-                stcb = new SampleTabcronBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload);
+                stcb = new SampleTabBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload);
             }
             stcb.process(subdir, scriptdir);
         }

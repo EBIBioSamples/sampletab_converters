@@ -29,7 +29,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 
-public class SampleTabcronBulk {
+public class SampleTabBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
@@ -78,10 +78,10 @@ public class SampleTabcronBulk {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     
-    public SampleTabcronBulk(){
+    public SampleTabBulk(){
         Properties mysqlProperties = new Properties();
         try {
-            InputStream is = SampleTabcronBulk.class.getResourceAsStream("/mysql.properties");
+            InputStream is = SampleTabBulk.class.getResourceAsStream("/mysql.properties");
             mysqlProperties.load(is);
         } catch (IOException e) {
             log.error("Unable to read resource mysql.properties");
@@ -89,7 +89,7 @@ public class SampleTabcronBulk {
         }
         Properties ageProperties = new Properties();
         try {
-            ageProperties.load(SampleTabcronBulk.class.getResourceAsStream("/age.properties"));
+            ageProperties.load(SampleTabBulk.class.getResourceAsStream("/age.properties"));
         } catch (IOException e) {
             log.error("Unable to read resource age.properties");
             e.printStackTrace();
@@ -104,7 +104,7 @@ public class SampleTabcronBulk {
         this.agepassword = ageProperties.getProperty("password");
     }
     
-    public SampleTabcronBulk(String hostname, Integer port, String database, String username, String password, String agename, String ageusername, String agepassword, Boolean noload){
+    public SampleTabBulk(String hostname, Integer port, String database, String username, String password, String agename, String ageusername, String agepassword, Boolean noload){
         this();
         if (hostname != null)
             this.hostname = hostname;
@@ -397,7 +397,7 @@ public class SampleTabcronBulk {
     }
 
     public static void main(String[] args) {
-        new SampleTabcronBulk().doMain(args);
+        new SampleTabBulk().doMain(args);
     }
 
     public void doMain(String[] args) {
