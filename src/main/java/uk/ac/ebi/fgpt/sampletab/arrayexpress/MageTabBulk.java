@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.fgpt.sampletab.SampleTabcronBulk;
 
-public class MageTabcronBulk {
+public class MageTabBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
@@ -236,7 +236,7 @@ public class MageTabcronBulk {
     }
 
     public static void main(String[] args) {
-        new MageTabcronBulk().doMain(args);
+        new MageTabBulk().doMain(args);
     }
 
     public void doMain(String[] args) {

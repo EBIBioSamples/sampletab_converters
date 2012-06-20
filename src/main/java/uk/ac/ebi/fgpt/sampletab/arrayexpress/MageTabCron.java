@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
-public class MageTabcron {
+public class MageTabCron {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
@@ -40,7 +40,7 @@ public class MageTabcron {
 
 	private FTPClient ftp = null;
 
-	private MageTabcron() {
+	private MageTabCron() {
 	}
 
 	private void close() {
@@ -264,7 +264,7 @@ public class MageTabcron {
 	}
 
 	public static void main(String[] args) {
-        new MageTabcron().doMain(args);
+        new MageTabCron().doMain(args);
     }
 
     public void doMain(String[] args) {
