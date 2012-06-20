@@ -11,7 +11,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -45,10 +44,6 @@ public class SampleTabToGUIXML {
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
-
-    // receives other command line parameters than options
-    @Argument
-    private List<String> arguments = new ArrayList<String>();
 
     private Logger log = LoggerFactory.getLogger(getClass());
 

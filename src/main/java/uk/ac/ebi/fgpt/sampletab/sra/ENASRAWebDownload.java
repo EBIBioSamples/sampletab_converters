@@ -71,12 +71,13 @@ public class ENASRAWebDownload {
         }
         
         //check that it does not already exist
-        //TODO handle updates
         if (studyFile.exists()){
             Document existStudyDoc = XMLUtils.getDocument(studyFile);
             NodeComparator c = new NodeComparator();
             if (c.compare(studyDoc, existStudyDoc) != 0){
-                log.debug("Skipping "+accession);
+                //TODO also check samples, which may have been updated separately from study.
+                
+                log.debug("No changes, skipping "+accession);
                 return false;
             }
         }
