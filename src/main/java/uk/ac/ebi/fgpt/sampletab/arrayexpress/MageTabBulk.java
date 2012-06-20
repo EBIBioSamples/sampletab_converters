@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -11,22 +13,30 @@ import java.util.concurrent.TimeUnit;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.Argument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.fgpt.sampletab.SampleTabcronBulk;
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class MageTabBulk {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
-    @Option(name = "-i", aliases={"--input"}, usage = "input filename")
-    private String inputFilename;
+    //@Option(name = "-i", aliases={"--input"}, usage = "input filename or glob")
+    //private String inputFilename;
 
-    @Option(name = "-s", aliases={"--scripts"}, usage = "script directory")
+    //@Option(name = "-s", aliases={"--scripts"}, usage = "script directory")
+    //private String scriptDirname;
+
+    @Argument(required=true, index=0, metaVar="SCRIPTDIR", usage = "script directory")
     private String scriptDirname;
+
+    @Argument(required=true, index=1, metaVar="INPUT", usage = "input filenames or globs")
+    private List<String> inputFilenames;
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
@@ -200,40 +210,6 @@ public class MageTabBulk {
         }
         
     }
-    
-    public void run(File dir, File scriptdir) {
-        dir = dir.getAbsoluteFile();
-        scriptdir = scriptdir.getAbsoluteFile();
-
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
-        
-        File[] subdirs = dir.listFiles();
-        Arrays.sort(subdirs);
-        for (File subdir : subdirs) {
-            if (subdir.isDirectory()) {
-                Runnable t = new DoProcessFile(subdir, scriptdir);
-                if (threaded) {
-                    pool.execute(t);
-                } else {
-                    t.run();
-                }
-            }
-        }
-        
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
-            }
-        }
-    }
 
     public static void main(String[] args) {
         new MageTabBulk().doMain(args);
@@ -252,31 +228,45 @@ public class MageTabBulk {
 
         if (help) {
             // print the list of available options
+            parser.printSingleLineUsage(System.err);
+            System.err.println();
             parser.printUsage(System.err);
             System.err.println();
             System.exit(1);
             return;
         }
         
-        File outdir = new File(inputFilename);
-        
-        if (outdir.exists() && !outdir.isDirectory()) {
-            log.error("Target is not a directory");
-            System.exit(1);
-            return;
-        }
-
-        if (!outdir.exists())
-            outdir.mkdirs();
 
         File scriptdir = new File(scriptDirname);
-        
-        if (!outdir.exists() && !outdir.isDirectory()) {
-            log.error("Script directory missing or is not a directory");
-            System.exit(1);
-            return;
+        scriptdir = scriptdir.getAbsoluteFile();
+
+        int nothreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+               
+        for (String inputFilename : inputFilenames){
+            for (File subdir : FileUtils.getMatchesGlob(inputFilename)){
+                if (subdir.isDirectory()) {
+                    Runnable t = new DoProcessFile(subdir, scriptdir);
+                    if (threaded) {
+                        pool.execute(t);
+                    } else {
+                        t.run();
+                    }
+                }
+            }
         }
-        
-        run(outdir, scriptdir);
+                
+        // run the pool and then close it afterwards
+        // must synchronize on the pool object
+        synchronized (pool) {
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                log.error("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
+            }
+        }
     }
 }
