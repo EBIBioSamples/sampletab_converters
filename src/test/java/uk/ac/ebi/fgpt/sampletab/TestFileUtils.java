@@ -71,7 +71,10 @@ public class TestFileUtils extends TestCase {
         FA1A2SA1A2.add(new File("Second/A2.txt").getAbsoluteFile());
         assertEquals(FA1A2SA1A2, FileUtils.getMatchesGlob("*/A*.txt"));
         
-        
+
+        List<File> F = new ArrayList<File>();
+        F.add(new File("First/").getAbsoluteFile());
+        assertEquals(F, FileUtils.getMatchesGlob("Fir*/"));
     }
 
 }
