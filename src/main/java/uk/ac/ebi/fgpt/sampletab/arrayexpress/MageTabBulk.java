@@ -26,12 +26,6 @@ public class MageTabBulk {
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
-    //@Option(name = "-i", aliases={"--input"}, usage = "input filename or glob")
-    //private String inputFilename;
-
-    //@Option(name = "-s", aliases={"--scripts"}, usage = "script directory")
-    //private String scriptDirname;
-
     @Argument(required=true, index=0, metaVar="SCRIPTDIR", usage = "script directory")
     private String scriptDirname;
 

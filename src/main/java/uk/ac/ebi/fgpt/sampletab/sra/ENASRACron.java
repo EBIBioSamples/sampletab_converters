@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
-public class ENASRAcron {
+public class ENASRACron {
 
     @Option(name = "-h", aliases = { "--help" }, usage = "display help")
     private boolean help;
@@ -35,7 +35,7 @@ public class ENASRAcron {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private ENASRAcron() {
+    private ENASRACron() {
     }
 
     private class ENASRADownloadRunnable implements Runnable {
@@ -62,6 +62,7 @@ public class ENASRAcron {
                 e.printStackTrace();
                 return;
             }
+            //Submit it to conan for processing
             if (!noconan && newOrUpdate) {
                 String submissionIdentifier = "GEN-"+identStudy;
                 try {
@@ -148,7 +149,7 @@ public class ENASRAcron {
 	}
 
     public static void main(String[] args) {
-        new ENASRAcron().doMain(args);
+        new ENASRACron().doMain(args);
     }
 
     public void doMain(String[] args) {
