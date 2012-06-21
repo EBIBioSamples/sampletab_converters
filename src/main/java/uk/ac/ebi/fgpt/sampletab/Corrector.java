@@ -187,7 +187,7 @@ public class Corrector {
                     attr.setAttributeValue(taxonName);
                     String ncbiTaxonomyName = sampledata.msi.getOrAddTermSource(ncbiTaxonomy);
                     attr.setTermSourceREF(ncbiTaxonomyName);
-                    attr.setTermSourceID(taxid);
+                    attr.setTermSourceIDInteger(taxid);
                 } catch (TaxonException e) {
                     log.warn("Unable to find taxon #"+taxid);
                     //e.printStackTrace();
@@ -203,14 +203,14 @@ public class Corrector {
                     //e.printStackTrace();
                 }
                 if (taxid != null){
-                    attr.setTermSourceID(taxid);
+                    attr.setTermSourceIDInteger(taxid);
                     String ncbiTaxonomyName = sampledata.msi.getOrAddTermSource(ncbiTaxonomy);
                     attr.setTermSourceREF(ncbiTaxonomyName);
                 }
             }
         } else if (attr.getTermSourceID().startsWith("http://purl.org/obo/owl/NCBITaxon#NCBITaxon_")){
             Integer taxid = new Integer(attr.getTermSourceID().substring("http://purl.org/obo/owl/NCBITaxon#NCBITaxon_".length(), attr.getTermSourceID().length()));
-            attr.setTermSourceID(taxid);
+            attr.setTermSourceIDInteger(taxid);
             String ncbiTaxonomyName = sampledata.msi.getOrAddTermSource(ncbiTaxonomy);
             attr.setTermSourceREF(ncbiTaxonomyName);
         }

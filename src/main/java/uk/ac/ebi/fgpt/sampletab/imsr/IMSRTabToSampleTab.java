@@ -246,7 +246,7 @@ public class IMSRTabToSampleTab {
             OrganismAttribute organismattribute = new OrganismAttribute();
             organismattribute.setAttributeValue("Mus musculus (Mouse)");
             organismattribute.setTermSourceREF("NCBI Taxonomy");
-            organismattribute.setTermSourceID(10090);
+            organismattribute.setTermSourceIDInteger(10090);
 
             if (mutations.containsKey(name)) {
                 for (List<String> thismutation : mutations.get(name)) {

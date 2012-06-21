@@ -4,11 +4,9 @@ import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -17,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.dom4j.DocumentException;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -200,7 +197,7 @@ public class Coriell {
                             try {
                                 int taxid = TaxonUtils.findTaxon(oa.getAttributeValue());
                                 oa.setTermSourceREF("NCBI Taxonomy");
-                                oa.setTermSourceID(taxid);
+                                oa.setTermSourceIDInteger(taxid);
                             } catch (TaxonException e){
                                 log.warn("unable to find taxid for "+oa.getAttributeValue());
                             }
