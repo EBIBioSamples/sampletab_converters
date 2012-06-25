@@ -18,6 +18,26 @@ public class CorrectorTermSource {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public void correct(SampleData sampledata) {
+        //some samples have a term source ref but no term source id
+        //ideally, we should do a full lookup against that term source
+        //for the moment the information will be dropped
+        for (SCDNode scdnode : sampledata.scd.getAllNodes()){
+            for (SCDNodeAttribute attr : scdnode.getAttributes()){
+                if (AbstractNodeAttributeOntology.class.isInstance(attr)){
+                    AbstractNodeAttributeOntology attrOnt = (AbstractNodeAttributeOntology) attr;
+                    if (attrOnt.getTermSourceREF() != null && attrOnt.getTermSourceREF().trim().length() > 0){
+                        if (attrOnt.getTermSourceID() == null || attrOnt.getTermSourceID().trim().length() == 0){
+                            log.info("Removing un-IDed term source "+attrOnt.getTermSourceREF()+" : "+attrOnt.getAttributeValue());
+                            attrOnt.setTermSourceREF(null);
+                            attrOnt.setTermSourceID(null);
+                        }
+                    }
+                }
+            }
+        }
+        
+        
+        
         //remove any unused term sources
         //first find which are used
         Set<String> usedTsNames = new HashSet<String>();
@@ -158,7 +178,7 @@ public class CorrectorTermSource {
                             if (AbstractNodeAttributeOntology.class.isInstance(attr)){
                                 AbstractNodeAttributeOntology attrOnt = (AbstractNodeAttributeOntology) attr;
                                 //if this attribute has this term source, remove it
-                                if (attrOnt.getTermSourceREF().equals(ts.getName())){
+                                if (attrOnt.getTermSourceREF()!= null && attrOnt.getTermSourceREF().equals(ts.getName())){
                                     attrOnt.setTermSourceREF(null);
                                     attrOnt.setTermSourceIDInteger(null);
                                 }
