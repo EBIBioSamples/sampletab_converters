@@ -173,6 +173,12 @@ public class ENASRAXMLToSampleTab {
             Element sampleName = XMLUtils.getChildByName(sampleElement, "SAMPLE_NAME");
             Element sampledescription = XMLUtils.getChildByName(sampleElement, "DESCRIPTION");
             Element synonym = XMLUtils.getChildByName(sampleElement, "TITLE");
+            
+            //sometimes the study is public but the samples are private
+            //check for that and skip sample
+            if (sampleElement == null){
+                continue;
+            }
 
             // check that this actually is the sample we want
             if (sampleElement.attributeValue("accession") != null
