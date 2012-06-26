@@ -66,7 +66,7 @@ public class ENASRACron {
             if (!noconan && newOrUpdate) {
                 String submissionIdentifier = "GEN-"+identStudy;
                 try {
-                    ConanUtils.submit(submissionIdentifier, "BioSamples (SRA) and load");
+                    ConanUtils.submit(submissionIdentifier, "BioSamples (SRA)");
                 } catch (IOException e) {
                     log.warn("Problem submitting "+submissionIdentifier);
                     e.printStackTrace();

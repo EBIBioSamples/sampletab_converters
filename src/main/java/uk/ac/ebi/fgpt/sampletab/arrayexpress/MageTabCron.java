@@ -252,7 +252,7 @@ public class MageTabCron {
         
         for (String submissionIdentifier : conanProcess){
             try {
-                ConanUtils.submit(submissionIdentifier, "BioSamples (AE) and load");
+                ConanUtils.submit(submissionIdentifier, "BioSamples (AE)");
             } catch (IOException e) {
                 log.warn("Problem submitting "+submissionIdentifier);
                 e.printStackTrace();

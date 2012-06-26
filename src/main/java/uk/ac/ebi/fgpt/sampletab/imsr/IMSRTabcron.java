@@ -43,7 +43,7 @@ public class IMSRTabcron {
 	
 	private void submitConan(String submissionIdentifier){
         try {
-            ConanUtils.submit(submissionIdentifier, "BioSamples (IMSR) and load");
+            ConanUtils.submit(submissionIdentifier, "BioSamples (IMSR)");
         } catch (IOException e) {
             log.warn("Problem submitting "+submissionIdentifier);
             e.printStackTrace();
