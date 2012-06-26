@@ -37,9 +37,6 @@ public class SampleTabToGUIXML {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
-    
-    @Option(name = "--threaded", usage = "use multiple threads?")
-    private boolean threaded = false;
 
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output filename")
     private String outputFilename;
