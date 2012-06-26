@@ -114,6 +114,7 @@ public class SampleTabToGUIXML {
                     
                     //if release date is in the future, dont output
                     if (sd.msi.submissionReleaseDate.after(new Date())){
+                        log.info("Future release, skipping");
                         continue;
                     }
                     
@@ -121,7 +122,7 @@ public class SampleTabToGUIXML {
                     //but not of sampletab.txt files.
                     
                     for (GroupNode g : sd.scd.getNodes(GroupNode.class)){
-                        log.info("Group "+g.getNodeName());
+                        log.debug("Group "+g.getNodeName());
                         
                         xmlWriter.writeStartElement("SampleGroup");
                         xmlWriter.writeAttribute("id", g.getGroupAccession());
@@ -243,7 +244,7 @@ public class SampleTabToGUIXML {
                         }
                         
                         for (Node s : g.getParentNodes()){
-                            log.info("Node "+s.getNodeName());
+                            log.debug("Node "+s.getNodeName());
                             //these should all be samples, but have to check anyway...
                             if (SampleNode.class.isInstance(s)){
                                 SampleNode sample = (SampleNode) s;
@@ -257,7 +258,7 @@ public class SampleTabToGUIXML {
                                 
                                 for (SCDNodeAttribute a : sample.getAttributes()){
                                     writeAttribute(xmlWriter, a.getAttributeType(), "false", "STRING", a.getAttributeValue());
-                                    log.info("Attribute "+a.getAttributeType()+" "+a.getAttributeValue());
+                                    log.debug("Attribute "+a.getAttributeType()+" "+a.getAttributeValue());
                                 }
                                 
                                 //implicit derived from
