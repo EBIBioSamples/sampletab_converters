@@ -5,12 +5,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -35,15 +37,15 @@ public class SampleTabToGUIXML {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
-
-    @Option(name = "-i", aliases={"--input"}, usage = "input filename or glob")
-    private String inputFilename;
-
-    @Option(name = "-o", aliases={"--output"}, usage = "output filename")
-    private String outputFilename;
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
+
+    @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output filename")
+    private String outputFilename;
+
+    @Argument(required=true, index=1, metaVar="INPUT", usage = "input filename or globs")
+    private List<String> inputFilenames;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -88,8 +90,11 @@ public class SampleTabToGUIXML {
 
         log.debug("Looking for input files");
         List<File> inputFiles = new ArrayList<File>();
-        inputFiles = FileUtils.getMatchesGlob(inputFilename);
-        log.info("Found " + inputFiles.size() + " input files from "+inputFilename);
+        for (String inputFilename : inputFilenames){
+            inputFiles.addAll(FileUtils.getMatchesGlob(inputFilename));
+        }
+        log.info("Found " + inputFiles.size() + " input files");
+        //TODO no duplicates
         Collections.sort(inputFiles);
 
         XMLOutputFactory output = XMLOutputFactory.newInstance();
@@ -106,6 +111,11 @@ public class SampleTabToGUIXML {
                 log.info("File "+inputFile);
                 try {
                     SampleData sd = new SampleTabParser<SampleData>().parse(inputFile);
+                    
+                    //if release date is in the future, dont output
+                    if (sd.msi.submissionReleaseDate.after(new Date())){
+                        continue;
+                    }
                     
                     //NB. this assumes all samples are in a group. This is a condition of the .toload.txt files
                     //but not of sampletab.txt files.
