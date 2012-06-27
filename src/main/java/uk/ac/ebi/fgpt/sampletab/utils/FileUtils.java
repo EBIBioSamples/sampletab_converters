@@ -12,6 +12,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.Files;
+
 public class FileUtils {
     // static logger must have name hand-written
     private static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.utils.FileUtils");
@@ -122,25 +124,10 @@ public class FileUtils {
     }
     
     public static void copy(File sourceFile, File destFile) throws IOException {
-        //copied from http://stackoverflow.com/a/115086/932342
-        if(!destFile.exists()) {
-            destFile.createNewFile();
-        }
-
-        FileChannel source = null;
-        FileChannel destination = null;
-
-        try {
-            source = new FileInputStream(sourceFile).getChannel();
-            destination = new FileOutputStream(destFile).getChannel();
-            destination.transferFrom(source, 0, source.size());
-        } finally {
-            if(source != null) {
-                source.close();
-            }
-            if(destination != null) {
-                destination.close();
-            }
-        }
+        Files.copy(sourceFile, destFile);
+    }
+    
+    public static void move(File sourceFile, File destFile) throws IOException {
+        Files.move(sourceFile, destFile);
     }
 }
