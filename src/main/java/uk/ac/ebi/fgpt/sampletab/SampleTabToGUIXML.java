@@ -67,10 +67,10 @@ public class SampleTabToGUIXML {
 
     public void doMain(String[] args) {
 
-        CmdLineParser parser = new CmdLineParser(this);
+        CmdLineParser cmdParser = new CmdLineParser(this);
         try {
             // parse the arguments.
-            parser.parseArgument(args);
+            cmdParser.parseArgument(args);
             // TODO check for extra arguments?
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
@@ -79,7 +79,7 @@ public class SampleTabToGUIXML {
 
         if (help) {
             // print the list of available options
-            parser.printUsage(System.err);
+            cmdParser.printUsage(System.err);
             System.err.println();
             System.exit(1);
             return;
@@ -106,9 +106,17 @@ public class SampleTabToGUIXML {
             
             for (File inputFile : inputFiles){
                 log.info("File "+inputFile);
+                SampleData sd = null;
+                SampleTabParser<SampleData> stParser = new SampleTabParser<SampleData>();
                 try {
-                    SampleData sd = new SampleTabParser<SampleData>().parse(inputFile);
-                    
+                    sd = stParser.parse(inputFile);
+                } catch (ParseException e) {
+                    log.error("Unable to parse file "+inputFile);
+                    e.printStackTrace();
+                }
+                
+                if (sd != null){
+                
                     //if release date is in the future, dont output
                     if (sd.msi.submissionReleaseDate.after(new Date())){
                         log.info("Future release, skipping");
@@ -273,9 +281,6 @@ public class SampleTabToGUIXML {
                         
                         xmlWriter.writeEndElement(); //SampleGroup
                     }
-                } catch (ParseException e) {
-                    log.error("Unable to parse file "+inputFile);
-                    e.printStackTrace();
                 }
             }
             xmlWriter.writeEndDocument();
