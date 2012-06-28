@@ -124,10 +124,20 @@ public class FileUtils {
     }
     
     public static void copy(File sourceFile, File destFile) throws IOException {
+        sourceFile = sourceFile.getAbsoluteFile();
+        destFile = destFile.getAbsoluteFile();
+        if (!destFile.getParentFile().mkdirs()){
+            throw new IOException("Unable to make directories for "+destFile);
+        }
         Files.copy(sourceFile, destFile);
     }
     
     public static void move(File sourceFile, File destFile) throws IOException {
+        sourceFile = sourceFile.getAbsoluteFile();
+        destFile = destFile.getAbsoluteFile();
+        if (!destFile.getParentFile().mkdirs()){
+            throw new IOException("Unable to make directories for "+destFile);
+        }
         Files.move(sourceFile, destFile);
     }
 }
