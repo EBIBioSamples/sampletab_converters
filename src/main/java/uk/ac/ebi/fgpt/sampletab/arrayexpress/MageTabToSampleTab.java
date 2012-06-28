@@ -454,14 +454,17 @@ public class MageTabToSampleTab {
         } catch (IOException e) {
             log.error("Error converting "+idfFilename);
             e.printStackTrace();
+            System.exit(2);
             return;
         } catch (ParseException e) {
             log.error("Error converting "+idfFilename);
             e.printStackTrace();
+            System.exit(3);
             return;
         } catch (java.text.ParseException e) {
             log.error("Error converting "+idfFilename);
             e.printStackTrace();
+            System.exit(4);
             return;
         }
 	}
