@@ -287,9 +287,13 @@ public class DGVaXMLToSampleTab {
         } catch (ParseException e) {
             System.out.println("Error converting " + dgvafilename + " to " + sampleTabFilename);
             e.printStackTrace();
+            System.exit(2);
+            return;
         } catch (IOException e) {
             System.out.println("Error converting " + dgvafilename + " to " + sampleTabFilename);
             e.printStackTrace();
+            System.exit(3);
+            return;
         }
     }
 }

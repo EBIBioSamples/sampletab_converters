@@ -369,6 +369,8 @@ public class PRIDEXMLToSampleTab {
 
         if (help) {
             // print the list of available options
+            parser.printSingleLineUsage(System.err);
+            System.err.println();
             parser.printUsage(System.err);
             System.err.println();
             System.exit(1);
@@ -382,12 +384,12 @@ public class PRIDEXMLToSampleTab {
         } catch (IOException e) {
             System.out.println("Error converting " + inputFilename + " to " + outputFilename);
             e.printStackTrace();
-            System.exit(1);
+            System.exit(2);
             return;
         } catch (DocumentException e) {
             System.out.println("Error converting " + inputFilename + " to " + outputFilename);
             e.printStackTrace();
-            System.exit(1);
+            System.exit(3);
             return;
         }
     }

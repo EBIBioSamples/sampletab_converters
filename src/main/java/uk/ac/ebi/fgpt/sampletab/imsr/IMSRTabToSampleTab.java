@@ -356,15 +356,23 @@ public class IMSRTabToSampleTab {
         } catch (ParseException e) {
             System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
             e.printStackTrace();
+            System.exit(2);
+            return;
         } catch (IOException e) {
             System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
             e.printStackTrace();
+            System.exit(3);
+            return;
         } catch (NumberFormatException e) {
             System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
             e.printStackTrace();
+            System.exit(4);
+            return;
         } catch (java.text.ParseException e) {
             System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
             e.printStackTrace();
+            System.exit(5);
+            return;
         }
     }
 }
