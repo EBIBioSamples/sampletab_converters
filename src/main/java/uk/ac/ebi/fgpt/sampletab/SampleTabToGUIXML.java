@@ -79,6 +79,8 @@ public class SampleTabToGUIXML {
 
         if (help) {
             // print the list of available options
+            cmdParser.printSingleLineUsage(System.err);
+            System.err.println();
             cmdParser.printUsage(System.err);
             System.err.println();
             System.exit(1);

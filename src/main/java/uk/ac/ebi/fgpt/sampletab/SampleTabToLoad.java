@@ -37,6 +37,8 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNa
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.NamedAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.arrayexpress2.sampletab.validator.LoadValidator;
+import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class SampleTabToLoad {
@@ -68,11 +70,8 @@ public class SampleTabToLoad {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
 
-    // receives other command line parameters than options
-    @Argument
-    private List<String> arguments = new ArrayList<String>();
-
-    private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+    private final SampleTabValidator validator = new LoadValidator();
+    private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>(validator);
 
 
     // logging
@@ -361,6 +360,8 @@ public class SampleTabToLoad {
 
         if (help) {
             // print the list of available options
+            parser.printSingleLineUsage(System.err);
+            System.err.println();
             parser.printUsage(System.err);
             System.err.println();
             System.exit(1);

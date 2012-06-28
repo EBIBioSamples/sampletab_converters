@@ -78,7 +78,7 @@ public class SampleTabStatusRunnable implements Runnable {
         //calculate shouldBePublic
         //use release date inside file
     	if (sd != null){
-    		if (sd.msi.submissionReleaseDate.before(now)){
+    		if (sd.msi.submissionReleaseDate == null || sd.msi.submissionReleaseDate.before(now)){
         		//should be public
     			shouldBePublic = true;
     		} else if (sd.msi.submissionReleaseDate.after(now)){

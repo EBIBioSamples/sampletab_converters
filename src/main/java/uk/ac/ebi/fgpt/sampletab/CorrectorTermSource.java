@@ -178,7 +178,7 @@ public class CorrectorTermSource {
                             if (AbstractNodeAttributeOntology.class.isInstance(attr)){
                                 AbstractNodeAttributeOntology attrOnt = (AbstractNodeAttributeOntology) attr;
                                 //if this attribute has this term source, remove it
-                                if (attrOnt.getTermSourceREF()!= null && attrOnt.getTermSourceREF().equals(ts.getName())){
+                                if (attrOnt.getTermSourceREF() != null && attrOnt.getTermSourceREF().equals(ts.getName())){
                                     attrOnt.setTermSourceREF(null);
                                     attrOnt.setTermSourceIDInteger(null);
                                 }

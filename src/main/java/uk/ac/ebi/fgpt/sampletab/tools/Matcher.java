@@ -71,6 +71,8 @@ public class Matcher {
 
         if (help) {
             // print the list of available options
+            parser.printSingleLineUsage(System.err);
+            System.err.println();
             parser.printUsage(System.err);
             System.err.println();
             System.exit(1);

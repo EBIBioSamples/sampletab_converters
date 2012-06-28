@@ -208,6 +208,8 @@ public class SampleTabStatus {
 
         if (help) {
             // print the list of available options
+            parser.printSingleLineUsage(System.err);
+            System.err.println();
             parser.printUsage(System.err);
             System.err.println();
             System.exit(1);
@@ -215,7 +217,7 @@ public class SampleTabStatus {
         }
         
 
-        log.debug("Looking for input files");
+        log.info("Looking for input files");
         List<File> inputFiles = new ArrayList<File>();
         for (String inputFilename : inputFilenames){
             inputFiles.addAll(FileUtils.getMatchesGlob(inputFilename));

@@ -87,6 +87,12 @@ public class SampleTabBulk {
             log.error("Unable to read resource mysql.properties");
             e.printStackTrace();
         }
+        this.hostname = mysqlProperties.getProperty("hostname");
+        this.port = new Integer(mysqlProperties.getProperty("port"));
+        this.database = mysqlProperties.getProperty("database");
+        this.username = mysqlProperties.getProperty("username");
+        this.password = mysqlProperties.getProperty("password");
+        
         Properties ageProperties = new Properties();
         try {
             ageProperties.load(SampleTabBulk.class.getResourceAsStream("/age.properties"));
@@ -94,11 +100,6 @@ public class SampleTabBulk {
             log.error("Unable to read resource age.properties");
             e.printStackTrace();
         }
-        this.hostname = mysqlProperties.getProperty("hostname");
-        this.port = new Integer(mysqlProperties.getProperty("port"));
-        this.database = mysqlProperties.getProperty("database");
-        this.username = mysqlProperties.getProperty("username");
-        this.password = mysqlProperties.getProperty("password");
         this.agename = ageProperties.getProperty("hostname");
         this.ageusername = ageProperties.getProperty("username");
         this.agepassword = ageProperties.getProperty("password");
@@ -413,6 +414,8 @@ public class SampleTabBulk {
 
         if (help) {
             // print the list of available options
+            parser.printSingleLineUsage(System.err);
+            System.err.println();
             parser.printUsage(System.err);
             System.err.println();
             System.exit(1);
