@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class SampleTabStatusRunnable implements Runnable {
@@ -68,7 +69,7 @@ public class SampleTabStatusRunnable implements Runnable {
 		
     	SampleData sd = null;
         try {
-            sd = new SampleTabParser<SampleData>().parse(inputFile);
+            sd = new SampleTabSaferParser().parse(inputFile);
         } catch (ParseException e){
             log.error("Unable to parse file "+inputFile);
             e.printStackTrace();

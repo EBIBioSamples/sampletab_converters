@@ -29,6 +29,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAtt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fgpt.sampletab.SampleTabToLoad;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
@@ -71,7 +72,7 @@ public class AttributeSummary {
 		}
 		
 		public void run() {
-			SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+		    SampleTabSaferParser parser = new SampleTabSaferParser();
 			SampleData sampledata;
 			try {
 				sampledata = parser.parse(this.inFile);

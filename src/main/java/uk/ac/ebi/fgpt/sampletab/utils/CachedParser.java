@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutionException;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheBuilder;
@@ -18,8 +18,8 @@ public class CachedParser {
         .build(
             new CacheLoader<File, SampleData>() {
                 public synchronized SampleData load(File file) throws ParseException {
-                    SampleTabParser<SampleData> stParser = new SampleTabParser<SampleData>();
-                    return stParser.parse(file);
+                    SampleTabSaferParser parser = new SampleTabSaferParser();
+                    return parser.parse(file);
                 }
             });;
     

@@ -40,6 +40,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
@@ -58,7 +59,7 @@ public class Accessioner {
     private static boolean setup = false;
     private static ObjectPool connectionPool = new GenericObjectPool();
 
-    private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+    private final SampleTabSaferParser parser = new SampleTabSaferParser();
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -283,7 +284,7 @@ public class Accessioner {
 
     public void convert(File sampletabFile, Writer writer) throws IOException, ParseException, SQLException {
         log.info("preparing to load SampleData");
-        SampleTabParser<SampleData> stparser = new SampleTabParser<SampleData>();
+        SampleTabSaferParser stparser = new SampleTabSaferParser();
         log.info("created SampleTabParser<SampleData>, beginning parse");
         SampleData st = stparser.parse(sampletabFile);
         convert(st, writer);

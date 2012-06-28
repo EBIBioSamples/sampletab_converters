@@ -30,6 +30,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 
@@ -109,7 +110,7 @@ public class SampleTabToGUIXML {
             for (File inputFile : inputFiles){
                 log.info("File "+inputFile);
                 SampleData sd = null;
-                SampleTabParser<SampleData> stParser = new SampleTabParser<SampleData>();
+                SampleTabSaferParser stParser = new SampleTabSaferParser();
                 try {
                     sd = stParser.parse(inputFile);
                 } catch (ParseException e) {

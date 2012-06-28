@@ -16,6 +16,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class Matcher {
@@ -38,7 +39,7 @@ public class Matcher {
 	
 	private void process(File inFile){
 
-		SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+	    SampleTabSaferParser parser = new SampleTabSaferParser();
 		SampleData sampledata;
 		try {
 			sampledata = parser.parse(inFile);

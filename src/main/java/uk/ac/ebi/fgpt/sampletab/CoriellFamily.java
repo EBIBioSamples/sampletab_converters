@@ -23,6 +23,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class CoriellFamily {
@@ -38,8 +39,7 @@ public class CoriellFamily {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-
-    private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>();
+    private final SampleTabSaferParser parser = new SampleTabSaferParser();
     
     public static void main(String[] args) {
         new CoriellFamily().doMain(args);
