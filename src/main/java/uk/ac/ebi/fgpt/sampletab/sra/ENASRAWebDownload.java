@@ -71,32 +71,39 @@ public class ENASRAWebDownload {
         }
         
         //check that it does not already exist
+        boolean writeOut = true;
+        
         if (studyFile.exists()){
             Document existStudyDoc = XMLUtils.getDocument(studyFile);
             NodeComparator c = new NodeComparator();
-            if (c.compare(studyDoc, existStudyDoc) != 0){
-                //TODO also check samples, which may have been updated separately from study.
-                
-                log.debug("No changes, skipping "+accession);
-                return false;
+            if (c.compare(studyDoc, existStudyDoc) == 0){
+                writeOut = false;
             }
         }
         
-        log.info("Downloading "+accession+" to disk");
-        
-        //write the study file to disk
+
         OutputStream os = null;
-        try {
-            os = new BufferedOutputStream(new FileOutputStream(studyFile));
-            OutputFormat format = OutputFormat.createPrettyPrint();
-            XMLWriter writer = new XMLWriter(os, format);
-            writer.write(studyDoc);
-            writer.flush();
-            os.close();
-        } finally {
-            if (os != null) {
+        if(writeOut){
+            log.info("Downloading "+accession+" to disk");
+            
+            //write the study file to disk
+            os = null;
+            try {
+                os = new BufferedOutputStream(new FileOutputStream(studyFile));
+                //this pretty printing is messing up comparisons by trimming whitespace WITHIN an element
+                //OutputFormat format = OutputFormat.createPrettyPrint();
+                //XMLWriter writer = new XMLWriter(os, format);
+                XMLWriter writer = new XMLWriter(os);
+                writer.write(studyDoc);
+                writer.flush();
                 os.close();
+            } finally {
+                if (os != null) {
+                    os.close();
+                }
             }
+        } else {
+            log.info("Skipping "+accession);
         }
         
         Set<String> sampleSRAAccessions = ENAUtils.getSamplesForStudy(root);
@@ -106,20 +113,42 @@ public class ENASRAWebDownload {
             String sampleURL = "http://www.ebi.ac.uk/ena/data/view/" + sampleSRAAccession + "&display=xml";
             File sampleFile = new File(outdir.getAbsoluteFile(), sampleSRAAccession + ".xml");
             Document sampledoc = XMLUtils.getDocument(sampleURL);
-            os = null;
-            try {
-                os = new BufferedOutputStream(new FileOutputStream(sampleFile));
-                OutputFormat format = OutputFormat.createPrettyPrint();
-                XMLWriter writer = new XMLWriter(os, format);
-                writer.write(sampledoc);
-                writer.flush();
-                os.close();
-            } finally {
-                if (os != null) {
-                    os.close();
+            
+            writeOut = false;
+            
+            if (!sampleFile.exists()){
+                //if it does not exist, it needs to be written
+                writeOut = true;
+            } else {
+                //if it is different from what is on disk, it needs to be written
+                Document existSampleDoc = XMLUtils.getDocument(sampleFile);
+                NodeComparator c = new NodeComparator();
+                if (c.compare(sampledoc, existSampleDoc) != 0){
+                    writeOut = true;
                 }
             }
             
+            if (writeOut){
+                log.info("Downloading "+sampleSRAAccession+" to disk");
+                //write the sample xml to disk
+                os = null;
+                try {
+                    os = new BufferedOutputStream(new FileOutputStream(sampleFile));
+                    //this pretty printing is messing up comparisons by trimming whitespace WITHIN an element
+                    //OutputFormat format = OutputFormat.createPrettyPrint();
+                    //XMLWriter writer = new XMLWriter(os, format);
+                    XMLWriter writer = new XMLWriter(os);
+                    writer.write(sampledoc);
+                    writer.flush();
+                    os.close();
+                } finally {
+                    if (os != null) {
+                        os.close();
+                    }
+                }
+            } else {
+                log.info("Skipping "+sampleSRAAccession);
+            }
         }
         log.debug("ENA SRA study download complete.");
         return true;
