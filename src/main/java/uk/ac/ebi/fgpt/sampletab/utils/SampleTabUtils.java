@@ -15,7 +15,7 @@ public class SampleTabUtils {
         else if (submissionId.startsWith("GEN-")) return "sra";
         else if (submissionId.equals("GEN")) return "encode";
         else if (submissionId.equals("G1K")) return "g1k";
-        else if (submissionId.equals("GHM")) return "hapmap";
+        else if (submissionId.startsWith("GHM")) return "hapmap";
         else throw new IllegalArgumentException("Unable to get path prefix for "+submissionId);
     }
     
