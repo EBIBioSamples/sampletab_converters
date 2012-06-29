@@ -2,6 +2,8 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -147,16 +149,22 @@ public class ENASRABulk {
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
-               
+        log.info("Looking for input files");
+        List<File> inputFiles = new ArrayList<File>();
         for (String inputFilename : inputFilenames){
-            for (File subdir : FileUtils.getMatchesGlob(inputFilename)){
-                if (subdir.isDirectory()) {
-                    Runnable t = new DoProcessFile(subdir, scriptdir);
-                    if (threaded) {
-                        pool.execute(t);
-                    } else {
-                        t.run();
-                    }
+            inputFiles.addAll(FileUtils.getMatchesGlob(inputFilename));
+        }
+        log.info("Found " + inputFiles.size() + " input files");
+        //TODO no duplicates
+        Collections.sort(inputFiles);
+        
+        for(File subdir : inputFiles){
+            if (subdir.isDirectory()) {
+                Runnable t = new DoProcessFile(subdir, scriptdir);
+                if (threaded) {
+                    pool.execute(t);
+                } else {
+                    t.run();
                 }
             }
         }
