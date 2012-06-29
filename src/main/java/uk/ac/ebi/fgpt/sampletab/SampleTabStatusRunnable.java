@@ -25,6 +25,8 @@ public class SampleTabStatusRunnable implements Runnable {
 	public static final List<File> toAddToDatabase = Collections.synchronizedList(new ArrayList<File>());
 	public static final List<File> toRemoveFromDatabase = Collections.synchronizedList(new ArrayList<File>());
 	
+	private final SampleTabSaferParser stparser = new SampleTabSaferParser();
+	
 	private final File inputFile;
 	private final File ftpDir;
 	
@@ -69,7 +71,7 @@ public class SampleTabStatusRunnable implements Runnable {
 		
     	SampleData sd = null;
         try {
-            sd = new SampleTabSaferParser().parse(inputFile);
+            sd = stparser.parse(inputFile);
         } catch (ParseException e){
             log.error("Unable to parse file "+inputFile);
             e.printStackTrace();
@@ -110,6 +112,8 @@ public class SampleTabStatusRunnable implements Runnable {
     	} else {
     		isPublic = false;
     	}
+    	
+    	log.info(inputFile.getName()+" "+shouldBePublic+" "+isPublic+" "+isLoaded);
     	
     	
     	//now we have the information, determine what we need to do

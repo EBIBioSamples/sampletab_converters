@@ -69,6 +69,7 @@ public class SampleTabStatus {
         List<File> ageFiles = new ArrayList<File>();
         for(File inputFile : inputFiles) {
             log.info("Adding to database "+inputFile);
+            /*
             File ageDir = new File(inputFile, "age");
             File ageFile = new File(ageDir, inputFile.getName()+".age.txt");
             
@@ -80,8 +81,9 @@ public class SampleTabStatus {
                 if (!loadSuccessFile.exists() || ageFile.lastModified() > loadSuccessFile.lastModified()){
                     ageFiles.add(ageDir);
                 }
-            }
+            }*/
         }
+        /*
         File scriptDir = new File(scriptDirFilename);
         File scriptFile = new File(scriptDir, "AgeTab-Loader.sh");
         
@@ -151,13 +153,14 @@ public class SampleTabStatus {
         if (!tempDir.delete()){
             log.error("Unable to delete "+tempDir);
         }
-        
+        */
     }
     
     private void toFTP(List<File> inputFiles){
         File ftpDir = new File(ftpDirFilename);
         for(File inputFile : inputFiles){
             log.info("Adding to ftp "+inputFile);
+            /*
             String accession = inputFile.getName();
             File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(accession)); 
             File ftpSubSubDir = new File(ftpSubDir, accession);
@@ -188,6 +191,7 @@ public class SampleTabStatus {
                 + " -i "+inputFile.getName();
 
             ProcessUtils.doCommand(command, null);
+            */
         }
     }
     
@@ -262,7 +266,7 @@ public class SampleTabStatus {
         //remove from FTP
         for(File inputFile : SampleTabStatusRunnable.toRemoveFromFTP){
             log.info("Removing from ftp "+inputFile);
-            
+            /*
     		File ftpDir = new File(ftpDirFilename);
         	File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(inputFile.getName())); 
     		File ftpSubSubDir = new File(ftpSubDir, inputFile.getName());
@@ -273,13 +277,14 @@ public class SampleTabStatus {
 	    			log.error("Unable to delete from FTP "+ftpFile);
 	    		}
     		}
+    		*/
         }
         
         //remove from database
         //or rather "hide from the public"
         for(File inputFile : SampleTabStatusRunnable.toRemoveFromDatabase){
             log.info("Removing from database "+inputFile);
-
+/*
             File scriptDir = new File(scriptDirFilename);
             File scriptFile = new File(scriptDir, "TagControl.sh");
 
@@ -291,6 +296,7 @@ public class SampleTabStatus {
                 + " -i "+inputFile.getName();
 
             ProcessUtils.doCommand(command, null);
+            */
         }
         
         //add to database
