@@ -240,7 +240,7 @@ public class SampleTabStatus {
     		if (inputFile == null){
     			continue;
     		}
-    		
+    		inputFile = new File(inputFile, "sampletab.txt");
             Runnable t = new SampleTabStatusRunnable(inputFile, ftpDirFilename);
             if (threaded){
                 pool.execute(t);
