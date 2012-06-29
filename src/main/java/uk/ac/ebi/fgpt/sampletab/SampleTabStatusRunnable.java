@@ -70,8 +70,17 @@ public class SampleTabStatusRunnable implements Runnable {
     	//  currently not up to date and should be private
 		
     	SampleData sd = null;
+    	File sampletabFile = new File(inputFile, "sampletab.txt");
+        if (!sampletabFile.exists()){
+            log.error(sampletabFile+" does not exist");
+            return;
+        }
+        if (sampletabFile.isDirectory()){
+            log.error(sampletabFile+" is a directory");
+            return;
+        }
         try {
-            sd = stparser.parse(inputFile);
+            sd = stparser.parse(sampletabFile);
         } catch (ParseException e){
             log.error("Unable to parse file "+inputFile);
             e.printStackTrace();
