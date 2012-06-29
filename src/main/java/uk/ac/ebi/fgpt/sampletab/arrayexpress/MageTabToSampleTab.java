@@ -1,5 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab.arrayexpress;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -405,7 +406,7 @@ public class MageTabToSampleTab {
 
 	public void convert(String idffilename, File stfile) throws IOException,
 			ParseException, java.text.ParseException {
-		convert(idffilename, new FileWriter(stfile));
+		convert(idffilename, new BufferedWriter(new FileWriter(stfile)));
 	}
 
 	public void convert(String idffilename, String stfilename)
