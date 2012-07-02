@@ -127,7 +127,7 @@ public class SampleTabStatusRunnable implements Runnable {
     		isOnFTP = false;
     	}
     	
-    	log.info(inputFile.getName()+" "+shouldBePublic+" "+isOnFTP+" "+isLoaded);
+    	log.info(inputFile.getName()+" "+shouldBePublic+" "+isLoaded+" "+isLoadUpToDate+" "+isOnFTP+" "+isFTPUpToDate);
     	
     	
     	//now we have the information, determine what we need to do
@@ -138,7 +138,7 @@ public class SampleTabStatusRunnable implements Runnable {
     	        //no way to test if this is possible or not so just do it
     	        removePrivateTag();
     	    }
-    	    if (!isLoadUpToDate){
+    	    if (!isLoaded || !isLoadUpToDate){
     	        //reload
     	        reload();
     	    }
