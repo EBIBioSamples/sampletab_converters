@@ -156,45 +156,6 @@ public class SampleTabStatus {
         */
     }
     
-    private void toFTP(List<File> inputFiles){
-        File ftpDir = new File(ftpDirFilename);
-        for(File inputFile : inputFiles){
-            log.info("Adding to ftp "+inputFile);
-            /*
-            String accession = inputFile.getName();
-            File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(accession)); 
-            File ftpSubSubDir = new File(ftpSubDir, accession);
-            File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
-            
-            File sampletabFile = new File(inputFile, "sampletab.txt");
-            
-            if (!ftpFile.exists() && sampletabFile.exists()){
-                try {
-                    FileUtils.copy(sampletabFile, ftpFile);
-                    ftpFile.setLastModified(sampletabFile.lastModified());
-                } catch (IOException e) {
-                    log.error("Unable to copy to FTP "+ftpFile);
-                    e.printStackTrace();
-                }
-            }
-            
-            //also need to try to remove private tag from database
-            //not sure what will happen if it doesn't have the tag
-            File scriptDir = new File(scriptDirFilename);
-            File scriptFile = new File(scriptDir, "TagControl.sh");
-
-            String command = scriptFile.getAbsolutePath() 
-                + " -u "+ageusername
-                + " -p "+agepassword
-                + " -h \""+agename+"\"" 
-                + " -r Security:Private"
-                + " -i "+inputFile.getName();
-
-            ProcessUtils.doCommand(command, null);
-            */
-        }
-    }
-    
     public static void main(String[] args) {
         new SampleTabStatus().doMain(args);
     }
@@ -263,48 +224,6 @@ public class SampleTabStatus {
             }
         }
         
-        //remove from FTP
-        for(File inputFile : SampleTabStatusRunnable.toRemoveFromFTP){
-            log.info("Removing from ftp "+inputFile);
-            /*
-    		File ftpDir = new File(ftpDirFilename);
-        	File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(inputFile.getName())); 
-    		File ftpSubSubDir = new File(ftpSubDir, inputFile.getName());
-    		File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
-    		
-    		if (ftpFile.exists()){
-	    		if (!ftpFile.delete()){
-	    			log.error("Unable to delete from FTP "+ftpFile);
-	    		}
-    		}
-    		*/
-        }
-        
-        //remove from database
-        //or rather "hide from the public"
-        for(File inputFile : SampleTabStatusRunnable.toRemoveFromDatabase){
-            log.info("Removing from database "+inputFile);
-/*
-            File scriptDir = new File(scriptDirFilename);
-            File scriptFile = new File(scriptDir, "TagControl.sh");
-
-            String command = scriptFile.getAbsolutePath() 
-                + " -u "+ageusername
-                + " -p "+agepassword
-                + " -h \""+agename+"\"" 
-                + " -a Security:Private"
-                + " -i "+inputFile.getName();
-
-            ProcessUtils.doCommand(command, null);
-            */
-        }
-        
-        //add to database
-        toDatabase(SampleTabStatusRunnable.toAddToDatabase);
-        
-        
-        //copy to FTP
-        toFTP(SampleTabStatusRunnable.toCopyToFTP);
         //because tags may have changed, need to trigger re-indexing
         //this could be done by going into and out of maintenence mode
         //once that tool is finished

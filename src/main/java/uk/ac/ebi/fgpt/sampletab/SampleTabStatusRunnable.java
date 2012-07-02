@@ -18,13 +18,7 @@ import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 public class SampleTabStatusRunnable implements Runnable {
 	
 	private static final Date now = new Date(); 
-	
-	public static final List<File> toCopyToFTP = Collections.synchronizedList(new ArrayList<File>());
-	public static final List<File> toRemoveFromFTP = Collections.synchronizedList(new ArrayList<File>());
-
-	public static final List<File> toAddToDatabase = Collections.synchronizedList(new ArrayList<File>());
-	public static final List<File> toRemoveFromDatabase = Collections.synchronizedList(new ArrayList<File>());
-	
+		
 	private final SampleTabSaferParser stparser = new SampleTabSaferParser();
 	
 	private final File inputFile;
@@ -32,7 +26,9 @@ public class SampleTabStatusRunnable implements Runnable {
 	
 	public Boolean shouldBePublic = null;
 	public Boolean isLoaded = null;
-	public Boolean isPublic = null;
+    public Boolean isLoadUpToDate = null;
+	public Boolean isOnFTP = null;
+    public Boolean isFTPUpToDate = null;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -68,7 +64,7 @@ public class SampleTabStatusRunnable implements Runnable {
     	//  currently private and should stay private <- do nothing
     	//  currently not up to date and should be public
     	//  currently not up to date and should be private
-		
+	    		
     	SampleData sd = null;
     	File sampletabFile = new File(inputFile, "sampletab.txt");
         if (!sampletabFile.exists()){
@@ -105,55 +101,138 @@ public class SampleTabStatusRunnable implements Runnable {
         File ageDir = new File(inputFile, "age");
         File ageFile = new File(ageDir, inputFile.getName()+".age.txt");
     	//this is not a perfect check - ideally this should be an API query for last load date
-        if (!sucessFile.exists() || ageFile.lastModified() > sucessFile.lastModified()){
+        if (!sucessFile.exists()){
             isLoaded = false;
         } else {
             isLoaded = true;
+            if (ageFile.lastModified() > sucessFile.lastModified()){
+                isLoadUpToDate = false;
+            } else {
+                isLoadUpToDate = true;
+            }
         }
-    	
-    	
+            	
         //calculate isPublic
     	File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(inputFile.getName())); 
 		File ftpSubSubDir = new File(ftpSubDir, inputFile.getName());
 		File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
     	if (ftpFile.exists()){
-    		isPublic = true;
+    		isOnFTP = true;
+            if (sampletabFile.lastModified() > ftpFile.lastModified()){
+                isFTPUpToDate = false;
+            } else {
+                isFTPUpToDate = true;
+            }
     	} else {
-    		isPublic = false;
+    		isOnFTP = false;
     	}
     	
-    	log.info(inputFile.getName()+" "+shouldBePublic+" "+isPublic+" "+isLoaded);
+    	log.info(inputFile.getName()+" "+shouldBePublic+" "+isOnFTP+" "+isLoaded);
     	
     	
     	//now we have the information, determine what we need to do
-    	if (shouldBePublic && isPublic && isLoaded){
-    		//do nothing
-    	} else if (shouldBePublic && isPublic && !isLoaded){
-    		//load
-    		toAddToDatabase.add(inputFile);
-    	} else if (shouldBePublic && !isPublic && isLoaded){
-    		//add to ftp site
-    		toCopyToFTP.add(inputFile);
-    	} else if (shouldBePublic && !isPublic && !isLoaded){
-    		//load
-    		//add to ftp site
-    		toCopyToFTP.add(inputFile);
-    		toAddToDatabase.add(inputFile);
-    	} else if (!shouldBePublic && isPublic && isLoaded){
-    		//remove from ftp site
-    		//remove from database
-    		toRemoveFromFTP.add(inputFile);
-    		toRemoveFromDatabase.add(inputFile);
-    	} else if (!shouldBePublic && isPublic && !isLoaded){
-    		//remove from ftp site
-    		toRemoveFromFTP.add(inputFile);
-    	} else if (!shouldBePublic && !isPublic && isLoaded){
-    		//remove from database
-    		toRemoveFromDatabase.add(inputFile);
-    	} else if (!shouldBePublic && !isPublic && !isLoaded){
-    		//do nothing
+    	
+    	if (shouldBePublic){
+    	    if (isLoaded){
+    	        //remove private tag
+    	        //no way to test if this is possible or not so just do it
+    	        removePrivateTag();
+    	    }
+    	    if (!isLoadUpToDate){
+    	        //reload
+    	        reload();
+    	    }
+    	    if (!isOnFTP || !isFTPUpToDate){
+    	        //copy to FTP
+    	        copyToFTP();
+    	    }
+    	} else if (!shouldBePublic) {
+            if (isLoaded){
+                //add private tag
+                //no way to test if this is possible or not so just do it
+                addPrivateTag();
+            }
+            if (isOnFTP){
+                //remove from FTP
+                removeFromFTP();
+            }
     	}
-
 	}
+	
+	private void removePrivateTag(){
+	    log.info("Removing private tag "+inputFile.getName());
+	}
+    
+    private void addPrivateTag(){
+        log.info("Adding private tag "+inputFile.getName());
+        /*
+        File scriptDir = new File(scriptDirFilename);
+        File scriptFile = new File(scriptDir, "TagControl.sh");
 
+        String command = scriptFile.getAbsolutePath() 
+            + " -u "+ageusername
+            + " -p "+agepassword
+            + " -h \""+agename+"\"" 
+            + " -a Security:Private"
+            + " -i "+inputFile.getName();
+
+        ProcessUtils.doCommand(command, null);
+        */
+    }
+    
+    private void reload(){
+        log.info("Reloading in database "+inputFile.getName());
+    }
+    
+    private void removeFromFTP(){
+        log.info("Removing from FTP "+inputFile.getName());
+        /*
+        File ftpDir = new File(ftpDirFilename);
+        File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(inputFile.getName())); 
+        File ftpSubSubDir = new File(ftpSubDir, inputFile.getName());
+        File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
+        
+        if (ftpFile.exists()){
+            if (!ftpFile.delete()){
+                log.error("Unable to delete from FTP "+ftpFile);
+            }
+        }
+        */
+    }
+    
+    private void copyToFTP(){
+        log.info("Copying to FTP "+inputFile.getName());
+        /*
+        String accession = inputFile.getName();
+        File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(accession)); 
+        File ftpSubSubDir = new File(ftpSubDir, accession);
+        File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
+        
+        File sampletabFile = new File(inputFile, "sampletab.txt");
+        
+        if (!ftpFile.exists() && sampletabFile.exists()){
+            try {
+                FileUtils.copy(sampletabFile, ftpFile);
+                ftpFile.setLastModified(sampletabFile.lastModified());
+            } catch (IOException e) {
+                log.error("Unable to copy to FTP "+ftpFile);
+                e.printStackTrace();
+            }
+        }
+        
+        //also need to try to remove private tag from database
+        //not sure what will happen if it doesn't have the tag
+        File scriptDir = new File(scriptDirFilename);
+        File scriptFile = new File(scriptDir, "TagControl.sh");
+
+        String command = scriptFile.getAbsolutePath() 
+            + " -u "+ageusername
+            + " -p "+agepassword
+            + " -h \""+agename+"\"" 
+            + " -r Security:Private"
+            + " -i "+inputFile.getName();
+
+        ProcessUtils.doCommand(command, null);
+        */
+    }
 }
