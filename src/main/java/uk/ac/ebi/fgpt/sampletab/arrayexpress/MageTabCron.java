@@ -306,11 +306,11 @@ public class MageTabCron {
             }
             
             if (!onAEFTP){
-                log.warn("Hiding deleted experiment "+submission);
                 //TODO multi-thread this
                 File sampletabFile = new File(subdir, "sampletab.pre.txt");
                 
                 if (sampletabFile.exists()){
+                    log.warn("Hiding deleted experiment "+submission);
                     boolean doConan = false;
                     try {
                         SampleTabUtils.releaseInADecade(sampletabFile);
