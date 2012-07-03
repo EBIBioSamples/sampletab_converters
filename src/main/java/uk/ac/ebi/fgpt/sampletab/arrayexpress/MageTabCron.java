@@ -1,24 +1,35 @@
 package uk.ac.ebi.fgpt.sampletab.arrayexpress;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
+import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
@@ -27,7 +38,7 @@ public class MageTabCron {
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
-    @Option(name = "-o", aliases={"--output"}, usage = "output directory")
+    @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output directory")
     private String outputDirName;
     
     @Option(name = "--threaded", usage = "use multiple threads?")
@@ -138,7 +149,7 @@ public class MageTabCron {
 			}
 			for (String subdirstr : subdirstrs) {
 				String subdirpath = root + subdirstr + "/";
-				log.info("working on " + subdirpath);
+				log.debug("working on " + subdirpath);
 
 				FTPFile[] subsubdirs = null;
 				try {
@@ -251,16 +262,95 @@ public class MageTabCron {
         //tell conan to process those files that have changed
         
         for (String submissionIdentifier : conanProcess){
-            try {
-                ConanUtils.submit(submissionIdentifier, "BioSamples (AE)");
-            } catch (IOException e) {
-                log.warn("Problem submitting "+submissionIdentifier);
-                e.printStackTrace();
+            if (!noconan) {
+                try {
+                    ConanUtils.submit(submissionIdentifier, "BioSamples (AE)");
+                } catch (IOException e) {
+                    log.warn("Problem submitting to Conan "+submissionIdentifier);
+                    e.printStackTrace();
+                }
             }
         }
         
+               
         
-		// TODO hide files that have disappeared from the FTP site.
+        //for each ae sampletab
+        // check if it is on the ae ftp
+        // if not, then put publication date in the far future
+        SampleTabSaferParser parser = new SampleTabSaferParser();
+        File[] stsubdirs = outdir.listFiles();
+        Arrays.sort(stsubdirs);
+        for(File subdir : stsubdirs){
+            String submission = subdir.getName();
+            
+            //extract the middle part of the accession - the array-express pipeline
+            String prefix = submission.substring(4);
+            prefix = prefix.substring(0, prefix.indexOf("-"));
+            
+            //get the array express accession - start with AE-
+            String aename = submission.substring(2);
+            
+            boolean onAEFTP = false;
+            
+            try {
+                if (ftp.listFiles(root + prefix+"/"+aename+"/"+aename+".idf.txt").length > 0){
+                    onAEFTP = true;
+                }
+            } catch (IOException e) {
+                log.error("Problem accessing FTP.");
+                e.printStackTrace();
+            }
+            
+            if (!onAEFTP){
+                log.warn("Hiding deleted experiment "+submission);
+                //TODO multi-thread this
+                File sampletabFile = new File(subdir, "sampletab.pre.txt");
+                SampleData sd = null;
+                
+                if (sampletabFile.exists()){
+                    try {
+                        sd = parser.parse(sampletabFile);
+                    } catch (ParseException e) {
+                        log.error("Unable to parser "+sampletabFile);
+                        e.printStackTrace();
+                    }
+                }
+                if (sd != null){
+                    //release it in 10 years
+                    Calendar cal = GregorianCalendar.getInstance();
+                    cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)+10);
+                    sd.msi.submissionReleaseDate = cal.getTime();
+                    Writer writer = null;
+                    try {
+                        writer = new BufferedWriter(new FileWriter(sampletabFile));
+                        SampleTabWriter stwriter = new SampleTabWriter(writer);
+                        stwriter.write(sd);
+                    } catch (IOException e){
+                        log.error("Problem writing to sampletabFile.");
+                        e.printStackTrace();
+                        
+                    } finally {
+                        if (writer != null){
+                            try {
+                                writer.close();
+                            } catch (IOException e) {
+                                //do nothing
+                            }
+                        }
+                    }
+                    //trigger conan to complete processing
+                    if (!noconan) {
+                        try {
+                            ConanUtils.submit(submission, "BioSamples (AE)", 1);
+                        } catch (IOException e) {
+                            log.warn("Problem submitting to Conan "+submission);
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        
 	}
 
 	public static void main(String[] args) {
