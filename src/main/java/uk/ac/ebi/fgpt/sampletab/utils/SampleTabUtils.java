@@ -9,7 +9,7 @@ public class SampleTabUtils {
     public static String getPathPrefix(String submissionId){
         if (submissionId.startsWith("GMS-")) return "imsr";
         else if (submissionId.startsWith("GAE-")) return "ae";
-        else if (submissionId.startsWith("GRP-")) return "pride";
+        else if (submissionId.startsWith("GPR-")) return "pride";
         else if (submissionId.startsWith("GVA-")) return "dgva";
         else if (submissionId.startsWith("GCR-")) return "coriell";
         else if (submissionId.startsWith("GEN-")) return "sra";
