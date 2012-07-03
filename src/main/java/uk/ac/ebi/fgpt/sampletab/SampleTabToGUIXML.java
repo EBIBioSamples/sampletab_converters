@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -26,6 +28,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
@@ -52,17 +55,15 @@ public class SampleTabToGUIXML {
     }
 
     private void writeAttribute(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, String value) throws XMLStreamException{
-        if (value == null){
-            return;
-        }
-        
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", cls);
         xmlWriter.writeAttribute("classDefined", classDefined);
         xmlWriter.writeAttribute("dataType", dataType);
-        xmlWriter.writeStartElement("value");
-        xmlWriter.writeCharacters(value);
-        xmlWriter.writeEndElement(); //value
+        if (value != null){
+            xmlWriter.writeStartElement("value");
+            xmlWriter.writeCharacters(value);
+            xmlWriter.writeEndElement(); //value
+        }
         xmlWriter.writeEndElement(); //attribute
     }
 
@@ -224,7 +225,30 @@ public class SampleTabToGUIXML {
                             xmlWriter.writeEndElement(); //publications
                         }
                         
-                        //TODO term sources
+                        //term sources
+                        if (sd.msi.termSources.size() > 0){
+                            xmlWriter.writeStartElement("attribute");
+                            xmlWriter.writeAttribute("class", "Term Sources");
+                            xmlWriter.writeAttribute("classDefined", "true");
+                            xmlWriter.writeAttribute("dataType", "OBJECT");
+                            xmlWriter.writeStartElement("value");                     
+                            for (Integer i = 0; i < sd.msi.termSources.size(); i++){
+                                TermSource t = sd.msi.termSources.get(i);
+                                
+                                xmlWriter.writeStartElement("object");
+                                xmlWriter.writeAttribute("id", t.getName());
+                                xmlWriter.writeAttribute("class", "Term Source");
+                                xmlWriter.writeAttribute("classDefined", "true");
+    
+                                writeAttribute(xmlWriter, "Term Source Name", "true", "STRING", t.getName());
+                                writeAttribute(xmlWriter, "Term Source URI", "true", "STRING", t.getURI());
+                                writeAttribute(xmlWriter, "Term Source Version", "true", "STRING", t.getVersion());
+                                
+                                xmlWriter.writeEndElement(); //object
+                            }
+                            xmlWriter.writeEndElement(); //value
+                            xmlWriter.writeEndElement(); //term sources
+                        }
                         
                         //database entries
                         if (sd.msi.databases.size() > 0){
@@ -248,8 +272,10 @@ public class SampleTabToGUIXML {
                                 xmlWriter.writeEndElement(); //object
                             }
                             xmlWriter.writeEndElement(); //value
-                            xmlWriter.writeEndElement(); //publications
+                            xmlWriter.writeEndElement(); //databaases
                         }
+                        
+                        Set<String> attributeTypes = new HashSet<String>();
                         
                         for (Node s : g.getParentNodes()){
                             log.debug("Node "+s.getNodeName());
@@ -261,12 +287,20 @@ public class SampleTabToGUIXML {
                                 xmlWriter.writeAttribute("id", sample.getSampleAccession());
 
                                 writeAttribute(xmlWriter, "Name", "false", "STRING", sample.getNodeName());
+                                attributeTypes.add("Name");
+                                
                                 writeAttribute(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
+                                attributeTypes.add("Sample Accession");
+                                
                                 writeAttribute(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
+                                attributeTypes.add("Sample Description");
                                 
                                 for (SCDNodeAttribute a : sample.getAttributes()){
-                                    writeAttribute(xmlWriter, a.getAttributeType(), "false", "STRING", a.getAttributeValue());
-                                    log.debug("Attribute "+a.getAttributeType()+" "+a.getAttributeValue());
+                                    if (a.getAttributeValue() != null && a.getAttributeValue().length()>0){
+                                        writeAttribute(xmlWriter, a.getAttributeType(), "false", "STRING", a.getAttributeValue());
+                                        attributeTypes.add(a.getAttributeType());
+                                        log.debug("Attribute "+a.getAttributeType()+" "+a.getAttributeValue());
+                                    }
                                 }
                                 
                                 //implicit derived from
@@ -275,12 +309,20 @@ public class SampleTabToGUIXML {
                                     if (SampleNode.class.isInstance(p)){
                                         SampleNode parent = (SampleNode) p;
                                         writeAttribute(xmlWriter, "derived from", "false", "STRING", parent.getSampleAccession());
+                                        attributeTypes.add("derived from");
                                     }
                                 }
                                 
                                 xmlWriter.writeEndElement(); //Sample
                             }
                         }
+                        
+                        //write out precomputed attribute summary
+                        xmlWriter.writeStartElement("SampleAttributes");
+                        for (String attributeType : attributeTypes){
+                            writeAttribute(xmlWriter, attributeType, "false", "STRING", null);
+                        }
+                        xmlWriter.writeEndElement(); //SampleAttributes
                         
                         xmlWriter.writeEndElement(); //SampleGroup
                     }
