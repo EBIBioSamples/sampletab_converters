@@ -1,30 +1,45 @@
 package uk.ac.ebi.fgpt.sampletab.sra;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
+import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class ENASRACron {
 
     @Option(name = "-h", aliases = { "--help" }, usage = "display help")
     private boolean help;
 
-    @Option(name = "-o", aliases = { "--output" }, usage = "output directory")
+    @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output directory")
     private String outputDirName;
 
     @Option(name = "--threaded", usage = "use multiple threads?")
@@ -145,7 +160,56 @@ public class ENASRACron {
             }
         }
         
-		// TODO hide files that have disappeared from the FTP site.
+        log.info("Starting deleted processing");
+        File[] stsubdirs = outdir.listFiles();
+        Arrays.sort(stsubdirs);
+        for(File subdir : stsubdirs){
+            String accession = subdir.getName();
+
+            String url = "http://www.ebi.ac.uk/ena/data/view/" + accession + "&display=xml";
+
+            log.debug("Prepared for download "+accession);
+
+            Document studyDoc = null;
+            try {
+                studyDoc = XMLUtils.getDocument(url);
+            } catch (DocumentException e) {
+                log.error("Unable to read "+url);
+                e.printStackTrace();
+            }
+            
+            if (studyDoc != null){
+                Element root = studyDoc.getRootElement();
+                //if this is a blank study, delete it
+                if (XMLUtils.getChildrenByName(root, "STUDY").size() == 0) {
+
+                    File sampletabFile = new File(subdir, "sampletab.pre.txt");
+                    if (sampletabFile.exists()){
+                        log.debug("Deleted study "+accession);
+                        boolean doConan = false;
+                        try {
+                            SampleTabUtils.releaseInADecade(sampletabFile);
+                            doConan = true;
+                        } catch (IOException e) {
+                            log.error("Problem with "+sampletabFile);
+                            e.printStackTrace();
+                        } catch (ParseException e) {
+                            log.error("Problem with "+sampletabFile);
+                            e.printStackTrace();
+                        }
+                        //trigger conan to complete processing
+                        if (!noconan && doConan) {
+                            try {
+                                ConanUtils.submit(accession, "BioSamples (SRA)", 1);
+                            } catch (IOException e) {
+                                log.warn("Problem submitting to Conan "+accession);
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        }
 	}
 
     public static void main(String[] args) {

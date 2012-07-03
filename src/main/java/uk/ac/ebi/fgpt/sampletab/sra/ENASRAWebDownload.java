@@ -71,19 +71,20 @@ public class ENASRAWebDownload {
         }
         
         //check that it does not already exist
-        boolean writeOut = true;
+        boolean studyWriteOut = true;
+        boolean sampleWriteOut = true;
         
         if (studyFile.exists()){
             Document existStudyDoc = XMLUtils.getDocument(studyFile);
             NodeComparator c = new NodeComparator();
             if (c.compare(studyDoc, existStudyDoc) == 0){
-                writeOut = false;
+                studyWriteOut = false;
             }
         }
         
 
         OutputStream os = null;
-        if(writeOut){
+        if(studyWriteOut){
             log.info("Downloading "+accession+" to disk");
             
             //write the study file to disk
@@ -103,7 +104,7 @@ public class ENASRAWebDownload {
                 }
             }
         } else {
-            log.info("Skipping "+accession);
+            log.debug("Skipping "+accession);
         }
         
         Set<String> sampleSRAAccessions = ENAUtils.getSamplesForStudy(root);
@@ -114,21 +115,25 @@ public class ENASRAWebDownload {
             File sampleFile = new File(outdir.getAbsoluteFile(), sampleSRAAccession + ".xml");
             Document sampledoc = XMLUtils.getDocument(sampleURL);
             
-            writeOut = false;
+            sampleWriteOut = false;
             
             if (!sampleFile.exists()){
                 //if it does not exist, it needs to be written
-                writeOut = true;
+                sampleWriteOut = true;
             } else {
                 //if it is different from what is on disk, it needs to be written
                 Document existSampleDoc = XMLUtils.getDocument(sampleFile);
                 NodeComparator c = new NodeComparator();
                 if (c.compare(sampledoc, existSampleDoc) != 0){
-                    writeOut = true;
+                    sampleWriteOut = true;
                 }
             }
             
-            if (writeOut){
+            if (sampleWriteOut){
+                //update the study write out variable if any of the samples were updated
+                //this is so it can return the correct value
+                
+                studyWriteOut = true;
                 log.info("Downloading "+sampleSRAAccession+" to disk");
                 //write the sample xml to disk
                 os = null;
@@ -147,11 +152,11 @@ public class ENASRAWebDownload {
                     }
                 }
             } else {
-                log.info("Skipping "+sampleSRAAccession);
+                log.debug("Skipping "+sampleSRAAccession);
             }
         }
         log.debug("ENA SRA study download complete.");
-        return true;
+        return studyWriteOut;
 
     }
 

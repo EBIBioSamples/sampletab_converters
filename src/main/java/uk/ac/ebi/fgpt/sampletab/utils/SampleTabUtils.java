@@ -1,6 +1,17 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
+import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
+import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class SampleTabUtils {
 
@@ -26,4 +37,29 @@ public class SampleTabUtils {
         return sampletabFile;
     }
     
+    public static void releaseInADecade(File sampletabFile) throws IOException, ParseException{
+        SampleTabSaferParser parser = new SampleTabSaferParser();
+        SampleData sd = parser.parse(sampletabFile);
+        //release it in 10 years
+        Calendar cal = GregorianCalendar.getInstance();
+        cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)+10);
+        sd.msi.submissionReleaseDate = cal.getTime();
+        Writer writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(sampletabFile));
+            SampleTabWriter stwriter = new SampleTabWriter(writer);
+            stwriter.write(sd);
+        } catch (IOException e){
+            e.printStackTrace();
+            throw e;
+        } finally {
+            if (writer != null){
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+        }
+    }
 }

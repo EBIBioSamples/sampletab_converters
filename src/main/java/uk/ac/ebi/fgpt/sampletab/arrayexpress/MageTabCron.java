@@ -1,37 +1,34 @@
 package uk.ac.ebi.fgpt.sampletab.arrayexpress;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
-import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class MageTabCron {
 
@@ -79,57 +76,47 @@ public class MageTabCron {
         }
         
         public void run(){
-	        ProcessBuilder pb = new ProcessBuilder();
-	        Process p;
-	        String bashcom;
-	        ArrayList<String> command;
+            log.info("Curl downloading "+this.filename);
 	        
-	        log.info("Curl downloading "+this.filename);
+	        String bashcom = "curl -z "+filename+" -o "+filename+" "+url;
 	        
-	        bashcom = "curl -z "+filename+" -o "+filename+" "+url;
-	        log.debug(bashcom);
-
-            command = new ArrayList<String>();
-            command.add("/bin/bash");
-            command.add("-c");
-            command.add(bashcom);
-            pb.command(command);
-            
-            try {
-				p = pb.start();
-	            synchronized (p) {
-	                p.waitFor();
-	            }
-			} catch (IOException e) {
-				System.err.println("Error running "+bashcom);
-				e.printStackTrace();
-				return;
-			} catch (InterruptedException e) {
-				System.err.println("Error running "+bashcom);
-				e.printStackTrace();
-				return;
-			}
-        	
+	        ProcessUtils.doCommand(bashcom, null);        	
         }
+	}
+	
+	private boolean connectFTP(){
+	    if (ftp == null || !ftp.isConnected()){
+            try {
+                ftp = FTPUtils.connect("ftp.ebi.ac.uk");
+            } catch (IOException e) {
+                log.error("Unable to connect to FTP");
+                e.printStackTrace();
+                return false;
+            }
+	    }
+	    if (ftp.isConnected()) {
+	        return true;
+	    } else {
+	        return false;
+	    }
 	}
 
 	public void run(File outdir) {
 		FTPFile[] subdirs = null;
-		try {
-			ftp = FTPUtils.connect("ftp.ebi.ac.uk");
-		} catch (IOException e) {
-		    log.error("Unable to connect to FTP");
-			e.printStackTrace();
-			System.exit(1);
-			return;
-		}
 
+		if (!connectFTP()){
+		    System.exit(1);
+		    return;
+		}
+		
 		String root = "/pub/databases/arrayexpress/data/experiment/";
 		try {
 			subdirs = ftp.listDirectories(root);
 		} catch (IOException e) {
 		    log.error("Unable to connect to FTP");
 			e.printStackTrace();
+            System.exit(1);
+            return;
 		}
 
 
@@ -151,6 +138,11 @@ public class MageTabCron {
 				String subdirpath = root + subdirstr + "/";
 				log.debug("working on " + subdirpath);
 
+		        if (!connectFTP()){
+		            System.exit(1);
+		            return;
+		        }
+		        
 				FTPFile[] subsubdirs = null;
 				try {
 					subsubdirs = ftp.listDirectories(subdirpath);
@@ -161,6 +153,11 @@ public class MageTabCron {
 				}
 				if (subsubdirs != null) {
 					for (FTPFile subsubdir : subsubdirs) {
+					    
+		                if (!connectFTP()){
+		                    System.exit(1);
+		                    return;
+		                }
 
 					    String submissionIdentifier = "GA"+subsubdir.getName();
 					    
@@ -277,10 +274,16 @@ public class MageTabCron {
         //for each ae sampletab
         // check if it is on the ae ftp
         // if not, then put publication date in the far future
-        SampleTabSaferParser parser = new SampleTabSaferParser();
+        log.info("Starting deleted processing");
         File[] stsubdirs = outdir.listFiles();
         Arrays.sort(stsubdirs);
         for(File subdir : stsubdirs){
+            
+            if (!connectFTP()){
+                System.exit(1);
+                return;
+            }
+            
             String submission = subdir.getName();
             
             //extract the middle part of the accession - the array-express pipeline
@@ -299,47 +302,28 @@ public class MageTabCron {
             } catch (IOException e) {
                 log.error("Problem accessing FTP.");
                 e.printStackTrace();
+                continue;
             }
             
             if (!onAEFTP){
                 log.warn("Hiding deleted experiment "+submission);
                 //TODO multi-thread this
                 File sampletabFile = new File(subdir, "sampletab.pre.txt");
-                SampleData sd = null;
                 
                 if (sampletabFile.exists()){
+                    boolean doConan = false;
                     try {
-                        sd = parser.parse(sampletabFile);
+                        SampleTabUtils.releaseInADecade(sampletabFile);
+                        doConan = true;
+                    } catch (IOException e) {
+                        log.error("Problem with "+sampletabFile);
+                        e.printStackTrace();
                     } catch (ParseException e) {
-                        log.error("Unable to parser "+sampletabFile);
+                        log.error("Problem with "+sampletabFile);
                         e.printStackTrace();
-                    }
-                }
-                if (sd != null){
-                    //release it in 10 years
-                    Calendar cal = GregorianCalendar.getInstance();
-                    cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)+10);
-                    sd.msi.submissionReleaseDate = cal.getTime();
-                    Writer writer = null;
-                    try {
-                        writer = new BufferedWriter(new FileWriter(sampletabFile));
-                        SampleTabWriter stwriter = new SampleTabWriter(writer);
-                        stwriter.write(sd);
-                    } catch (IOException e){
-                        log.error("Problem writing to sampletabFile.");
-                        e.printStackTrace();
-                        
-                    } finally {
-                        if (writer != null){
-                            try {
-                                writer.close();
-                            } catch (IOException e) {
-                                //do nothing
-                            }
-                        }
                     }
                     //trigger conan to complete processing
-                    if (!noconan) {
+                    if (!noconan && doConan) {
                         try {
                             ConanUtils.submit(submission, "BioSamples (AE)", 1);
                         } catch (IOException e) {
