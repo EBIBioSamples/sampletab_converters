@@ -38,8 +38,12 @@ public class ConanUtils {
             }
         }
     }
-    
+
     public synchronized static void submit(String submissionIdentifier, String pipeline) throws IOException{
+        submit(submissionIdentifier, pipeline, 0);
+    }
+    
+    public synchronized static void submit(String submissionIdentifier, String pipeline, int startingProcessIndex) throws IOException{
         setup();
         
         ObjectMapper objectMapper = new ObjectMapper();
@@ -47,7 +51,7 @@ public class ConanUtils {
         
         userOb.put("priority", "MEDIUM");
         userOb.put("pipelineName", pipeline);
-        userOb.put("startingProcessIndex", 0);
+        userOb.put("startingProcessIndex", startingProcessIndex);
         userOb.put("restApiKey", APIKEY);
         ObjectNode inputParameters = userOb.putObject("inputParameters");
         inputParameters.put("SampleTab Accession", submissionIdentifier);
