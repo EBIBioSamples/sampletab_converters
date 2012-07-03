@@ -24,11 +24,11 @@ public class SampleTabStatusRunnable implements Runnable {
 	private final File inputFile;
 	private final File ftpDir;
 	
-	public Boolean shouldBePublic = null;
-	public Boolean isLoaded = null;
-    public Boolean isLoadUpToDate = null;
-	public Boolean isOnFTP = null;
-    public Boolean isFTPUpToDate = null;
+	public Boolean shouldBePublic = false;
+	public Boolean isLoaded = false;
+    public Boolean isLoadUpToDate = false;
+	public Boolean isOnFTP = false;
+    public Boolean isFTPUpToDate = false;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
