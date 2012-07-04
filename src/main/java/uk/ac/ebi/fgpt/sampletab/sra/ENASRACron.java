@@ -89,11 +89,70 @@ public class ENASRACron {
             }
         }
     }
+    
+    private class ENASRADeleteRunnable implements Runnable {
+        private final File subdir;
+
+        public ENASRADeleteRunnable(File subdir) {
+            this.subdir = subdir;
+        }
+
+        public void run() {
+            String accession = subdir.getName();
+            String sraaccession = accession.substring(4);
+            log.info("Processing study "+accession);
+
+            
+            String url = "http://www.ebi.ac.uk/ena/data/view/" + sraaccession + "&display=xml";
+            log.debug("Prepared for download "+accession);
+
+            Document studyDoc = null;
+            try {
+                studyDoc = XMLUtils.getDocument(url);
+            } catch (DocumentException e) {
+                log.error("Unable to read "+url);
+                e.printStackTrace();
+            }
+            
+            if (studyDoc != null){
+                Element root = studyDoc.getRootElement();
+                if (root == null){
+                    throw new RuntimeException("root is null");
+                }
+                //if this is a blank study, delete it
+                if (XMLUtils.getChildrenByName(root, "STUDY").size() == 0) {
+
+                    File sampletabFile = new File(subdir, "sampletab.pre.txt");
+                    if (sampletabFile.exists()){
+                        log.info("Deleted study "+accession);
+                        boolean doConan = false;
+                        try {
+                            SampleTabUtils.releaseInADecade(sampletabFile);
+                            doConan = true;
+                        } catch (IOException e) {
+                            log.error("Problem with "+sampletabFile);
+                            e.printStackTrace();
+                        } catch (ParseException e) {
+                            log.error("Problem with "+sampletabFile);
+                            e.printStackTrace();
+                        }
+                        //trigger conan to complete processing
+                        if (!noconan && doConan) {
+                            try {
+                                ConanUtils.submit(accession, "BioSamples (SRA)", 1);
+                            } catch (IOException e) {
+                                log.warn("Problem submitting to Conan "+accession);
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+    }
 
     public void run(File outdir) {
-
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
 
 
         //there isnt an easy way to get a list of all possible accessions
@@ -111,6 +170,10 @@ public class ENASRACron {
         //http://www.ebi.ac.uk/ena/data/view/ERP000000-ERP900000&display=xml
         
         //...except that it wont let anyone download files that big. Grrr. <grumble>
+
+        int nothreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+        
         
 
         //BRUTE FORCE!
@@ -160,54 +223,30 @@ public class ENASRACron {
             }
         }
         
+        pool = Executors.newFixedThreadPool(nothreads);
+        
         log.info("Starting deleted processing");
         File[] stsubdirs = outdir.listFiles();
         Arrays.sort(stsubdirs);
         for(File subdir : stsubdirs){
-            String accession = subdir.getName();
-
-            String url = "http://www.ebi.ac.uk/ena/data/view/" + accession + "&display=xml";
-
-            log.debug("Prepared for download "+accession);
-
-            Document studyDoc = null;
-            try {
-                studyDoc = XMLUtils.getDocument(url);
-            } catch (DocumentException e) {
-                log.error("Unable to read "+url);
-                e.printStackTrace();
+            Runnable t = new ENASRADeleteRunnable(subdir);
+            if (threaded) {
+                pool.execute(t);
+            } else {
+                t.run();
             }
-            
-            if (studyDoc != null){
-                Element root = studyDoc.getRootElement();
-                //if this is a blank study, delete it
-                if (XMLUtils.getChildrenByName(root, "STUDY").size() == 0) {
-
-                    File sampletabFile = new File(subdir, "sampletab.pre.txt");
-                    if (sampletabFile.exists()){
-                        log.debug("Deleted study "+accession);
-                        boolean doConan = false;
-                        try {
-                            SampleTabUtils.releaseInADecade(sampletabFile);
-                            doConan = true;
-                        } catch (IOException e) {
-                            log.error("Problem with "+sampletabFile);
-                            e.printStackTrace();
-                        } catch (ParseException e) {
-                            log.error("Problem with "+sampletabFile);
-                            e.printStackTrace();
-                        }
-                        //trigger conan to complete processing
-                        if (!noconan && doConan) {
-                            try {
-                                ConanUtils.submit(accession, "BioSamples (SRA)", 1);
-                            } catch (IOException e) {
-                                log.warn("Problem submitting to Conan "+accession);
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
+        }
+        
+        // run the pool and then close it afterwards
+        // must synchronize on the pool object
+        synchronized (pool) {
+            pool.shutdown();
+            try {
+                // allow 24h to execute. Rather too much, but meh
+                pool.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                log.error("Interuppted awaiting thread pool termination");
+                e.printStackTrace();
             }
         }
 	}
