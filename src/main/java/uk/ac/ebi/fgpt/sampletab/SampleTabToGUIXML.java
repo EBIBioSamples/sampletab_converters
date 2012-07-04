@@ -58,6 +58,30 @@ public class SampleTabToGUIXML {
     public static void main(String[] args) {
         new SampleTabToGUIXML().doMain(args);
     }
+    
+    public static String stripNonValidXMLCharacters(String in) {
+        //from http://blog.mark-mclaren.info/2007/02/invalid-xml-characters-when-valid-utf8_5873.html
+
+        if (in == null){ 
+            return null;
+        }
+        
+        StringBuffer out = new StringBuffer(); // Used to hold the output.
+        char current; // Used to reference the current character.
+        
+        for (int i = 0; i < in.length(); i++) {
+            current = in.charAt(i); // NOTE: No IndexOutOfBoundsException caught here; it should not happen.
+            if ((current == 0x9) ||
+                (current == 0xA) ||
+                (current == 0xD) ||
+                ((current >= 0x20) && (current <= 0xD7FF)) ||
+                ((current >= 0xE000) && (current <= 0xFFFD)) ||
+                ((current >= 0x10000) && (current <= 0x10FFFF))){
+                out.append(current);
+            }
+        }
+        return out.toString();
+    } 
 
     private void writeAttribute(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, String value) throws XMLStreamException{
         xmlWriter.writeStartElement("attribute");
@@ -66,6 +90,8 @@ public class SampleTabToGUIXML {
         xmlWriter.writeAttribute("dataType", dataType);
         if (value != null){
             xmlWriter.writeStartElement("value");
+            
+            value = stripNonValidXMLCharacters(value);
             xmlWriter.writeCharacters(value);
             xmlWriter.writeEndElement(); //value
         }
