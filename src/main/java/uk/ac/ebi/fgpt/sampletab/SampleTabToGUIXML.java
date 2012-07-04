@@ -14,6 +14,11 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.Serializer.Property;
+
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -32,11 +37,11 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
-import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 
+@SuppressWarnings("restriction")
 public class SampleTabToGUIXML {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
@@ -103,8 +108,14 @@ public class SampleTabToGUIXML {
         
         FileWriter outputWriter = null;
         try {
-            outputWriter = new FileWriter(outputFilename);
-            XMLStreamWriter xmlWriter = output.createXMLStreamWriter(outputWriter);
+            //outputWriter = new FileWriter(outputFilename);
+            //XMLStreamWriter xmlWriter = output.createXMLStreamWriter(outputWriter);
+            
+            Processor processor = new Processor(false);
+            Serializer serializer = processor.newSerializer(new File(outputFilename));
+            serializer.setOutputProperty(Property.INDENT, "yes");
+            XMLStreamWriter xmlWriter = serializer.getXMLStreamWriter();
+            
             xmlWriter.writeStartDocument();
             xmlWriter.writeStartElement("Biosamples");
             
@@ -318,6 +329,7 @@ public class SampleTabToGUIXML {
                         }
                         
                         //write out precomputed attribute summary
+                        xmlWriter.writeCharacters("\n");
                         xmlWriter.writeStartElement("SampleAttributes");
                         for (String attributeType : attributeTypes){
                             writeAttribute(xmlWriter, attributeType, "false", "STRING", null);
@@ -331,9 +343,9 @@ public class SampleTabToGUIXML {
             xmlWriter.writeEndDocument();
             
             xmlWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (XMLStreamException e) {
+            e.printStackTrace();
+        } catch (SaxonApiException e) {
             e.printStackTrace();
         } finally {
             if (outputWriter != null){
