@@ -1,6 +1,8 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -13,6 +15,8 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class SampleTabStatusRunnable implements Runnable {
@@ -24,6 +28,12 @@ public class SampleTabStatusRunnable implements Runnable {
 	private final File inputFile;
 	private final File ftpDir;
 	
+    private final String ageusername;
+    private final String agepassword;
+    private final String agehostname;
+    
+    private final String scriptDirFilename;
+	
 	public Boolean shouldBePublic = false;
 	public Boolean isLoaded = false;
     public Boolean isLoadUpToDate = false;
@@ -33,7 +43,7 @@ public class SampleTabStatusRunnable implements Runnable {
     private Logger log = LoggerFactory.getLogger(getClass());
     
 
-	public SampleTabStatusRunnable(File inputFile, File ftpDir){
+	public SampleTabStatusRunnable(File inputFile, File ftpDir, String ageusername, String agepassword, String agehostname, String scriptDirFilename){
 		if (inputFile == null){
 			throw new IllegalArgumentException("inputFile cannot be null");
 		}
@@ -49,10 +59,16 @@ public class SampleTabStatusRunnable implements Runnable {
 			throw new IllegalArgumentException("ftpDir must exist ("+ftpDir+")");
 		}
 		this.ftpDir = ftpDir;
+		
+		this.ageusername = ageusername;
+		this.agepassword = agepassword;
+		this.agehostname = agehostname;
+		
+        this.scriptDirFilename = scriptDirFilename;
 	}
 
-	public SampleTabStatusRunnable(File inputFile, String ftpDirFilename){
-		this(inputFile, new File(ftpDirFilename));
+	public SampleTabStatusRunnable(File inputFile, String ftpDirFilename, String ageusername, String agepassword, String agehostname, String scriptDirFilename){
+		this(inputFile, new File(ftpDirFilename), ageusername, agepassword, agehostname, scriptDirFilename);
 	}
 	
 	public void run() {
@@ -161,52 +177,86 @@ public class SampleTabStatusRunnable implements Runnable {
 	
 	private void removePrivateTag(){
 	    log.info("Removing private tag "+inputFile.getName());
-	}
-    
-    private void addPrivateTag(){
-        log.info("Adding private tag "+inputFile.getName());
-        /*
+	    
         File scriptDir = new File(scriptDirFilename);
         File scriptFile = new File(scriptDir, "TagControl.sh");
+        
+        SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        File logfile = new File(inputFile, "tag_"+simpledateformat.format(new Date())+".log");
 
         String command = scriptFile.getAbsolutePath() 
             + " -u "+ageusername
             + " -p "+agepassword
-            + " -h \""+agename+"\"" 
+            + " -h \""+agehostname+"\"" 
+            + " -r Security:Private"
+            + " -i "+inputFile.getName();
+
+        ProcessUtils.doCommand(command, logfile);
+	}
+    
+    private void addPrivateTag(){
+        log.info("Adding private tag "+inputFile.getName());
+        
+        File scriptDir = new File(scriptDirFilename);
+        File scriptFile = new File(scriptDir, "TagControl.sh");
+        
+        SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        File logfile = new File(inputFile, "tag_"+simpledateformat.format(new Date())+".log");
+
+        String command = scriptFile.getAbsolutePath() 
+            + " -u "+ageusername
+            + " -p "+agepassword
+            + " -h \""+agehostname+"\"" 
             + " -a Security:Private"
             + " -i "+inputFile.getName();
 
-        ProcessUtils.doCommand(command, null);
-        */
+        ProcessUtils.doCommand(command, logfile);
     }
     
     private void reload(){
         log.info("Reloading in database "+inputFile.getName());
+        
+        File scriptDir = new File(scriptDirFilename);
+        File scriptFile = new File(scriptDir, "AgeTab-Loader.sh");
+        File loadDir = new File(inputFile, "load");
+        File ageDir = new File(inputFile, "age");
+
+        SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        File logfile = new File(inputFile, "load_"+simpledateformat.format(new Date())+".log");
+        
+        String command = scriptFile.getAbsolutePath() 
+            + " -s -m -i -e"
+            + " -o \""+loadDir.getAbsolutePath()+"\""
+            + " -u "+ageusername
+            + " -p "+agepassword
+            + " -h \""+agehostname+"\""
+            + " \""+ageDir.getAbsolutePath()+"\""; 
+        
+        ProcessUtils.doCommand(command, logfile);
+    }
+    
+    private File getFTPFile(){
+        File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(inputFile.getName())); 
+        File ftpSubSubDir = new File(ftpSubDir, inputFile.getName());
+        File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
+        return ftpFile;
+        
     }
     
     private void removeFromFTP(){
         log.info("Removing from FTP "+inputFile.getName());
-        /*
-        File ftpDir = new File(ftpDirFilename);
-        File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(inputFile.getName())); 
-        File ftpSubSubDir = new File(ftpSubDir, inputFile.getName());
-        File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
-        
+        File ftpFile = getFTPFile();
         if (ftpFile.exists()){
             if (!ftpFile.delete()){
                 log.error("Unable to delete from FTP "+ftpFile);
             }
         }
-        */
     }
     
     private void copyToFTP(){
         log.info("Copying to FTP "+inputFile.getName());
-        /*
-        String accession = inputFile.getName();
-        File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(accession)); 
-        File ftpSubSubDir = new File(ftpSubDir, accession);
-        File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
+
+        File ftpFile = getFTPFile();
         
         File sampletabFile = new File(inputFile, "sampletab.txt");
         
@@ -218,21 +268,6 @@ public class SampleTabStatusRunnable implements Runnable {
                 log.error("Unable to copy to FTP "+ftpFile);
                 e.printStackTrace();
             }
-        }
-        
-        //also need to try to remove private tag from database
-        //not sure what will happen if it doesn't have the tag
-        File scriptDir = new File(scriptDirFilename);
-        File scriptFile = new File(scriptDir, "TagControl.sh");
-
-        String command = scriptFile.getAbsolutePath() 
-            + " -u "+ageusername
-            + " -p "+agepassword
-            + " -h \""+agename+"\"" 
-            + " -r Security:Private"
-            + " -i "+inputFile.getName();
-
-        ProcessUtils.doCommand(command, null);
-        */
+        }        
     }
 }

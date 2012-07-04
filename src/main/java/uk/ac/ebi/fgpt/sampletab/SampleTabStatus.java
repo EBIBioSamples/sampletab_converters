@@ -2,10 +2,14 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +46,7 @@ public class SampleTabStatus {
     private boolean threaded = false;
 
     @Option(name = "--agename", usage = "Age server hostname")
-    private String agename = null;
+    private String agehostname = null;
 
     @Option(name = "--ageusername", usage = "Age server username")
     private String ageusername = null;
@@ -60,100 +64,9 @@ public class SampleTabStatus {
             log.error("Unable to read resource age.properties");
             e.printStackTrace();
         }
-        this.agename = ageProperties.getProperty("hostname");
+        this.agehostname = ageProperties.getProperty("hostname");
         this.ageusername = ageProperties.getProperty("username");
         this.agepassword = ageProperties.getProperty("password");
-    }
-    
-    private void toDatabase(List<File> inputFiles){
-        List<File> ageFiles = new ArrayList<File>();
-        for(File inputFile : inputFiles) {
-            log.info("Adding to database "+inputFile);
-            /*
-            File ageDir = new File(inputFile, "age");
-            File ageFile = new File(ageDir, inputFile.getName()+".age.txt");
-            
-            File loadDirFile = new File(inputFile, "load");
-            File loadSuccessFile = new File(loadDirFile, inputFile.getName()+".SUCCESS");
-            
-            if (ageFile.exists()){
-                //if it has never been loaded, or it is loaded but out of date
-                if (!loadSuccessFile.exists() || ageFile.lastModified() > loadSuccessFile.lastModified()){
-                    ageFiles.add(ageDir);
-                }
-            }*/
-        }
-        /*
-        File scriptDir = new File(scriptDirFilename);
-        File scriptFile = new File(scriptDir, "AgeTab-Loader.sh");
-        
-        File tempDir = Files.createTempDir();
-        
-        String mainCommand = scriptFile.getAbsolutePath() 
-            + " -s -m -i -e -mmode"
-            + " -o "+tempDir.getAbsolutePath()
-            + " -u "+ageusername
-            + " -p "+agepassword
-            + " -h \""+agename+"\""; 
-        
-        //because of shell maximum command length
-        //(which you can find by running 'getconf ARG_MAX')
-        //only process some files at a time
-        //approximate max length is at least 100,000 characters
-        
-        String commandRoot = mainCommand;
-        for(File ageDir : ageFiles){
-            if (mainCommand.length() + ageDir.getAbsolutePath().length()+1 < 100000){
-                mainCommand = mainCommand+" "+ageDir.getAbsolutePath();
-            } else {
-                //command is too long. run and reset.
-                ProcessUtils.doCommand(mainCommand, null);
-                mainCommand = commandRoot+" "+ageDir.getAbsolutePath();
-            }
-        }
-        
-        //now all of them should be loaded, but we have to put the load reports 
-        //back in the right directories.
-        for(File inputFile : inputFiles){
-            
-            File successFile = new File(tempDir, inputFile.getName()+".SUCCESS");
-            File errorFile = new File(tempDir, inputFile.getName()+".ERROR");
-            
-            File loadDirFile = new File(inputFile, "load");
-            File loadSuccessFile = new File(loadDirFile, inputFile.getName()+".SUCCESS");
-            File loadErrorFile = new File(loadDirFile, inputFile.getName()+".ERROR");
-            
-            if (successFile.exists()){
-                try {
-                    FileUtils.move(successFile, loadSuccessFile);
-                } catch (IOException e) {
-                    log.error("Unable to move "+successFile);
-                    e.printStackTrace();
-                }
-            }
-
-            if (errorFile.exists()){
-                try {
-                    FileUtils.move(errorFile, loadErrorFile);
-                } catch (IOException e) {
-                    log.error("Unable to move "+errorFile);
-                    e.printStackTrace();
-                }
-            }
-        }
-        
-        //and finally, clean up
-        //Note due to issues described in http://code.google.com/p/guava-libraries/issues/detail?id=365
-        //this is not totally secure against concurrent modification.
-        for (File tempFile : tempDir.listFiles()){
-            if (!tempFile.delete()){
-                log.error("Unable to delete "+tempFile);
-            }
-        }
-        if (!tempDir.delete()){
-            log.error("Unable to delete "+tempDir);
-        }
-        */
     }
     
     public static void main(String[] args) {
@@ -188,11 +101,22 @@ public class SampleTabStatus {
             inputFiles.addAll(FileUtils.getMatchesGlob(inputFilename));
         }
         log.info("Found " + inputFiles.size() + " input files");
-        //TODO no duplicates
+        
+        //no duplicates
+        Set<File> inputFileSet = new HashSet<File>();
+        inputFileSet.addAll(inputFiles);
+        inputFiles.clear();
+        inputFiles.addAll(inputFileSet);
+        
+        //sort to get consistent order
         Collections.sort(inputFiles);
+        
+        log.info("Found " + inputFiles.size() + " input files");
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+
+        startMMode();
         
         for (File inputFile : inputFiles) {
         	if (!inputFile.isDirectory()){
@@ -202,7 +126,7 @@ public class SampleTabStatus {
     			continue;
     		}
     		
-            Runnable t = new SampleTabStatusRunnable(inputFile, ftpDirFilename);
+            Runnable t = new SampleTabStatusRunnable(inputFile, ftpDirFilename, ageusername, agepassword, agehostname, scriptDirFilename);
             if (threaded){
                 pool.execute(t);
             } else {
@@ -224,9 +148,37 @@ public class SampleTabStatus {
             }
         }
         
-        //because tags may have changed, need to trigger re-indexing
-        //this could be done by going into and out of maintenence mode
-        //once that tool is finished
+        stopMMode();
+        
+    }
+    
+    private void startMMode(){
+
+        File scriptDir = new File(scriptDirFilename);
+        File scriptFile = new File(scriptDir, "MModeTool.sh");
+
+        String command = scriptFile.getAbsolutePath() 
+            + " -u "+ageusername
+            + " -p "+agepassword
+            + " -h \""+agehostname+"\"" 
+            + " -t "+(4*60*60)//4 hour timeout, just in case
+            + " set" ; 
+
+        ProcessUtils.doCommand(command, null);
+    }
+    
+    private void stopMMode(){
+
+        File scriptDir = new File(scriptDirFilename);
+        File scriptFile = new File(scriptDir, "MModeTool.sh");
+
+        String command = scriptFile.getAbsolutePath() 
+            + " -u "+ageusername
+            + " -p "+agepassword
+            + " -h \""+agehostname+"\"" 
+            + " reset";
+
+        ProcessUtils.doCommand(command, null);
         
     }
 }
