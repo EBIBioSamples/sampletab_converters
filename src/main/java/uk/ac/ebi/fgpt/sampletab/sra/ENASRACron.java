@@ -100,11 +100,11 @@ public class ENASRACron {
         public void run() {
             String accession = subdir.getName();
             String sraaccession = accession.substring(4);
-            log.info("Processing study "+accession);
+            log.debug("Processing study "+accession);
 
             
             String url = "http://www.ebi.ac.uk/ena/data/view/" + sraaccession + "&display=xml";
-            log.debug("Prepared for download "+accession);
+            log.debug("Prepared for download "+url);
 
             Document studyDoc = null;
             try {
