@@ -193,19 +193,20 @@ public class SampleTabToGUIXML {
                             xmlWriter.writeStartElement("value");                     
                             for (Integer i = 0; i < sd.msi.organizations.size(); i++){
                                 Organization o = sd.msi.organizations.get(i);
-                                
-                                xmlWriter.writeStartElement("object");
-                                xmlWriter.writeAttribute("id", "Org"+i.toString());
-                                xmlWriter.writeAttribute("class", "Organization");
-                                xmlWriter.writeAttribute("classDefined", "true");
-    
-                                writeAttribute(xmlWriter, "Organization Name", "true", "STRING", o.getName());
-                                writeAttribute(xmlWriter, "Organization Address", "true", "STRING", o.getAddress());
-                                writeAttribute(xmlWriter, "Organization URI", "true", "STRING", o.getURI());
-                                writeAttribute(xmlWriter, "Organization Email", "true", "STRING", o.getEmail());
-                                writeAttribute(xmlWriter, "Organization Role", "true", "STRING", o.getRole());
-                                
-                                xmlWriter.writeEndElement(); //object
+                                if (o != null){
+                                    xmlWriter.writeStartElement("object");
+                                    xmlWriter.writeAttribute("id", "Org"+i.toString());
+                                    xmlWriter.writeAttribute("class", "Organization");
+                                    xmlWriter.writeAttribute("classDefined", "true");
+        
+                                    writeAttribute(xmlWriter, "Organization Name", "true", "STRING", o.getName());
+                                    writeAttribute(xmlWriter, "Organization Address", "true", "STRING", o.getAddress());
+                                    writeAttribute(xmlWriter, "Organization URI", "true", "STRING", o.getURI());
+                                    writeAttribute(xmlWriter, "Organization Email", "true", "STRING", o.getEmail());
+                                    writeAttribute(xmlWriter, "Organization Role", "true", "STRING", o.getRole());
+                                    
+                                    xmlWriter.writeEndElement(); //object
+                                }
                             }
                             xmlWriter.writeEndElement(); //value
                             xmlWriter.writeEndElement(); //organizations
@@ -220,19 +221,20 @@ public class SampleTabToGUIXML {
                             xmlWriter.writeStartElement("value");                     
                             for (Integer i = 0; i < sd.msi.persons.size(); i++){
                                 Person p = sd.msi.persons.get(i);
-                                
-                                xmlWriter.writeStartElement("object");
-                                xmlWriter.writeAttribute("id", "Per"+i.toString());
-                                xmlWriter.writeAttribute("class", "Person");
-                                xmlWriter.writeAttribute("classDefined", "true");
-    
-                                writeAttribute(xmlWriter, "Person Last Name", "true", "STRING", p.getLastName());
-                                writeAttribute(xmlWriter, "Person Initials", "true", "STRING", p.getInitials());
-                                writeAttribute(xmlWriter, "Person First Name", "true", "STRING", p.getFirstName());
-                                writeAttribute(xmlWriter, "Person Email", "true", "STRING", p.getEmail());
-                                writeAttribute(xmlWriter, "Person Role", "true", "STRING", p.getRole());
-                                
-                                xmlWriter.writeEndElement(); //object
+                                if (p != null){
+                                    xmlWriter.writeStartElement("object");
+                                    xmlWriter.writeAttribute("id", "Per"+i.toString());
+                                    xmlWriter.writeAttribute("class", "Person");
+                                    xmlWriter.writeAttribute("classDefined", "true");
+        
+                                    writeAttribute(xmlWriter, "Person Last Name", "true", "STRING", p.getLastName());
+                                    writeAttribute(xmlWriter, "Person Initials", "true", "STRING", p.getInitials());
+                                    writeAttribute(xmlWriter, "Person First Name", "true", "STRING", p.getFirstName());
+                                    writeAttribute(xmlWriter, "Person Email", "true", "STRING", p.getEmail());
+                                    writeAttribute(xmlWriter, "Person Role", "true", "STRING", p.getRole());
+                                    
+                                    xmlWriter.writeEndElement(); //object
+                                }
                             }
                             xmlWriter.writeEndElement(); //value
                             xmlWriter.writeEndElement(); //persons
@@ -247,16 +249,17 @@ public class SampleTabToGUIXML {
                             xmlWriter.writeStartElement("value");                     
                             for (Integer i = 0; i < sd.msi.publications.size(); i++){
                                 Publication p = sd.msi.publications.get(i);
-                                
-                                xmlWriter.writeStartElement("object");
-                                xmlWriter.writeAttribute("id", "Pub"+i.toString());
-                                xmlWriter.writeAttribute("class", "Publication");
-                                xmlWriter.writeAttribute("classDefined", "true");
-    
-                                writeAttribute(xmlWriter, "Publication PubMed ID", "true", "STRING", p.getPubMedID());
-                                writeAttribute(xmlWriter, "Publication DOI", "true", "STRING", p.getDOI());
-                                
-                                xmlWriter.writeEndElement(); //object
+                                if (p != null){
+                                    xmlWriter.writeStartElement("object");
+                                    xmlWriter.writeAttribute("id", "Pub"+i.toString());
+                                    xmlWriter.writeAttribute("class", "Publication");
+                                    xmlWriter.writeAttribute("classDefined", "true");
+        
+                                    writeAttribute(xmlWriter, "Publication PubMed ID", "true", "STRING", p.getPubMedID());
+                                    writeAttribute(xmlWriter, "Publication DOI", "true", "STRING", p.getDOI());
+                                    
+                                    xmlWriter.writeEndElement(); //object
+                                }
                             }
                             xmlWriter.writeEndElement(); //value
                             xmlWriter.writeEndElement(); //publications
@@ -271,17 +274,18 @@ public class SampleTabToGUIXML {
                             xmlWriter.writeStartElement("value");                     
                             for (Integer i = 0; i < sd.msi.termSources.size(); i++){
                                 TermSource t = sd.msi.termSources.get(i);
-                                
-                                xmlWriter.writeStartElement("object");
-                                xmlWriter.writeAttribute("id", t.getName());
-                                xmlWriter.writeAttribute("class", "Term Source");
-                                xmlWriter.writeAttribute("classDefined", "true");
-    
-                                writeAttribute(xmlWriter, "Term Source Name", "true", "STRING", t.getName());
-                                writeAttribute(xmlWriter, "Term Source URI", "true", "STRING", t.getURI());
-                                writeAttribute(xmlWriter, "Term Source Version", "true", "STRING", t.getVersion());
-                                
-                                xmlWriter.writeEndElement(); //object
+                                if (t != null){
+                                    xmlWriter.writeStartElement("object");
+                                    xmlWriter.writeAttribute("id", t.getName());
+                                    xmlWriter.writeAttribute("class", "Term Source");
+                                    xmlWriter.writeAttribute("classDefined", "true");
+        
+                                    writeAttribute(xmlWriter, "Term Source Name", "true", "STRING", t.getName());
+                                    writeAttribute(xmlWriter, "Term Source URI", "true", "STRING", t.getURI());
+                                    writeAttribute(xmlWriter, "Term Source Version", "true", "STRING", t.getVersion());
+                                    
+                                    xmlWriter.writeEndElement(); //object
+                                }
                             }
                             xmlWriter.writeEndElement(); //value
                             xmlWriter.writeEndElement(); //term sources
@@ -296,17 +300,18 @@ public class SampleTabToGUIXML {
                             xmlWriter.writeStartElement("value");                     
                             for (Integer i = 0; i < sd.msi.databases.size(); i++){
                                 Database d = sd.msi.databases.get(i);
-                                
-                                xmlWriter.writeStartElement("object");
-                                xmlWriter.writeAttribute("id", "Dat"+i.toString());
-                                xmlWriter.writeAttribute("class", "Database");
-                                xmlWriter.writeAttribute("classDefined", "true");
-    
-                                writeAttribute(xmlWriter, "Database Name", "true", "STRING", d.getName());
-                                writeAttribute(xmlWriter, "Database ID", "true", "STRING", d.getID());
-                                writeAttribute(xmlWriter, "Database URI", "true", "STRING", d.getURI());
-                                
-                                xmlWriter.writeEndElement(); //object
+                                if (d != null){
+                                    xmlWriter.writeStartElement("object");
+                                    xmlWriter.writeAttribute("id", "Dat"+i.toString());
+                                    xmlWriter.writeAttribute("class", "Database");
+                                    xmlWriter.writeAttribute("classDefined", "true");
+        
+                                    writeAttribute(xmlWriter, "Database Name", "true", "STRING", d.getName());
+                                    writeAttribute(xmlWriter, "Database ID", "true", "STRING", d.getID());
+                                    writeAttribute(xmlWriter, "Database URI", "true", "STRING", d.getURI());
+                                    
+                                    xmlWriter.writeEndElement(); //object
+                                }
                             }
                             xmlWriter.writeEndElement(); //value
                             xmlWriter.writeEndElement(); //databaases
