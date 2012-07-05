@@ -172,6 +172,8 @@ public class SampleTabStatusRunnable implements Runnable {
                 //remove from FTP
                 removeFromFTP();
             }
+            //delete sampletab.toload.txt file
+            removeToLoad();
     	}
 	}
 	
@@ -269,5 +271,15 @@ public class SampleTabStatusRunnable implements Runnable {
                 e.printStackTrace();
             }
         }        
+    }
+    
+    private void removeToLoad(){
+        log.info("Removing toLoad "+inputFile.getName());
+        File toLoad = new File(inputFile, "sampletab.toload.txt");
+        if (toLoad.exists()){
+            if (!toLoad.delete()){
+                log.error("Unable to delete file "+toLoad);
+            }
+        }
     }
 }
