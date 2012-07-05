@@ -41,13 +41,13 @@ public class SampleTabUtils {
         return sampletabFile;
     }
     
-    public static void releaseInADecade(File sampletabFile) throws IOException, ParseException{
+    public static void releaseInACentury(File sampletabFile) throws IOException, ParseException{
         SampleTabSaferParser parser = new SampleTabSaferParser();
         SampleData sd = parser.parse(sampletabFile);
         if (sd == null){
             log.error("Failed to parse "+sampletabFile);
         } else {
-            //release it in 10 years
+            //release it in 100 years
             Calendar cal = GregorianCalendar.getInstance();
             cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)+10);
             sd.msi.submissionReleaseDate = cal.getTime();
