@@ -132,7 +132,7 @@ public class PRIDEXMLToSampleTab {
             }
             
             SampleNode sample = new SampleNode();
-            sample.setNodeName(accession.toString());
+            sample.setNodeName(accession);
             
             DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, "http://www.ebi.ac.uk/pride/showExperiment.do?experimentAccessionNumber="+accession);
             sample.addAttribute(dbattr);
@@ -239,7 +239,7 @@ public class PRIDEXMLToSampleTab {
             submitids.add(in.getNodeName());
         }
         Collections.sort(submitids);
-        st.msi.submissionIdentifier = submitids.get(0) ;
+        st.msi.submissionIdentifier = "GPR-"+submitids.get(0) ;
         
         log.info("Finished convert()");
         return st;
