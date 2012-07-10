@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -29,7 +30,9 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 
 public class PRIDEcron {
@@ -40,6 +43,7 @@ public class PRIDEcron {
     //TODO make required
     @Option(name = "-o", aliases={"--output"}, usage = "output directory")
     private String outputDirName;
+    private File outputDir;
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
@@ -50,6 +54,11 @@ public class PRIDEcron {
     private Logger log = LoggerFactory.getLogger(getClass());
     
     private FTPClient ftp = null;
+
+    private Map<String, Set<String>> subs = Collections.synchronizedMap(new HashMap<String, Set<String>>());
+    
+    private Set<String> updated = new HashSet<String>();
+    
 
     private PRIDEcron() {
         
@@ -120,7 +129,8 @@ public class PRIDEcron {
         
     }
 
-    public void run(File outdir) {
+    private void downloads(File outdir) {
+
         FTPFile[] files;
         try {
             ftp = FTPUtils.connect("ftp.ebi.ac.uk");
@@ -133,6 +143,7 @@ public class PRIDEcron {
             System.exit(1);
             return;
         }
+        
         //Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
         Pattern regex = Pattern.compile("PRIDE_Exp_IdentOnly_Ac_([0-9]+)\\.xml\\.gz");
 
@@ -152,12 +163,16 @@ public class PRIDEcron {
                 outfiletime.setTimeInMillis(outfile.lastModified());
                 if (!outfile.exists() 
                         || ftptime.after(outfiletime)) {
+                    
                     Runnable t = new PRIDEXMLFTPDownload(accession, outfile, false);
+                    
                     if (threaded){
                         pool.execute(t);
                     } else {
                         t.run();
                     }
+                    
+                    updated.add(accession);
                 }
             }
         }
@@ -174,23 +189,22 @@ public class PRIDEcron {
                 e.printStackTrace();
             }
         }
-        
-        log.info("Completed downloading, starting parsing...");
+    }
+    
+    private void findSubs(File outdir) {
 
         // now that all the files have been updated, parse them to extract the relevant data
-        Map<String, Set<String>> subs = new HashMap<String, Set<String>>();
-        subs = Collections.synchronizedMap(subs);
         
-        //create a new thread pool since the last one was shut down
-        pool = Executors.newFixedThreadPool(nothreads);        
+        int nothreads = Runtime.getRuntime().availableProcessors();
+        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
         
         for (File subdir : outdir.listFiles()) {
-        	Runnable t = new XMLProjectRunnable(subdir, subs);
-        	if (threaded) {
+            Runnable t = new XMLProjectRunnable(subdir, subs);
+            if (threaded) {
                 pool.execute(t);
-        	} else {
+            } else {
                 t.run();
-        	}
+            }
         }
 
         // run the pool and then close it afterwards
@@ -205,50 +219,56 @@ public class PRIDEcron {
                 e.printStackTrace();
             }
         }
-        
+    }
+    
+    private void writeSubs(Writer writer) throws IOException {
+
         // at this point, subs is a mapping from the project name to a set of BioSample accessions
         // output them to a file
-        File projout = new File(outdir, "projects.tab.txt");
-        BufferedWriter projoutwrite = null; 
-        try {
-            projoutwrite = new BufferedWriter(new FileWriter(projout));
-            synchronized (subs) {
-                // sort them to put them in a sensible order
-                List<String> projects = new ArrayList<String>(subs.keySet());
-                Collections.sort(projects);
-                for (String project : projects) {
+        synchronized (subs) {
+            // sort them to put them in a sensible order
+            List<String> projects = new ArrayList<String>(subs.keySet());
+            Collections.sort(projects);
+            for (String project : projects) {
 
-                    projoutwrite.write(project);
-                    projoutwrite.write("\t");
-                    List<String> accessions = new ArrayList<String>(subs.get(project));
-                    Collections.sort(accessions);
-                    for (String accession : accessions) {
+                writer.write(project);
+                writer.write("\t");
+                List<String> accessions = new ArrayList<String>(subs.get(project));
+                Collections.sort(accessions);
+                for (String accession : accessions) {
 
-                        projoutwrite.write(accession);
-                        projoutwrite.write("\t");
-                    }
-
-                    projoutwrite.write("\n");
+                    writer.write(accession);
+                    writer.write("\t");
                 }
+
+                writer.write("\n");
             }
-        } catch (IOException e) {
-            log.error("Unable to write to " + projout);
-            e.printStackTrace();
-            System.exit(1);
+        }
+    }
+    
+    private void submitToConan() {
+        if (noconan){
             return;
-        } finally {
-            if (projoutwrite != null){
-                try {
-                    projoutwrite.close();
-                } catch (IOException e) {
-                    //failed within a fail so give up
-                    log.error("Unable to close file writer " + projout);
-                    
+        }
+        Set<String> updatedProjects = new HashSet<String>();
+        for (String updatedAccession : updated){
+            for (String project : subs.keySet()){
+                if (subs.get(project).contains(updatedAccession)){
+                    updatedProjects.add(project);
                 }
             }
         }
         
-        //TODO hide files that have disappeared from the FTP site.
+        for (String project : updatedProjects){
+            try {
+                if (!noconan){
+                    ConanUtils.submit("GPR-"+project, "BioSamples (PRIDE)");
+                }
+            } catch (IOException e) {
+                log.error("Unable to submit to conan GPR-"+project);
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void main(String[] args) {
@@ -276,22 +296,58 @@ public class PRIDEcron {
             return;
         }
         
-        File outdir = new File(this.outputDirName);
+        outputDir = new File(this.outputDirName);
 
-        if (outdir.exists() && !outdir.isDirectory()) {
+        if (outputDir.exists() && !outputDir.isDirectory()) {
             System.err.println("Target is not a directory");
             System.exit(1);
             return;
         }
 
-        if (!outdir.exists())
-            outdir.mkdirs();
+        if (!outputDir.exists())
+            outputDir.mkdirs();
 
         try {
-            this.run(outdir);
+            downloads(outputDir);
+            log.info("Completed downloading, starting parsing...");
+            //TODO hide files that have disappeared from the FTP site.            
         } finally {
             // tidy up ftp connection
             this.close();
         }
+
+        //look through xmls to determine projects
+        findSubs(outputDir);
+
+        //write out the project summary
+        //this is needed so conan jobs can read this 
+        BufferedWriter projoutwrite = null; 
+        //create it in a tempory location
+        File projout = new File(outputDir, "projects.tab.txt.tmp");
+        //then move it when it is complete
+        File projoutFinal = new File(outputDir, "projects.tab.txt");
+        try {
+            projoutwrite = new BufferedWriter(new FileWriter(projout));
+            writeSubs(projoutwrite);
+            FileUtils.move(projout, projoutFinal);
+        } catch (IOException e) {
+            log.error("Unable to write to " + projout);
+            e.printStackTrace();
+            System.exit(1);
+            return;
+        } finally {
+            if (projoutwrite != null) {
+                try {
+                    projoutwrite.close();
+                } catch (IOException e) {
+                    //failed within a fail so give up
+                    log.error("Unable to close file writer " + projout);
+                    
+                }
+            }
+        }
+        
+        //trigger conan for any project that have been extended or updated
+        submitToConan();
     }
 }

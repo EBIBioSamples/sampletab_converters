@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -40,18 +41,14 @@ public class PRIDEXMLToSampleTab {
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
-    //TODO make required
-    //TODO make multiple
-    @Option(name = "-i", aliases={"--input"}, usage = "input filename")
-    private String inputFilename;
-
-    //TODO make required
-    @Option(name = "-o", aliases={"--output"}, usage = "output filename")
+    @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output filename")
     private String outputFilename;
+
+    @Argument(required=true, index=1, metaVar="INPUT", usage = "input filename(s)")
+    private String inputFilename;
 
     @Option(name = "-p", aliases={"--projects"}, usage = "projects filename")
     private String projectsFilename;
-
 
     private Map<String, Set<String>> projects;
     
