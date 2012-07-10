@@ -62,17 +62,21 @@ public class PRIDEXMLToSampleTab {
     
     public PRIDEXMLToSampleTab(String projectsFilename) {
         this.projectsFilename = projectsFilename;
-        //read all the projects
-        try {
-            this.projects = PRIDEutils.loadProjects(new File(this.projectsFilename));
-        } catch (IOException e) {
-            log.error("Unable to read projects file "+projectsFilename);
-            e.printStackTrace();
-            this.projects = null;
-        }
-            
     }
     
+    public Map<String, Set<String>> getProjects(){
+        if (this.projects == null){
+            //read all the projects
+            try {
+                this.projects = PRIDEutils.loadProjects(new File(this.projectsFilename));
+            } catch (IOException e) {
+                log.error("Unable to read projects file "+projectsFilename);
+                e.printStackTrace();
+                this.projects = null;
+            }
+        }
+        return this.projects;
+    }
 
     public SampleData convert(Set<File> infiles) throws DocumentException, FileNotFoundException {
         
@@ -304,9 +308,9 @@ public class PRIDEXMLToSampleTab {
 
         //find the project
         String projectname = null;
-        for (String name: projects.keySet()){
+        for (String name: getProjects().keySet()){
             //TODO handle where one accession is in multiple projects...
-            if (projects.get(name).contains(accession)){
+            if (getProjects().get(name).contains(accession)){
                 if (projectname == null){
                     projectname = name;
                 } else {
@@ -325,13 +329,13 @@ public class PRIDEXMLToSampleTab {
         
         if (projectsFilename != null){
             //if a project filename was given, then we find the project that the provided input filename is part of
-            if (projects == null){
+            if (getProjects() == null){
                 log.warn("No files of project "+projectname+" to process");
                 return;
             }
             
             //now add all the files that are similar to the input filename but with the other accessions
-            Set<String> accessions = projects.get(projectname);
+            Set<String> accessions = getProjects().get(projectname);
             for (String subaccession : accessions){
                 prideFiles.add(new File(inputFilename.replace(accession, subaccession)));
             }
@@ -340,7 +344,7 @@ public class PRIDEXMLToSampleTab {
             prideFiles.add(new File(inputFilename));
         }
         
-        if (!accession.equals(Collections.min(projects.get(projectname)))){
+        if (!accession.equals(Collections.min(getProjects().get(projectname)))){
             log.error("Accession is not minimum in project, aborting");
             return;
         }
