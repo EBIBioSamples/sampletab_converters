@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.dom4j.DocumentException;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -40,8 +41,7 @@ public class PRIDEcron {
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
 
-    //TODO make required
-    @Option(name = "-o", aliases={"--output"}, usage = "output directory")
+    @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output filename")
     private String outputDirName;
     private File outputDir;
     
@@ -329,6 +329,7 @@ public class PRIDEcron {
         try {
             projoutwrite = new BufferedWriter(new FileWriter(projout));
             writeSubs(projoutwrite);
+            projoutwrite.close();
             FileUtils.move(projout, projoutFinal);
         } catch (IOException e) {
             log.error("Unable to write to " + projout);
