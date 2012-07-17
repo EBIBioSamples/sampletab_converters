@@ -274,7 +274,7 @@ public class SampleTabToGUIXML {
                             xmlWriter.writeStartElement("value");                     
                             for (Integer i = 0; i < sd.msi.termSources.size(); i++){
                                 TermSource t = sd.msi.termSources.get(i);
-                                if (t != null){
+                                if (t != null && t.getName() != null){
                                     xmlWriter.writeStartElement("object");
                                     xmlWriter.writeAttribute("id", t.getName());
                                     xmlWriter.writeAttribute("class", "Term Source");
