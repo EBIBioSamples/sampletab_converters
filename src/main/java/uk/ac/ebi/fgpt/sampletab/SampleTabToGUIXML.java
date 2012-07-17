@@ -120,7 +120,7 @@ public class SampleTabToGUIXML {
             return;
         }
 
-        log.debug("Looking for input files");
+        log.info("Looking for input files");
         List<File> inputFiles = new ArrayList<File>();
         for (String inputFilename : inputFilenames){
             inputFiles.addAll(FileUtils.getMatchesGlob(inputFilename));
@@ -168,6 +168,12 @@ public class SampleTabToGUIXML {
                     //but not of sampletab.txt files.
                     
                     for (GroupNode g : sd.scd.getNodes(GroupNode.class)){
+                        
+                        if (g.getGroupAccession() == null){
+                            log.warn("Group has null accession "+g.getNodeName()+" ("+sd.msi.submissionIdentifier+")");
+                            continue;
+                        }
+                        
                         log.debug("Group "+g.getNodeName());
                         
                         xmlWriter.writeStartElement("SampleGroup");
