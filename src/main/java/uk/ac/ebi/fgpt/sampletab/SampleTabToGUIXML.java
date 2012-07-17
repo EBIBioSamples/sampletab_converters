@@ -159,7 +159,10 @@ public class SampleTabToGUIXML {
                 if (sd != null){
                 
                     //if release date is in the future, dont output
-                    if (sd.msi.submissionReleaseDate.after(new Date())){
+                    if (sd.msi.submissionReleaseDate == null){
+                        log.info("No release date, skipping");
+                        continue;
+                    } else if (sd.msi.submissionReleaseDate.after(new Date())){
                         log.info("Future release, skipping");
                         continue;
                     }
