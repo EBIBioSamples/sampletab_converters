@@ -47,10 +47,6 @@ public class AccessionerDriver {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
 
-    // receives other command line parameters than options
-    @Argument
-    private List<String> arguments = new ArrayList<String>();
-
     private Accessioner accessioner = null;
     
     private int exitcode = 0;
@@ -86,11 +82,11 @@ public class AccessionerDriver {
             accessioner = new Accessioner(hostname, port, database, username, password);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            System.exit(1);
+            System.exit(2);
             return;
         } catch (SQLException e) {
             e.printStackTrace();
-            System.exit(1);
+            System.exit(2);
             return;
         }
         
@@ -99,7 +95,13 @@ public class AccessionerDriver {
         inputFiles = FileUtils.getMatchesGlob(inputFilename);
         log.info("Found " + inputFiles.size() + " input files from "+inputFilename);
         Collections.sort(inputFiles);
-
+        
+        if (inputFiles.size() == 0){
+            log.error("No input files found");
+            System.exit(3);
+            return;
+        }
+        
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
         Corrector c = new Corrector();
@@ -128,7 +130,7 @@ public class AccessionerDriver {
             } catch (InterruptedException e) {
                 log.error("Interuppted awaiting thread pool termination");
                 e.printStackTrace();
-                exitcode = 1;
+                exitcode = 4;
                 return;
             }
         }

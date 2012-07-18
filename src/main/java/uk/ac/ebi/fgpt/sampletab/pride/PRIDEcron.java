@@ -350,5 +350,8 @@ public class PRIDEcron {
         
         //trigger conan for any project that have been extended or updated
         submitToConan();
+        
+        
+        //TODO handle removed projects
     }
 }

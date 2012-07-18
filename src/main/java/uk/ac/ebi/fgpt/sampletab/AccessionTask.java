@@ -73,9 +73,4 @@ public class AccessionTask implements Runnable {
         }
     }
 
-    public SampleData call() throws Exception {
-        // TODO Auto-generated method stub
-        return null;
-    }   
-
 }

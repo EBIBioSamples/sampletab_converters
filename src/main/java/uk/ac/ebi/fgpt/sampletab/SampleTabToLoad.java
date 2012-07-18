@@ -36,6 +36,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNamedAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.NamedAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
+import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.LoadValidator;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
@@ -71,7 +72,7 @@ public class SampleTabToLoad {
     private boolean threaded = false;
 
     private final SampleTabValidator validator = new LoadValidator();
-    private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>(validator);
+    private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
 
 
     // logging

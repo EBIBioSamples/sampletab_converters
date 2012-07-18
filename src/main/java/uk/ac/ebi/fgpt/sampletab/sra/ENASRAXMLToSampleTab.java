@@ -362,6 +362,11 @@ public class ENASRAXMLToSampleTab {
             e.printStackTrace();
             System.exit(3);
             return;
+        } catch (Exception e) {
+            System.out.println("Error converting " + enasrafilename + " to " + sampleTabFilename);
+            e.printStackTrace();
+            System.exit(4);
+            return;
         }
     }
 }

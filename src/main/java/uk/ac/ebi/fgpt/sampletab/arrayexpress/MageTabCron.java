@@ -54,6 +54,7 @@ public class MageTabCron {
 	private void close() {
 		try {
 			ftp.logout();
+            ftp = null;
 		} catch (IOException e) {
 			if (ftp.isConnected()) {
 				try {
@@ -62,6 +63,7 @@ public class MageTabCron {
 					// do nothing
 				}
 			}
+			ftp = null;
 		}
 
 	}
@@ -85,7 +87,11 @@ public class MageTabCron {
 	}
 	
 	private boolean connectFTP(){
-	    if (ftp == null || !ftp.isConnected()){
+	    if (ftp != null && !ftp.isConnected()){
+	        close();
+	        ftp = null;
+	    }
+	    if (ftp == null){
             try {
                 ftp = FTPUtils.connect("ftp.ebi.ac.uk");
             } catch (IOException e) {
@@ -302,6 +308,7 @@ public class MageTabCron {
             } catch (IOException e) {
                 log.error("Problem accessing FTP.");
                 e.printStackTrace();
+                close();
                 continue;
             }
             
@@ -334,7 +341,6 @@ public class MageTabCron {
                 }
             }
         }
-        
 	}
 
 	public static void main(String[] args) {
