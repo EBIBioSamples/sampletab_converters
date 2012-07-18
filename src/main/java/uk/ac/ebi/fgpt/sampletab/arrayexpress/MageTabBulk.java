@@ -95,6 +95,9 @@ public class MageTabBulk {
             } else if (idffilename.equals("E-GEOD-9376.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it is too large");
                 return;
+            } else if (idffilename.equals("E-GEOD-28791.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is too large");
+                return;
             } else if (idffilename.equals("E-MEXP-1769.idf.txt")){
                 log.warn("Skipping "+idffilename+" as its sdrf requries merging which is not currently supported.");
                 return;
