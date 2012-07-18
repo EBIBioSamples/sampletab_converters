@@ -328,10 +328,10 @@ public class SampleTabToGUIXML {
                         
                         Set<String> attributeTypes = new HashSet<String>();
                         
-                        for (Node s : g.getParentNodes()){
+                        for (Node s : g.getParentNodes()) {
                             log.debug("Node "+s.getNodeName());
                             //these should all be samples, but have to check anyway...
-                            if (SampleNode.class.isInstance(s)){
+                            if (SampleNode.class.isInstance(s)) {
                                 SampleNode sample = (SampleNode) s;
                                 xmlWriter.writeStartElement("Sample");
                                 xmlWriter.writeAttribute("groupId", g.getGroupAccession());
@@ -355,9 +355,9 @@ public class SampleTabToGUIXML {
                                 }
                                 
                                 //implicit derived from
-                                for (Node p : s.getParentNodes()){
+                                for (Node p : s.getParentNodes()) { 
                                     //these should all be samples, but have to check anyway...
-                                    if (SampleNode.class.isInstance(p)){
+                                    if (SampleNode.class.isInstance(p)) {
                                         SampleNode parent = (SampleNode) p;
                                         writeAttribute(xmlWriter, "derived from", "false", "STRING", parent.getSampleAccession());
                                         attributeTypes.add("derived from");
