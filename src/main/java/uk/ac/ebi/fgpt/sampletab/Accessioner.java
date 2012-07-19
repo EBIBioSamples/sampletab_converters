@@ -11,27 +11,15 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
-import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.dbcp.PoolingDriver;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +27,9 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 
 public class Accessioner {
 
@@ -59,12 +46,12 @@ public class Accessioner {
     private static boolean setup = false;
     private static ObjectPool connectionPool = new GenericObjectPool();
 
-    private final SampleTabSaferParser parser = new SampleTabSaferParser();
+    private final SampleTabValidator validator = new SampleTabValidator();
+    private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
     private BasicDataSource ds;
-
 
     public Accessioner(String host, int port, String database, String username, String password)
             throws ClassNotFoundException, SQLException {

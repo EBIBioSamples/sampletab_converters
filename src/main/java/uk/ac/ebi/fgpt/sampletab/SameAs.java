@@ -26,6 +26,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SameAsAttr
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.utils.CachedParser;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
@@ -138,7 +139,7 @@ public class SameAs {
 
     public void convert(File sampletabFile, Writer writer) throws ParseException, IOException {
         log.info("preparing to load SampleData");
-        SampleTabSaferParser stparser = new SampleTabSaferParser();
+        SampleTabSaferParser stparser = new SampleTabSaferParser(new SampleTabValidator());;
         log.info("created SampleTabParser<SampleData>, beginning parse");
         SampleData st = stparser.parse(sampletabFile);
         convert(st, writer);

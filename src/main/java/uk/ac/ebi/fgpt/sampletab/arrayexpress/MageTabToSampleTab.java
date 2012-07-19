@@ -29,6 +29,7 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
 import uk.ac.ebi.arrayexpress2.magetab.parser.IDFParser;
 import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
+import uk.ac.ebi.arrayexpress2.magetab.validator.AbstractValidator;
 import uk.ac.ebi.arrayexpress2.magetab.validator.Validator;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
@@ -353,6 +354,10 @@ public class MageTabToSampleTab {
 	    log.debug("recieved magetab, preparing to convert");
 		SampleData st = convert(mt);
 		log.debug("sampletab converted, preparing to output");
+		
+		Validator<SampleData> validator = new SampleTabValidator();
+		validator.validate(st);
+		
 		SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
 		log.debug("created SampleTabWriter");
 		sampletabwriter.write(st);

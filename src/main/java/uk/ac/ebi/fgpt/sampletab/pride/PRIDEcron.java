@@ -59,6 +59,8 @@ public class PRIDEcron {
     
     private Set<String> updated = new HashSet<String>();
     
+    private Set<String> deleted = new HashSet<String>();
+    
 
     private PRIDEcron() {
         
@@ -174,6 +176,29 @@ public class PRIDEcron {
                     
                     updated.add(accession);
                 }
+            }
+        }
+        
+        //see which ones have been deleted
+        for (File subdir : outdir.listFiles()){
+            File trimmed = new File(subdir, "trimmed.xml");
+            if (trimmed.exists()){
+                String ftpFilename = "PRIDE_Exp_IdentOnly_Ac_"+subdir.getName().substring(4)+".xml.gz";
+                
+                boolean exists = false;
+                for (FTPFile file : files) {
+                    String filename = file.getName();
+                    if (filename.equals(ftpFilename)){
+                        exists = true;
+                        break;
+                    }
+                }
+                
+                if (!exists){
+                    //this has been deleted
+                    deleted.add(subdir.getName());
+                }
+                
             }
         }
 
@@ -353,5 +378,7 @@ public class PRIDEcron {
         
         
         //TODO handle removed projects
+        //get which files exist
+        //see which ones are not in FTP
     }
 }

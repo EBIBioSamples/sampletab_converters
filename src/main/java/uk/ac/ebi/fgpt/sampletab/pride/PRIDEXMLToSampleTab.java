@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
+import uk.ac.ebi.arrayexpress2.magetab.validator.Validator;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
@@ -33,6 +35,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAtt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
@@ -246,11 +249,14 @@ public class PRIDEXMLToSampleTab {
         return st;
     }
 
-    public void convert(Set<File> infiles, Writer writer) throws IOException, DocumentException  {
+    public void convert(Set<File> infiles, Writer writer) throws IOException, DocumentException, ValidateException  {
         log.debug("recieved infiles, preparing to convert");
         SampleData st = convert(infiles);
-
         log.info("SampleTab converted, preparing to write");
+
+        Validator<SampleData> validator = new SampleTabValidator();
+        validator.validate(st);
+        
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
         sampletabwriter.write(st);
         log.info("SampleTab written");
@@ -258,7 +264,7 @@ public class PRIDEXMLToSampleTab {
 
     }
 
-    public void convert(Set<File> infiles, File sampletabFile) throws IOException, DocumentException {
+    public void convert(Set<File> infiles, File sampletabFile) throws IOException, DocumentException, ValidateException {
 
         // create parent directories, if they dont exist
         sampletabFile = sampletabFile.getAbsoluteFile();
@@ -283,13 +289,13 @@ public class PRIDEXMLToSampleTab {
         }
     }
 
-    public void convert(Set<File> infiles, String outfilename) throws IOException, DocumentException  {
+    public void convert(Set<File> infiles, String outfilename) throws IOException, DocumentException, ValidateException  {
 
         convert(infiles, new File(outfilename));
     }
     
     
-    public void convert(String inputFilename, String outputFilename) throws IOException, DocumentException {
+    public void convert(String inputFilename, String outputFilename) throws IOException, DocumentException, ValidateException {
 
         //read the given input filename to determine accession
         String accession;
@@ -391,6 +397,11 @@ public class PRIDEXMLToSampleTab {
             System.out.println("Error converting " + inputFilename + " to " + outputFilename);
             e.printStackTrace();
             System.exit(3);
+            return;
+        } catch (ValidateException e) {
+            System.out.println("Error converting " + inputFilename + " to " + outputFilename);
+            e.printStackTrace();
+            System.exit(4);
             return;
         }
     }

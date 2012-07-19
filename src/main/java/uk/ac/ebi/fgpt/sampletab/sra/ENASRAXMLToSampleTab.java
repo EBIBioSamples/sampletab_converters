@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.magetab.validator.Validator;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
@@ -28,6 +29,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
@@ -50,11 +52,11 @@ public class ENASRAXMLToSampleTab {
         
     }
 
-    public SampleData convert(String filename) throws IOException, ParseException {
+    public SampleData convert(String filename) throws IOException, ParseException, DocumentException {
         return convert(new File(filename));
     }
 
-    public SampleData convert(File infile) throws ParseException, IOException {
+    public SampleData convert(File infile) throws ParseException, IOException, DocumentException {
         
         infile = infile.getAbsoluteFile();
         
@@ -69,12 +71,9 @@ public class ENASRAXMLToSampleTab {
         }
 
         Document studydoc;
-        try {
-            studydoc = XMLUtils.getDocument(infile);
-        } catch (DocumentException e) {
-            // rethrow as a ParseException
-            throw new ParseException("Unable to parse XML document of study");
-        }
+        
+        studydoc = XMLUtils.getDocument(infile);
+            
         Element root = studydoc.getRootElement();
         Element study = XMLUtils.getChildByName(root, "STUDY");
 
@@ -293,11 +292,15 @@ public class ENASRAXMLToSampleTab {
         return st;
     }
 
-    public void convert(File file, Writer writer) throws IOException, ParseException {
+    public void convert(File file, Writer writer) throws IOException, ParseException, DocumentException {
         log.debug("recieved xml, preparing to convert");
         SampleData st = convert(file);
 
         log.info("SampleTab converted, preparing to write");
+
+        Validator<SampleData> validator = new SampleTabValidator();
+        validator.validate(st);
+        
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
         sampletabwriter.write(st);
         log.info("SampleTab written");
@@ -305,12 +308,12 @@ public class ENASRAXMLToSampleTab {
 
     }
 
-    public void convert(File studyFile, String outfilename) throws IOException, ParseException {
+    public void convert(File studyFile, String outfilename) throws IOException, ParseException, DocumentException {
 
         convert(studyFile, new File(outfilename));
     }
 
-    public void convert(File studyFile, File sampletabFile) throws IOException, ParseException {
+    public void convert(File studyFile, File sampletabFile) throws IOException, ParseException, DocumentException {
 
         // create parent directories, if they dont exist
         sampletabFile = sampletabFile.getAbsoluteFile();
@@ -324,15 +327,15 @@ public class ENASRAXMLToSampleTab {
         convert(studyFile, new FileWriter(sampletabFile));
     }
 
-    public void convert(String studyFilename, Writer writer) throws IOException, ParseException {
+    public void convert(String studyFilename, Writer writer) throws IOException, ParseException, DocumentException {
         convert(new File(studyFilename), writer);
     }
 
-    public void convert(String studyFilename, File sampletabFile) throws IOException, ParseException {
+    public void convert(String studyFilename, File sampletabFile) throws IOException, ParseException, DocumentException {
         convert(studyFilename, new FileWriter(sampletabFile));
     }
 
-    public void convert(String studyFilename, String sampletabFilename) throws IOException, ParseException {
+    public void convert(String studyFilename, String sampletabFilename) throws IOException, ParseException, DocumentException {
         convert(studyFilename, new File(sampletabFilename));
     }
 

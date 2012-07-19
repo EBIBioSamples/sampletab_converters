@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.dom4j.DocumentException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -103,11 +104,15 @@ public class ENASRABulk {
                     log.error("Problem processing "+xmlFile);
                     e.printStackTrace();
                     return;
+                } catch (DocumentException e) {
+                    log.error("Problem processing "+xmlFile);
+                    e.printStackTrace();
+                    return;
                 } catch (RuntimeException e) {
                     log.error("Problem processing "+xmlFile);
                     e.printStackTrace();
                     return;
-                }
+                } 
                 
             }
             

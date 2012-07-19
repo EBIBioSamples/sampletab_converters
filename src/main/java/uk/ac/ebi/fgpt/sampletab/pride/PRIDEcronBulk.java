@@ -18,6 +18,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.fgpt.sampletab.SampleTabBulk;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 
@@ -113,6 +114,10 @@ public class PRIDEcronBulk {
                     e.printStackTrace();
                     return;
                 } catch (DocumentException e) {
+                    log.error("Problem processing "+sampletabpre);
+                    e.printStackTrace();
+                    return;
+                } catch (ValidateException e) {
                     log.error("Problem processing "+sampletabpre);
                     e.printStackTrace();
                     return;

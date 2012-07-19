@@ -7,8 +7,6 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
@@ -24,9 +22,10 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.arrayexpress2.sampletab.validator.LoadValidator;
+import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 
@@ -196,7 +195,8 @@ public class SampleTabBulk {
                     || sampletab.lastModified() < sampletabpre.lastModified()) {
                 log.info("Processing " + sampletab);
 
-                SampleTabSaferParser parser = new SampleTabSaferParser();
+                SampleTabSaferParser parser = new SampleTabSaferParser(new SampleTabValidator());
+                
                 SampleData st;
                 try {
                     st = parser.parse(sampletabpre);
