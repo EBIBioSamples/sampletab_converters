@@ -44,15 +44,18 @@ public class SampleTabStatus {
     
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
+    
+    @Option(name = "--no-age", usage = "")
+    private boolean noAGE = false;
 
     @Option(name = "--agename", usage = "Age server hostname")
-    private String agehostname = null;
+    private String agehostname; //default set in constructor
 
     @Option(name = "--ageusername", usage = "Age server username")
-    private String ageusername = null;
+    private String ageusername; //default set in constructor
 
     @Option(name = "--agepassword", usage = "Age server password")
-    private String agepassword = null;
+    private String agepassword; //default set in constructor
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -93,7 +96,11 @@ public class SampleTabStatus {
             System.exit(1);
             return;
         }
-        
+        if (noAGE){
+            agehostname = null;
+            ageusername = null;
+            agepassword = null;
+        }
 
         log.info("Looking for input files");
         List<File> inputFiles = new ArrayList<File>();
@@ -153,7 +160,11 @@ public class SampleTabStatus {
     }
     
     private void startMMode(){
-
+        if (ageusername == null){
+            log.info("Skipping start MMode");
+            return;
+        }
+        
         File scriptDir = new File(scriptDirFilename);
         File scriptFile = new File(scriptDir, "MModeTool.sh");
 
@@ -168,6 +179,10 @@ public class SampleTabStatus {
     }
     
     private void stopMMode(){
+        if (ageusername == null){
+            log.info("Skipping stop MMode");
+            return;
+        }
 
         File scriptDir = new File(scriptDirFilename);
         File scriptFile = new File(scriptDir, "MModeTool.sh");

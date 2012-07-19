@@ -178,7 +178,12 @@ public class SampleTabStatusRunnable implements Runnable {
 	}
 	
 	private void removePrivateTag(){
-	    log.info("Removing private tag "+inputFile.getName());
+        if (ageusername == null){
+            log.info("Skipping removing private tag "+inputFile.getName());
+            return;
+        }
+        
+	    log.info("Removing private tag "+inputFile.getName());	    
 	    
         File scriptDir = new File(scriptDirFilename);
         File scriptFile = new File(scriptDir, "TagControl.sh");
@@ -197,6 +202,11 @@ public class SampleTabStatusRunnable implements Runnable {
 	}
     
     private void addPrivateTag(){
+        if (ageusername == null){
+            log.info("Skipping adding private tag "+inputFile.getName());
+            return;
+        }
+        
         log.info("Adding private tag "+inputFile.getName());
         
         File scriptDir = new File(scriptDirFilename);
@@ -216,6 +226,11 @@ public class SampleTabStatusRunnable implements Runnable {
     }
     
     private void reload(){
+        if (ageusername == null){
+            log.info("Skipping reloading "+inputFile.getName());
+            return;
+        }
+        
         log.info("Reloading in database "+inputFile.getName());
         
         File scriptDir = new File(scriptDirFilename);
