@@ -160,9 +160,9 @@ public class MageTabToSampleTab {
                 name = mt.IDF.personAffiliation.get(i);
             }
             String uri = null;
-            if (i < mt.IDF.personAddress.size()){
-                uri = mt.IDF.personAddress.get(i);
-            }
+//            if (i < mt.IDF.personAddress.size()){
+//                uri = mt.IDF.personAddress.get(i);
+//            }
             String role = null;
             if (i < mt.IDF.personRoles.size()){
                 role = mt.IDF.personRoles.get(i);
