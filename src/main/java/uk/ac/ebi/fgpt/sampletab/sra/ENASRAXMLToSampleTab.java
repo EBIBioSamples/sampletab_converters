@@ -144,9 +144,7 @@ public class ENASRAXMLToSampleTab {
         }
 
         //ENA SRA does not have explicit term sources
-        //Put a couple on by default
-        st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null));
-        st.msi.termSources.add(new TermSource("EFO", "http://www.ebi.ac.uk/efo", null));
+        TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
         
         log.info("MSI section complete, starting SCD section.");
 
@@ -226,7 +224,7 @@ public class ENASRAXMLToSampleTab {
                     
                     OrganismAttribute organismAttribute = null;
                     if (taxName != null && taxid != null) {
-                        organismAttribute = new OrganismAttribute(taxName, "NCBI Taxonomy", taxid);
+                        organismAttribute = new OrganismAttribute(taxName, st.msi.getOrAddTermSource(ncbitaxonomy), taxid);
                     } else if (taxName != null) {
                         organismAttribute = new OrganismAttribute(taxName);
                     }
