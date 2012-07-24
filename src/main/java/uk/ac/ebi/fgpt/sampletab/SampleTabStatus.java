@@ -111,7 +111,14 @@ public class SampleTabStatus {
         
         //no duplicates
         Set<File> inputFileSet = new HashSet<File>();
-        inputFileSet.addAll(inputFiles);
+        for (File inputFile : inputFiles) {
+            if (!inputFile.isDirectory()) {
+                inputFile = inputFile.getAbsoluteFile().getParentFile();
+            }
+            if (inputFile != null) {
+                inputFileSet.add(inputFile);
+            }
+        }
         inputFiles.clear();
         inputFiles.addAll(inputFileSet);
         
