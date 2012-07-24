@@ -304,6 +304,9 @@ public class MageTabCron {
             try {
                 if (ftp.listFiles(root + prefix+"/"+aename+"/"+aename+".idf.txt").length > 0){
                     onAEFTP = true;
+                    log.debug("On FTP "+aename);
+                } else {
+                    log.debug("Not on FTP "+aename);
                 }
             } catch (IOException e) {
                 log.error("Problem accessing FTP.");
