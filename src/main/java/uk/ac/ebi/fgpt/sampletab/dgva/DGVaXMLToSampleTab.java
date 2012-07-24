@@ -21,6 +21,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
@@ -116,6 +117,8 @@ public class DGVaXMLToSampleTab {
             }
             if (dgvasample.attributeValue("NCBI_tax_id") != null) {
                 sampleNode.addAttribute(fromTaxID(new Integer(dgvasample.attributeValue("NCBI_tax_id"))));
+                TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
+                st.msi.getOrAddTermSource(ncbitaxonomy);
             }
             if (XMLUtils.getChildByName(dgvasample, "SOURCE") != null){
                 Element source = XMLUtils.getChildByName(dgvasample, "SOURCE");
