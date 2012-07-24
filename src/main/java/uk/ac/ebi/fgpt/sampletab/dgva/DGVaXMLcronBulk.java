@@ -91,6 +91,7 @@ public class DGVaXMLcronBulk {
             
             target = sampletabpre;
             if (!target.exists()
+                    || target.length() == 0
                     || target.lastModified() < xmlFile.lastModified()) {
                 log.info("Processing " + target);
                 // convert study.xml to sampletab.pre.txt

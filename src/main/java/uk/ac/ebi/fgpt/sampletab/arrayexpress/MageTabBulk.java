@@ -178,6 +178,7 @@ public class MageTabBulk {
             // convert idf/sdrf to sampletab.pre.txt
             target = sampletabpre;
             if (!target.exists() 
+                    || target.length() == 0
                     || target.lastModified() < idffile.lastModified() 
                     || target.lastModified() < sdrffile.lastModified()) {
                 log.info("Processing " + target);

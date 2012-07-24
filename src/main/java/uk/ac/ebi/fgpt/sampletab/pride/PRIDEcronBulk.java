@@ -101,6 +101,7 @@ public class PRIDEcronBulk {
             // convert xml to sampletab.pre.txt
             target = sampletabpre;
             if (!target.exists()
+                    || target.length() == 0
                     || target.lastModified() < xml.lastModified()) {
                 log.info("Processing " + target);
                 

@@ -192,6 +192,7 @@ public class SampleTabBulk {
             
             // accession sampletab.pre.txt to sampletab.txt
             if (!sampletab.exists()
+                    || sampletab.length() == 0
                     || sampletab.lastModified() < sampletabpre.lastModified()) {
                 log.info("Processing " + sampletab);
 
@@ -280,6 +281,7 @@ public class SampleTabBulk {
 
             // preprocess to load
             if (!sampletabtoload.exists()
+                    || sampletabtoload.length() == 0
                     || sampletabtoload.lastModified() < sampletab.lastModified()) {
                 log.info("Processing " + sampletabtoload);
 
@@ -314,6 +316,7 @@ public class SampleTabBulk {
 
             // convert to age
             if (!agefile.exists()
+                    || agefile.length() == 0
                     || agefile.lastModified() < sampletabtoload.lastModified()) {
                 log.info("Processing " + agefile);
                 File script = new File(scriptdir, "SampleTab-to-AGETAB.sh");
@@ -343,6 +346,7 @@ public class SampleTabBulk {
             
             if (!noLoad 
                     && (!loadfile.exists()
+                            || loadfile.length() == 0
                             || loadfile.lastModified() < agefile.lastModified())) {
                 log.info("Processing " + loadfile);
                 File script = new File(scriptdir, "AgeTab-Loader.sh");

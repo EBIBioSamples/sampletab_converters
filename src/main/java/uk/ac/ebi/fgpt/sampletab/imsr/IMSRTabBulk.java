@@ -92,6 +92,7 @@ public class IMSRTabBulk {
             
             target = sampletabpre;
             if (!target.exists()
+                    || target.length() == 0
                     || target.lastModified() < tabFile.lastModified()) {
                 log.info("Processing " + target);
                 
