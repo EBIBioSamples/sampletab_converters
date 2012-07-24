@@ -168,6 +168,8 @@ public class DGVaXMLToSampleTab {
             }
             if (dgvasample.attributeValue("NCBI_tax_id") != null) {
                 sampleNode.addAttribute(fromTaxID(new Integer(dgvasample.attributeValue("NCBI_tax_id"))));
+                TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
+                st.msi.getOrAddTermSource(ncbitaxonomy);
             }
             if (XMLUtils.getChildByName(dgvasample, "SOURCE") != null){
                 Element source = XMLUtils.getChildByName(dgvasample, "SOURCE");
@@ -213,6 +215,8 @@ public class DGVaXMLToSampleTab {
             }
             if (sampleset.attributeValue("NCBI_tax_id") != null) {
                 group.addAttribute(fromTaxID(new Integer(sampleset.attributeValue("NCBI_tax_id"))));
+                TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
+                st.msi.getOrAddTermSource(ncbitaxonomy);
             }
             if (XMLUtils.getChildByName(sampleset, "SOURCE") != null){
                 Element source = XMLUtils.getChildByName(sampleset, "SOURCE");
