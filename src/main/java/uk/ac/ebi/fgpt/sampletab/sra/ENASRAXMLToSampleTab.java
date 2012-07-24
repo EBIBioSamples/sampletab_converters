@@ -276,7 +276,7 @@ public class ENASRAXMLToSampleTab {
                         CharacteristicAttribute characteristicAttribute = new CharacteristicAttribute(tagtext,
                                 valuetext);
                         
-                        if (units != null) {
+                        if (units != null && units.getTextTrim().length() > 0) {
                             log.info("Added unit "+units.getTextTrim());
                             characteristicAttribute.unit = new UnitAttribute();
                             characteristicAttribute.unit.setAttributeValue(units.getTextTrim());
