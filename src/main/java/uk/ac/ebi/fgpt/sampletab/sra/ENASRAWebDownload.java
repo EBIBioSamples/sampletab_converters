@@ -10,10 +10,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.custommonkey.xmlunit.Diff;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -22,6 +29,8 @@ import org.dom4j.io.XMLWriter;
 import org.dom4j.util.NodeComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
@@ -75,17 +84,32 @@ public class ENASRAWebDownload {
         boolean sampleWriteOut = true;
         
         if (studyFile.exists()){
-            Document existStudyDoc = XMLUtils.getDocument(studyFile);
-            NodeComparator c = new NodeComparator();
-            if (c.compare(studyDoc, existStudyDoc) == 0){
-                studyWriteOut = false;
+            //conpare the document in memory with the document on disk
+            //first need them to be in the right class for XMLTest to use
+            
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder;
+            try {
+                builder = factory.newDocumentBuilder();
+                org.w3c.dom.Document docA = builder.parse(new InputSource(new StringReader(studyDoc.asXML())));
+                org.w3c.dom.Document docB = builder.parse(studyFile);
+                Diff diff = new Diff(docA, docB);
+                if (diff.similar()){
+                    studyWriteOut = false;
+                }
+            } catch (ParserConfigurationException e) {
+                //do nothing, file will be overwritten
+                e.printStackTrace();
+            } catch (SAXException e) {
+                //do nothing, file will be overwritten
+                e.printStackTrace();
             }
         }
         
 
         OutputStream os = null;
         if(studyWriteOut){
-            log.info("Downloading "+accession+" to disk");
+            log.info("Writing "+accession+" to disk");
             
             //write the study file to disk
             os = null;
@@ -121,11 +145,24 @@ public class ENASRAWebDownload {
                 //if it does not exist, it needs to be written
                 sampleWriteOut = true;
             } else {
-                //if it is different from what is on disk, it needs to be written
-                Document existSampleDoc = XMLUtils.getDocument(sampleFile);
-                NodeComparator c = new NodeComparator();
-                if (c.compare(sampledoc, existSampleDoc) != 0){
-                    sampleWriteOut = true;
+                sampleWriteOut = true;
+                //compare the document in memory with the document on disk
+                //first need them to be in the right class for XMLTest to use
+                
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder;
+                try {
+                    builder = factory.newDocumentBuilder();
+                    org.w3c.dom.Document docA = builder.parse(new InputSource(new StringReader(sampledoc.asXML())));
+                    org.w3c.dom.Document docB = builder.parse(sampleFile);
+                    Diff diff = new Diff(docA, docB);
+                    if (diff.similar()){
+                        sampleWriteOut = false;
+                    }
+                } catch (ParserConfigurationException e) {
+                    //do nothing, file will be overwritten
+                } catch (SAXException e) {
+                    //do nothing, file will be overwritten
                 }
             }
             

@@ -210,6 +210,10 @@ public class ENASRAXMLToSampleTab {
                     CommentAttribute synonymattrib = new CommentAttribute("Synonym", annonname.getTextTrim());
                     samplenode.addAttribute(synonymattrib, 0);
                 }
+                if (synonym != null) {
+                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", synonym.getTextTrim());
+                    samplenode.addAttribute(synonymattrib, 0);
+                }
 
                 // now process organism
                 if (taxon != null) {
