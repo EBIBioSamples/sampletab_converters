@@ -28,6 +28,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
@@ -37,6 +38,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAt
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
+import uk.ac.ebi.fgpt.sampletab.utils.TermSourceUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class PRIDEXMLToSampleTab {
@@ -54,7 +56,8 @@ public class PRIDEXMLToSampleTab {
     private String projectsFilename;
 
     private Map<String, Set<String>> projects;
-    
+
+    private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -65,6 +68,23 @@ public class PRIDEXMLToSampleTab {
     
     public PRIDEXMLToSampleTab(String projectsFilename) {
         this.projectsFilename = projectsFilename;
+    }
+    
+    public String getOrAddTermSource(SampleData st, String key) {
+
+        if (st == null){
+            throw new IllegalArgumentException("SampleData object must not be null");
+        }
+        
+        TermSource termSource = new TermSource(key, null, null);
+        termSource = TermSourceUtils.guessURL(termSource);
+        if (termSource == null) {
+            //throw new IllegalArgumentException("key not recognized ("+key+")");
+            log.warn("term source not recognized ("+key+")");
+            return null;
+        }
+        
+        return st.msi.getOrAddTermSource(termSource);
     }
     
     public Map<String, Set<String>> getProjects(){
@@ -163,17 +183,20 @@ public class PRIDEXMLToSampleTab {
                 }
                 //TODO  use special attribute classes where appropriate
                 if ("NEWT".equals(cvLabel)) {
-                    String termSourceREF = "NCBI Taxonomy";
-                    //TODO make sure that this term source is then added to msi section
+                    TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
+                    String termSourceREF = st.msi.getOrAddTermSource(ncbitaxonomy);
                     Integer termSourceID = new Integer(cvAccession);
                     OrganismAttribute attr = new OrganismAttribute(name, termSourceREF, termSourceID);
                     sample.addAttribute(attr);
                 } else {
                     CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
                     if (cvLabel != null && cvAccession != null){
-                        attr.setTermSourceREF(cvLabel);
-                        //TODO make sure that this term source is then added to msi section
-                        attr.setTermSourceID(cvAccession);
+                        cvLabel = getOrAddTermSource(st, cvLabel);
+                        if (cvLabel != null) {
+                            attr.setTermSourceREF(cvLabel);
+                            attr.setTermSourceID(cvAccession);
+                        }
+                        
                     }
                     sample.addAttribute(attr);
                 }
@@ -191,9 +214,13 @@ public class PRIDEXMLToSampleTab {
                 }
                 CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
                 if (cvparam.attributeValue("cvLabel") != null && cvparam.attributeValue("accession") != null){
-                    attr.setTermSourceREF(cvparam.attributeValue("cvLabel").trim());
-                    //TODO make sure that this term source is then added to msi section
-                    attr.setTermSourceID(cvparam.attributeValue("accession").trim());
+                    String cvLabel = cvparam.attributeValue("cvLabel").trim();
+                    cvLabel = getOrAddTermSource(st, cvLabel);
+                    if (cvLabel != null) {
+                        attr.setTermSourceREF(cvLabel);
+                        attr.setTermSourceID(cvparam.attributeValue("accession").trim());
+                    }
+                    
                 }
                 sample.addAttribute(attr);
             }
