@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -336,9 +337,7 @@ public class IMSRTabToSampleTab {
         st.msi.organizations.add(new Organization("International Mouse Strain Resource", null, "http://www.findmice.org/", null, null));
         st.msi.organizations.add(new Organization(getSummary().facilities.get(index), null, "http://www.findmice.org/", null, "Biomaterial Provider"));
         
-        // TODO need mapping between site name and site number to do database
-        st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null));
-        st.msi.termSources.add(new TermSource("EFO", "http://www.ebi.ac.uk/efo", "2.13.1"));
+        st.msi.databases.add(new Database("IMSR "+site, "http://www.findmice.org/summary?query=&repositories=CMMR"+site, site));
     }
 
     public static void main(String[] args) {
