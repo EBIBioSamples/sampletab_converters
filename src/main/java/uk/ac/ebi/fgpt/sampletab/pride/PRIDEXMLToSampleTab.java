@@ -168,14 +168,24 @@ public class PRIDEXMLToSampleTab {
                 String cvLabel = null;
                 if (cvparam.attributeValue("cvLabel") != null){
                     cvLabel = cvparam.attributeValue("cvLabel").trim();
+                    if (cvLabel.length() == 0){
+                        cvLabel = null;
+                    }
                 }
                 
                 String cvAccession = null;
                 if (cvparam.attributeValue("accession") != null){
                     cvAccession = cvparam.attributeValue("accession").trim();
+                    if (cvAccession.length() == 0){
+                        cvAccession = null;
+                    }
                 }
                 
                 if (value == null || value.length() == 0){
+                    //some PRIDE attributes have neither name nor value! 8695
+                    if (name == null || name.length() == 0){
+                        continue;
+                    }
                     //some PRIDE attributes are boolean
                     //set their value to be their name
                     value = name;
@@ -197,7 +207,10 @@ public class PRIDEXMLToSampleTab {
                     sample.addAttribute(attr);
                 } else {
                     CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
-                    if (cvLabel != null && cvAccession != null){
+                    if (cvLabel != null 
+                            && cvLabel.length() > 0 
+                            && cvAccession != null 
+                            && cvAccession.length() > 0){
                         cvLabel = getOrAddTermSource(st, cvLabel);
                         if (cvLabel != null) {
                             attr.setTermSourceREF(cvLabel);
@@ -221,7 +234,10 @@ public class PRIDEXMLToSampleTab {
                 }
                 
                 CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
-                if (cvparam.attributeValue("cvLabel") != null && cvparam.attributeValue("accession") != null){
+                if (cvparam.attributeValue("cvLabel") != null
+                        && cvparam.attributeValue("cvLabel").trim().length() > 0
+                        && cvparam.attributeValue("accession") != null
+                        && cvparam.attributeValue("accession").trim().length() > 0){
                     String cvLabel = cvparam.attributeValue("cvLabel").trim();
                     cvLabel = getOrAddTermSource(st, cvLabel);
                     if (cvLabel != null) {
