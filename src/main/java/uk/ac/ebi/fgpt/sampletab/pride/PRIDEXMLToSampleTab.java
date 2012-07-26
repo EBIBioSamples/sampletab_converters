@@ -164,30 +164,32 @@ public class PRIDEXMLToSampleTab {
             for (Element cvparam : XMLUtils.getChildrenByName(sampledescription, "cvParam")){
                 String name = cvparam.attributeValue("name").trim();
                 String value = cvparam.attributeValue("value");
+                
                 String cvLabel = null;
                 if (cvparam.attributeValue("cvLabel") != null){
                     cvLabel = cvparam.attributeValue("cvLabel").trim();
                 }
+                
                 String cvAccession = null;
                 if (cvparam.attributeValue("accession") != null){
                     cvAccession = cvparam.attributeValue("accession").trim();
                 }
                 
-                
-                if (value == null){
+                if (value == null || value.length() == 0){
                     //some PRIDE attributes are boolean
                     //set their value to be their name
                     value = name;
                 } else {
                     value = value.trim();
                 }
+                
                 //TODO  use special attribute classes where appropriate
                 if ("NEWT".equals(cvLabel)) {
                     TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
-                    String termSourceREF = st.msi.getOrAddTermSource(ncbitaxonomy);
                     OrganismAttribute attr;
                     try {
                         Integer termSourceID = new Integer(cvAccession);
+                        String termSourceREF = st.msi.getOrAddTermSource(ncbitaxonomy);
                         attr = new OrganismAttribute(name, termSourceREF, termSourceID);
                     } catch (NumberFormatException e){
                         attr = new OrganismAttribute(name);
@@ -210,13 +212,14 @@ public class PRIDEXMLToSampleTab {
             for (Element cvparam : XMLUtils.getChildrenByName(additional, "cvParam")){
                 String name = cvparam.attributeValue("name").trim();
                 String value = cvparam.attributeValue("value");
-                if (value == null){
+                if (value == null || value.length() == 0){
                     //some PRIDE attributes are boolean
                     //set their value to be their name
                     value = name;
                 } else {
                     value = value.trim();
                 }
+                
                 CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
                 if (cvparam.attributeValue("cvLabel") != null && cvparam.attributeValue("accession") != null){
                     String cvLabel = cvparam.attributeValue("cvLabel").trim();
@@ -286,8 +289,8 @@ public class PRIDEXMLToSampleTab {
         SampleData st = convert(infiles);
         log.info("SampleTab converted, preparing to write");
 
-        Validator<SampleData> validator = new SampleTabValidator();
-        validator.validate(st);
+        //Validator<SampleData> validator = new SampleTabValidator();
+        //validator.validate(st);
         
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
         sampletabwriter.write(st);
