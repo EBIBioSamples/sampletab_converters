@@ -185,8 +185,13 @@ public class PRIDEXMLToSampleTab {
                 if ("NEWT".equals(cvLabel)) {
                     TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
                     String termSourceREF = st.msi.getOrAddTermSource(ncbitaxonomy);
-                    Integer termSourceID = new Integer(cvAccession);
-                    OrganismAttribute attr = new OrganismAttribute(name, termSourceREF, termSourceID);
+                    OrganismAttribute attr;
+                    try {
+                        Integer termSourceID = new Integer(cvAccession);
+                        attr = new OrganismAttribute(name, termSourceREF, termSourceID);
+                    } catch (NumberFormatException e){
+                        attr = new OrganismAttribute(name);
+                    }
                     sample.addAttribute(attr);
                 } else {
                     CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
