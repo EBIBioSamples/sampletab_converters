@@ -34,16 +34,13 @@ public class AccessionTask implements Runnable {
         try {
             st = accessioner.convert(this.inputFile);
         } catch (ParseException e) {
-            log.error("ParseException converting " + this.inputFile);
-            e.printStackTrace();
+            log.error("ParseException converting " + this.inputFile, e);
             return;
         } catch (IOException e) {
-            log.error("IOException converting " + this.inputFile);
-            e.printStackTrace();
+            log.error("IOException converting " + this.inputFile, e);
             return;
         } catch (SQLException e) {
-            log.error("SQLException converting " + this.inputFile);
-            e.printStackTrace();
+            log.error("SQLException converting " + this.inputFile, e);
             return;
         }
         
@@ -58,8 +55,7 @@ public class AccessionTask implements Runnable {
         try {
             out = new FileWriter(this.outputFile);
         } catch (IOException e) {
-            log.error("Error opening " + this.outputFile);
-            e.printStackTrace();
+            log.error("Error opening " + this.outputFile, e);
             return;
         }
 
@@ -67,8 +63,7 @@ public class AccessionTask implements Runnable {
         try {
             sampletabwriter.write(st);
         } catch (IOException e) {
-            log.error("Error writing " + this.outputFile);
-            e.printStackTrace();
+            log.error("Error writing " + this.outputFile, e);
             return;
         }
     }

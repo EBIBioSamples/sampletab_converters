@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.IDF;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
+import uk.ac.ebi.arrayexpress2.magetab.datamodel.SDRF;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.ExtractNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.LabeledExtractNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SDRFNode;
@@ -44,6 +46,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttrib
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.CorrectorTermSource;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class MageTabToSampleTab {
 	private final MAGETABParser<MAGETABInvestigation> parser;
@@ -199,7 +202,7 @@ public class MageTabToSampleTab {
         }
         throw new IllegalArgumentException("Unable to find term source "+name);
     }
-    
+        
 	public SampleData convert(MAGETABInvestigation mt)
 			throws ParseException {
 
@@ -210,9 +213,8 @@ public class MageTabToSampleTab {
 		    //null release date
 		    //ArrayExpress defaults to private
 		    //so set a date in the far future
-		    Calendar cal = new GregorianCalendar();
-		    cal.set(3000, 1, 1);
-		    st.msi.submissionReleaseDate = cal.getTime();
+            SampleTabUtils.releaseInACentury(st);
+		    
 		} else if (mt.IDF.publicReleaseDate != null && !mt.IDF.publicReleaseDate.trim().equals("")) {
 			try{
 			    st.msi.submissionReleaseDate = magetabdateformat
@@ -234,7 +236,6 @@ public class MageTabToSampleTab {
 		        "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
 		        mt.IDF.accession));
 		
-		// TODO add samples...
 		// get the nodes that have relevant sample information
 		// e.g. characteristics
 		Collection<SDRFNode> samplenodes = new ArrayList<SDRFNode>();
@@ -442,8 +443,7 @@ public class MageTabToSampleTab {
         try {
             idf = idfparser.parse(new File(idfFilename));
         } catch (ParseException e) {
-            log.error("Error parsing " + idfFilename);
-            e.printStackTrace();
+            log.error("Error parsing " + idfFilename, e);
             System.exit(1);
             return;
         }
@@ -458,18 +458,15 @@ public class MageTabToSampleTab {
 		try {
             convert(idfFilename, sampleTabFilename);
         } catch (IOException e) {
-            log.error("Error converting "+idfFilename);
-            e.printStackTrace();
+            log.error("Error converting "+idfFilename, e);
             System.exit(2);
             return;
         } catch (ParseException e) {
-            log.error("Error converting "+idfFilename);
-            e.printStackTrace();
+            log.error("Error converting "+idfFilename, e);
             System.exit(3);
             return;
         } catch (java.text.ParseException e) {
-            log.error("Error converting "+idfFilename);
-            e.printStackTrace();
+            log.error("Error converting "+idfFilename, e);
             System.exit(4);
             return;
         }

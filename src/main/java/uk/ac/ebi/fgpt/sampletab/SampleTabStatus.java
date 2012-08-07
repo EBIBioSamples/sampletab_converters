@@ -64,8 +64,7 @@ public class SampleTabStatus {
         try {
             ageProperties.load(SampleTabStatus.class.getResourceAsStream("/age.properties"));
         } catch (IOException e) {
-            log.error("Unable to read resource age.properties");
-            e.printStackTrace();
+            log.error("Unable to read resource age.properties", e);
         }
         this.agehostname = ageProperties.getProperty("hostname");
         this.ageusername = ageProperties.getProperty("username");
@@ -157,8 +156,7 @@ public class SampleTabStatus {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
         

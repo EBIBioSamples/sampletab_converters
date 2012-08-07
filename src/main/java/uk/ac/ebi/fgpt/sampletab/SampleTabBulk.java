@@ -79,13 +79,14 @@ public class SampleTabBulk {
 
     
     public SampleTabBulk(){
+        //load defaults from file
+        //will be overriden by command-line options later
         Properties mysqlProperties = new Properties();
         try {
             InputStream is = SampleTabBulk.class.getResourceAsStream("/mysql.properties");
             mysqlProperties.load(is);
         } catch (IOException e) {
-            log.error("Unable to read resource mysql.properties");
-            e.printStackTrace();
+            log.error("Unable to read resource mysql.properties", e);
         }
         this.hostname = mysqlProperties.getProperty("hostname");
         this.port = new Integer(mysqlProperties.getProperty("port"));
@@ -97,8 +98,7 @@ public class SampleTabBulk {
         try {
             ageProperties.load(SampleTabBulk.class.getResourceAsStream("/age.properties"));
         } catch (IOException e) {
-            log.error("Unable to read resource age.properties");
-            e.printStackTrace();
+            log.error("Unable to read resource age.properties", e);
         }
         this.agename = ageProperties.getProperty("hostname");
         this.ageusername = ageProperties.getProperty("username");
@@ -202,8 +202,7 @@ public class SampleTabBulk {
                 try {
                     st = parser.parse(sampletabpre);
                 } catch (ParseException e) {
-                    log.error("Problem processing "+sampletabpre);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletabpre, e);
                     return;
                 }
                 
@@ -213,20 +212,16 @@ public class SampleTabBulk {
                             port, database, username, password);
                     accessioner.convert(st);
                 } catch (ClassNotFoundException e) {
-                    log.error("Problem processing "+sampletabpre);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletabpre, e);
                     return;
                 } catch (ParseException e) {
-                    log.error("Problem processing "+sampletabpre);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletabpre, e);
                     return;
                 } catch (SQLException e) {
-                    log.error("Problem processing "+sampletabpre);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletabpre, e);
                     return;
                 } catch (RuntimeException e){
-                    log.error("Problem processing "+sampletabpre);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletabpre, e);
                     return;
                 }
 
@@ -240,8 +235,7 @@ public class SampleTabBulk {
                     try {
                         derivedFrom.convert(st);
                     } catch (IOException e) {
-                        log.error("Unable to find derived from relationships due to error");
-                        e.printStackTrace();
+                        log.error("Unable to find derived from relationships due to error", e);
                         return;
                     }
     
@@ -249,8 +243,7 @@ public class SampleTabBulk {
                     try {
                         sameAs.convert(st);
                     } catch (IOException e) {
-                        log.error("Unable to find derived from relationships due to error");
-                        e.printStackTrace();
+                        log.error("Unable to find derived from relationships due to error", e);
                         return;
                     }
                 }
@@ -264,8 +257,7 @@ public class SampleTabBulk {
                     sampletabwriter.write(st);
                     sampletabwriter.close();
                 } catch (IOException e) {
-                    log.error("Problem processing "+sampletabpre);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletabpre, e);
                     return;
                 } finally {
                     if (writer != null){
@@ -291,24 +283,19 @@ public class SampleTabBulk {
                             port, database, username, password);
                     c.convert(sampletab, sampletabtoload);
                 } catch (ClassNotFoundException e) {
-                    log.error("Problem processing "+sampletab);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletab, e);
                     return;
                 } catch (IOException e) {
-                    log.error("Problem processing "+sampletab);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletab, e);
                     return;
                 } catch (ParseException e) {
-                    log.error("Problem processing "+sampletab);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletab, e);
                     return;
                 } catch (RuntimeException e){
-                    log.error("Problem processing "+sampletab);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletab, e);
                     return;
                 } catch (SQLException e) {
-                    log.error("Problem processing "+sampletab);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletab, e);
                     return;
                 }
                 log.info("Finished " + sampletabtoload);
@@ -396,8 +383,7 @@ public class SampleTabBulk {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interupted awaiting thread pool termination", e);
             }
         }
     }

@@ -53,20 +53,16 @@ public class PersistentLookup {
 			getTarget = dbConnection.prepareStatement("SELECT targetid FROM lookups WHERE source = ? AND sourceid = ? AND target = ? AND targetid != ?");
 
 		} catch (InstantiationException e) {
-			log.error("Unable to create embedded Derby database");
-			e.printStackTrace();
+			log.error("Unable to create embedded Derby database", e);
 			return;
 		} catch (IllegalAccessException e) {
-			log.error("Unable to create embedded Derby database");
-			e.printStackTrace();
+			log.error("Unable to create embedded Derby database", e);
 			return;
 		} catch (ClassNotFoundException e) {
-			log.error("Unable to create embedded Derby database");
-			e.printStackTrace();
+			log.error("Unable to create embedded Derby database", e);
 			return;
 		} catch (SQLException e) {
-			log.error("Unable to execute SQL on embedded Derby database");
-			printSQLException(e);
+			log.error("Unable to execute SQL on embedded Derby database", e);
 			return;
 		}
 	}

@@ -93,8 +93,7 @@ public class PRIDEXMLToSampleTab {
             try {
                 this.projects = PRIDEutils.loadProjects(new File(this.projectsFilename));
             } catch (IOException e) {
-                log.error("Unable to read projects file "+projectsFilename);
-                e.printStackTrace();
+                log.error("Unable to read projects file "+projectsFilename, e);
                 this.projects = null;
             }
         }
@@ -125,25 +124,25 @@ public class PRIDEXMLToSampleTab {
             //actually maybe it does as a CVparam...
             
             
-            for (Element contact : XMLUtils.getChildrenByName(admin, "contact")){
+            for (Element contact : XMLUtils.getChildrenByName(admin, "contact")) {
                 String name = XMLUtils.getChildByName(contact, "name").getTextTrim();
                 String institution = XMLUtils.getChildByName(contact, "institution").getTextTrim();
                 
                 Organization org = new Organization(institution, null, null, null, null);
-                if (!st.msi.organizations.contains(org)){
+                if (!st.msi.organizations.contains(org)) {
                     st.msi.organizations.add(org);
                 }
                 
                 String[] splitnames = PRIDEutils.splitName(name);
                 Person per = new Person(splitnames[2], splitnames[1], splitnames[0], null, "Submitter");
-                if (!st.msi.persons.contains(per)){
+                if (!st.msi.persons.contains(per)) {
                     st.msi.persons.add(per);
                 }
             }
             
-            for (Element reference : XMLUtils.getChildrenByName(exp, "Reference")){
-                for (Element referenceadditional : XMLUtils.getChildrenByName(reference, "additional")){
-                    for (Element referenceaddpar : XMLUtils.getChildrenByName(referenceadditional, "cvParam")){
+            for (Element reference : XMLUtils.getChildrenByName(exp, "Reference")) {
+                for (Element referenceadditional : XMLUtils.getChildrenByName(reference, "additional")) {
+                    for (Element referenceaddpar : XMLUtils.getChildrenByName(referenceadditional, "cvParam")) {
                         if (referenceaddpar.attributeValue("cvLabel").trim().equals("PubMed")){
                             //some PubMed IDs have full URLs, strip them
                             String pubmedid = referenceaddpar.attributeValue("accession").trim();
@@ -161,12 +160,12 @@ public class PRIDEXMLToSampleTab {
             DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, "http://www.ebi.ac.uk/pride/showExperiment.do?experimentAccessionNumber="+accession);
             sample.addAttribute(dbattr);
 
-            for (Element cvparam : XMLUtils.getChildrenByName(sampledescription, "cvParam")){
+            for (Element cvparam : XMLUtils.getChildrenByName(sampledescription, "cvParam")) {
                 String name = cvparam.attributeValue("name").trim();
                 String value = cvparam.attributeValue("value");
                 
                 String cvLabel = null;
-                if (cvparam.attributeValue("cvLabel") != null){
+                if (cvparam.attributeValue("cvLabel") != null) {
                     cvLabel = cvparam.attributeValue("cvLabel").trim();
                     if (cvLabel.length() == 0){
                         cvLabel = null;
@@ -174,16 +173,16 @@ public class PRIDEXMLToSampleTab {
                 }
                 
                 String cvAccession = null;
-                if (cvparam.attributeValue("accession") != null){
+                if (cvparam.attributeValue("accession") != null) {
                     cvAccession = cvparam.attributeValue("accession").trim();
                     if (cvAccession.length() == 0){
                         cvAccession = null;
                     }
                 }
                 
-                if (value == null || value.length() == 0){
+                if (value == null || value.length() == 0) {
                     //some PRIDE attributes have neither name nor value! 8695
-                    if (name == null || name.length() == 0){
+                    if (name == null || name.length() == 0) {
                         continue;
                     }
                     //some PRIDE attributes are boolean
@@ -280,8 +279,7 @@ public class PRIDEXMLToSampleTab {
             try {
                 st.scd.addNode(sample);
             } catch (ParseException e) {
-                log.error("Unable to add node "+sample);
-                e.printStackTrace();
+                log.error("Unable to add node "+sample, e);
                 continue;
             }
             
@@ -440,18 +438,15 @@ public class PRIDEXMLToSampleTab {
         try {
             convert(inputFilename, outputFilename);
         } catch (IOException e) {
-            System.out.println("Error converting " + inputFilename + " to " + outputFilename);
-            e.printStackTrace();
+            log.error("Error converting " + inputFilename + " to " + outputFilename, e);
             System.exit(2);
             return;
         } catch (DocumentException e) {
-            System.out.println("Error converting " + inputFilename + " to " + outputFilename);
-            e.printStackTrace();
+            log.error("Error converting " + inputFilename + " to " + outputFilename, e);
             System.exit(3);
             return;
         } catch (ValidateException e) {
-            System.out.println("Error converting " + inputFilename + " to " + outputFilename);
-            e.printStackTrace();
+            log.error("Error converting " + inputFilename + " to " + outputFilename, e);
             System.exit(4);
             return;
         }

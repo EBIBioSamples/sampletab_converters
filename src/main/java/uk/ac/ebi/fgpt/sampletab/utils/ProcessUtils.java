@@ -37,12 +37,10 @@ public class ProcessUtils {
                 return false;
             }
         } catch (IOException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
+            log.error("Error running " + command, e);
             return false;
         } catch (InterruptedException e) {
-            log.error("Error running " + command);
-            e.printStackTrace();
+            log.error("Error running " + command, e);
             return false;
         }
         return true;

@@ -44,8 +44,7 @@ public class Matcher {
 		try {
 			sampledata = parser.parse(inFile);
 		} catch (ParseException e) {
-			log.error("Unable to parse "+inFile);
-			e.printStackTrace();
+			log.error("Unable to parse "+inFile, e);
 			return;
 		}
 				

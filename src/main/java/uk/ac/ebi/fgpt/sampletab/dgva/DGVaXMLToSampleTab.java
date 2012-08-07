@@ -47,13 +47,13 @@ public class DGVaXMLToSampleTab {
         return convert(new File(filename));
     }
     
-    public static OrganismAttribute fromTaxID(int taxID){
+    public OrganismAttribute fromTaxID(int taxID){
 
         String sciName;
         try {
             sciName = TaxonUtils.getTaxonOfID(taxID);
         } catch (TaxonException e) {
-            e.printStackTrace();
+            log.warn("unable to find recognisable taxon "+taxID, e);
             return new OrganismAttribute(new Integer(taxID).toString());
         }
         return new OrganismAttribute(sciName, "NCBI Taxonomy", taxID);
@@ -292,13 +292,11 @@ public class DGVaXMLToSampleTab {
         try {
             converter.convert(dgvafilename, sampleTabFilename);
         } catch (ParseException e) {
-            System.out.println("Error converting " + dgvafilename + " to " + sampleTabFilename);
-            e.printStackTrace();
+            log.error("Error converting " + dgvafilename + " to " + sampleTabFilename, e);
             System.exit(2);
             return;
         } catch (IOException e) {
-            System.out.println("Error converting " + dgvafilename + " to " + sampleTabFilename);
-            e.printStackTrace();
+            log.error("Error converting " + dgvafilename + " to " + sampleTabFilename, e);
             System.exit(3);
             return;
         }

@@ -77,8 +77,7 @@ public class AttributeSummary {
 			try {
 				sampledata = parser.parse(this.inFile);
 			} catch (ParseException e) {
-				log.error("Unable to parse "+inFile);
-				e.printStackTrace();
+				log.error("Unable to parse "+inFile, e);
 				return;
 			}
 			
@@ -231,8 +230,7 @@ public class AttributeSummary {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interupted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interupted awaiting thread pool termination", e);
             }
         }
         log.info("Finished reading");
@@ -276,8 +274,7 @@ public class AttributeSummary {
         	}
         	
         } catch (IOException e) {
-			log.error("Unable to output to "+outputFilename);
-			e.printStackTrace();
+			log.error("Unable to output to "+outputFilename, e);
 		} finally {
         	if (out != null) {
         		try {

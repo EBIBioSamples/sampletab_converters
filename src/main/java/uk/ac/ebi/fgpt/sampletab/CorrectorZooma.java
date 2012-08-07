@@ -97,24 +97,19 @@ public class CorrectorZooma {
 
                         }
                     } catch (UnsupportedEncodingException e) {
-                        log.error("Error processing "+a);
-                        e.printStackTrace();
+                        log.error("Error processing "+a, e);
                         return;
                     } catch (JsonParseException e) {
-                        log.error("Error processing "+a);
-                        e.printStackTrace();
+                        log.error("Error processing "+a, e);
                         return;
                     } catch (JsonMappingException e) {
-                        log.error("Error processing "+a);
-                        e.printStackTrace();
+                        log.error("Error processing "+a, e);
                         return;
                     } catch (IOException e) {
-                        log.error("Error processing "+a);
-                        e.printStackTrace();
+                        log.error("Error processing "+a, e);
                         return;
                     } catch (Throwable e) {
-                        log.error("Error processing "+a);
-                        e.printStackTrace();
+                        log.error("Error processing "+a, e);
                         return;
                     }
                 }

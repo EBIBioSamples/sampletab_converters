@@ -29,11 +29,11 @@ public class MageTabFTPDownload {
         return instance;
     }
 	
-	public String download(String accession, String outdirname){
-		return this.download(accession, new File(outdirname));	
+	public void download(String accession, String outdirname) throws IOException{
+		this.download(accession, new File(outdirname));	
 	}
 	
-	public String download(String accession, File outdir){
+	public void download(String accession, File outdir) throws IOException{
 		boolean error = false;
 		FTPClient ftp = new FTPClient();
 		String server = "ftp.ebi.ac.uk";
@@ -48,7 +48,7 @@ public class MageTabFTPDownload {
 			reply = ftp.getReplyCode();
 			if(!FTPReply.isPositiveCompletion(reply)) {
 				ftp.disconnect();
-				return "FTP server refused connection.";
+				throw new RuntimeException("FTP connection failed");
 			}
 			
 			//Now we can work out the paths we need
@@ -86,12 +86,6 @@ public class MageTabFTPDownload {
 			*/
 
 			ftp.logout();
-		} catch(IOException e) {
-			error = true;
-			e.printStackTrace();
-		} catch(RuntimeException e) {
-			error = true;
-			e.printStackTrace();
 		} finally {
 			if(ftp.isConnected()) {
 				try {
@@ -100,15 +94,14 @@ public class MageTabFTPDownload {
 					// do nothing
 				}
 			}
-			if (error){
-				return "An IOException error occored";
-			}
 		}
-		//return a null string to indicate nothing went wrong
-		return null;
 	}
 
 	public static void main(String[] args) {
+        MageTabFTPDownload magetabftpdownload = MageTabFTPDownload.getInstance();
+        magetabftpdownload.doMain(args);
+	}
+    public void doMain(String[] args){
 		if (args.length < 2){
 			System.out.println("Must provide an ArrayExpress submission identifier and an output directory.");
 			return;
@@ -116,12 +109,11 @@ public class MageTabFTPDownload {
 		String accession = args[0];
 		String outdir = args[1];
 		
-		MageTabFTPDownload magetabftpdownload = MageTabFTPDownload.getInstance();
-		String error = magetabftpdownload.download(accession, outdir);
-		if (error != null){
-			System.out.println("ERROR: "+error);
-			System.exit(1);
-		}
+		try {
+            download(accession, outdir);
+        } catch (IOException e) {
+            log.error("Unable to download "+accession, e);
+        }
 
 	}
 

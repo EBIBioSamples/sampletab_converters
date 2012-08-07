@@ -45,8 +45,7 @@ public class IMSRTabcron {
         try {
             ConanUtils.submit(submissionIdentifier, "BioSamples (IMSR)");
         } catch (IOException e) {
-            log.warn("Problem submitting "+submissionIdentifier);
-            e.printStackTrace();
+            log.error("Problem submitting "+submissionIdentifier, e);
         }
 	}
 
@@ -86,18 +85,15 @@ public class IMSRTabcron {
 		try {
             summary.get();
         } catch (NumberFormatException e) {
-            System.err.println("Unable to download summary");
-            e.printStackTrace();
+            log.error("Unable to download summary", e);
             System.exit(1);
             return;
         } catch (ParseException e) {
-            System.err.println("Unable to download summary");
-            e.printStackTrace();
+            log.error("Unable to download summary", e);
             System.exit(1);
             return;
         } catch (IOException e) {
-            System.err.println("Unable to download summary");
-            e.printStackTrace();
+            log.error("Unable to download summary", e);
             System.exit(1);
             return;
         }

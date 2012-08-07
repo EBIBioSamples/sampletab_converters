@@ -100,8 +100,7 @@ public class SameAs {
                     try {
                         sd = CachedParser.get(sourceFile);
                     } catch (ParseException e) {
-                        log.error("Unable to read "+sourceFile);
-                        e.printStackTrace();
+                        log.error("Unable to read "+sourceFile, e);
                         continue;
                     }
                     
@@ -200,9 +199,9 @@ public class SameAs {
                     try {
                         convert(inputFile, outputFile);
                     } catch (ParseException e) {
-                        e.printStackTrace();
+                        log.error("Unable to convert "+inputFile, e);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        log.error("Unable to convert from "+inputFile+" to "+outputFile, e);
                     }
                 }
             }

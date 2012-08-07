@@ -33,8 +33,7 @@ public class ConanUtils {
                 InputStream is = ConanUtils.class.getResourceAsStream("/conan.properties");
                 properties.load(is);
             } catch (IOException e) {
-                log.error("Unable to read resource mysql.properties");
-                e.printStackTrace();
+                log.error("Unable to read resource mysql.properties", e);
             }
         }
     }

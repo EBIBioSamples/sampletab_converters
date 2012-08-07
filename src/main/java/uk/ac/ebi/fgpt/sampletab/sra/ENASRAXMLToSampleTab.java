@@ -358,18 +358,15 @@ public class ENASRAXMLToSampleTab {
         try {
             converter.convert(enasrafilename, sampleTabFilename);
         } catch (ParseException e) {
-            System.out.println("Error converting " + enasrafilename + " to " + sampleTabFilename);
-            e.printStackTrace();
+            log.error("ParseException converting " + enasrafilename + " to " + sampleTabFilename, e);
             System.exit(2);
             return;
         } catch (IOException e) {
-            System.out.println("Error converting " + enasrafilename + " to " + sampleTabFilename);
-            e.printStackTrace();
+            log.error("IOException converting " + enasrafilename + " to " + sampleTabFilename, e);
             System.exit(3);
             return;
         } catch (Exception e) {
-            System.out.println("Error converting " + enasrafilename + " to " + sampleTabFilename);
-            e.printStackTrace();
+            log.error("Error converting " + enasrafilename + " to " + sampleTabFilename, e);
             System.exit(4);
             return;
         }

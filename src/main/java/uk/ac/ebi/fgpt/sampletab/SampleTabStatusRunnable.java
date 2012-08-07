@@ -94,8 +94,7 @@ public class SampleTabStatusRunnable implements Runnable {
         try {
             sd = stparser.parse(sampletabFile);
         } catch (ParseException e){
-            log.error("Unable to parse file "+inputFile);
-            e.printStackTrace();
+            log.error("Unable to parse file "+inputFile, e);
         	return;
         }
     	
@@ -282,8 +281,7 @@ public class SampleTabStatusRunnable implements Runnable {
                 FileUtils.copy(sampletabFile, ftpFile);
                 ftpFile.setLastModified(sampletabFile.lastModified());
             } catch (IOException e) {
-                log.error("Unable to copy to FTP "+ftpFile);
-                e.printStackTrace();
+                log.error("Unable to copy to FTP "+ftpFile, e);
             }
         }        
     }

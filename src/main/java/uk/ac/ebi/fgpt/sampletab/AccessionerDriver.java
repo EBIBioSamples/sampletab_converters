@@ -81,11 +81,11 @@ public class AccessionerDriver {
         try {
             accessioner = new Accessioner(hostname, port, database, username, password);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            log.error("Unable to find interface class ", e);
             System.exit(2);
             return;
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error in SQL", e);
             System.exit(2);
             return;
         }
@@ -128,8 +128,7 @@ public class AccessionerDriver {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
                 exitcode = 4;
                 return;
             }

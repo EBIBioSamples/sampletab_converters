@@ -61,10 +61,10 @@ public class IMSRTabWebDownload {
 			input.close();
 			output.close();
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
+		    log.error("Unable to recognise url "+url, e);
 	        return;
 		} catch (IOException e) {
-			e.printStackTrace();
+		    log.error("Unable to download", e);
 	        return;
 		} finally {
 		    //clean up file handles

@@ -48,16 +48,13 @@ public class SampleTabUtils {
             log.error("Failed to parse "+sampletabFile);
         } else {
             //release it in 100 years
-            Calendar cal = GregorianCalendar.getInstance();
-            cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)+10);
-            sd.msi.submissionReleaseDate = cal.getTime();
+            releaseInACentury(sd);
             Writer writer = null;
             try {
                 writer = new BufferedWriter(new FileWriter(sampletabFile));
                 SampleTabWriter stwriter = new SampleTabWriter(writer);
                 stwriter.write(sd);
             } catch (IOException e){
-                e.printStackTrace();
                 throw e;
             } finally {
                 if (writer != null){
@@ -69,5 +66,15 @@ public class SampleTabUtils {
                 }
             }
         }
+    }
+    
+    public static void releaseInACentury(SampleData sd) {
+        if (sd == null){
+            throw new IllegalArgumentException("Must provide non-null SampleData");
+        }
+        //release it in 100 years
+        Calendar cal = GregorianCalendar.getInstance();
+        cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)+10);
+        sd.msi.submissionReleaseDate = cal.getTime();
     }
 }

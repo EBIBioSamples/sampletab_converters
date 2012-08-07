@@ -98,11 +98,9 @@ public class ENASRAWebDownload {
                     studyWriteOut = false;
                 }
             } catch (ParserConfigurationException e) {
-                //do nothing, file will be overwritten
-                e.printStackTrace();
+                log.warn("Problem with parser configuration", e);
             } catch (SAXException e) {
-                //do nothing, file will be overwritten
-                e.printStackTrace();
+                log.warn("Problem with SAX parsing", e);
             }
         }
         
@@ -198,6 +196,11 @@ public class ENASRAWebDownload {
     }
 
     public static void main(String[] args) {
+        ENASRAWebDownload downloader = new ENASRAWebDownload();
+        downloader.doMain(args);
+    }
+        
+    public void doMain(String[] args){
         if (args.length < 2) {
             System.out.println("Must provide an ENA SRA study accession and an output directory.");
             return;
@@ -205,15 +208,14 @@ public class ENASRAWebDownload {
         String accession = args[0];
         String outdir = args[1];
 
-        ENASRAWebDownload downloader = new ENASRAWebDownload();
         try {
-            downloader.download(accession, outdir);
+            download(accession, outdir);
         } catch (DocumentException e) {
-            System.err.println("Unable to download "+accession+" to "+outdir);
-            e.printStackTrace();
+            log.error("Unable to download "+accession+" to "+outdir, e);
+            System.exit(2);
         } catch (IOException e) {
-            System.err.println("Unable to download "+accession+" to "+outdir);
-            e.printStackTrace();
+            log.error("Unable to download "+accession+" to "+outdir, e);
+            System.exit(3);
         }
 
     }

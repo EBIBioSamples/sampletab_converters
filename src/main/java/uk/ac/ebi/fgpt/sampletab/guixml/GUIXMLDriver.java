@@ -72,11 +72,9 @@ public class GUIXMLDriver extends AbstractDriver {
             try {
                 sd = futureSampleData.get();
             } catch (InterruptedException e) {
-                log.error("Unable to process "+inputFile);
-                e.printStackTrace();
+                log.error("Unable to process "+inputFile, e);
             } catch (ExecutionException e) {
-                log.error("Unable to process "+inputFile);
-                e.printStackTrace();
+                log.error("Unable to process "+inputFile, e);
             }
             setIndex(index+1);
         }
@@ -125,17 +123,14 @@ public class GUIXMLDriver extends AbstractDriver {
             }
             
         } catch (SaxonApiException e) {
-            log.error("Error generating GUI XML");
-            e.printStackTrace();
+            log.error("Error generating GUI XML", e);
         } catch (XMLStreamException e) {
-            log.error("Error generating GUI XML");
-            e.printStackTrace();
+            log.error("Error generating GUI XML", e);
         } finally {
             try {
                 outputer.end();
             } catch (XMLStreamException e) {
-                e.printStackTrace();
-                //do nothing
+                log.error("Error generating GUI XML", e);
             }   
         }
         
@@ -147,8 +142,7 @@ public class GUIXMLDriver extends AbstractDriver {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
         

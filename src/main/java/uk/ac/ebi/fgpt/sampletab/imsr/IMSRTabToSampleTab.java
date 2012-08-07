@@ -177,8 +177,7 @@ public class IMSRTabToSampleTab {
                 }
             }
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Unable to find tab file", e);
         }
         getLog().info("Finished reading, starting conversion");
 
@@ -341,35 +340,35 @@ public class IMSRTabToSampleTab {
     }
 
     public static void main(String[] args) {
+
+        IMSRTabToSampleTab converter = new IMSRTabToSampleTab();
+        converter.doMain(args);
+    }
+
+    public void doMain(String[] args){
         if (args.length < 2) {
             System.out.println("Must provide an IMSR Tab input filename and a SampleTab output filename.");
             return;
         }
         String imsrTabFilename = args[0];
         String sampleTabFilename = args[1];
-
-        IMSRTabToSampleTab converter = new IMSRTabToSampleTab();
-
+        
         try {
-            converter.convert(imsrTabFilename, sampleTabFilename);
+            convert(imsrTabFilename, sampleTabFilename);
         } catch (ParseException e) {
-            System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
-            e.printStackTrace();
+            log.error("Error converting " + imsrTabFilename + " to " + sampleTabFilename, e);
             System.exit(2);
             return;
         } catch (IOException e) {
-            System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
-            e.printStackTrace();
+            log.error("Error converting " + imsrTabFilename + " to " + sampleTabFilename, e);
             System.exit(3);
             return;
         } catch (NumberFormatException e) {
-            System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
-            e.printStackTrace();
+            log.error("Error converting " + imsrTabFilename + " to " + sampleTabFilename, e);
             System.exit(4);
             return;
         } catch (java.text.ParseException e) {
-            System.out.println("Error converting " + imsrTabFilename + " to " + sampleTabFilename);
-            e.printStackTrace();
+            log.error("Error converting " + imsrTabFilename + " to " + sampleTabFilename, e);
             System.exit(5);
             return;
         }

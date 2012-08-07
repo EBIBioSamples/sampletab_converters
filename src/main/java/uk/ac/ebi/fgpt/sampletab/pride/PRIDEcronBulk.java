@@ -111,16 +111,13 @@ public class PRIDEcronBulk {
                     log.info("Converting "+xml.getPath()+" to "+sampletabpre.getPath());
                     c.convert(xml.getPath(), sampletabpre.getPath());
                 } catch (IOException e) {
-                    log.error("Problem processing "+sampletabpre);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletabpre, e);
                     return;
                 } catch (DocumentException e) {
-                    log.error("Problem processing "+sampletabpre);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletabpre, e);
                     return;
                 } catch (ValidateException e) {
-                    log.error("Problem processing "+sampletabpre);
-                    e.printStackTrace();
+                    log.error("Problem processing "+sampletabpre, e);
                     return;
                 } 
             }
@@ -186,8 +183,7 @@ public class PRIDEcronBulk {
         try {
             projects = PRIDEutils.loadProjects(projectsFile);
         } catch (IOException e) {
-            log.error("Unable to read projects file "+projectsFilename);
-            e.printStackTrace();
+            log.error("Unable to read projects file "+projectsFilename, e);
             System.exit(1);
             return;
         }
@@ -214,8 +210,7 @@ public class PRIDEcronBulk {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
     }

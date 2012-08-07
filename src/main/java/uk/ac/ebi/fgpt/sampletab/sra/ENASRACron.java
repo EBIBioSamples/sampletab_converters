@@ -69,12 +69,10 @@ public class ENASRACron {
             try {
                 newOrUpdate = downloader.download(this.identStudy, this.subdir);
             } catch (DocumentException e) {
-                log.error("Unable to download "+this.identStudy+" to "+this.subdir);
-                e.printStackTrace();
+                log.error("Unable to download "+this.identStudy+" to "+this.subdir, e);
                 return;
             } catch (IOException e) {
-                log.error("Unable to download "+this.identStudy+" to "+this.subdir);
-                e.printStackTrace();
+                log.error("Unable to download "+this.identStudy+" to "+this.subdir, e);
                 return;
             }
             //Submit it to conan for processing
@@ -83,8 +81,7 @@ public class ENASRACron {
                 try {
                     ConanUtils.submit(submissionIdentifier, "BioSamples (SRA)");
                 } catch (IOException e) {
-                    log.warn("Problem submitting "+submissionIdentifier);
-                    e.printStackTrace();
+                    log.warn("Problem submitting "+submissionIdentifier, e);
                 }
             }
         }
@@ -110,8 +107,7 @@ public class ENASRACron {
             try {
                 studyDoc = XMLUtils.getDocument(url);
             } catch (DocumentException e) {
-                log.error("Unable to read "+url);
-                e.printStackTrace();
+                log.error("Unable to read "+url, e);
             }
             
             if (studyDoc != null){
@@ -130,19 +126,16 @@ public class ENASRACron {
                             SampleTabUtils.releaseInACentury(sampletabFile);
                             doConan = true;
                         } catch (IOException e) {
-                            log.error("Problem with "+sampletabFile);
-                            e.printStackTrace();
+                            log.error("Problem with "+sampletabFile, e);
                         } catch (ParseException e) {
-                            log.error("Problem with "+sampletabFile);
-                            e.printStackTrace();
+                            log.error("Problem with "+sampletabFile, e);
                         }
                         //trigger conan to complete processing
                         if (!noconan && doConan) {
                             try {
                                 ConanUtils.submit(accession, "BioSamples (SRA)", 1);
                             } catch (IOException e) {
-                                log.warn("Problem submitting to Conan "+accession);
-                                e.printStackTrace();
+                                log.warn("Problem submitting to Conan "+accession, e);
                             }
                         }
                     }
@@ -218,8 +211,7 @@ public class ENASRACron {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
         
@@ -245,8 +237,7 @@ public class ENASRACron {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
 	}

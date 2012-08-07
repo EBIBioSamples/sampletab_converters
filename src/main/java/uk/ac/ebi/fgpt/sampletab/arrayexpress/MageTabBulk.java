@@ -187,16 +187,13 @@ public class MageTabBulk {
                 try {
                     new MageTabToSampleTab().convert(idffile, sampletabpre);
                 } catch (IOException e) {
-                    log.error("Problem processing "+idffile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+idffile, e);
                     return;
                 } catch (ParseException e) {
-                    log.error("Problem processing "+idffile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+idffile, e);
                     return;
                 } catch (RuntimeException e) {
-                    log.error("Problem processing "+idffile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+idffile, e);
                     return;
                 }
             }
@@ -262,8 +259,7 @@ public class MageTabBulk {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
     }

@@ -102,16 +102,13 @@ public class PRIDEXMLFTPDownload implements Runnable {
             log.debug("Processed " + outfile);
 
         } catch (IOException e) {
-            log.error("Unable to run bash");
-            e.printStackTrace();
+            log.error("Unable to run bash", e);
             return;
         } catch (RuntimeException e) {
-            log.error("Unable to run bash");
-            e.printStackTrace();
+            log.error("Unable to run bash", e);
             return;
         } catch (InterruptedException e) {
-            log.error("Unable to run bash");
-            e.printStackTrace();
+            log.error("Unable to run bash", e);
             return;
         }
     }

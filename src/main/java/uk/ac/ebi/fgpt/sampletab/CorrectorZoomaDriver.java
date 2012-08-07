@@ -66,8 +66,7 @@ public class CorrectorZoomaDriver {
                     sd = stParser.parse(inputFile);
                     zooma.correct(sd);
                 } catch (ParseException e) {
-                    log.error("Unable ot parse "+inputFile);
-                    e.printStackTrace();
+                    log.error("Unable ot parse "+inputFile, e);
                 }
             }
         }

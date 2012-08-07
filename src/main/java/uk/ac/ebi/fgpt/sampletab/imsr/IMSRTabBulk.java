@@ -101,24 +101,19 @@ public class IMSRTabBulk {
                 try {
                     c.convert(tabFile, sampletabpre);
                 } catch (NumberFormatException e) {
-                    log.error("Problem processing "+tabFile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+tabFile, e);
                     return;
                 } catch (IOException e) {
-                    log.error("Problem processing "+tabFile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+tabFile, e);
                     return;
                 } catch (ParseException e) {
-                    log.error("Problem processing "+tabFile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+tabFile, e);
                     return;
                 } catch (java.text.ParseException e) {
-                    log.error("Problem processing "+tabFile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+tabFile, e);
                     return;
                 } catch (RuntimeException e) {
-                    log.error("Problem processing "+tabFile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+tabFile, e);
                     return;
                 }
                 
@@ -184,8 +179,7 @@ public class IMSRTabBulk {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
     }

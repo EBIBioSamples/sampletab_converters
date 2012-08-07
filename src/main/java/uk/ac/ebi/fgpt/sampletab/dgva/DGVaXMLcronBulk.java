@@ -99,16 +99,13 @@ public class DGVaXMLcronBulk {
                 try {
                     new DGVaXMLToSampleTab().convert(xmlFile, sampletabpre);
                 } catch (IOException e) {
-                    log.error("Problem processing "+xmlFile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+xmlFile, e);
                     return;
                 } catch (ParseException e) {
-                    log.error("Problem processing "+xmlFile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+xmlFile, e);
                     return;
                 } catch (RuntimeException e) {
-                    log.error("Problem processing "+xmlFile);
-                    e.printStackTrace();
+                    log.error("Problem processing "+xmlFile, e);
                     return;
                 }
                 
@@ -150,8 +147,7 @@ public class DGVaXMLcronBulk {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
     }

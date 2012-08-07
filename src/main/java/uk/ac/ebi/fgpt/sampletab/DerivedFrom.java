@@ -118,8 +118,7 @@ public class DerivedFrom {
                 try {
                     sd = CachedParser.get(coriellFile);
                 } catch (ParseException e) {
-                    log.error("Unable to read "+coriellFile);
-                    e.printStackTrace();
+                    log.error("Unable to read "+coriellFile, e);
                     continue;
                 }
                 
@@ -283,9 +282,9 @@ public class DerivedFrom {
                     try {
                         convert(inputFile, outputFile);
                     } catch (ParseException e) {
-                        e.printStackTrace();
+                        log.error("Unable to convert "+inputFile, e);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        log.error("Unable to convert from "+inputFile+" to "+outputFile, e);
                     }
                 }
             }

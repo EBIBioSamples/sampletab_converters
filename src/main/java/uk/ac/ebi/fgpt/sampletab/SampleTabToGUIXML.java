@@ -152,8 +152,7 @@ public class SampleTabToGUIXML {
                 try {
                     sd = stParser.parse(inputFile);
                 } catch (ParseException e) {
-                    log.error("Unable to parse file "+inputFile);
-                    e.printStackTrace();
+                    log.error("Unable to parse file "+inputFile, e);
                 }
                 
                 if (sd != null){
@@ -384,9 +383,9 @@ public class SampleTabToGUIXML {
             
             xmlWriter.close();
         } catch (XMLStreamException e) {
-            e.printStackTrace();
+            log.error("Problem parsing XML", e);
         } catch (SaxonApiException e) {
-            e.printStackTrace();
+            log.error("Problem parsing XML", e);
         } finally {
             if (outputWriter != null){
                 try{

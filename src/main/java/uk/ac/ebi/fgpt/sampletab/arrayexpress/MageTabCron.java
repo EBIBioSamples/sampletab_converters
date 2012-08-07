@@ -95,8 +95,7 @@ public class MageTabCron {
             try {
                 ftp = FTPUtils.connect("ftp.ebi.ac.uk");
             } catch (IOException e) {
-                log.error("Unable to connect to FTP");
-                e.printStackTrace();
+                log.error("Unable to connect to FTP", e);
                 return false;
             }
 	    }
@@ -119,8 +118,7 @@ public class MageTabCron {
 		try {
 			subdirs = ftp.listDirectories(root);
 		} catch (IOException e) {
-		    log.error("Unable to connect to FTP");
-			e.printStackTrace();
+		    log.error("Unable to connect to FTP", e);
             System.exit(1);
             return;
 		}
@@ -153,8 +151,7 @@ public class MageTabCron {
 				try {
 					subsubdirs = ftp.listDirectories(subdirpath);
 				} catch (IOException e) {
-				    log.error("Unable to list subdirs " + subdirpath);
-					e.printStackTrace();
+				    log.error("Unable to list subdirs " + subdirpath, e);
 					continue;
 				}
 				if (subsubdirs != null) {
@@ -182,8 +179,7 @@ public class MageTabCron {
                         try {
                             testFTPFiles = ftp.listFiles(subsubdirpath);
                         } catch (IOException e) {
-                            log.error("Unable to list files " + subsubdirpath);
-                            e.printStackTrace();
+                            log.error("Unable to list files " + subsubdirpath, e);
                             continue;
                         }
                         for (FTPFile testFTPFile : testFTPFiles){
@@ -256,8 +252,7 @@ public class MageTabCron {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
 
@@ -269,8 +264,7 @@ public class MageTabCron {
                 try {
                     ConanUtils.submit(submissionIdentifier, "BioSamples (AE)");
                 } catch (IOException e) {
-                    log.warn("Problem submitting to Conan "+submissionIdentifier);
-                    e.printStackTrace();
+                    log.warn("Problem submitting to Conan "+submissionIdentifier, e);
                 }
             }
         }
@@ -309,8 +303,7 @@ public class MageTabCron {
                     log.debug("Not on FTP "+aename);
                 }
             } catch (IOException e) {
-                log.error("Problem accessing FTP.");
-                e.printStackTrace();
+                log.error("Problem accessing FTP.", e);
                 close();
                 continue;
             }
@@ -326,19 +319,16 @@ public class MageTabCron {
                         SampleTabUtils.releaseInACentury(sampletabFile);
                         doConan = true;
                     } catch (IOException e) {
-                        log.error("Problem with "+sampletabFile);
-                        e.printStackTrace();
+                        log.error("Problem with "+sampletabFile, e);
                     } catch (ParseException e) {
-                        log.error("Problem with "+sampletabFile);
-                        e.printStackTrace();
+                        log.error("Problem with "+sampletabFile, e);
                     }
                     //trigger conan to complete processing
                     if (!noconan && doConan) {
                         try {
                             ConanUtils.submit(submission, "BioSamples (AE)", 1);
                         } catch (IOException e) {
-                            log.warn("Problem submitting to Conan "+submission);
-                            e.printStackTrace();
+                            log.warn("Problem submitting to Conan "+submission, e);
                         }
                     }
                 }

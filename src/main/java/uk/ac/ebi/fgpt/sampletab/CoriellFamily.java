@@ -164,8 +164,7 @@ public class CoriellFamily {
             try {
                 st = this.parser.parse(inputFile);
             } catch (ParseException e) {
-                System.err.println("ParseException converting " + inputFile);
-                e.printStackTrace();
+                log.error("ParseException converting " + inputFile, e);
                 System.exit(1);
             }
             

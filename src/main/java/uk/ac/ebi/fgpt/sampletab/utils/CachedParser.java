@@ -3,6 +3,9 @@ package uk.ac.ebi.fgpt.sampletab.utils;
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
@@ -27,7 +30,6 @@ public class CachedParser {
         try {
             return cache.get(file);
         } catch (ExecutionException e) {
-            e.printStackTrace();
             throw new ParseException(e.getCause());
         }
     }

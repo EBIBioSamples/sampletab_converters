@@ -120,7 +120,7 @@ public class Coriell {
             sampleDisplay = new TabFile(new File(inputFile, "sample_display.txt"));
             omimDiag = new TabFile(new File(inputFile, "omim_diag.txt"));
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Unable to parse files", e);
             System.exit(2);
             return;
         }
@@ -290,7 +290,7 @@ public class Coriell {
                         try {
                             st.scd.addNode(sample);
                         } catch (ParseException e) {
-                            e.printStackTrace();
+                            log.error("Unable to add SCD node "+sample, e);
                             return;
                         }
                     }
@@ -326,7 +326,7 @@ public class Coriell {
                     try {
                         st.scd.addNode(sample);
                     } catch (ParseException e) {
-                        e.printStackTrace();
+                        log.error("Unable to add SCD node "+sample, e);
                         return;
                     }
                     
@@ -427,7 +427,7 @@ public class Coriell {
                         try {
                             toWriter.scd.addNode(sample);
                         } catch (ParseException e) {
-                            e.printStackTrace();
+                            log.error("Unable to add SCD node "+sample, e);
                             return;
                         }
                         
@@ -464,9 +464,9 @@ public class Coriell {
             try {
                 writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outfile)));
                 writer.write(toWriter);
-                writer.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Unable write to "+outfile, e);
+            } finally {
                 if (writer != null) {
                     try {
                         writer.close();

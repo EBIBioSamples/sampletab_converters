@@ -106,12 +106,10 @@ public class PRIDEcron {
                     try {
 						projects = PRIDEutils.getProjects(xmlfile);
 					} catch (FileNotFoundException e) {
-						System.err.println("Error reading file "+xmlfile);
-			            e.printStackTrace();
+						log.error("Error reading file "+xmlfile, e);
 						return;
 					} catch (DocumentException e) {
-						System.err.println("Error parsing file "+xmlfile);
-			            e.printStackTrace();
+						log.error("Error parsing file "+xmlfile, e);
 						return;
 					}
                     for (String project : projects) {
@@ -140,8 +138,7 @@ public class PRIDEcron {
             files = ftp.listFiles("/pub/databases/pride/");
             log.info("Got file listing");
         } catch (IOException e) {
-            System.err.println("Unable to connect to FTP");
-            e.printStackTrace();
+            log.error("Unable to connect to FTP", e);
             System.exit(1);
             return;
         }
@@ -210,8 +207,7 @@ public class PRIDEcron {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
     }
@@ -240,8 +236,7 @@ public class PRIDEcron {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
     }
@@ -290,8 +285,7 @@ public class PRIDEcron {
                     ConanUtils.submit("GPR-"+project, "BioSamples (PRIDE)");
                 }
             } catch (IOException e) {
-                log.error("Unable to submit to conan GPR-"+project);
-                e.printStackTrace();
+                log.error("Unable to submit to conan GPR-"+project, e);
             }
         }
     }
@@ -349,16 +343,12 @@ public class PRIDEcron {
         BufferedWriter projoutwrite = null; 
         //create it in a tempory location
         File projout = new File(outputDir, "projects.tab.txt.tmp");
-        //then move it when it is complete
-        File projoutFinal = new File(outputDir, "projects.tab.txt");
         try {
             projoutwrite = new BufferedWriter(new FileWriter(projout));
             writeSubs(projoutwrite);
             projoutwrite.close();
-            FileUtils.move(projout, projoutFinal);
         } catch (IOException e) {
-            log.error("Unable to write to " + projout);
-            e.printStackTrace();
+            log.error("Unable to write to " + projout, e);
             System.exit(1);
             return;
         } finally {
@@ -366,11 +356,16 @@ public class PRIDEcron {
                 try {
                     projoutwrite.close();
                 } catch (IOException e) {
-                    //failed within a fail so give up
-                    log.error("Unable to close file writer " + projout);
-                    
+                    //failed within a fail so give up                    
                 }
             }
+        }
+        //then move it when it is complete
+        File projoutFinal = new File(outputDir, "projects.tab.txt");
+        try {
+            FileUtils.move(projout, projoutFinal);
+        } catch (IOException e) {
+            log.error("Unable to move "+projout+" to "+projoutFinal, e);
         }
         
         //trigger conan for any project that have been extended or updated

@@ -75,7 +75,6 @@ public class SampleTabToLoad {
     private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
 
 
-    // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
     private int exitcode = 0;
@@ -271,6 +270,8 @@ public class SampleTabToLoad {
         private final File inputFile;
         private final File outputFile;
 
+        private Logger log = LoggerFactory.getLogger(getClass());
+
         public ToLoadTask(File inputFile, File outputFile) {
             this.inputFile = inputFile;
             this.outputFile = outputFile;
@@ -284,8 +285,7 @@ public class SampleTabToLoad {
             try {
                 toloader = new SampleTabToLoad(hostname, port, database, username, password);
             } catch (ClassNotFoundException e) {
-                System.err.println("ClassNotFoundException converting " + inputFile);
-                e.printStackTrace();
+                log.error("ClassNotFoundException converting " + inputFile, e);
                 exitcode = 1;
                 return;
             }
@@ -294,23 +294,19 @@ public class SampleTabToLoad {
             try {
                 st = toloader.convert(inputFile);
             } catch (ParseException e) {
-                System.err.println("ParseException converting " + inputFile);
-                e.printStackTrace();
+                log.error("ParseException converting " + inputFile, e);
                 exitcode = 1;
                 return;
             } catch (IOException e) {
-                System.err.println("IOException converting " + inputFile);
-                e.printStackTrace();
+                log.error("IOException converting " + inputFile, e);
                 exitcode = 2;
                 return;
             } catch (ClassNotFoundException e) {
-                System.err.println("ClassNotFoundException converting " + inputFile);
-                e.printStackTrace();
+                log.error("ClassNotFoundException converting " + inputFile, e);
                 exitcode = 3;
                 return;
             } catch (SQLException e) {
-                System.err.println("SQLException converting " + inputFile);
-                e.printStackTrace();
+                log.error("SQLException converting " + inputFile, e);
                 exitcode = 4;
                 return;
             }
@@ -322,8 +318,7 @@ public class SampleTabToLoad {
             try {
                 out = new FileWriter(outputFile);
             } catch (IOException e) {
-                System.out.println("Error opening " + outputFile);
-                e.printStackTrace();
+                log.error("Error opening " + outputFile, e);
                 exitcode = 5;
                 return;
             }
@@ -333,8 +328,7 @@ public class SampleTabToLoad {
                 sampletabwriter.write(st);
                 sampletabwriter.close();
             } catch (IOException e) {
-                System.out.println("Error writing " + outputFile);
-                e.printStackTrace();
+                log.error("Error writing " + outputFile, e);
                 exitcode = 6;
                 return;
             }
@@ -400,8 +394,7 @@ public class SampleTabToLoad {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interupted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interupted awaiting thread pool termination", e);
                 exitcode = 7;
             }
         }

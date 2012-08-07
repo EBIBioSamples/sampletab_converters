@@ -1,5 +1,7 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.io.IOException;
+
 import uk.ac.ebi.fgpt.sampletab.arrayexpress.MageTabFTPDownload;
 import junit.framework.TestCase;
 
@@ -20,7 +22,12 @@ public class TestMageTabFTPDownload extends TestCase {
     }
 
     public void testDownload() {
-    	magetabftpdownload.download(accession, accession);
+    	try {
+            magetabftpdownload.download(accession, accession);
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
 }

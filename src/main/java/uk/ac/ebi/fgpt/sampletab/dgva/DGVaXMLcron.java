@@ -91,12 +91,10 @@ public class DGVaXMLcron {
 	                p.waitFor();
 	            }
 			} catch (IOException e) {
-				System.err.println("Error running "+bashcom);
-				e.printStackTrace();
+				log.error("Error running "+bashcom, e);
 				return;
 			} catch (InterruptedException e) {
-				System.err.println("Error running "+bashcom);
-				e.printStackTrace();
+                log.error("Error running "+bashcom, e);
 				return;
 			}
 			
@@ -104,8 +102,7 @@ public class DGVaXMLcron {
             try {
                 ConanUtils.submit(submissionIdentifier, "BioSamples (DGVa) and load");
             } catch (IOException e) {
-                log.warn("Problem submitting "+submissionIdentifier);
-                e.printStackTrace();
+                log.warn("Problem submitting "+submissionIdentifier, e);
             }
         }
 	}
@@ -117,8 +114,7 @@ public class DGVaXMLcron {
 		try {
 			ftp = FTPUtils.connect(server, username, password);
 		} catch (IOException e) {
-		    log.error("Unable to connect to FTP");
-			e.printStackTrace();
+		    log.error("Unable to connect to FTP", e);
 			System.exit(1);
 			return;
 		}
@@ -127,8 +123,7 @@ public class DGVaXMLcron {
 		try {
 			ftpfiles = ftp.listFiles();
 		} catch (IOException e) {
-		    log.error("Unable to connect to FTP");
-			e.printStackTrace();
+		    log.error("Unable to connect to FTP", e);
 		}
 
 
@@ -190,8 +185,7 @@ public class DGVaXMLcron {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
 
