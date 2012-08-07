@@ -86,10 +86,12 @@ public class CorrectorTermSource {
         //for others, delete them as they are not useful
         for (int i = 0; i < sampledata.msi.termSources.size(); i++){
             TermSource ts = sampledata.msi.termSources.get(i);
+            log.debug("term source "+ts.getName()+" "+ts.getURI());
             if (ts.getURI() == null){
+                log.debug("null URI term source "+ts.getName());
                 TermSource tsnew = TermSourceUtils.guessURL(ts);
                 if (tsnew == null) {
-                    log.error("Removing null term source "+ts.getName());
+                    log.debug("Removing null term source "+ts.getName());
                     sampledata.msi.termSources.remove(i);
                     //because the list is now shorter, adjust the counter too
                     i--;
@@ -107,7 +109,7 @@ public class CorrectorTermSource {
                         }
                     }
                 } else {
-                    sampledata.msi.termSources.set(i, ts);
+                    sampledata.msi.termSources.set(i, tsnew);
                 }
             }
         }
