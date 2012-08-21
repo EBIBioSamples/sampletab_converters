@@ -337,17 +337,13 @@ public class NCBIBiosampleToSampleTab {
 		try {
 			st = converter.convert(inputFilename);
 		} catch (IOException e) {
-			System.out.println("Error converting " + inputFilename);
-			e.printStackTrace();
+			log.error("Error converting " + inputFilename, e);
 		} catch (ParseException e) {
-			System.out.println("Error converting " + inputFilename);
-			e.printStackTrace();
+		    log.error("Error converting " + inputFilename, e);
 		} catch (DocumentException e) {
-			System.out.println("Error converting " + inputFilename);
-			e.printStackTrace();
+		    log.error("Error converting " + inputFilename, e);
 		} catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
-			System.out.println("Error converting " + inputFilename);
-			e.printStackTrace();
+		    log.error("Error converting " + inputFilename, e);
 		}
 
 		FileWriter out = null;
@@ -357,8 +353,7 @@ public class NCBIBiosampleToSampleTab {
             sampletabwriter.write(st);
             sampletabwriter.close();
 		} catch (IOException e) {
-			System.out.println("Error writing " + outputFilename);
-			e.printStackTrace();
+			log.error("Error writing " + outputFilename, e);
 		} finally {
 		    if (out != null){
 		        try {

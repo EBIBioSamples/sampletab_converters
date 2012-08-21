@@ -150,10 +150,10 @@ public class NCBISampleTabCombiner {
                     try {
                         xml = XMLUtils.getDocument(this.inFile);
                     } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                        log.error("Unable to parse xml", e);
                         return -1;
                     } catch (DocumentException e) {
-                        e.printStackTrace();
+                        log.error("Unable to parse xml", e);
                         return -1;
                     }
                     Element root = xml.getRootElement();
@@ -219,8 +219,7 @@ public class NCBISampleTabCombiner {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
 
@@ -249,8 +248,7 @@ public class NCBISampleTabCombiner {
                 }
             }
         } catch (IOException e) {
-            log.error("Unable to write to " + projout);
-            e.printStackTrace();
+            log.error("Unable to write to " + projout, e);
             System.exit(1);
         } finally {
             if (projoutwrite != null) {
@@ -325,8 +323,7 @@ public class NCBISampleTabCombiner {
                         }
                     }
                 } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e4) {
-                    log.warn("Unable to add node " + node.getNodeName());
-                    e4.printStackTrace();
+                    log.warn("Unable to add node " + node.getNodeName(), e4);
                     continue;
                 }
             }
@@ -380,12 +377,10 @@ public class NCBISampleTabCombiner {
             makeGroupings(inFiles);
             log.debug("Got groupings...");
         } catch (DocumentException e) {
-            log.error("Unable to group");
-            e.printStackTrace();
+            log.error("Unable to group", e);
             return;
         } catch (SQLException e) {
-            log.error("Unable to group");
-            e.printStackTrace();
+            log.error("Unable to group", e);
             return;
         }
 
@@ -414,20 +409,16 @@ public class NCBISampleTabCombiner {
                     try {
                         sampledatas.add(this.converter.convert(xmlFile));
                     } catch (ParseException e2) {
-                        log.warn("Unable to convert " + xmlFile);
-                        e2.printStackTrace();
+                        log.warn("Unable to convert " + xmlFile, e2);
                         continue;
                     } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e2) {
-                        log.warn("Unable to convert " + xmlFile);
-                        e2.printStackTrace();
+                        log.warn("Unable to convert " + xmlFile, e2);
                         continue;
                     } catch (DocumentException e2) {
-                        log.warn("Unable to convert " + xmlFile);
-                        e2.printStackTrace();
+                        log.warn("Unable to convert " + xmlFile, e2);
                         continue;
                     } catch (FileNotFoundException e2) {
-                        log.warn("Unable to convert " + xmlFile);
-                        e2.printStackTrace();
+                        log.warn("Unable to convert " + xmlFile, e2);
                         continue;
                     }
                 }
@@ -448,8 +439,7 @@ public class NCBISampleTabCombiner {
                     writer.close();
                     log.error("Wrote to " + outFile);
                 } catch (IOException e) {
-                    log.error("Unable to write " + outFile);
-                    e.printStackTrace();
+                    log.error("Unable to write " + outFile, e);
                     return;
                 }
 
@@ -498,8 +488,7 @@ public class NCBISampleTabCombiner {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination");
-                e.printStackTrace();
+                log.error("Interuppted awaiting thread pool termination", e);
             }
         }
 
