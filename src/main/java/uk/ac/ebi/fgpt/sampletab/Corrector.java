@@ -52,6 +52,17 @@ public class Corrector {
         return sb.toString();
     }
     
+    public String stripHTML(String in){
+        String out = in;
+        out = out.replaceAll("\\s*\\<[bB][rR]? ?/?\\>\\s*"," ");
+        
+        //some UTF-8 hacks
+        out = out.replaceAll("ÃƒÂ¼", "ü");
+        
+        return out;
+    }
+    
+    
     private UnitAttribute correctUnit(UnitAttribute unit){
         String lcval = unit.getAttributeValue().toLowerCase();
         if (lcval.equals("alphanumeric")
@@ -61,7 +72,7 @@ public class Corrector {
                 || lcval.equals("test/control")
                 || lcval.equals("yes/no")
                 || lcval.equals("y/n")
-                || lcval.equals("na")){
+                || lcval.equals("na")) {
             return null;
         } else if (lcval.equals("meter")
                 || lcval.equals("meters")) {
@@ -375,6 +386,10 @@ public class Corrector {
     
     
     public void correct(SampleData sampledata) {
+        sampledata.msi.submissionTitle = stripHTML(sampledata.msi.submissionTitle);
+        sampledata.msi.submissionDescription = stripHTML(sampledata.msi.submissionDescription);
+        
+        
         for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
             //convert to array so we can delete and add attributes if needed
             for (SCDNodeAttribute a : new ArrayList<SCDNodeAttribute>(s.getAttributes())) {
