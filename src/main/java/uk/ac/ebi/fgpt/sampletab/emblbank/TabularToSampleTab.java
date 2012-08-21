@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.emblbank;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -45,7 +45,7 @@ import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-public class EMBLBankToSampleTab {
+public class TabularToSampleTab {
 
     @Option(name = "-h", usage = "display help")
     private boolean help;
@@ -325,7 +325,7 @@ public class EMBLBankToSampleTab {
     }
 
     public static void main(String[] args) {
-        new EMBLBankToSampleTab().doMain(args);
+        new TabularToSampleTab().doMain(args);
     }
 
     public void doMain(String[] args) {
