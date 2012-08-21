@@ -2,8 +2,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-
-
 	<groupId>uk.ac.ebi.fgpt</groupId>
 	<artifactId>sampletab-converters</artifactId>
 	<version>0.1-SNAPSHOT</version>
@@ -14,6 +12,27 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
+	<distributionManagement>
+		<repository>
+			<id>bar.ebi.ac.uk-releases</id>
+			<name>bar.ebi.ac.uk-releases</name>
+			<url>http://bar.ebi.ac.uk:8081/artifactory/local-repo</url>
+		</repository>
+		<snapshotRepository>
+			<id>bar-snapshots</id>
+			<name>bar.ebi.ac.uk-snapshots</name>
+			<url>http://bar.ebi.ac.uk:8081/artifactory/local-repo</url>
+		</snapshotRepository>
+	</distributionManagement>
+	
+	<repositories>
+		<repository>
+			<id>biojava-maven-repo</id>
+			<name>BioJava repository</name>
+			<url>http://biojava.org/download/maven/</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -99,8 +118,11 @@
 			<version>1.3</version>
 		</dependency>
 		            
-		            
-            		
+		<dependency>
+			<groupId>org.biojava</groupId>
+			<artifactId>core</artifactId>
+			<version>1.8.2</version>
+		</dependency>
 		            
 	</dependencies>
 
@@ -174,17 +196,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<distributionManagement>
-		<repository>
-			<id>bar.ebi.ac.uk-releases</id>
-			<name>bar.ebi.ac.uk-releases</name>
-			<url>http://bar.ebi.ac.uk:8081/artifactory/local-repo</url>
-		</repository>
-		<snapshotRepository>
-			<id>bar-snapshots</id>
-			<name>bar.ebi.ac.uk-snapshots</name>
-			<url>http://bar.ebi.ac.uk:8081/artifactory/local-repo</url>
-		</snapshotRepository>
-	</distributionManagement>
+	
 </project>
