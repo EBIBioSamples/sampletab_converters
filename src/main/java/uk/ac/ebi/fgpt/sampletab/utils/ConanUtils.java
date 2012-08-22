@@ -20,8 +20,6 @@ import org.slf4j.LoggerFactory;
 
 
 public class ConanUtils {
-    private final static String APIKEY = "FE200DC6A286FA0302A72225CAD3671E3287A16E";
-
     private final static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.utils.ConanUtils");
     
     private static Properties properties = null;
@@ -51,7 +49,7 @@ public class ConanUtils {
         userOb.put("priority", "MEDIUM");
         userOb.put("pipelineName", pipeline);
         userOb.put("startingProcessIndex", startingProcessIndex);
-        userOb.put("restApiKey", APIKEY);
+        userOb.put("restApiKey", properties.getProperty("apikey"));
         ObjectNode inputParameters = userOb.putObject("inputParameters");
         inputParameters.put("SampleTab Accession", submissionIdentifier);
         
