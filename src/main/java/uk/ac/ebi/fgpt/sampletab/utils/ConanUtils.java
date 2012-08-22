@@ -59,7 +59,7 @@ public class ConanUtils {
 
         // Send data
         DefaultHttpClient httpClient = new DefaultHttpClient();
-        HttpPost postRequest = new HttpPost("http://banana.ebi.ac.uk:14052/conan2-perftest/api/submissions/");
+        HttpPost postRequest = new HttpPost(properties.getProperty("url")+"/api/submissions/");
         StringEntity input = new StringEntity(userOb.toString());
         input.setContentType("application/json");
         postRequest.setEntity(input);
