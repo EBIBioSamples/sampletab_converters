@@ -211,7 +211,7 @@ public class SampleTabStatusRunnable implements Runnable {
             + " -p "+agepassword
             + " -h \""+agehostname+"\"" 
             + " -r Security:Private"
-            + " -smb "+inputFile.getName();
+            + " -sbm "+inputFile.getName();
 
         ProcessUtils.doCommand(command, logfile);
 	}
@@ -235,7 +235,7 @@ public class SampleTabStatusRunnable implements Runnable {
             + " -p "+agepassword
             + " -h \""+agehostname+"\"" 
             + " -a Security:Private"
-            + " -smb "+inputFile.getName();
+            + " -sbm "+inputFile.getName();
 
         ProcessUtils.doCommand(command, logfile);
     }
