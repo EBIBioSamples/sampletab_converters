@@ -185,7 +185,7 @@ public class TabularToSampleTab {
                             } else if (header.equals("HOST")){
                                 s.addAttribute(new CharacteristicAttribute("Host", value));
                             } else if (header.equals("IDENTIFIED_BY")){
-                                s.addAttribute(new CommentAttribute("Identified BY", value));
+                                s.addAttribute(new CommentAttribute("Identified By", value));
                             } else if (header.equals("ISOLATION_SOURCE")){
                                 s.addAttribute(new CharacteristicAttribute("Isolation Source", value));
                             } else if (header.equals("LAT_LON")){
@@ -212,7 +212,7 @@ public class TabularToSampleTab {
                             } else if (header.equals("LAB_HOST")){
                                 s.addAttribute(new CharacteristicAttribute("Lab Host", value));
                             } else if (header.equals("ENVIRONMENTAL_SAMPLE")){
-                                //do not use, subset of organism
+                                s.addAttribute(new CommentAttribute("Environmental?", value));
                             } else if (header.equals("MATING_TYPE")){
                                 s.addAttribute(new SexAttribute(value));
                             } else if (header.equals("SEX")){
