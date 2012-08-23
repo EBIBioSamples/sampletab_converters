@@ -223,8 +223,7 @@ public class MageTabToSampleTab {
 				log.error("Unable to parse release date "+mt.IDF.publicReleaseDate);
 			}
 		}
-		//reuse the release date as update date
-		st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
+		//dont do an update date - current date will be used by default
 		st.msi.submissionIdentifier = "GA" + mt.IDF.accession;
 		st.msi.submissionReferenceLayer = false;
 		
