@@ -2,11 +2,10 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +30,7 @@ public class SampleTabStatusRunnable implements Runnable {
     private final String ageusername;
     private final String agepassword;
     private final String agehostname;
+    private URI ageHostURI;
     
     private final String scriptDirFilename;
 	
@@ -63,6 +63,14 @@ public class SampleTabStatusRunnable implements Runnable {
 		this.ageusername = ageusername;
 		this.agepassword = agepassword;
 		this.agehostname = agehostname;
+
+        try {
+            URI tempURI = new URI(agehostname);
+            this.ageHostURI = tempURI;
+        } catch (URISyntaxException e) {
+            log.error("Invalid URI "+agehostname, e);
+            this.ageHostURI = null;
+        }
 		
         this.scriptDirFilename = scriptDirFilename;
 	}
@@ -112,7 +120,7 @@ public class SampleTabStatusRunnable implements Runnable {
     	
     	//calculate isLoaded
     	File loadDir = new File(inputFile, "load");
-    	File sucessFile = new File(loadDir, inputFile.getName()+".SUCCESS");
+    	File sucessFile = new File(loadDir, inputFile.getName()+".SUCCESS."+ageHostURI.getAuthority());
         File ageDir = new File(inputFile, "age");
         File ageFile = new File(ageDir, inputFile.getName()+".age.txt");
     	//this is not a perfect check - ideally this should be an API query for last load date

@@ -45,8 +45,11 @@ public class SampleTabStatus {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
     
-    @Option(name = "--no-age", usage = "")
+    @Option(name = "--no-age", usage = "Do not interact with AGE, ftp only")
     private boolean noAGE = false;
+    
+    @Option(name = "--no-mmode", usage = "Do not use MMode")
+    private boolean noMMode = false;
 
     @Option(name = "--agename", usage = "Age server hostname")
     private String agehostname; //default set in constructor
@@ -170,6 +173,11 @@ public class SampleTabStatus {
             return;
         }
         
+        if (noMMode){
+            log.info("Skipping start MMode");
+            return;
+        }
+        
         File scriptDir = new File(scriptDirFilename);
         File scriptFile = new File(scriptDir, "MModeTool.sh");
 
@@ -185,6 +193,11 @@ public class SampleTabStatus {
     
     private void stopMMode(){
         if (ageusername == null){
+            log.info("Skipping stop MMode");
+            return;
+        }
+        
+        if (noMMode){
             log.info("Skipping stop MMode");
             return;
         }
