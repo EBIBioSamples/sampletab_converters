@@ -257,6 +257,21 @@ public class SampleTabStatusRunnable implements Runnable {
             + " \""+ageDir.getAbsolutePath()+"\""; 
         
         ProcessUtils.doCommand(command, logfile);
+        
+        //move the server response file
+        File serverResponseOrigSuccess = new File(loadDir, inputFile.getName()+".SUCCESS");
+        File serverResponseOrigError = new File(loadDir, inputFile.getName()+".ERROR");
+        File serverResponseNewSuccess = new File(loadDir, inputFile.getName()+".SUCCESS."+ageHostURI.getAuthority());
+        File serverResponseNewError = new File(loadDir, inputFile.getName()+".ERROR."+ageHostURI.getAuthority());
+        //this could probably have more checks, but how would we handle fails and differently?
+        serverResponseNewSuccess.delete();
+        serverResponseNewError.delete();
+        if (serverResponseOrigSuccess.exists()){
+            serverResponseOrigSuccess.renameTo(serverResponseNewSuccess);
+        }
+        if (serverResponseOrigError.exists()){
+            serverResponseOrigError.renameTo(serverResponseNewError);
+        }
     }
     
     private File getFTPFile(){
