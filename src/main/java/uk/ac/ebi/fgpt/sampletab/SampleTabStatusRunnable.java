@@ -120,10 +120,11 @@ public class SampleTabStatusRunnable implements Runnable {
     	
     	//calculate isLoaded
     	File loadDir = new File(inputFile, "load");
-    	File sucessFile = new File(loadDir, inputFile.getName()+".SUCCESS."+ageHostURI.getAuthority());
+    	File sucessFile = new File(loadDir, inputFile.getName()+".SUCCESS."+ageHostURI.getHost());
         File ageDir = new File(inputFile, "age");
         File ageFile = new File(ageDir, inputFile.getName()+".age.txt");
     	//this is not a perfect check - ideally this should be an API query for last load date
+        log.info("Checking existance of "+sucessFile);
         if (!sucessFile.exists()){
             isLoaded = false;
         } else {
@@ -261,8 +262,8 @@ public class SampleTabStatusRunnable implements Runnable {
         //move the server response file
         File serverResponseOrigSuccess = new File(loadDir, inputFile.getName()+".SUCCESS");
         File serverResponseOrigError = new File(loadDir, inputFile.getName()+".ERROR");
-        File serverResponseNewSuccess = new File(loadDir, inputFile.getName()+".SUCCESS."+ageHostURI.getAuthority());
-        File serverResponseNewError = new File(loadDir, inputFile.getName()+".ERROR."+ageHostURI.getAuthority());
+        File serverResponseNewSuccess = new File(loadDir, inputFile.getName()+".SUCCESS."+ageHostURI.getHost());
+        File serverResponseNewError = new File(loadDir, inputFile.getName()+".ERROR."+ageHostURI.getHost());
         //this could probably have more checks, but how would we handle fails and differently?
         serverResponseNewSuccess.delete();
         serverResponseNewError.delete();
