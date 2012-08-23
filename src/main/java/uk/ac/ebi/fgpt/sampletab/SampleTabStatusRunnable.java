@@ -1,11 +1,18 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -204,7 +211,7 @@ public class SampleTabStatusRunnable implements Runnable {
             + " -p "+agepassword
             + " -h \""+agehostname+"\"" 
             + " -r Security:Private"
-            + " -i "+inputFile.getName();
+            + " -smb "+inputFile.getName();
 
         ProcessUtils.doCommand(command, logfile);
 	}
@@ -228,7 +235,7 @@ public class SampleTabStatusRunnable implements Runnable {
             + " -p "+agepassword
             + " -h \""+agehostname+"\"" 
             + " -a Security:Private"
-            + " -i "+inputFile.getName();
+            + " -smb "+inputFile.getName();
 
         ProcessUtils.doCommand(command, logfile);
     }
@@ -300,6 +307,11 @@ public class SampleTabStatusRunnable implements Runnable {
         
         File sampletabFile = new File(inputFile, "sampletab.txt");
         
+        //if the ftp file exists, delete it
+        if (ftpFile.exists()){
+            ftpFile.delete();
+        }
+        
         if (!ftpFile.exists() && sampletabFile.exists()){
             try {
                 FileUtils.copy(sampletabFile, ftpFile);
@@ -318,5 +330,54 @@ public class SampleTabStatusRunnable implements Runnable {
                 log.error("Unable to delete file "+toLoad);
             }
         }
+    }
+    
+    private Set<String> getTags(){
+        if (ageusername == null){
+            log.info("Skipping getting tags "+inputFile.getName());
+            return null;
+        }
+
+        File scriptDir = new File(scriptDirFilename);
+        File scriptFile = new File(scriptDir, "TagControl.sh");
+        
+        String command = scriptFile.getAbsolutePath() 
+            + " -u "+ageusername
+            + " -p "+agepassword
+            + " -h \""+agehostname+"\""
+            + " -l -sbm "+inputFile.getName();
+
+        ArrayList<String> bashcommand = new ArrayList<String>();
+        bashcommand.add("/bin/bash");
+        bashcommand.add("-c");
+        bashcommand.add(command);
+
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.command(bashcommand);
+        pb.redirectErrorStream(true);// merge stderr to stdout
+        Process p = null;
+        Set<String> tags = new HashSet<String>();
+        try {
+            p = pb.start();
+            InputStream is = p.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr);
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(" ");
+                String tag = parts[2];
+                tags.add(tag);
+            }
+            synchronized (p) {
+                p.waitFor();
+            }
+        } catch (IOException e) {
+            log.error("Error running " + command, e);
+            return null;
+        } catch (InterruptedException e) {
+            log.error("Error running " + command, e);
+            return null;
+        }
+        return tags;
     }
 }
