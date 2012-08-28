@@ -123,8 +123,9 @@ public class ENASRACron {
                         log.info("Deleted study "+accession);
                         boolean doConan = false;
                         try {
-                            SampleTabUtils.releaseInACentury(sampletabFile);
-                            doConan = true;
+                            if (SampleTabUtils.releaseInACentury(sampletabFile)){
+                                doConan = true;
+                            }
                         } catch (IOException e) {
                             log.error("Problem with "+sampletabFile, e);
                         } catch (ParseException e) {
