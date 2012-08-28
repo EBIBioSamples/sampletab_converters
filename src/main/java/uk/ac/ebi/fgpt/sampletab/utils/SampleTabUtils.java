@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.slf4j.Logger;
@@ -41,14 +42,14 @@ public class SampleTabUtils {
         return sampletabFile;
     }
     
-    public static void releaseInACentury(File sampletabFile) throws IOException, ParseException{
+    public static boolean releaseInACentury(File sampletabFile) throws IOException, ParseException{
         SampleTabSaferParser parser = new SampleTabSaferParser();
         SampleData sd = parser.parse(sampletabFile);
         if (sd == null){
             log.error("Failed to parse "+sampletabFile);
-        } else {
-            //release it in 100 years
-            releaseInACentury(sd);
+            return false;
+        } else if(sd.msi.submissionReleaseDate.before(new Date())) {
+            //if its already public, then release it in 100 years
             Writer writer = null;
             try {
                 writer = new BufferedWriter(new FileWriter(sampletabFile));
@@ -65,16 +66,24 @@ public class SampleTabUtils {
                     }
                 }
             }
+
+            return true;
+        } else {
+            return false;
         }
     }
     
-    public static void releaseInACentury(SampleData sd) {
+    public static boolean releaseInACentury(SampleData sd) {
         if (sd == null){
             throw new IllegalArgumentException("Must provide non-null SampleData");
         }
-        //release it in 100 years
-        Calendar cal = GregorianCalendar.getInstance();
-        cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)+10);
-        sd.msi.submissionReleaseDate = cal.getTime();
+        if(sd.msi.submissionReleaseDate.before(new Date())) {
+            //release it in 100 years
+            Calendar cal = GregorianCalendar.getInstance();
+            cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)+100);
+            sd.msi.submissionReleaseDate = cal.getTime();
+            return true;
+        }
+        return false;
     }
 }
