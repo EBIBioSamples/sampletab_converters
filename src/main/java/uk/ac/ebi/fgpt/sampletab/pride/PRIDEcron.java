@@ -180,7 +180,8 @@ public class PRIDEcron {
         for (File subdir : outdir.listFiles()){
             File trimmed = new File(subdir, "trimmed.xml");
             if (trimmed.exists()){
-                String ftpFilename = "PRIDE_Exp_IdentOnly_Ac_"+subdir.getName().substring(4)+".xml.gz";
+                String prideAccession = subdir.getName().substring(4);
+                String ftpFilename = "PRIDE_Exp_IdentOnly_Ac_"+prideAccession+".xml.gz";
                 
                 boolean exists = false;
                 for (FTPFile file : files) {
@@ -193,7 +194,8 @@ public class PRIDEcron {
                 
                 if (!exists){
                     //this has been deleted
-                    deleted.add(subdir.getName());
+                    deleted.add(prideAccession);
+                    updated.add(prideAccession);
                 }
                 
             }

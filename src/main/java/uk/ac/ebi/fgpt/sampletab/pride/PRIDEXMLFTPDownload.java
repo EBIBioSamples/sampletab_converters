@@ -92,7 +92,7 @@ public class PRIDEXMLFTPDownload implements Runnable {
             command.add(bashcom);
             pb.command(command);
 
-            log.info("Starting bash process for "+accession);
+            log.debug("Starting bash process for "+accession);
             
             p = pb.start();
             synchronized (p) {
