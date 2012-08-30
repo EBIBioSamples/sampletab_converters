@@ -171,7 +171,7 @@ public class SampleTabStatusRunnable implements Runnable {
     	    }
     	    if (!isLoaded || !isLoadUpToDate){
     	        //reload
-    	        reload();
+    	        reload(shouldBePublic);
     	    }
     	    if (!isOnFTP || !isFTPUpToDate){
     	        //copy to FTP
@@ -187,8 +187,6 @@ public class SampleTabStatusRunnable implements Runnable {
                 //remove from FTP
                 removeFromFTP();
             }
-            //delete sampletab.toload.txt file
-            removeToLoad();
     	}
 	}
 	
@@ -238,9 +236,9 @@ public class SampleTabStatusRunnable implements Runnable {
             + " -sbm "+inputFile.getName();
 
         ProcessUtils.doCommand(command, logfile);
-    }
-    
-    private void reload(){
+    }    
+    private void reload(boolean isPublic){
+     
         if (ageusername == null){
             log.info("Skipping reloading "+inputFile.getName());
             return;
@@ -261,8 +259,11 @@ public class SampleTabStatusRunnable implements Runnable {
             + " -o \""+loadDir.getAbsolutePath()+"\""
             + " -u "+ageusername
             + " -p "+agepassword
-            + " -h \""+agehostname+"\""
-            + " \""+ageDir.getAbsolutePath()+"\""; 
+            + " -h \""+agehostname+"\"";
+        if (!isPublic){
+            command = command+" -a Security:Private";
+        }
+        command = command+" \""+ageDir.getAbsolutePath()+"\""; 
         
         ProcessUtils.doCommand(command, logfile);
         
