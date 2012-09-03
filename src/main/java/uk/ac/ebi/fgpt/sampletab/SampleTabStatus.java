@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
+import uk.ac.ebi.fgpt.sampletab.utils.AgeUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
@@ -129,20 +131,26 @@ public class SampleTabStatus {
         
         log.info("Found " + inputFiles.size() + " input files");
 
+        //convert to strings by filename
+        List<String> inputAccessions = new ArrayList<String>(inputFiles.size());
+        for (int i = 0; i < inputFiles.size(); i++){
+            inputAccessions.add(i, inputFiles.get(i).getName());
+        }
+
+        AgeUtils ageUtils = new AgeUtils(scriptDirFilename, ageusername, agepassword, agehostname);
+        Map<String, Set<String>> tags = ageUtils.BulkTagQuery(inputAccessions);
+        
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
 
         startMMode();
         
         for (File inputFile : inputFiles) {
-        	if (!inputFile.isDirectory()){
-        		inputFile = inputFile.getAbsoluteFile().getParentFile();
-        	}
     		if (inputFile == null){
     			continue;
     		}
     		
-            Runnable t = new SampleTabStatusRunnable(inputFile, ftpDirFilename, ageusername, agepassword, agehostname, scriptDirFilename);
+            Runnable t = new SampleTabStatusRunnable(inputFile, ftpDirFilename, ageusername, agepassword, agehostname, scriptDirFilename, tags.get(inputFile.getName()));
             if (threaded){
                 pool.execute(t);
             } else {

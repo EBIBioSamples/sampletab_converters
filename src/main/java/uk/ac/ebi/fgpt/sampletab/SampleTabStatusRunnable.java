@@ -11,11 +11,15 @@ import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
@@ -37,7 +41,9 @@ public class SampleTabStatusRunnable implements Runnable {
     private final String ageusername;
     private final String agepassword;
     private final String agehostname;
-    private URI ageHostURI;
+    private final URI ageHostURI;
+    
+    private final Set<String> tags;
     
     private final String scriptDirFilename;
 	
@@ -46,11 +52,12 @@ public class SampleTabStatusRunnable implements Runnable {
     public Boolean isLoadUpToDate = false;
 	public Boolean isOnFTP = false;
     public Boolean isFTPUpToDate = false;
-
+    
+    
     private Logger log = LoggerFactory.getLogger(getClass());
     
 
-	public SampleTabStatusRunnable(File inputFile, File ftpDir, String ageusername, String agepassword, String agehostname, String scriptDirFilename){
+	public SampleTabStatusRunnable(File inputFile, File ftpDir, String ageusername, String agepassword, String agehostname, String scriptDirFilename, Set<String> tags){
 		if (inputFile == null){
 			throw new IllegalArgumentException("inputFile cannot be null");
 		}
@@ -71,19 +78,25 @@ public class SampleTabStatusRunnable implements Runnable {
 		this.agepassword = agepassword;
 		this.agehostname = agehostname;
 
+        URI tempURI = null;
         try {
-            URI tempURI = new URI(agehostname);
-            this.ageHostURI = tempURI;
+            tempURI = new URI(agehostname);
         } catch (URISyntaxException e) {
             log.error("Invalid URI "+agehostname, e);
-            this.ageHostURI = null;
         }
+        this.ageHostURI = tempURI;
 		
         this.scriptDirFilename = scriptDirFilename;
+        
+        if (tags == null){
+            this.tags = new HashSet<String>();
+        } else {
+            this.tags = tags;
+        }
 	}
 
-	public SampleTabStatusRunnable(File inputFile, String ftpDirFilename, String ageusername, String agepassword, String agehostname, String scriptDirFilename){
-		this(inputFile, new File(ftpDirFilename), ageusername, agepassword, agehostname, scriptDirFilename);
+	public SampleTabStatusRunnable(File inputFile, String ftpDirFilename, String ageusername, String agepassword, String agehostname, String scriptDirFilename, Set<String> tags){
+		this(inputFile, new File(ftpDirFilename), ageusername, agepassword, agehostname, scriptDirFilename, tags);
 	}
 	
 	public void run() {
@@ -164,10 +177,9 @@ public class SampleTabStatusRunnable implements Runnable {
     	//now we have the information, determine what we need to do
     	
     	if (shouldBePublic){
-    	    if (isLoaded){
+    	    if (isLoaded && this.tags.contains("Security:Private")){
     	        //remove private tag
-    	        //no way to test if this is possible or not so just do it
-    	        removePrivateTag();
+                removePrivateTag();
     	    }
     	    if (!isLoaded || !isLoadUpToDate){
     	        //reload
@@ -178,9 +190,8 @@ public class SampleTabStatusRunnable implements Runnable {
     	        copyToFTP();
     	    }
     	} else if (!shouldBePublic) {
-            if (isLoaded){
+            if (isLoaded && !this.tags.contains("Security:Private")){
                 //add private tag
-                //no way to test if this is possible or not so just do it
                 addPrivateTag();
             }
             if (isOnFTP){
@@ -193,6 +204,9 @@ public class SampleTabStatusRunnable implements Runnable {
 	private void removePrivateTag(){
         if (ageusername == null){
             log.info("Skipping removing private tag "+inputFile.getName());
+            return;
+        }
+        if (!this.tags.contains("Security:Private")){
             return;
         }
         
@@ -217,6 +231,9 @@ public class SampleTabStatusRunnable implements Runnable {
     private void addPrivateTag(){
         if (ageusername == null){
             log.info("Skipping adding private tag "+inputFile.getName());
+            return;
+        }
+        if (this.tags.contains("Security:Private")){
             return;
         }
         
