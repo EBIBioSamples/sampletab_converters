@@ -49,8 +49,6 @@ public class AccessionerDriver {
 
     private Accessioner accessioner = null;
     
-    private int exitcode = 0;
-    
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public static void main(String[] args) {
@@ -129,12 +127,22 @@ public class AccessionerDriver {
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
                 log.error("Interuppted awaiting thread pool termination", e);
-                exitcode = 4;
-                return;
+                System.exit(4);
             }
         }
         log.info("Finished processing");
-
+        
+        //check that all the required output files were created
+        int exitcode = 0;
+        for (File inputFile : inputFiles) {
+            // System.out.println("Checking "+inputFile);
+            File outputFile = new File(inputFile.getParentFile(), outputFilename);
+            if (!outputFile.exists() 
+                    || outputFile.lastModified() < inputFile.lastModified()) {
+                log.error("Unable to find output file "+outputFile);
+                exitcode = 5;
+            }
+        }
         System.exit(exitcode);
     }
 }

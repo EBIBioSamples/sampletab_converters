@@ -144,7 +144,7 @@ public class SampleTabStatusRunnable implements Runnable {
         File ageDir = new File(inputFile, "age");
         File ageFile = new File(ageDir, inputFile.getName()+".age.txt");
     	//this is not a perfect check - ideally this should be an API query for last load date
-        log.info("Checking existance of "+sucessFile);
+        log.debug("Checking existance of "+sucessFile);
         if (!sucessFile.exists()){
             isLoaded = false;
         } else {
@@ -171,7 +171,7 @@ public class SampleTabStatusRunnable implements Runnable {
     		isOnFTP = false;
     	}
     	
-    	log.info(inputFile.getName()+" "+shouldBePublic+" "+isLoaded+" "+isLoadUpToDate+" "+isOnFTP+" "+isFTPUpToDate);
+    	log.debug(inputFile.getName()+" "+shouldBePublic+" "+isLoaded+" "+isLoadUpToDate+" "+isOnFTP+" "+isFTPUpToDate);
     	
     	
     	//now we have the information, determine what we need to do

@@ -389,6 +389,7 @@ public class Corrector {
     
     
     public void correct(SampleData sampledata) {
+        //TODO handle nulls here with dummy text
         sampledata.msi.submissionTitle = stripHTML(sampledata.msi.submissionTitle);
         sampledata.msi.submissionDescription = stripHTML(sampledata.msi.submissionDescription);
         

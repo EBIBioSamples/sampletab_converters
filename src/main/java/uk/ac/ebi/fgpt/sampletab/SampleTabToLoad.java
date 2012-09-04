@@ -368,6 +368,12 @@ public class SampleTabToLoad {
         inputFiles = FileUtils.getMatchesGlob(inputFilename);
         log.info("Found " + inputFiles.size() + " input files");
         Collections.sort(inputFiles);
+        
+        if (inputFiles.size() == 0){
+            log.error("No input files found");
+            System.exit(3);
+            return;
+        }
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
