@@ -57,10 +57,15 @@ public class Corrector {
             return in;
         }
         String out = in;
+        //extra whitespace
+        out = out.trim();
+        
+        //<br>
         out = out.replaceAll("\\s*\\<[bB][rR]? ?/?\\>\\s*"," ");
         
         //some UTF-8 hacks
         out = out.replaceAll("ÃƒÂ¼", "ü");
+        out = out.replaceAll("\u2009", " "); //thin space
         
         return out;
     }
