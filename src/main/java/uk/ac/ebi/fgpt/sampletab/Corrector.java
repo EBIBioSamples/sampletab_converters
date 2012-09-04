@@ -53,6 +53,9 @@ public class Corrector {
     }
     
     public String stripHTML(String in){
+        if (in == null){
+            return in;
+        }
         String out = in;
         out = out.replaceAll("\\s*\\<[bB][rR]? ?/?\\>\\s*"," ");
         
