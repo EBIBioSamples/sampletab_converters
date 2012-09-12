@@ -238,15 +238,13 @@ public class ENASRAXMLToSampleTab {
                     }
                 }
             }
+
+            if (sampleElement.attributeValue("alias") != null) {
+                CommentAttribute synonymattrib = new CommentAttribute("Synonym", sampleElement.attributeValue("alias"));
+                samplenode.addAttribute(synonymattrib, 0);
+            }
             
             if (sampledescription != null) {
-                // insert all synonyms at position zero so they display next to name
-                // do this after doing synonyms
-                if (sampledescription.attributeValue("alias") != null) {
-                    CommentAttribute synonymattrib = new CommentAttribute("Synonym",
-                            sampledescription.attributeValue("alias"));
-                    samplenode.addAttribute(synonymattrib, 0);
-                }
                 samplenode.setSampleDescription(sampledescription.getTextTrim());
             }
 
