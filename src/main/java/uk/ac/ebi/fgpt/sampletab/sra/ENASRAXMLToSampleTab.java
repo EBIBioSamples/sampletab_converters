@@ -218,7 +218,7 @@ public class ENASRAXMLToSampleTab {
                 // now process organism
                 if (taxon != null) {
                     Integer taxid = new Integer(taxon.getTextTrim());
-                    // TODO get taxon name from id
+                    // could get taxon name by lookup, but this will be done by correction later on.
                     String taxName = null;
                     if (scientificname != null ){
                         taxName = scientificname.getTextTrim();
@@ -247,6 +247,7 @@ public class ENASRAXMLToSampleTab {
                             sampledescription.attributeValue("alias"));
                     samplenode.addAttribute(synonymattrib, 0);
                 }
+                samplenode.setSampleDescription(sampledescription.getTextTrim());
             }
 
             // finally, any other attributes ENA SRA provides
