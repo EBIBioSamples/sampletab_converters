@@ -188,8 +188,8 @@ public class Accessioner {
             
             //first do one query to retrieve all that have already got accessions
             long start = System.currentTimeMillis();
-            statement = connect.prepareStatement("SELECT user_accession, accession FROM " + table
-                    + " WHERE submission_accession LIKE ? AND is_deleted = 0");
+            statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM " + table
+                    + " WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
             statement.setString(1, submission);
             log.trace(statement.toString());
             results = statement.executeQuery();
@@ -212,7 +212,7 @@ public class Accessioner {
             results.close();
             
 
-            statement = connect.prepareStatement("SELECT user_accession, accession FROM SAMPLE_GROUPS WHERE submission_accession LIKE ? AND is_deleted = 0");
+            statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM SAMPLE_GROUPS WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
             statement.setString(1, submission);
             log.trace(statement.toString());
             results = statement.executeQuery();
@@ -245,7 +245,7 @@ public class Accessioner {
                     statement = connect
                             .prepareStatement("INSERT INTO "
                                     + table
-                                    + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, SYSDATE, 0);");
+                                    + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.trace(statement.toString());
@@ -254,8 +254,8 @@ public class Accessioner {
                     end = System.currentTimeMillis();
                     log.info("Time elapsed = "+(end-start)+"ms");
 
-                    statement = connect.prepareStatement("SELECT accession FROM " + table
-                            + " WHERE user_accession LIKE ? AND submission_accession LIKE ? LIMIT 1");
+                    statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
+                            + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ? LIMIT 1");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.trace(statement.toString());
@@ -279,7 +279,7 @@ public class Accessioner {
                 if (group.getGroupAccession() == null) {
                     name = group.getNodeName();
                     statement = connect
-                            .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 );");
+                            .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.info(name);
