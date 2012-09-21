@@ -245,7 +245,7 @@ public class Accessioner {
                     statement = connect
                             .prepareStatement("INSERT INTO "
                                     + table
-                                    + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, SYSDATE, 0)");
+                                    + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, SYSDATE, 0);");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.trace(statement.toString());
@@ -279,7 +279,7 @@ public class Accessioner {
                 if (group.getGroupAccession() == null) {
                     name = group.getNodeName();
                     statement = connect
-                            .prepareStatement("INSERT INTO sample_groups ( user_accession , submission_accession , date_assigned , is_deleted ) VALUES ( ? ,  ? , SYSDATE, 0)");
+                            .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 );");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.info(name);
@@ -288,7 +288,7 @@ public class Accessioner {
                     statement.close();
 
                     statement = connect
-                            .prepareStatement("SELECT accession FROM sample_groups WHERE user_accession = ? AND submission_accession = ?");
+                            .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.trace(statement.toString());
