@@ -255,13 +255,12 @@ public class Accessioner {
                     log.info("Time elapsed = "+(end-start)+"ms");
 
                     statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
-                            + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ? LIMIT 1");
+                            + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.trace(statement.toString());
                     results = statement.executeQuery();
-                    results.first();
-                    
+                    results.next();
                     accessionID = results.getInt(1);
                     accession = prefix + accessionID;
                     statement.close();
@@ -293,7 +292,7 @@ public class Accessioner {
                     statement.setString(2, submission);
                     log.trace(statement.toString());
                     results = statement.executeQuery();
-                    results.first();
+                    results.next();
                     accessionID = results.getInt(1);
                     accession = "SAMEG" + accessionID;
                     statement.close();
