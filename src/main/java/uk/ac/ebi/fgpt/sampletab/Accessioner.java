@@ -64,6 +64,51 @@ public class Accessioner {
         
         doSetup();
     }
+    
+    private String getAccession(Connection connect, String table, String userAccession, String submissionAccession) throws SQLException{
+
+        String prefix;
+        if (table.toLowerCase().equals("sample_assay")){
+            prefix = "SAMEA";
+        } else if (table.toLowerCase().equals("sample_groups")){
+            prefix = "SAMEG";
+        } else if (table.toLowerCase().equals("sample_reference")){
+            prefix = "SAME";
+        } else {
+            throw new IllegalArgumentException("invalud table "+table);
+        }
+        
+        PreparedStatement statement = null;
+        ResultSet results = null;
+        String accession = null;
+        try {
+            statement = connect.prepareStatement("SELECT accession FROM " + table
+                    + " WHERE user_accession LIKE ? AND submission_accession LIKE ? LIMIT 1");
+            statement.setString(1, userAccession);
+            statement.setString(2, submissionAccession);
+            results = statement.executeQuery();
+            results.first();
+            Integer accessionID = results.getInt(1);
+            accession = prefix + accessionID;
+        } finally {
+            if (statement != null){
+                try {
+                    statement.close();
+                } catch (SQLException e){
+                    //do nothing
+                }
+            }
+            if (results != null){
+                try {
+                    results.close();
+                } catch (SQLException e){
+                    //do nothing
+                }
+            }
+        }
+        
+        return accession;
+    }
 
     
     private void doSetup() throws ClassNotFoundException, SQLException{
@@ -111,10 +156,10 @@ public class Accessioner {
         String prefix = null;
         if (sampleIn.msi.submissionReferenceLayer == true) {
             prefix = "SAME";
-            table = "sample_reference";
+            table = "SAMPLE_REFERENCE";
         } else if (sampleIn.msi.submissionReferenceLayer == false) {
             prefix = "SAMEA";
-            table = "sample_assay";
+            table = "SAMPLE_ASSAY";
         } else {
             throw new ParseException("Must specify a Submission Reference Layer MSI attribute.");
         }
@@ -159,10 +204,34 @@ public class Accessioner {
                 if (sample != null){
                     sample.setSampleAccession(accession);
                 } else {
-                    log.warn("Unable to find SCD sample node "+samplename);
+                    log.warn("Unable to find SCD sample node "+samplename+" in submission "+submission);
                 }
             }
+            //TODO try finally this
+            statement.close();
             results.close();
+            
+
+            statement = connect.prepareStatement("SELECT user_accession, accession FROM SAMPLE_GROUPS WHERE submission_accession LIKE ? AND is_deleted = 0");
+            statement.setString(1, submission);
+            log.trace(statement.toString());
+            results = statement.executeQuery();
+            while (results.next()){
+                String groupname = results.getString(1).trim();
+                accessionID = results.getInt(2);
+                accession = prefix + accessionID;
+                GroupNode group = sampleIn.scd.getNode(groupname, GroupNode.class);
+                log.trace(groupname+" : "+accession);
+                if (group != null){
+                    group.setGroupAccession(accession);
+                } else {
+                    log.warn("Unable to find SCD group node "+groupname+" in submission "+submission);
+                }
+            }
+            //TODO try finally this
+            statement.close();
+            results.close();
+            
             
             //now assign and retrieve accessions for samples that do not have them
             for (SampleNode sample : samples) {
@@ -176,7 +245,7 @@ public class Accessioner {
                     statement = connect
                             .prepareStatement("INSERT INTO "
                                     + table
-                                    + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, SYSDATE(), 0)");
+                                    + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, SYSDATE, 0)");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.trace(statement.toString());
@@ -210,10 +279,11 @@ public class Accessioner {
                 if (group.getGroupAccession() == null) {
                     name = group.getNodeName();
                     statement = connect
-                            .prepareStatement("INSERT IGNORE INTO sample_groups (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
+                            .prepareStatement("INSERT INTO sample_groups ( user_accession , submission_accession , date_assigned , is_deleted ) VALUES ( ? ,  ? , SYSDATE, 0)");
                     statement.setString(1, name);
                     statement.setString(2, submission);
-                    log.trace(statement.toString());
+                    log.info(name);
+                    log.info(submission);
                     statement.executeUpdate();
                     statement.close();
 
