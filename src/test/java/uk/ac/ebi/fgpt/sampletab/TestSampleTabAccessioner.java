@@ -42,7 +42,7 @@ public class TestSampleTabAccessioner extends TestCase {
         parser = new SampleTabParser();
         Properties mysqlProperties = new Properties();
         try {
-            InputStream is = getClass().getResourceAsStream("/mysql.properties");
+            InputStream is = getClass().getResourceAsStream("/oracle.properties");
             mysqlProperties.load(is);
         } catch (IOException e) {
             e.printStackTrace();
@@ -85,16 +85,15 @@ public class TestSampleTabAccessioner extends TestCase {
 			try {
 				sampletabwriter.write(st);
 			} catch (IOException e) {
+                log.error("Unable to write output", e);
 				fail();
-				e.printStackTrace();
 			}
 			//System.out.println(out.toString());
 		} catch (ParseException e) {
-            e.printStackTrace();
+		    log.error("Unable to parse source", e);
             fail();
 		} catch (SQLException e) {
-		    log.error(e.getSQLState());
-            e.printStackTrace();
+		    log.error(e.getSQLState(), e);
             fail();
         } 
     }
