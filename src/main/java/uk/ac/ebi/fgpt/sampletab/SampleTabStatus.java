@@ -106,9 +106,9 @@ public class SampleTabStatus {
             agepassword = null;
         }
 
-        log.info("Looking for input files");
         List<File> inputFiles = new ArrayList<File>();
         for (String inputFilename : inputFilenames){
+            log.info("Looking for input files matching "+inputFilename);
             inputFiles.addAll(FileUtils.getMatchesGlob(inputFilename));
         }
         log.info("Found " + inputFiles.size() + " input files");
