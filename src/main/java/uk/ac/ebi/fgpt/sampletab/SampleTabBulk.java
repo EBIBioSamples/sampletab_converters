@@ -83,7 +83,7 @@ public class SampleTabBulk {
         //will be overriden by command-line options later
         Properties mysqlProperties = new Properties();
         try {
-            InputStream is = SampleTabBulk.class.getResourceAsStream("/mysql.properties");
+            InputStream is = SampleTabBulk.class.getResourceAsStream("/oracle.properties");
             mysqlProperties.load(is);
         } catch (IOException e) {
             log.error("Unable to read resource mysql.properties", e);

@@ -74,9 +74,11 @@ public class Accessioner {
         }
 
         String connectURI = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
+        connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
         ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI, username, password);
         PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(connectionFactory, connectionPool, null, null, false, true);
         Class.forName("com.mysql.jdbc.Driver");
+        Class.forName("oracle.jdbc.driver.OracleDriver");
         Class.forName("org.apache.commons.dbcp.PoolingDriver");
         PoolingDriver driver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
         driver.registerPool("accessioner", connectionPool);
@@ -174,7 +176,7 @@ public class Accessioner {
                     statement = connect
                             .prepareStatement("INSERT INTO "
                                     + table
-                                    + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, NOW(), 0)");
+                                    + " (user_accession, submission_accession, date_assigned, is_deleted) VALUES (?, ?, SYSDATE(), 0)");
                     statement.setString(1, name);
                     statement.setString(2, submission);
                     log.trace(statement.toString());

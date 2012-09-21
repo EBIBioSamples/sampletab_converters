@@ -15,14 +15,14 @@
 
 	<distributionManagement>
 		<repository>
-			<id>bar.ebi.ac.uk-releases</id>
-			<name>bar.ebi.ac.uk-releases</name>
-			<url>http://bar.ebi.ac.uk:8081/artifactory/local-repo</url>
+			<id>coconut.ebi.ac.uk-releases</id>
+			<name>coconut.ebi.ac.uk-releases</name>
+			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
 		</repository>
 		<snapshotRepository>
-			<id>bar-snapshots</id>
-			<name>bar.ebi.ac.uk-snapshots</name>
-			<url>http://bar.ebi.ac.uk:8081/artifactory/local-repo</url>
+			<id>coconut.ebi.ac.uk-snapshots</id>
+			<name>coconut.ebi.ac.uk.ebi.ac.uk-snapshots</name>
+			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
 		</snapshotRepository>
 	</distributionManagement>
 	
@@ -31,6 +31,17 @@
 			<id>biojava-maven-repo</id>
 			<name>BioJava repository</name>
 			<url>http://biojava.org/download/maven/</url>
+		</repository>
+
+
+		<!--  internal repository -->
+		<repository>
+			<id>coconut.ebi.ac.uk-snapshots</id>
+			<name>Coconut Snapshot Repository</name>
+			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</repository>
 	</repositories>
 
@@ -58,6 +69,14 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.18</version>
 		</dependency>
+		
+		 <!-- this is not in public repos due to Oracle license -->
+		<dependency>
+		    <groupId>com.oracle</groupId>
+		    <artifactId>ojdbc6</artifactId>
+		    <version>11.2.0.2.0</version>
+		</dependency>
+		
 
 		<!-- testing -->
 		<dependency>
