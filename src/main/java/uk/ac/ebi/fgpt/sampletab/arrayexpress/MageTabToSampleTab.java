@@ -208,7 +208,9 @@ public class MageTabToSampleTab {
 
 		SampleData st = new SampleData();
 		st.msi.submissionTitle = mt.IDF.investigationTitle;
-		st.msi.submissionDescription = mt.IDF.experimentDescription;
+		String description = mt.IDF.experimentDescription;
+		description = description.replaceAll("\t", " ");
+		st.msi.submissionDescription = description;
 		if (mt.IDF.publicReleaseDate == null){
 		    //null release date
 		    //ArrayExpress defaults to private
