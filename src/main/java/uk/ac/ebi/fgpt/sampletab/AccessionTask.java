@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.Callable;
 
+import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,9 @@ public class AccessionTask implements Runnable {
             st = accessioner.convert(this.inputFile);
         } catch (ParseException e) {
             log.error("ParseException converting " + this.inputFile, e);
+            for(ErrorItem error : e.getErrorItems()){
+                log.error(error.reportString());
+            }
             return;
         } catch (IOException e) {
             log.error("IOException converting " + this.inputFile, e);
