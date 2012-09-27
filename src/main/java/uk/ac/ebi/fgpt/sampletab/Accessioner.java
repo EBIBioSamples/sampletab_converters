@@ -11,6 +11,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLRecoverableException;
 import java.util.Collection;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -65,51 +66,6 @@ public class Accessioner {
         doSetup();
     }
     
-    private String getAccession(Connection connect, String table, String userAccession, String submissionAccession) throws SQLException{
-
-        String prefix;
-        if (table.toLowerCase().equals("sample_assay")){
-            prefix = "SAMEA";
-        } else if (table.toLowerCase().equals("sample_groups")){
-            prefix = "SAMEG";
-        } else if (table.toLowerCase().equals("sample_reference")){
-            prefix = "SAME";
-        } else {
-            throw new IllegalArgumentException("invalud table "+table);
-        }
-        
-        PreparedStatement statement = null;
-        ResultSet results = null;
-        String accession = null;
-        try {
-            statement = connect.prepareStatement("SELECT accession FROM " + table
-                    + " WHERE user_accession LIKE ? AND submission_accession LIKE ? LIMIT 1");
-            statement.setString(1, userAccession);
-            statement.setString(2, submissionAccession);
-            results = statement.executeQuery();
-            results.first();
-            Integer accessionID = results.getInt(1);
-            accession = prefix + accessionID;
-        } finally {
-            if (statement != null){
-                try {
-                    statement.close();
-                } catch (SQLException e){
-                    //do nothing
-                }
-            }
-            if (results != null){
-                try {
-                    results.close();
-                } catch (SQLException e){
-                    //do nothing
-                }
-            }
-        }
-        
-        return accession;
-    }
-
     
     private void doSetup() throws ClassNotFoundException, SQLException{
         //this will only setup for the first instance
@@ -151,6 +107,212 @@ public class Accessioner {
         return convert(parser.parse(dataIn));
     }
 
+    private void bulkSamples(SampleData sd, String submissionID, String prefix, String table) throws SQLException{
+
+        Connection connect = null;
+        PreparedStatement statement = null;
+        ResultSet results = null;
+        
+        try {
+            //first do one query to retrieve all that have already got accessions
+            connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+            statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM " + table
+                    + " WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
+            statement.setString(1, submissionID);
+            log.trace(statement.toString());
+            results = statement.executeQuery();
+            while (results.next()){
+                String samplename = results.getString(1).trim();
+                int accessionID = results.getInt(2);
+                String accession = prefix + accessionID;
+                SampleNode sample = sd.scd.getNode(samplename, SampleNode.class);
+                log.trace(samplename+" : "+accession);
+                if (sample != null){
+                    sample.setSampleAccession(accession);
+                } else {
+                    log.warn("Unable to find SCD sample node "+samplename+" in submission "+submissionID);
+                }
+            }
+        } catch (SQLRecoverableException e) {
+            bulkSamples(sd, submissionID, prefix, table);
+        } finally {
+            if (statement != null){
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+            if (results != null){
+                try {
+                    results.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+        }
+    }
+
+    private void bulkGroups(SampleData sd, String submissionID) throws SQLException{
+
+        Connection connect = null;
+        PreparedStatement statement = null;
+        ResultSet results = null;
+        
+        try {
+
+            connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+            statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM SAMPLE_GROUPS WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
+            statement.setString(1, submissionID);
+            log.trace(statement.toString());
+            results = statement.executeQuery();
+            while (results.next()){
+                String groupname = results.getString(1).trim();
+                int accessionID = results.getInt(2);
+                String accession = "SAMEG" + accessionID;
+                GroupNode group = sd.scd.getNode(groupname, GroupNode.class);
+                log.trace(groupname+" : "+accession);
+                if (group != null){
+                    group.setGroupAccession(accession);
+                } else {
+                    log.warn("Unable to find SCD group node "+groupname+" in submission "+submissionID);
+                }
+            }
+        } catch (SQLRecoverableException e) {
+            bulkGroups(sd, submissionID);
+        } finally {
+            if (statement != null){
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+            if (results != null){
+                try {
+                    results.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+        }
+    }
+
+    private void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table) throws SQLException{
+
+        Connection connect = null;
+        PreparedStatement statement = null;
+        ResultSet results = null;
+        
+        try {
+            if (sample.getSampleAccession() == null) {
+                String name = sample.getNodeName().trim();
+
+                log.info("Assigning new accession for "+submissionID+" : "+name);
+                
+                //insert it if not exists
+                connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+                statement = connect
+                        .prepareStatement("INSERT INTO "
+                                + table
+                                + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
+                statement.setString(1, name);
+                statement.setString(2, submissionID);
+                log.trace(statement.toString());
+                statement.executeUpdate();
+                statement.close();
+
+                connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+                statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
+                        + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
+                statement.setString(1, name);
+                statement.setString(2, submissionID);
+                log.trace(statement.toString());
+                results = statement.executeQuery();
+                results.next();
+                Integer accessionID = results.getInt(1);
+                String accession = prefix + accessionID;
+                statement.close();
+                results.close();
+
+                log.debug("Assigning " + accession + " to " + name);
+                sample.setSampleAccession(accession);
+            }
+        } catch (SQLRecoverableException e) {
+            singleSample(sd, sample, submissionID, prefix, table);
+        } finally {
+            if (statement != null){
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+            if (results != null){
+                try {
+                    results.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+        }
+    }
+
+    private void singleGroup(SampleData sd, GroupNode group, String submissionID) throws SQLException{
+
+        Connection connect = null;
+        PreparedStatement statement = null;
+        ResultSet results = null;
+        
+        try {
+            if (group.getGroupAccession() == null) {
+                String name = group.getNodeName();
+                connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+                statement = connect
+                        .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
+                statement.setString(1, name);
+                statement.setString(2, submissionID);
+                log.info(name);
+                log.info(submissionID);
+                statement.executeUpdate();
+                statement.close();
+
+                connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+                statement = connect
+                        .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
+                statement.setString(1, name);
+                statement.setString(2, submissionID);
+                log.trace(statement.toString());
+                results = statement.executeQuery();
+                results.next();
+                int accessionID = results.getInt(1);
+                String accession = "SAMEG" + accessionID;
+                statement.close();
+                results.close();
+
+                log.debug("Assigning " + accession + " to " + name);
+                group.setGroupAccession(accession);
+            }
+        } catch (SQLRecoverableException e) {
+            singleGroup(sd, group, submissionID);
+        } finally {
+            if (statement != null){
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+            if (results != null){
+                try {
+                    results.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+        }
+    }
+    
     public SampleData convert(SampleData sampleIn) throws ParseException, SQLException {
         String table = null;
         String prefix = null;
@@ -164,166 +326,31 @@ public class Accessioner {
             throw new ParseException("Must specify a Submission Reference Layer MSI attribute.");
         }
 
-
-        Collection<SampleNode> samples = sampleIn.scd.getNodes(SampleNode.class);
-
-        log.debug("got " + samples.size() + " samples.");
         String name;
         String submission = sampleIn.msi.submissionIdentifier;
         if (submission == null){
             throw new ParseException("Submission Identifier cannot be null");
         }
         submission = submission.trim();
-        int accessionID;
-        String accession;
         
-        Connection connect = null;
-        PreparedStatement statement = null;
-        ResultSet results = null;
+        log.info("Starting accessioning");
         
-        try {
-            connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
-            log.info("Starting accessioning");
-            
-            
-            //first do one query to retrieve all that have already got accessions
-            long start = System.currentTimeMillis();
-            statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM " + table
-                    + " WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
-            statement.setString(1, submission);
-            log.trace(statement.toString());
-            results = statement.executeQuery();
-            long end = System.currentTimeMillis();
-            log.debug("Time elapsed = "+(end-start)+"ms");
-            while (results.next()){
-                String samplename = results.getString(1).trim();
-                accessionID = results.getInt(2);
-                accession = prefix + accessionID;
-                SampleNode sample = sampleIn.scd.getNode(samplename, SampleNode.class);
-                log.trace(samplename+" : "+accession);
-                if (sample != null){
-                    sample.setSampleAccession(accession);
-                } else {
-                    log.warn("Unable to find SCD sample node "+samplename+" in submission "+submission);
-                }
-            }
-            //TODO try finally this
-            statement.close();
-            results.close();
-            
+        
+        //first do one query to retrieve all that have already got accessions
+        bulkSamples(sampleIn, submission, prefix, table);         
+        bulkGroups(sampleIn, submission);                      
+        
+        
+        //now assign and retrieve accessions for samples that do not have them
+        Collection<SampleNode> samples = sampleIn.scd.getNodes(SampleNode.class);
+        for (SampleNode sample : samples) {
+            singleSample(sampleIn, sample, submission, prefix, table);
+        }
 
-            statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM SAMPLE_GROUPS WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
-            statement.setString(1, submission);
-            log.trace(statement.toString());
-            results = statement.executeQuery();
-            while (results.next()){
-                String groupname = results.getString(1).trim();
-                accessionID = results.getInt(2);
-                accession = prefix + accessionID;
-                GroupNode group = sampleIn.scd.getNode(groupname, GroupNode.class);
-                log.trace(groupname+" : "+accession);
-                if (group != null){
-                    group.setGroupAccession(accession);
-                } else {
-                    log.warn("Unable to find SCD group node "+groupname+" in submission "+submission);
-                }
-            }
-            //TODO try finally this
-            statement.close();
-            results.close();
-            
-            
-            //now assign and retrieve accessions for samples that do not have them
-            for (SampleNode sample : samples) {
-                if (sample.getSampleAccession() == null) {
-                    name = sample.getNodeName().trim();
-
-                    log.info("Assigning new accession for "+submission+" : "+name);
-                    
-                    //insert it if not exists
-                    start = System.currentTimeMillis();
-                    statement = connect
-                            .prepareStatement("INSERT INTO "
-                                    + table
-                                    + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
-                    statement.setString(1, name);
-                    statement.setString(2, submission);
-                    log.trace(statement.toString());
-                    statement.executeUpdate();
-                    statement.close();
-                    end = System.currentTimeMillis();
-                    log.info("Time elapsed = "+(end-start)+"ms");
-
-                    statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
-                            + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
-                    statement.setString(1, name);
-                    statement.setString(2, submission);
-                    log.trace(statement.toString());
-                    results = statement.executeQuery();
-                    results.next();
-                    accessionID = results.getInt(1);
-                    accession = prefix + accessionID;
-                    statement.close();
-                    results.close();
-
-                    log.debug("Assigning " + accession + " to " + name);
-                    sample.setSampleAccession(accession);
-                }
-            }
-
-            Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
-
-            log.debug("got " + groups.size() + " groups.");
-            for (GroupNode group : groups) {
-                if (group.getGroupAccession() == null) {
-                    name = group.getNodeName();
-                    statement = connect
-                            .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
-                    statement.setString(1, name);
-                    statement.setString(2, submission);
-                    log.info(name);
-                    log.info(submission);
-                    statement.executeUpdate();
-                    statement.close();
-
-                    statement = connect
-                            .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
-                    statement.setString(1, name);
-                    statement.setString(2, submission);
-                    log.trace(statement.toString());
-                    results = statement.executeQuery();
-                    results.next();
-                    accessionID = results.getInt(1);
-                    accession = "SAMEG" + accessionID;
-                    statement.close();
-                    results.close();
-
-                    log.debug("Assigning " + accession + " to " + name);
-                    group.setGroupAccession(accession);
-                }
-            }
-        } finally {
-            if (results != null){
-                try {
-                    results.close();
-                } catch (Exception e) {
-                    //do nothing
-                }
-            }
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (Exception e) {
-                    //do nothing
-                }
-            }
-            if (connect != null) {
-                try {
-                    connect.close();
-                } catch (Exception e) {
-                    //do nothing
-                }
-            }
+        Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
+        log.debug("got " + groups.size() + " groups.");
+        for (GroupNode group : groups) {
+            singleGroup(sampleIn, group, submission);
         }
 
         return sampleIn;
