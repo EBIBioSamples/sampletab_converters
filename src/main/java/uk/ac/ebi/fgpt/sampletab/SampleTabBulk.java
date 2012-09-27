@@ -43,19 +43,19 @@ public class SampleTabBulk {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
 
-    @Option(name = "-n", aliases={"--hostname"}, usage = "MySQL server hostname")
+    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
     private String hostname;
 
-    @Option(name = "-t", aliases={"--port"}, usage = "MySQL server port")
+    @Option(name = "-t", aliases={"--port"}, usage = "server port")
     private Integer port = null;
 
-    @Option(name = "-d", aliases={"--database"}, usage = "MySQL server database")
+    @Option(name = "-d", aliases={"--database"}, usage = "server database")
     private String database = null;
 
-    @Option(name = "-u", aliases={"--username"}, usage = "MySQL server username")
+    @Option(name = "-u", aliases={"--username"}, usage = "server username")
     private String username = null;
 
-    @Option(name = "-p", aliases={"--password"}, usage = "MySQL server password")
+    @Option(name = "-p", aliases={"--password"}, usage = "server password")
     private String password  = null;
 
     @Option(name = "--agename", usage = "Age server hostname")
@@ -86,7 +86,7 @@ public class SampleTabBulk {
             InputStream is = SampleTabBulk.class.getResourceAsStream("/oracle.properties");
             mysqlProperties.load(is);
         } catch (IOException e) {
-            log.error("Unable to read resource mysql.properties", e);
+            log.error("Unable to read resource oracle.properties", e);
         }
         this.hostname = mysqlProperties.getProperty("hostname");
         this.port = new Integer(mysqlProperties.getProperty("port"));
