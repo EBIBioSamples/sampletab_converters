@@ -150,6 +150,13 @@ public class Accessioner {
                     //do nothing
                 }
             }
+            if (connect != null){
+                try {
+                    connect.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
         }
     }
 
@@ -191,6 +198,13 @@ public class Accessioner {
             if (results != null){
                 try {
                     results.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+            if (connect != null){
+                try {
+                    connect.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
@@ -255,6 +269,13 @@ public class Accessioner {
                     //do nothing
                 }
             }
+            if (connect != null){
+                try {
+                    connect.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
         }
     }
 
@@ -306,6 +327,13 @@ public class Accessioner {
             if (results != null){
                 try {
                     results.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+            if (connect != null){
+                try {
+                    connect.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
