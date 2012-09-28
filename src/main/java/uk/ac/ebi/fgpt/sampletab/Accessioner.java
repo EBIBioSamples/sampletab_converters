@@ -13,6 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLRecoverableException;
 import java.util.Collection;
+import java.util.Properties;
+
+import oracle.jdbc.pool.OracleDataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.ConnectionFactory;
@@ -44,15 +47,12 @@ public class Accessioner {
 
     private String password;
     
-    private static boolean setup = false;
-    private static ObjectPool connectionPool = new GenericObjectPool();
+    private OracleDataSource ods;
 
     private final SampleTabValidator validator = new SampleTabValidator();
     private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
 
     private Logger log = LoggerFactory.getLogger(getClass());
-    
-    private BasicDataSource ds;
 
     public Accessioner(String host, int port, String database, String username, String password)
             throws ClassNotFoundException, SQLException {
@@ -67,33 +67,30 @@ public class Accessioner {
     }
     
     
+    @SuppressWarnings("deprecation")
     private void doSetup() throws ClassNotFoundException, SQLException{
-        //this will only setup for the first instance
-        //therefore do not try to mix and match different connections in the same VM
-        if (setup){
-            return;
-        }
 
-        String connectURI = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
-        connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
-        ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI, username, password);
-        PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(connectionFactory, connectionPool, null, null, false, true);
-        Class.forName("com.mysql.jdbc.Driver");
-        Class.forName("oracle.jdbc.driver.OracleDriver");
-        Class.forName("org.apache.commons.dbcp.PoolingDriver");
-        PoolingDriver driver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
-        driver.registerPool("accessioner", connectionPool);
-
-        //
-        // Now we can just use the connect string "jdbc:apache:commons:dbcp:example"
-        // to access our pool of Connections.
-        //        
+        String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
         
-        setup = true;
+        ods = new OracleDataSource();
+        ods.setURL(connectURI);
+        ods.setUser(username);
+        ods.setPassword(password);
+        // caching params
+        ods.setConnectionCachingEnabled(true);
+        ods.setConnectionCacheName("STAccessioning");
+        Properties cacheProps = new Properties();
+        cacheProps.setProperty("MinLimit", "1");
+        cacheProps.setProperty("MaxLimit", "4");
+        cacheProps.setProperty("InitialLimit", "1");
+        cacheProps.setProperty("ConnectionWaitTimeout", "5");
+        cacheProps.setProperty("ValidateConnection", "true");
+
+        ods.setConnectionCacheProperties(cacheProps);
     }
     
-    private Connection getConnection() throws SQLException{
-        return DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+    private Connection getConnection() throws SQLException{        
+        return ods.getConnection();
     }
     
     public SampleData convert(String sampleTabFilename) throws IOException, ParseException, SQLException {
