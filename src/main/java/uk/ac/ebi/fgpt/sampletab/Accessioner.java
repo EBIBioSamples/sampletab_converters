@@ -77,20 +77,23 @@ public class Accessioner {
         ods.setUser(username);
         ods.setPassword(password);
         // caching params
+        // see http://docs.oracle.com/cd/E11882_01/java.112/e16548/concache.htm#CDEBCBJC
         ods.setConnectionCachingEnabled(true);
         ods.setConnectionCacheName("STAccessioning");
         Properties cacheProps = new Properties();
-        cacheProps.setProperty("MinLimit", "1");
-        cacheProps.setProperty("MaxLimit", "4");
-        cacheProps.setProperty("InitialLimit", "1");
-        cacheProps.setProperty("ConnectionWaitTimeout", "5");
+        cacheProps.setProperty("MaxLimit", "5");
+        cacheProps.setProperty("ConnectionWaitTimeout", "60");
         cacheProps.setProperty("ValidateConnection", "true");
 
         ods.setConnectionCacheProperties(cacheProps);
     }
     
-    private Connection getConnection() throws SQLException{        
-        return ods.getConnection();
+    private Connection getConnection() throws SQLException {        
+        Connection c = ods.getConnection();
+        if (c == null){
+            throw new SQLRecoverableException("Unable to find connection");
+        }
+        return c;
     }
     
     public SampleData convert(String sampleTabFilename) throws IOException, ParseException, SQLException {
@@ -166,7 +169,7 @@ public class Accessioner {
         }
     }
 
-    private void bulkGroups(SampleData sd, String submissionID, int retries) throws SQLException{
+    private void bulkGroups(SampleData sd, String submissionID, int retries) throws SQLException {
 
         Connection connect = null;
         PreparedStatement statement = null;
