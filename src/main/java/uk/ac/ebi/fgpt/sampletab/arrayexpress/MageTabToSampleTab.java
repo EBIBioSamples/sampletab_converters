@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.IDF;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.SDRF;
+import uk.ac.ebi.arrayexpress2.magetab.datamodel.graph.Node;
+import uk.ac.ebi.arrayexpress2.magetab.datamodel.graph.utils.GraphUtils;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.ExtractNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.LabeledExtractNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SDRFNode;
@@ -39,6 +41,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -49,17 +52,17 @@ import uk.ac.ebi.fgpt.sampletab.CorrectorTermSource;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class MageTabToSampleTab {
-	private final MAGETABParser<MAGETABInvestigation> parser;
+    private final MAGETABParser<MAGETABInvestigation> parser;
     private final List<ErrorItem> errorItems;
 
-	private SimpleDateFormat magetabdateformat = new SimpleDateFormat(
-			"yyyy-MM-dd");
+    private SimpleDateFormat magetabdateformat = new SimpleDateFormat(
+            "yyyy-MM-dd");
 
-	// logging
-	public Logger log = LoggerFactory.getLogger(getClass());
+    // logging
+    public Logger log = LoggerFactory.getLogger(getClass());
 
-	public MageTabToSampleTab() {
-	    parser = new MAGETABParser<MAGETABInvestigation>();
+    public MageTabToSampleTab() {
+        parser = new MAGETABParser<MAGETABInvestigation>();
         errorItems = new ArrayList<ErrorItem>();
 
         parser.addErrorItemListener(new ErrorItemListener() {
@@ -68,14 +71,14 @@ public class MageTabToSampleTab {
                 errorItems.add(item);
             }
         });
-	    
-	}
+        
+    }
 
-	public SampleData convert(String idfFilename) throws IOException, ParseException {
-		return convert(new File(idfFilename));
-	}
+    public SampleData convert(String idfFilename) throws IOException, ParseException {
+        return convert(new File(idfFilename));
+    }
 
-	public SampleData convert(File idfFile) throws IOException, ParseException {
+    public SampleData convert(File idfFile) throws IOException, ParseException {
         //A few IDF files specify multiple SDRF files which may not all have been downloaded.
         //Due to a bug in Limpopo, this can cause Limpopo to hang indefinitely.
         //therefore, first parse the IDF only to see if this is something to avoid.
@@ -96,10 +99,10 @@ public class MageTabToSampleTab {
             }
             throw new ParseException();
         }
-		return convert(mt);
-	}
-	
-	private void convertPublications(MAGETABInvestigation mt, SampleData st){
+        return convert(mt);
+    }
+    
+    private void convertPublications(MAGETABInvestigation mt, SampleData st){
         for (int i = 0; i < mt.IDF.publicationDOI.size() || i < mt.IDF.pubMedId.size(); i++){
             String doi = null;
             if (i < mt.IDF.publicationDOI.size()){
@@ -114,8 +117,8 @@ public class MageTabToSampleTab {
                 st.msi.publications.add(pub);
             }
         }
-	}
-	
+    }
+    
     private void convertPeople(MAGETABInvestigation mt, SampleData st){
         for (int i = 0; i < mt.IDF.personLastName.size() || 
             i < mt.IDF.personMidInitials.size() || 
@@ -203,180 +206,176 @@ public class MageTabToSampleTab {
         throw new IllegalArgumentException("Unable to find term source "+name);
     }
         
-	public SampleData convert(MAGETABInvestigation mt)
-			throws ParseException {
+    private void processCharacteristics(List<CharacteristicsAttribute> characteristics, SCDNode scdnode, MAGETABInvestigation mt, SampleData st){
+        for (CharacteristicsAttribute sdrfcharacteristic : characteristics) {
+            
+            if (sdrfcharacteristic.getAttributeValue() != null && sdrfcharacteristic.getAttributeValue().trim().length() > 0){
+                CharacteristicAttribute scdcharacteristic = new CharacteristicAttribute();
+            
+                scdcharacteristic.type = sdrfcharacteristic.type;
+                scdcharacteristic.setAttributeValue(sdrfcharacteristic
+                        .getAttributeValue());
+                if (sdrfcharacteristic.unit != null) {
+                    scdcharacteristic.unit = new UnitAttribute();
+                    if (sdrfcharacteristic.unit.termSourceREF != null 
+                            && sdrfcharacteristic.unit.termSourceREF.length() > 0 
+                            && sdrfcharacteristic.unit.termAccessionNumber != null
+                            && sdrfcharacteristic.unit.termAccessionNumber.length() > 0){
+                        scdcharacteristic.unit.setTermSourceREF(convertTermSource(sdrfcharacteristic.unit.termSourceREF, mt, st));
+                        scdcharacteristic.unit.setTermSourceID(sdrfcharacteristic.unit.termAccessionNumber);
+                    }
+                } else {
+                    if (sdrfcharacteristic.termSourceREF != null 
+                            && sdrfcharacteristic.termSourceREF.length() > 0 
+                            && sdrfcharacteristic.termAccessionNumber != null
+                            && sdrfcharacteristic.termAccessionNumber.length() > 0){
+                        scdcharacteristic.setTermSourceREF(convertTermSource(sdrfcharacteristic.termSourceREF, mt, st));
+                        scdcharacteristic.setTermSourceID(sdrfcharacteristic.termAccessionNumber);
+                    }
+                }
+                scdnode.addAttribute(scdcharacteristic);
+            }
+        }
+    }
+    
+    private void processComments(Map<String, String> comments, SCDNode scdnode){
+        if (comments != null ){
+            for (String key : comments.keySet()) {
+                CommentAttribute comment = new CommentAttribute();
+                comment.type = key;
+                comment.setAttributeValue(comments.get(key));
+                scdnode.addAttribute(comment);
+            }
+        }
+    }
+    
+    public SCDNode convertNode(Node sdrfnode, MAGETABInvestigation mt, SampleData st) throws ParseException{
 
-		SampleData st = new SampleData();
-		st.msi.submissionTitle = mt.IDF.investigationTitle;
-		String description = mt.IDF.experimentDescription;
-		description = description.replaceAll("\t", " ");
-		st.msi.submissionDescription = description;
-		if (mt.IDF.publicReleaseDate == null){
-		    //null release date
-		    //ArrayExpress defaults to private
-		    //so set a date in the far future
+        boolean useable = false;
+        List<CharacteristicsAttribute> characteristics = null;
+        Map<String, String> comments = null;
+        
+        // horribly long class references due to namespace collision
+        synchronized(uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode.class){
+            if (uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode.class.isInstance(sdrfnode)){
+                useable = true;
+                uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode nodeB = (uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode) sdrfnode;
+                characteristics = nodeB.characteristics;
+                comments = nodeB.comments;
+            }
+        }
+        
+        synchronized(SourceNode.class){
+            if (SourceNode.class.isInstance(sdrfnode)){
+                useable = true;
+                SourceNode nodeB = (SourceNode) sdrfnode;
+                characteristics = nodeB.characteristics;
+                comments = nodeB.comments;
+            }
+        }
+        
+        if (useable){
+            String name = sdrfnode.getNodeName();
+            
+            SampleNode scdnode = st.scd.getNode(name, SampleNode.class);
+            
+            if (scdnode == null){
+                scdnode = new SampleNode();
+                log.info("processing " + name);
+                scdnode.setNodeName(name);
+    
+                processCharacteristics(characteristics, scdnode, mt, st);
+                
+                processComments(comments, scdnode);
+                            
+                st.scd.addNode(scdnode);
+                
+                
+                for (Node childSDRFNode : GraphUtils.findDownstreamNodes(sdrfnode, uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode.class)){
+                    SCDNode childSCDNode = convertNode(childSDRFNode, mt, st);
+                    if (childSCDNode != null){
+                        scdnode.addChildNode(childSCDNode);
+                        childSCDNode.addParentNode(scdnode);
+                    }
+                }
+                
+                for (Node childSDRFNode : GraphUtils.findDownstreamNodes(sdrfnode, SourceNode.class)){
+                    SCDNode childSCDNode = convertNode(childSDRFNode, mt, st);
+                    if (childSCDNode != null){
+                        scdnode.addChildNode(childSCDNode);
+                        childSCDNode.addParentNode(scdnode);
+                    }
+                }
+            }
+            return scdnode;
+        }
+        return null;
+    }
+    
+    public SampleData convert(MAGETABInvestigation mt)
+            throws ParseException {
+
+        SampleData st = new SampleData();
+        st.msi.submissionTitle = mt.IDF.investigationTitle;
+        st.msi.submissionDescription = mt.IDF.experimentDescription;
+        if (mt.IDF.publicReleaseDate == null){
+            //null release date
+            //ArrayExpress defaults to private
+            //so set a date in the far future
             SampleTabUtils.releaseInACentury(st);
-		    
-		} else if (mt.IDF.publicReleaseDate != null && !mt.IDF.publicReleaseDate.trim().equals("")) {
-			try{
-			    st.msi.submissionReleaseDate = magetabdateformat
-					.parse(mt.IDF.publicReleaseDate.trim());
-			} catch (java.text.ParseException e){
-				log.error("Unable to parse release date "+mt.IDF.publicReleaseDate);
-			}
-		}
-		//dont do an update date - current date will be used by default
-		st.msi.submissionIdentifier = "GA" + mt.IDF.accession;
-		st.msi.submissionReferenceLayer = false;
-		
-		convertPublications(mt, st);
-		convertPeople(mt, st);
-		convertOrganizations(mt,st);
+            
+        } else if (mt.IDF.publicReleaseDate != null && !mt.IDF.publicReleaseDate.trim().equals("")) {
+            try{
+                st.msi.submissionReleaseDate = magetabdateformat
+                    .parse(mt.IDF.publicReleaseDate.trim());
+            } catch (java.text.ParseException e){
+                log.error("Unable to parse release date "+mt.IDF.publicReleaseDate);
+            }
+        }
+        st.msi.submissionIdentifier = "GA" + mt.IDF.accession;
+        st.msi.submissionReferenceLayer = false;
+        
+        convertPublications(mt, st);
+        convertPeople(mt, st);
+        convertOrganizations(mt,st);
 
-		st.msi.databases.add(new Database("ArrayExpress", 
-		        "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
-		        mt.IDF.accession));
-		
-		// get the nodes that have relevant sample information
-		// e.g. characteristics
-		Collection<SDRFNode> samplenodes = new ArrayList<SDRFNode>();
-		for (SDRFNode node : mt.SDRF.getNodes("sourcename")) {
-			samplenodes.add(node);
-		}
-		for (SDRFNode node : mt.SDRF.getNodes("samplename")) {
-			samplenodes.add(node);
-		}
-		for (SDRFNode node : mt.SDRF.getNodes("extractname")) {
-			samplenodes.add(node);
-		}
-		for (SDRFNode node : mt.SDRF.getNodes("labeledextractname")) {
-			samplenodes.add(node);
-		}
+        st.msi.databases.add(new Database("ArrayExpress", 
+                "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
+                mt.IDF.accession));
 
-		// now get nodes that are the topmost nodes
-		ArrayList<SDRFNode> topnodes = new ArrayList<SDRFNode>();
-		for (SDRFNode node : samplenodes) {
-			if (node.getParentNodes().size() == 0) {
-				topnodes.add(node);
-			}
-		}
-
-		log.debug("Creating node names");
-		// create a sample from each topmost node
-		for (SDRFNode sdrfnode : topnodes) {
-
-		    
-			SampleNode scdnode = new SampleNode();
-			String name = sdrfnode.getNodeName();
-			log.debug("processing " + name);
-			scdnode.setNodeName(name);
-			
-			//TODO cascade down related nodes of the same top-level node?
-			//e.g. extracts taken from samples
-			
-			// since some attributes only exist for some sub-classes, need to
-			// test
-			// for instanceof for each of those sub-classes, cast accordingly
-			// and then access the attributes
-			List<CharacteristicsAttribute> characteristics = null;
-			Map<String, String> comments = null;
-			if (uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode.class.isInstance(sdrfnode)) {
-				// horribly long class references due to namespace collision
-				uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode sdrfsamplenode = (uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode) sdrfnode;
-				scdnode.setSampleDescription(sdrfsamplenode.description);
-				characteristics = sdrfsamplenode.characteristics;
-				comments = sdrfsamplenode.comments;
-			} else if (SourceNode.class.isInstance(sdrfnode)) {
-				SourceNode sdrfsourcenode = (SourceNode) sdrfnode;
-				scdnode.setSampleDescription(sdrfsourcenode.description);
-				characteristics = sdrfsourcenode.characteristics;
-				comments = sdrfsourcenode.comments;
-			} else if (ExtractNode.class.isInstance(sdrfnode)) {
-				ExtractNode sdrfextractnode = (ExtractNode) sdrfnode;
-				scdnode.setSampleDescription(sdrfextractnode.description);
-				characteristics = sdrfextractnode.characteristics;
-				comments = sdrfextractnode.comments;
-			} else if (LabeledExtractNode.class.isInstance(sdrfnode)) {
-				LabeledExtractNode sdrflabeledextractnode = (LabeledExtractNode) sdrfnode;
-				scdnode.setSampleDescription(sdrflabeledextractnode.description);
-				characteristics = sdrflabeledextractnode.characteristics;
-				comments = sdrflabeledextractnode.comments;
-			}
-
-			log.debug("got characteristics");
-			if (characteristics != null) {
-				for (CharacteristicsAttribute sdrfcharacteristic : characteristics) {
-					
-					if (sdrfcharacteristic.getAttributeValue() != null && sdrfcharacteristic.getAttributeValue().trim().length() > 0){
-	                    CharacteristicAttribute scdcharacteristic = new CharacteristicAttribute();
-					
-    					scdcharacteristic.type = sdrfcharacteristic.type;
-    					scdcharacteristic.setAttributeValue(sdrfcharacteristic
-    							.getAttributeValue());
-    					if (sdrfcharacteristic.unit != null) {
-    						scdcharacteristic.unit = new UnitAttribute();
-                            if (sdrfcharacteristic.unit.termSourceREF != null 
-                                    && sdrfcharacteristic.unit.termSourceREF.length() > 0 
-                                    && sdrfcharacteristic.unit.termAccessionNumber != null
-                                    && sdrfcharacteristic.unit.termAccessionNumber.length() > 0){
-        						scdcharacteristic.unit.setTermSourceREF(convertTermSource(sdrfcharacteristic.unit.termSourceREF, mt, st));
-        						scdcharacteristic.unit.setTermSourceID(sdrfcharacteristic.unit.termAccessionNumber);
-    						}
-    					} else {
-    					    if (sdrfcharacteristic.termSourceREF != null 
-    					            && sdrfcharacteristic.termSourceREF.length() > 0 
-    					            && sdrfcharacteristic.termAccessionNumber != null
-                                    && sdrfcharacteristic.termAccessionNumber.length() > 0){
-            					scdcharacteristic.setTermSourceREF(convertTermSource(sdrfcharacteristic.termSourceREF, mt, st));
-            					scdcharacteristic.setTermSourceID(sdrfcharacteristic.termAccessionNumber);
-        					}
-    					}
-    					scdnode.addAttribute(scdcharacteristic);
-					}
-				}
-			}
-			
-			log.debug("got comments");
-			if (comments != null) {
-				for (String key : comments.keySet()) {
-					CommentAttribute comment = new CommentAttribute();
-					comment.type = key;
-					comment.setAttributeValue(comments.get(key));
-					scdnode.addAttribute(comment);
-				}
-			}
-
-			st.scd.addNode(scdnode);
-		}
-		
-		//correct any term source issues here first
+        log.debug("Creating node names");
+        for (SDRFNode sdrfnode : mt.SDRF.getRootNodes()) {
+            convertNode(sdrfnode, mt, st);
+        }
+        
+        //correct any term source issues here first
         CorrectorTermSource cts = new CorrectorTermSource();
         cts.correct(st);
-		
-		log.info("Finished convert()");
-		return st;
-	}
+        
+        log.info("Finished convert()");
+        return st;
+    }
 
-	public void convert(MAGETABInvestigation mt, Writer writer)
-			throws IOException, ParseException {
-	    log.debug("recieved magetab, preparing to convert");
-		SampleData st = convert(mt);
-		log.debug("sampletab converted, preparing to output");
-		
-		Validator<SampleData> validator = new SampleTabValidator();
-		validator.validate(st);
-		
-		SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
-		log.debug("created SampleTabWriter");
-		sampletabwriter.write(st);
-		sampletabwriter.close();
+    public void convert(MAGETABInvestigation mt, Writer writer)
+            throws IOException, ParseException {
+        log.debug("recieved magetab, preparing to convert");
+        SampleData st = convert(mt);
+        log.debug("sampletab converted, preparing to output");
+        
+        Validator<SampleData> validator = new SampleTabValidator();
+        validator.validate(st);
+        
+        SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
+        log.debug("created SampleTabWriter");
+        sampletabwriter.write(st);
+        sampletabwriter.close();
 
-	}
+    }
 
-	public void convert(File idfFile, Writer writer) throws IOException,
-			ParseException {
+    public void convert(File idfFile, Writer writer) throws IOException,
+            ParseException {
         //a few idf files specify multiple sdrf files which may not all have been downloaded
-        //due to a bug in limpopo, this can cause limpopo to hang indefinately.
+        //due to a bug in limpopo, this can cause limpopo to hang indefinitely.
         //therefore, first parse the idf only to see if this is something to avoid.
 
         log.info("Parsing IDF");
@@ -390,7 +389,7 @@ public class MageTabToSampleTab {
         }
         
         errorItems.clear();
-		MAGETABInvestigation mt = parser.parse(idfFile);
+        MAGETABInvestigation mt = parser.parse(idfFile);
         if (!errorItems.isEmpty()) {
             // there are error items, print them and fail
             for (ErrorItem error : errorItems){
@@ -398,49 +397,49 @@ public class MageTabToSampleTab {
             }
             throw new ParseException();
         }
-		
-		convert(mt, writer);
-	}
+        
+        convert(mt, writer);
+    }
 
-	public void convert(File idffile, String stfilename) throws IOException,
-			ParseException {
-		convert(idffile, new File(stfilename));
-	}
+    public void convert(File idffile, String stfilename) throws IOException,
+            ParseException {
+        convert(idffile, new File(stfilename));
+    }
 
-	public void convert(File idffile, File stfile) throws IOException,
-			ParseException {
-		convert(idffile, new FileWriter(stfile));
-	}
+    public void convert(File idffile, File stfile) throws IOException,
+            ParseException {
+        convert(idffile, new FileWriter(stfile));
+    }
 
-	public void convert(String idffilename, Writer writer) throws IOException,
-			ParseException {
-		convert(new File(idffilename), writer);
-	}
+    public void convert(String idffilename, Writer writer) throws IOException,
+            ParseException {
+        convert(new File(idffilename), writer);
+    }
 
-	public void convert(String idffilename, File stfile) throws IOException,
-			ParseException, java.text.ParseException {
-		convert(idffilename, new BufferedWriter(new FileWriter(stfile)));
-	}
+    public void convert(String idffilename, File stfile) throws IOException,
+            ParseException, java.text.ParseException {
+        convert(idffilename, new BufferedWriter(new FileWriter(stfile)));
+    }
 
-	public void convert(String idffilename, String stfilename)
-			throws IOException, ParseException, java.text.ParseException {
-		convert(idffilename, new File(stfilename));
-	}
+    public void convert(String idffilename, String stfilename)
+            throws IOException, ParseException, java.text.ParseException {
+        convert(idffilename, new File(stfilename));
+    }
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
         new MageTabToSampleTab().doMain(args);
     }
 
     public void doMain(String[] args) {
-		if (args.length < 2) {
-			System.out
-					.println("Must provide an MAGETAB IDF filename and a SampleTab output filename.");
-			System.exit(1);
-			return;
-		}
-		String idfFilename = args[0];
-		String sampleTabFilename = args[1];
-		
+        if (args.length < 2) {
+            System.out
+                    .println("Must provide an MAGETAB IDF filename and a SampleTab output filename.");
+            System.exit(1);
+            return;
+        }
+        String idfFilename = args[0];
+        String sampleTabFilename = args[1];
+        
         //a few idf files specify multiple sdrf files which may not all have been downloaded
         //due to a bug in limpopo, this can cause limpopo to hang indefinitely.
         //therefore, first parse the idf only to see if this is something to avoid.
@@ -462,7 +461,7 @@ public class MageTabToSampleTab {
             return;
         }
 
-		try {
+        try {
             convert(idfFilename, sampleTabFilename);
         } catch (IOException e) {
             log.error("Error converting "+idfFilename, e);
@@ -477,5 +476,5 @@ public class MageTabToSampleTab {
             System.exit(4);
             return;
         }
-	}
+    }
 }
