@@ -36,10 +36,11 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttributeOntology;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
-
+import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 @SuppressWarnings("restriction")
 public class SampleTabToGUIXML {
@@ -58,30 +59,6 @@ public class SampleTabToGUIXML {
     public static void main(String[] args) {
         new SampleTabToGUIXML().doMain(args);
     }
-    
-    public static String stripNonValidXMLCharacters(String in) {
-        //from http://blog.mark-mclaren.info/2007/02/invalid-xml-characters-when-valid-utf8_5873.html
-
-        if (in == null){ 
-            return null;
-        }
-        
-        StringBuffer out = new StringBuffer(); // Used to hold the output.
-        char current; // Used to reference the current character.
-        
-        for (int i = 0; i < in.length(); i++) {
-            current = in.charAt(i); // NOTE: No IndexOutOfBoundsException caught here; it should not happen.
-            if ((current == 0x9) ||
-                (current == 0xA) ||
-                (current == 0xD) ||
-                ((current >= 0x20) && (current <= 0xD7FF)) ||
-                ((current >= 0xE000) && (current <= 0xFFFD)) ||
-                ((current >= 0x10000) && (current <= 0x10FFFF))){
-                out.append(current);
-            }
-        }
-        return out.toString();
-    } 
 
     private void writeAttribute(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, String value) throws XMLStreamException{
         xmlWriter.writeStartElement("attribute");
@@ -91,7 +68,70 @@ public class SampleTabToGUIXML {
         if (value != null){
             xmlWriter.writeStartElement("value");
             
-            value = stripNonValidXMLCharacters(value);
+            value = XMLUtils.stripNonValidXMLCharacters(value);
+            xmlWriter.writeCharacters(value);
+            xmlWriter.writeEndElement(); //value
+        }
+        xmlWriter.writeEndElement(); //attribute
+    }
+
+    private void writeAttribute(XMLStreamWriter xmlWriter, AbstractNodeAttributeOntology attr, SampleData st) throws XMLStreamException{
+        String cls = attr.getAttributeType();
+        String value = attr.getAttributeValue();
+        xmlWriter.writeStartElement("attribute");
+        xmlWriter.writeAttribute("class", cls);
+        xmlWriter.writeAttribute("classDefined", "false");
+        xmlWriter.writeAttribute("dataType", "STRING");
+        if (value != null){
+            xmlWriter.writeStartElement("value");
+            if (attr.getTermSourceREF() != null && attr.getTermSourceREF().trim().length() > 0
+                    && attr.getTermSourceID() != null && attr.getTermSourceID().trim().length() > 0){
+            //ontology stuff
+            /*
+<attribute class="Organism" classDefined="false" dataType="STRING">
+    <value>
+        <attribute class="Term Source REF" classDefined="true" dataType="OBJECT">
+            <value>
+                <object id="NCBI Taxonomy" class="Term Source" classDefined="true">
+                    <attribute class="Term Source Name" classDefined="true" dataType="STRING">
+                        <value>NCBI Taxonomy</value>
+                    </attribute>
+                    <attribute class="Term Source URI" classDefined="true" dataType="URI">
+                        <value>http://www.ncbi.nlm.nih.gov/taxonomy</value>
+                    </attribute>
+                </object>
+            </value>
+        </attribute>
+        <attribute class="Term Source ID" classDefined="true" dataType="STRING">
+            <value>9606</value>
+        </attribute>
+        Homo sapiens
+    </value>
+</attribute>
+             */
+                xmlWriter.writeStartElement("attribute");
+                xmlWriter.writeAttribute("class", "Term Source REF");
+                xmlWriter.writeAttribute("classDefined", "true");
+                xmlWriter.writeAttribute("dataType", "OBJECT");
+                xmlWriter.writeStartElement("value");
+                
+                xmlWriter.writeStartElement("object");
+                xmlWriter.writeAttribute("id", attr.getTermSourceREF());
+                xmlWriter.writeAttribute("class", "Term Source REF");
+                xmlWriter.writeAttribute("classDefined", "true");
+
+                TermSource ts = st.msi.getTermSource(attr.getTermSourceREF());
+                writeAttribute(xmlWriter, "Term Source Name", "true", "STRING", ts.getName());
+                writeAttribute(xmlWriter, "Term Source URI", "true", "URI", ts.getURI());
+                //TODO Term Source Version?
+
+                xmlWriter.writeEndElement(); //object
+                xmlWriter.writeEndElement(); //value
+                xmlWriter.writeEndElement(); //attribute
+                writeAttribute(xmlWriter, "Term Source ID", "true", "STRING", attr.getTermSourceID());
+            }
+            
+            value = XMLUtils.stripNonValidXMLCharacters(value);
             xmlWriter.writeCharacters(value);
             xmlWriter.writeEndElement(); //value
         }
@@ -347,7 +387,13 @@ public class SampleTabToGUIXML {
                                 
                                 for (SCDNodeAttribute a : sample.getAttributes()){
                                     if (a.getAttributeValue() != null && a.getAttributeValue().length()>0){
-                                        writeAttribute(xmlWriter, a.getAttributeType(), "false", "STRING", a.getAttributeValue());
+                                        synchronized(AbstractNodeAttributeOntology.class){
+                                            if (AbstractNodeAttributeOntology.class.isInstance(a)){
+                                                writeAttribute(xmlWriter, (AbstractNodeAttributeOntology) a, sd);
+                                            } else {
+                                                writeAttribute(xmlWriter, a.getAttributeType(), "false", "STRING", a.getAttributeValue());
+                                            }
+                                        }
                                         attributeTypes.add(a.getAttributeType());
                                         log.debug("Attribute "+a.getAttributeType()+" "+a.getAttributeValue());
                                     }
@@ -358,8 +404,8 @@ public class SampleTabToGUIXML {
                                     //these should all be samples, but have to check anyway...
                                     if (SampleNode.class.isInstance(p)) {
                                         SampleNode parent = (SampleNode) p;
-                                        writeAttribute(xmlWriter, "derived from", "false", "STRING", parent.getSampleAccession());
-                                        attributeTypes.add("derived from");
+                                        writeAttribute(xmlWriter, "Derived From", "false", "STRING", parent.getSampleAccession());
+                                        attributeTypes.add("Derived From");
                                     }
                                 }
                                 
