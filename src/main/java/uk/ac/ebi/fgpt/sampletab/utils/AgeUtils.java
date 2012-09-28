@@ -101,11 +101,12 @@ public class AgeUtils {
                     if (line.trim().length() == 0){
                         continue;
                     }
+                    line = line.trim();
                     
                     //DEBUG
-                    log.info(line);
+                    log.info("$ "+line);
                     String[] parts = line.split(" ");
-                    if (parts.length == 2){
+                    if (parts.length == 3){
                         String subid = parts[1].replace(":", "");
                         String tag = parts[2];
                         if (!tags.containsKey(subid)){
