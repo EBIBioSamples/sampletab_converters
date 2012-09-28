@@ -245,7 +245,7 @@ public class Accessioner {
                 statement.executeUpdate();
                 statement.close();
 
-                connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+                connect = getConnection();
                 statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
                         + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
                 statement.setString(1, name);
@@ -311,7 +311,7 @@ public class Accessioner {
                 statement.executeUpdate();
                 statement.close();
 
-                connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+                connect = getConnection();
                 statement = connect
                         .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
                 statement.setString(1, name);
