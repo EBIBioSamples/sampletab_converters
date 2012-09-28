@@ -91,6 +91,11 @@ public class Accessioner {
         
         setup = true;
     }
+    
+    private Connection getConnection() throws SQLException{
+        return DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+    }
+    
     public SampleData convert(String sampleTabFilename) throws IOException, ParseException, SQLException {
         return convert(new File(sampleTabFilename));
     }
@@ -107,7 +112,7 @@ public class Accessioner {
         return convert(parser.parse(dataIn));
     }
 
-    private void bulkSamples(SampleData sd, String submissionID, String prefix, String table) throws SQLException{
+    private void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries) throws SQLException{
 
         Connection connect = null;
         PreparedStatement statement = null;
@@ -115,7 +120,7 @@ public class Accessioner {
         
         try {
             //first do one query to retrieve all that have already got accessions
-            connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+            connect = getConnection();
             statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM " + table
                     + " WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
             statement.setString(1, submissionID);
@@ -134,7 +139,11 @@ public class Accessioner {
                 }
             }
         } catch (SQLRecoverableException e) {
-            bulkSamples(sd, submissionID, prefix, table);
+            if (retries > 0){
+                bulkSamples(sd, submissionID, prefix, table, retries -1);
+            } else {
+                throw e;
+            }
         } finally {
             if (statement != null){
                 try {
@@ -160,15 +169,14 @@ public class Accessioner {
         }
     }
 
-    private void bulkGroups(SampleData sd, String submissionID) throws SQLException{
+    private void bulkGroups(SampleData sd, String submissionID, int retries) throws SQLException{
 
         Connection connect = null;
         PreparedStatement statement = null;
         ResultSet results = null;
         
         try {
-
-            connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+            connect = getConnection();
             statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM SAMPLE_GROUPS WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
             statement.setString(1, submissionID);
             log.trace(statement.toString());
@@ -186,7 +194,11 @@ public class Accessioner {
                 }
             }
         } catch (SQLRecoverableException e) {
-            bulkGroups(sd, submissionID);
+            if (retries > 0){
+                bulkGroups(sd, submissionID, retries -1);
+            } else {
+                throw e;
+            }
         } finally {
             if (statement != null){
                 try {
@@ -212,7 +224,7 @@ public class Accessioner {
         }
     }
 
-    private void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table) throws SQLException{
+    private void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries) throws SQLException{
 
         Connection connect = null;
         PreparedStatement statement = null;
@@ -225,7 +237,7 @@ public class Accessioner {
                 log.info("Assigning new accession for "+submissionID+" : "+name);
                 
                 //insert it if not exists
-                connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+                connect = getConnection();
                 statement = connect
                         .prepareStatement("INSERT INTO "
                                 + table
@@ -253,7 +265,11 @@ public class Accessioner {
                 sample.setSampleAccession(accession);
             }
         } catch (SQLRecoverableException e) {
-            singleSample(sd, sample, submissionID, prefix, table);
+            if (retries > 0){
+                singleSample(sd, sample, submissionID, prefix, table, retries -1);
+            } else {
+                throw e;
+            }
         } finally {
             if (statement != null){
                 try {
@@ -279,7 +295,7 @@ public class Accessioner {
         }
     }
 
-    private void singleGroup(SampleData sd, GroupNode group, String submissionID) throws SQLException{
+    private void singleGroup(SampleData sd, GroupNode group, String submissionID, int retries) throws SQLException{
 
         Connection connect = null;
         PreparedStatement statement = null;
@@ -288,7 +304,7 @@ public class Accessioner {
         try {
             if (group.getGroupAccession() == null) {
                 String name = group.getNodeName();
-                connect = DriverManager.getConnection("jdbc:apache:commons:dbcp:accessioner");
+                connect = getConnection();
                 statement = connect
                         .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
                 statement.setString(1, name);
@@ -315,7 +331,11 @@ public class Accessioner {
                 group.setGroupAccession(accession);
             }
         } catch (SQLRecoverableException e) {
-            singleGroup(sd, group, submissionID);
+            if (retries > 0){
+                singleGroup(sd, group, submissionID, retries -1);
+            } else {
+                throw e;
+            }
         } finally {
             if (statement != null){
                 try {
@@ -365,20 +385,20 @@ public class Accessioner {
         
         
         //first do one query to retrieve all that have already got accessions
-        bulkSamples(sampleIn, submission, prefix, table);         
-        bulkGroups(sampleIn, submission);                      
+        bulkSamples(sampleIn, submission, prefix, table, 10);         
+        bulkGroups(sampleIn, submission, 10);                      
         
         
         //now assign and retrieve accessions for samples that do not have them
         Collection<SampleNode> samples = sampleIn.scd.getNodes(SampleNode.class);
         for (SampleNode sample : samples) {
-            singleSample(sampleIn, sample, submission, prefix, table);
+            singleSample(sampleIn, sample, submission, prefix, table, 10);
         }
 
         Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
         log.debug("got " + groups.size() + " groups.");
         for (GroupNode group : groups) {
-            singleGroup(sampleIn, group, submission);
+            singleGroup(sampleIn, group, submission, 10);
         }
 
         return sampleIn;
