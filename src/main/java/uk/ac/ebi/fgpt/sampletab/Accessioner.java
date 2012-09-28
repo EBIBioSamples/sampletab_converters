@@ -15,6 +15,7 @@ import java.sql.SQLRecoverableException;
 import java.util.Collection;
 import java.util.Properties;
 
+import oracle.jdbc.pool.OracleConnectionCacheManager;
 import oracle.jdbc.pool.OracleDataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -83,15 +84,15 @@ public class Accessioner {
         Properties cacheProps = new Properties();
         cacheProps.setProperty("MaxLimit", "5");
         cacheProps.setProperty("ConnectionWaitTimeout", "60");
-        cacheProps.setProperty("ValidateConnection", "true");
-
+        //cacheProps.setProperty("ValidateConnection", "true");
         ods.setConnectionCacheProperties(cacheProps);
     }
-    
-    private Connection getConnection() throws SQLException {        
+
+    @SuppressWarnings("deprecation")
+    private Connection getConnection() throws SQLException {   
         Connection c = ods.getConnection();
         if (c == null){
-            throw new SQLRecoverableException("Unable to find connection");
+            throw new SQLException("Unable to find connection");
         }
         return c;
     }
@@ -112,7 +113,7 @@ public class Accessioner {
         return convert(parser.parse(dataIn));
     }
 
-    private void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries) throws SQLException{
+    private void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries) throws SQLException {
 
         Connection connect = null;
         PreparedStatement statement = null;
