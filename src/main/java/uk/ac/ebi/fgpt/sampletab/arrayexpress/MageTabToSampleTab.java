@@ -180,7 +180,11 @@ public class MageTabToSampleTab {
         }
     }
     
-    private String convertTermSource(String name, MAGETABInvestigation mt, SampleData st){
+    private String convertTermSource(String name, MAGETABInvestigation mt, SampleData st) throws ParseException{
+        name = name.trim();
+        if (name.length()==0){
+            throw new ParseException("Cannot convert blankly named term source");
+        }
         for (int i = 0; i < mt.IDF.termSourceName.size(); i++){
             String tsname = null;
             if (i < mt.IDF.termSourceName.size()){
@@ -203,7 +207,7 @@ public class MageTabToSampleTab {
                 return st.msi.getOrAddTermSource(ts);
             }
         }
-        throw new IllegalArgumentException("Unable to find term source "+name);
+        throw new ParseException("Unable to find term source "+name);
     }
         
     private void processCharacteristics(List<CharacteristicsAttribute> characteristics, SCDNode scdnode, MAGETABInvestigation mt, SampleData st){
@@ -215,13 +219,14 @@ public class MageTabToSampleTab {
                 scdcharacteristic.type = sdrfcharacteristic.type;
                 scdcharacteristic.setAttributeValue(sdrfcharacteristic
                         .getAttributeValue());
+                try {
                 if (sdrfcharacteristic.unit != null) {
                     scdcharacteristic.unit = new UnitAttribute();
                     if (sdrfcharacteristic.unit.termSourceREF != null 
                             && sdrfcharacteristic.unit.termSourceREF.length() > 0 
                             && sdrfcharacteristic.unit.termAccessionNumber != null
                             && sdrfcharacteristic.unit.termAccessionNumber.length() > 0){
-                        scdcharacteristic.unit.setTermSourceREF(convertTermSource(sdrfcharacteristic.unit.termSourceREF, mt, st));
+                            scdcharacteristic.unit.setTermSourceREF(convertTermSource(sdrfcharacteristic.unit.termSourceREF, mt, st));
                         scdcharacteristic.unit.setTermSourceID(sdrfcharacteristic.unit.termAccessionNumber);
                     }
                 } else {
@@ -232,6 +237,9 @@ public class MageTabToSampleTab {
                         scdcharacteristic.setTermSourceREF(convertTermSource(sdrfcharacteristic.termSourceREF, mt, st));
                         scdcharacteristic.setTermSourceID(sdrfcharacteristic.termAccessionNumber);
                     }
+                }
+                } catch (ParseException e) {
+                    log.warn("Unable to handle term source", e);
                 }
                 scdnode.addAttribute(scdcharacteristic);
             }
@@ -254,6 +262,7 @@ public class MageTabToSampleTab {
         boolean useable = false;
         List<CharacteristicsAttribute> characteristics = null;
         Map<String, String> comments = null;
+        String prefix = null;
         
         // horribly long class references due to namespace collision
         synchronized(uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode.class){
@@ -262,6 +271,7 @@ public class MageTabToSampleTab {
                 uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode nodeB = (uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode) sdrfnode;
                 characteristics = nodeB.characteristics;
                 comments = nodeB.comments;
+                prefix = "sample";
             }
         }
         
@@ -271,6 +281,7 @@ public class MageTabToSampleTab {
                 SourceNode nodeB = (SourceNode) sdrfnode;
                 characteristics = nodeB.characteristics;
                 comments = nodeB.comments;
+                prefix = "source";
             }
         }
         
@@ -282,28 +293,38 @@ public class MageTabToSampleTab {
             if (scdnode == null){
                 scdnode = new SampleNode();
                 log.info("processing " + name);
-                scdnode.setNodeName(name);
+                scdnode.setNodeName(prefix+" "+name);
     
                 processCharacteristics(characteristics, scdnode, mt, st);
                 
                 processComments(comments, scdnode);
                             
                 st.scd.addNode(scdnode);
-                
-                
-                for (Node childSDRFNode : GraphUtils.findDownstreamNodes(sdrfnode, uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode.class)){
-                    SCDNode childSCDNode = convertNode(childSDRFNode, mt, st);
-                    if (childSCDNode != null){
-                        scdnode.addChildNode(childSCDNode);
-                        childSCDNode.addParentNode(scdnode);
+                List<uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode> downstreamSamples = new ArrayList<uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode>();
+                downstreamSamples.addAll(GraphUtils.findDownstreamNodes(sdrfnode, uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode.class));
+                //if this is a source node with a single downstream sample
+                if (prefix.equals("source") && downstreamSamples.size() == 1){
+                    //combine it with the existing node
+                    uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode childSDRFNode = downstreamSamples.get(0);
+                    processCharacteristics(childSDRFNode.characteristics, scdnode, mt, st);
+                    processComments(childSDRFNode.comments, scdnode);
+                    //maybe add the samples nodes name as a synonym?
+                } else {
+                    //otherwise process all downstream nodes
+                    for (Node childSDRFNode : downstreamSamples){
+                        SCDNode childSCDNode = convertNode(childSDRFNode, mt, st);
+                        if (childSCDNode != null){
+                            scdnode.addChildNode(childSCDNode);
+                            childSCDNode.addParentNode(scdnode);
+                        }
                     }
-                }
-                
-                for (Node childSDRFNode : GraphUtils.findDownstreamNodes(sdrfnode, SourceNode.class)){
-                    SCDNode childSCDNode = convertNode(childSDRFNode, mt, st);
-                    if (childSCDNode != null){
-                        scdnode.addChildNode(childSCDNode);
-                        childSCDNode.addParentNode(scdnode);
+                    
+                    for (Node childSDRFNode : GraphUtils.findDownstreamNodes(sdrfnode, SourceNode.class)){
+                        SCDNode childSCDNode = convertNode(childSDRFNode, mt, st);
+                        if (childSCDNode != null){
+                            scdnode.addChildNode(childSCDNode);
+                            childSCDNode.addParentNode(scdnode);
+                        }
                     }
                 }
             }
@@ -352,7 +373,15 @@ public class MageTabToSampleTab {
         CorrectorTermSource cts = new CorrectorTermSource();
         cts.correct(st);
         
+        
+        //simple sanity check to avoid generating stupid files
+        if (st.scd.getAllNodes().size() == 0){
+            log.error("Zero nodes converted");
+            throw new ParseException("Zero nodes converted");
+        }
+        
         log.info("Finished convert()");
+        
         return st;
     }
 

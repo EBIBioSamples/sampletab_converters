@@ -54,6 +54,8 @@ public class TestMageTabToSampleTab extends TestCase {
 			assertSame("Titles should match", st.msi.submissionTitle, mt.IDF.investigationTitle);
 			//assertSame("Titles should match", st.msi.submissionTitle, "Transcription profiling of wild type and DREB2C over-expression Arabidopsis plants");
 			
+			assertTrue("Has at least one SCD node", st.scd.getAllNodes().size() > 0);
+			
 			StringWriter out = new StringWriter();
 			SampleTabWriter sampletabwriter = new SampleTabWriter(out);
 			try {
