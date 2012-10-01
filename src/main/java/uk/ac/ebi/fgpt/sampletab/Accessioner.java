@@ -71,6 +71,11 @@ public class Accessioner {
     @SuppressWarnings("deprecation")
     private void doSetup() throws ClassNotFoundException, SQLException{
 
+        if (ods != null){
+            ods.close();
+            ods = null;
+        }
+        
         String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
         
         ods = new OracleDataSource();
@@ -80,11 +85,11 @@ public class Accessioner {
         // caching params
         // see http://docs.oracle.com/cd/E11882_01/java.112/e16548/concache.htm#CDEBCBJC
         ods.setConnectionCachingEnabled(true);
-        ods.setConnectionCacheName("STAccessioning");
+        //ods.setConnectionCacheName("STAccessioning");
         Properties cacheProps = new Properties();
         cacheProps.setProperty("MaxLimit", "5");
         cacheProps.setProperty("ConnectionWaitTimeout", "60");
-        //cacheProps.setProperty("ValidateConnection", "true");
+        cacheProps.setProperty("ValidateConnection", "true");
         ods.setConnectionCacheProperties(cacheProps);
     }
 

@@ -73,7 +73,7 @@ public class SampleTabToLoad {
 
     private final SampleTabValidator validator = new LoadValidator();
     private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
-
+    private Accessioner accessioner;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -93,6 +93,21 @@ public class SampleTabToLoad {
         this.hostname = host;
         this.port = port;
         this.database = database;
+        
+        try {
+            this.accessioner = new Accessioner(hostname, 
+                    port, database, username, password);
+        } catch (ClassNotFoundException e) {
+            log.error("Unable to create accessioner", e);
+        } catch (SQLException e) {
+            log.error("Unable to create accessioner", e);
+        }
+    }
+
+    public SampleTabToLoad(Accessioner accessioner)
+            throws ClassNotFoundException {
+        this();
+        this.accessioner = accessioner;
     }
     
     public Logger getLog() {
@@ -232,9 +247,6 @@ public class SampleTabToLoad {
 
         log.info("completed initial conversion, re-accessioning...");
         
-        // get an accessioner and connect to database
-        Accessioner accessioner = new Accessioner(hostname, port, database, username, password);
-
         // assign accession to any created groups
         sampledata = accessioner.convert(sampledata);
         
@@ -361,6 +373,17 @@ public class SampleTabToLoad {
             System.err.println();
             System.exit(1);
             return;
+        }
+        
+        if (accessioner == null){
+            try {
+                accessioner = new Accessioner(hostname, 
+                        port, database, username, password);
+            } catch (ClassNotFoundException e) {
+                log.error("Unable to create accessioner", e);
+            } catch (SQLException e) {
+                log.error("Unable to create accessioner", e);
+            }
         }
 
         log.info("Looking for input files " + inputFilename);

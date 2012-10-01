@@ -73,6 +73,7 @@ public class SampleTabBulk {
 
     private Corrector corrector = new Corrector();
     private DerivedFrom derivedFrom = new DerivedFrom();
+    private Accessioner accessioner = null;
     private SameAs sameAs = new SameAs();
     
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -93,6 +94,15 @@ public class SampleTabBulk {
         this.database = mysqlProperties.getProperty("database");
         this.username = mysqlProperties.getProperty("username");
         this.password = mysqlProperties.getProperty("password");
+        
+        try {
+            accessioner = new Accessioner(hostname, 
+                    port, database, username, password);
+        } catch (ClassNotFoundException e) {
+            log.error("Unable to create accessioner", e);
+        } catch (SQLException e) {
+            log.error("Unable to create accessioner", e);
+        }
         
         Properties ageProperties = new Properties();
         try {
@@ -128,39 +138,34 @@ public class SampleTabBulk {
     }
     
     public void process(File subdir, File scriptdir){
-        Runnable t = new DoProcessFile(subdir, scriptdir, hostname, port, database, username, password, agename, ageusername, agepassword, noload, corrector, sameAs, derivedFrom);
+        Runnable t = new DoProcessFile(subdir, scriptdir, agename, ageusername, agepassword, noload, corrector, accessioner, sameAs, derivedFrom);
         t.run();
     }
     
     private static class DoProcessFile implements Runnable {
         private final File subdir;
         private final File scriptdir;
-        private File sampletabpre;
-        private File sampletab;
-        private File sampletabtoload;
-        private File agedir;
-        private File agefile;
-        private File loaddir;
-        private File loadfile;
-
-        private String hostname; 
-        private int port;
-        private String database;
-        private String username;
-        private String password;
+        private final File sampletabpre;
+        private final File sampletab;
+        private final File sampletabtoload;
+        private final File agedir;
+        private final File agefile;
+        private final File loaddir;
+        private final File loadfile;
         
-        private String agename;
-        private String ageusername;
-        private String agepassword;
-        private boolean noLoad;
+        private final String agename;
+        private final String ageusername;
+        private final String agepassword;
+        private final boolean noLoad;
         
-        private Corrector corrector;
-        private SameAs sameAs;
-        private DerivedFrom derivedFrom;
+        private final Corrector corrector;
+        private final SameAs sameAs;
+        private final DerivedFrom derivedFrom;
+        private final Accessioner accessioner;
         
         private Logger log = LoggerFactory.getLogger(getClass());
         
-        public DoProcessFile(File subdir, File scriptdir, String hostname, int port, String database, String username, String password, String agename, String ageusername, String agepassword, boolean noLoad, Corrector corrector, SameAs sameAs, DerivedFrom derivedFrom){
+        public DoProcessFile(File subdir, File scriptdir, String agename, String ageusername, String agepassword, boolean noLoad, Corrector corrector, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom){
             this.subdir = subdir;
             this.scriptdir = scriptdir;
             
@@ -172,12 +177,6 @@ public class SampleTabBulk {
             loaddir = new File(subdir, "load");
             loadfile = new File(loaddir, subdir.getName()+".SUCCESS");
             
-            this.hostname = hostname;
-            this.port = port;
-            this.database = database;
-            this.username = username;
-            this.password = password;
-            
             this.agename = agename;
             this.ageusername = ageusername;
             this.agepassword = agepassword;
@@ -186,6 +185,7 @@ public class SampleTabBulk {
             this.corrector = corrector;
             this.sameAs = sameAs;
             this.derivedFrom = derivedFrom;
+            this.accessioner = accessioner;
         }
 
         public void run() {
@@ -208,12 +208,7 @@ public class SampleTabBulk {
                 
                 
                 try {
-                    Accessioner accessioner = new Accessioner(hostname, 
-                            port, database, username, password);
                     accessioner.convert(st);
-                } catch (ClassNotFoundException e) {
-                    log.error("Problem processing "+sampletabpre, e);
-                    return;
                 } catch (ParseException e) {
                     log.error("Problem processing "+sampletabpre, e);
                     return;
@@ -279,8 +274,7 @@ public class SampleTabBulk {
 
                 SampleTabToLoad c;
                 try {
-                    c = new SampleTabToLoad(hostname, 
-                            port, database, username, password);
+                    c = new SampleTabToLoad(accessioner);
                     c.convert(sampletab, sampletabtoload);
                 } catch (ClassNotFoundException e) {
                     log.error("Problem processing "+sampletab, e);
@@ -367,7 +361,7 @@ public class SampleTabBulk {
                 subdir = subdir.getParentFile();
             }
             log.info("Processing "+subdir);
-            Runnable t = new DoProcessFile(subdir, scriptdir, hostname, port, database, username, password, agename, ageusername, agepassword, noload, corrector, sameAs, derivedFrom);
+            Runnable t = new DoProcessFile(subdir, scriptdir, agename, ageusername, agepassword, noload, corrector, accessioner, sameAs, derivedFrom);
             if (threaded) {
                 pool.execute(t);
             } else {
