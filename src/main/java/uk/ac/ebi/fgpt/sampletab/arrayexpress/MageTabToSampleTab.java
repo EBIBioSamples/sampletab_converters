@@ -287,19 +287,20 @@ public class MageTabToSampleTab {
         
         if (useable){
             String name = sdrfnode.getNodeName();
-            
+            name = prefix+" "+name;
             SampleNode scdnode = st.scd.getNode(name, SampleNode.class);
             
             if (scdnode == null){
                 scdnode = new SampleNode();
+                scdnode.setNodeName(name);
                 log.info("processing " + name);
-                scdnode.setNodeName(prefix+" "+name);
     
                 processCharacteristics(characteristics, scdnode, mt, st);
                 
                 processComments(comments, scdnode);
                             
                 st.scd.addNode(scdnode);
+                
                 List<uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode> downstreamSamples = new ArrayList<uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode>();
                 downstreamSamples.addAll(GraphUtils.findDownstreamNodes(sdrfnode, uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode.class));
                 //if this is a source node with a single downstream sample
