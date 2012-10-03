@@ -167,6 +167,27 @@ public class MageTabBulk {
             } else if (idffilename.equals("E-GEOD-9344.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
                 return;
+            } else if (idffilename.equals("E-GEOD-10348.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-12578.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-15186.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-16159.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-16579.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-19553.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-39977.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
             } else if (idffilename.equals("E-GEOD-40727.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
