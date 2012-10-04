@@ -137,6 +137,227 @@ public class SampleTabToGUIXML {
         }
         xmlWriter.writeEndElement(); //attribute
     }
+    
+    public void writeSampleData(XMLStreamWriter xmlWriter, SampleData sd) throws XMLStreamException{
+
+        //NB. this assumes all samples are in a group. This is a condition of the .toload.txt files
+        //but not of sampletab.txt files.
+        
+        for (GroupNode g : sd.scd.getNodes(GroupNode.class)){
+            
+            if (g.getGroupAccession() == null){
+                log.warn("Group has null accession "+g.getNodeName()+" ("+sd.msi.submissionIdentifier+")");
+                continue;
+            }
+            
+            log.debug("Group "+g.getNodeName());
+            
+            xmlWriter.writeStartElement("SampleGroup");
+            xmlWriter.writeAttribute("id", g.getGroupAccession());
+
+            writeAttribute(xmlWriter, "Submission Title", "true", "STRING", sd.msi.submissionTitle);
+            writeAttribute(xmlWriter, "Submission Identifier", "true", "STRING", sd.msi.submissionIdentifier);
+            writeAttribute(xmlWriter, "Submission Description", "true", "STRING", sd.msi.submissionDescription);
+            writeAttribute(xmlWriter, "Submission Version", "true", "STRING", sd.msi.submissionVersion);
+            writeAttribute(xmlWriter, "Submission Reference Layer", "true", "BOOLEAN", sd.msi.submissionReferenceLayer.toString());
+            writeAttribute(xmlWriter, "Submission Release Date", "true", "STRING", sd.msi.getSubmissionReleaseDateAsString());
+            writeAttribute(xmlWriter, "Submission Modification Date", "true", "STRING", sd.msi.getSubmissionUpdateDateAsString());
+            writeAttribute(xmlWriter, "Name", "true", "BOOLEAN", g.getNodeName());
+            writeAttribute(xmlWriter, "Group Accession", "true", "BOOLEAN", g.getGroupAccession());
+            //group description?
+            
+            //organizations   
+            if (sd.msi.organizations.size() > 0){
+                xmlWriter.writeStartElement("attribute");
+                xmlWriter.writeAttribute("class", "Organizations");
+                xmlWriter.writeAttribute("classDefined", "true");
+                xmlWriter.writeAttribute("dataType", "OBJECT");
+                xmlWriter.writeStartElement("value");                     
+                for (Integer i = 0; i < sd.msi.organizations.size(); i++){
+                    Organization o = sd.msi.organizations.get(i);
+                    if (o != null){
+                        xmlWriter.writeStartElement("object");
+                        xmlWriter.writeAttribute("id", "Org"+i.toString());
+                        xmlWriter.writeAttribute("class", "Organization");
+                        xmlWriter.writeAttribute("classDefined", "true");
+
+                        writeAttribute(xmlWriter, "Organization Name", "true", "STRING", o.getName());
+                        writeAttribute(xmlWriter, "Organization Address", "true", "STRING", o.getAddress());
+                        writeAttribute(xmlWriter, "Organization URI", "true", "STRING", o.getURI());
+                        writeAttribute(xmlWriter, "Organization Email", "true", "STRING", o.getEmail());
+                        writeAttribute(xmlWriter, "Organization Role", "true", "STRING", o.getRole());
+                        
+                        xmlWriter.writeEndElement(); //object
+                    }
+                }
+                xmlWriter.writeEndElement(); //value
+                xmlWriter.writeEndElement(); //organizations
+            }
+            
+            //persons
+            if (sd.msi.persons.size() > 0){
+                xmlWriter.writeStartElement("attribute");
+                xmlWriter.writeAttribute("class", "Persons");
+                xmlWriter.writeAttribute("classDefined", "true");
+                xmlWriter.writeAttribute("dataType", "OBJECT");
+                xmlWriter.writeStartElement("value");                     
+                for (Integer i = 0; i < sd.msi.persons.size(); i++){
+                    Person p = sd.msi.persons.get(i);
+                    if (p != null){
+                        xmlWriter.writeStartElement("object");
+                        xmlWriter.writeAttribute("id", "Per"+i.toString());
+                        xmlWriter.writeAttribute("class", "Person");
+                        xmlWriter.writeAttribute("classDefined", "true");
+
+                        writeAttribute(xmlWriter, "Person Last Name", "true", "STRING", p.getLastName());
+                        writeAttribute(xmlWriter, "Person Initials", "true", "STRING", p.getInitials());
+                        writeAttribute(xmlWriter, "Person First Name", "true", "STRING", p.getFirstName());
+                        writeAttribute(xmlWriter, "Person Email", "true", "STRING", p.getEmail());
+                        writeAttribute(xmlWriter, "Person Role", "true", "STRING", p.getRole());
+                        
+                        xmlWriter.writeEndElement(); //object
+                    }
+                }
+                xmlWriter.writeEndElement(); //value
+                xmlWriter.writeEndElement(); //persons
+            }
+            
+            //publications
+            if (sd.msi.publications.size() > 0){
+                xmlWriter.writeStartElement("attribute");
+                xmlWriter.writeAttribute("class", "Publications");
+                xmlWriter.writeAttribute("classDefined", "true");
+                xmlWriter.writeAttribute("dataType", "OBJECT");
+                xmlWriter.writeStartElement("value");                     
+                for (Integer i = 0; i < sd.msi.publications.size(); i++){
+                    Publication p = sd.msi.publications.get(i);
+                    if (p != null){
+                        xmlWriter.writeStartElement("object");
+                        xmlWriter.writeAttribute("id", "Pub"+i.toString());
+                        xmlWriter.writeAttribute("class", "Publication");
+                        xmlWriter.writeAttribute("classDefined", "true");
+
+                        writeAttribute(xmlWriter, "Publication PubMed ID", "true", "STRING", p.getPubMedID());
+                        writeAttribute(xmlWriter, "Publication DOI", "true", "STRING", p.getDOI());
+                        
+                        xmlWriter.writeEndElement(); //object
+                    }
+                }
+                xmlWriter.writeEndElement(); //value
+                xmlWriter.writeEndElement(); //publications
+            }
+            
+            //term sources
+            if (sd.msi.termSources.size() > 0){
+                xmlWriter.writeStartElement("attribute");
+                xmlWriter.writeAttribute("class", "Term Sources");
+                xmlWriter.writeAttribute("classDefined", "true");
+                xmlWriter.writeAttribute("dataType", "OBJECT");
+                xmlWriter.writeStartElement("value");                     
+                for (Integer i = 0; i < sd.msi.termSources.size(); i++){
+                    TermSource t = sd.msi.termSources.get(i);
+                    if (t != null && t.getName() != null){
+                        xmlWriter.writeStartElement("object");
+                        xmlWriter.writeAttribute("id", t.getName());
+                        xmlWriter.writeAttribute("class", "Term Source");
+                        xmlWriter.writeAttribute("classDefined", "true");
+
+                        writeAttribute(xmlWriter, "Term Source Name", "true", "STRING", t.getName());
+                        writeAttribute(xmlWriter, "Term Source URI", "true", "STRING", t.getURI());
+                        writeAttribute(xmlWriter, "Term Source Version", "true", "STRING", t.getVersion());
+                        
+                        xmlWriter.writeEndElement(); //object
+                    }
+                }
+                xmlWriter.writeEndElement(); //value
+                xmlWriter.writeEndElement(); //term sources
+            }
+            
+            //database entries
+            if (sd.msi.databases.size() > 0){
+                xmlWriter.writeStartElement("attribute");
+                xmlWriter.writeAttribute("class", "Databases");
+                xmlWriter.writeAttribute("classDefined", "true");
+                xmlWriter.writeAttribute("dataType", "OBJECT");
+                xmlWriter.writeStartElement("value");                     
+                for (Integer i = 0; i < sd.msi.databases.size(); i++){
+                    Database d = sd.msi.databases.get(i);
+                    if (d != null){
+                        xmlWriter.writeStartElement("object");
+                        xmlWriter.writeAttribute("id", "Dat"+i.toString());
+                        xmlWriter.writeAttribute("class", "Database");
+                        xmlWriter.writeAttribute("classDefined", "true");
+
+                        writeAttribute(xmlWriter, "Database Name", "true", "STRING", d.getName());
+                        writeAttribute(xmlWriter, "Database ID", "true", "STRING", d.getID());
+                        writeAttribute(xmlWriter, "Database URI", "true", "STRING", d.getURI());
+                        
+                        xmlWriter.writeEndElement(); //object
+                    }
+                }
+                xmlWriter.writeEndElement(); //value
+                xmlWriter.writeEndElement(); //databaases
+            }
+            
+            Set<String> attributeTypes = new HashSet<String>();
+            
+            for (Node s : g.getParentNodes()) {
+                log.debug("Node "+s.getNodeName());
+                //these should all be samples, but have to check anyway...
+                if (SampleNode.class.isInstance(s)) {
+                    SampleNode sample = (SampleNode) s;
+                    xmlWriter.writeStartElement("Sample");
+                    xmlWriter.writeAttribute("groupId", g.getGroupAccession());
+                    xmlWriter.writeAttribute("id", sample.getSampleAccession());
+
+                    writeAttribute(xmlWriter, "Name", "false", "STRING", sample.getNodeName());
+                    attributeTypes.add("Name");
+                    
+                    writeAttribute(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
+                    attributeTypes.add("Sample Accession");
+                    
+                    writeAttribute(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
+                    attributeTypes.add("Sample Description");
+                    
+                    for (SCDNodeAttribute a : sample.getAttributes()){
+                        if (a.getAttributeValue() != null && a.getAttributeValue().length()>0){
+                            synchronized(AbstractNodeAttributeOntology.class){
+                                if (AbstractNodeAttributeOntology.class.isInstance(a)){
+                                    writeAttribute(xmlWriter, (AbstractNodeAttributeOntology) a, sd);
+                                } else {
+                                    writeAttribute(xmlWriter, a.getAttributeType(), "false", "STRING", a.getAttributeValue());
+                                }
+                            }
+                            attributeTypes.add(a.getAttributeType());
+                            log.debug("Attribute "+a.getAttributeType()+" "+a.getAttributeValue());
+                        }
+                    }
+                    
+                    //implicit derived from
+                    for (Node p : s.getParentNodes()) { 
+                        //these should all be samples, but have to check anyway...
+                        if (SampleNode.class.isInstance(p)) {
+                            SampleNode parent = (SampleNode) p;
+                            writeAttribute(xmlWriter, "Derived From", "false", "STRING", parent.getSampleAccession());
+                            attributeTypes.add("Derived From");
+                        }
+                    }
+                    
+                    xmlWriter.writeEndElement(); //Sample
+                }
+            }
+            
+            //write out precomputed attribute summary
+            xmlWriter.writeCharacters("\n");
+            xmlWriter.writeStartElement("SampleAttributes");
+            for (String attributeType : attributeTypes){
+                writeAttribute(xmlWriter, attributeType, "false", "STRING", null);
+            }
+            xmlWriter.writeEndElement(); //SampleAttributes
+            
+            xmlWriter.writeEndElement(); //SampleGroup
+        }
+    }
 
     public void doMain(String[] args) {
 
@@ -206,223 +427,8 @@ public class SampleTabToGUIXML {
                         continue;
                     }
                     
-                    //NB. this assumes all samples are in a group. This is a condition of the .toload.txt files
-                    //but not of sampletab.txt files.
                     
-                    for (GroupNode g : sd.scd.getNodes(GroupNode.class)){
-                        
-                        if (g.getGroupAccession() == null){
-                            log.warn("Group has null accession "+g.getNodeName()+" ("+sd.msi.submissionIdentifier+")");
-                            continue;
-                        }
-                        
-                        log.debug("Group "+g.getNodeName());
-                        
-                        xmlWriter.writeStartElement("SampleGroup");
-                        xmlWriter.writeAttribute("id", g.getGroupAccession());
-
-                        writeAttribute(xmlWriter, "Submission Title", "true", "STRING", sd.msi.submissionTitle);
-                        writeAttribute(xmlWriter, "Submission Identifier", "true", "STRING", sd.msi.submissionIdentifier);
-                        writeAttribute(xmlWriter, "Submission Description", "true", "STRING", sd.msi.submissionDescription);
-                        writeAttribute(xmlWriter, "Submission Version", "true", "STRING", sd.msi.submissionVersion);
-                        writeAttribute(xmlWriter, "Submission Reference Layer", "true", "BOOLEAN", sd.msi.submissionReferenceLayer.toString());
-                        writeAttribute(xmlWriter, "Submission Release Date", "true", "STRING", sd.msi.getSubmissionReleaseDateAsString());
-                        writeAttribute(xmlWriter, "Submission Modification Date", "true", "STRING", sd.msi.getSubmissionUpdateDateAsString());
-                        writeAttribute(xmlWriter, "Name", "true", "BOOLEAN", g.getNodeName());
-                        writeAttribute(xmlWriter, "Group Accession", "true", "BOOLEAN", g.getGroupAccession());
-                        //group description?
-                        
-                        //organizations   
-                        if (sd.msi.organizations.size() > 0){
-                            xmlWriter.writeStartElement("attribute");
-                            xmlWriter.writeAttribute("class", "Organizations");
-                            xmlWriter.writeAttribute("classDefined", "true");
-                            xmlWriter.writeAttribute("dataType", "OBJECT");
-                            xmlWriter.writeStartElement("value");                     
-                            for (Integer i = 0; i < sd.msi.organizations.size(); i++){
-                                Organization o = sd.msi.organizations.get(i);
-                                if (o != null){
-                                    xmlWriter.writeStartElement("object");
-                                    xmlWriter.writeAttribute("id", "Org"+i.toString());
-                                    xmlWriter.writeAttribute("class", "Organization");
-                                    xmlWriter.writeAttribute("classDefined", "true");
-        
-                                    writeAttribute(xmlWriter, "Organization Name", "true", "STRING", o.getName());
-                                    writeAttribute(xmlWriter, "Organization Address", "true", "STRING", o.getAddress());
-                                    writeAttribute(xmlWriter, "Organization URI", "true", "STRING", o.getURI());
-                                    writeAttribute(xmlWriter, "Organization Email", "true", "STRING", o.getEmail());
-                                    writeAttribute(xmlWriter, "Organization Role", "true", "STRING", o.getRole());
-                                    
-                                    xmlWriter.writeEndElement(); //object
-                                }
-                            }
-                            xmlWriter.writeEndElement(); //value
-                            xmlWriter.writeEndElement(); //organizations
-                        }
-                        
-                        //persons
-                        if (sd.msi.persons.size() > 0){
-                            xmlWriter.writeStartElement("attribute");
-                            xmlWriter.writeAttribute("class", "Persons");
-                            xmlWriter.writeAttribute("classDefined", "true");
-                            xmlWriter.writeAttribute("dataType", "OBJECT");
-                            xmlWriter.writeStartElement("value");                     
-                            for (Integer i = 0; i < sd.msi.persons.size(); i++){
-                                Person p = sd.msi.persons.get(i);
-                                if (p != null){
-                                    xmlWriter.writeStartElement("object");
-                                    xmlWriter.writeAttribute("id", "Per"+i.toString());
-                                    xmlWriter.writeAttribute("class", "Person");
-                                    xmlWriter.writeAttribute("classDefined", "true");
-        
-                                    writeAttribute(xmlWriter, "Person Last Name", "true", "STRING", p.getLastName());
-                                    writeAttribute(xmlWriter, "Person Initials", "true", "STRING", p.getInitials());
-                                    writeAttribute(xmlWriter, "Person First Name", "true", "STRING", p.getFirstName());
-                                    writeAttribute(xmlWriter, "Person Email", "true", "STRING", p.getEmail());
-                                    writeAttribute(xmlWriter, "Person Role", "true", "STRING", p.getRole());
-                                    
-                                    xmlWriter.writeEndElement(); //object
-                                }
-                            }
-                            xmlWriter.writeEndElement(); //value
-                            xmlWriter.writeEndElement(); //persons
-                        }
-                        
-                        //publications
-                        if (sd.msi.publications.size() > 0){
-                            xmlWriter.writeStartElement("attribute");
-                            xmlWriter.writeAttribute("class", "Publications");
-                            xmlWriter.writeAttribute("classDefined", "true");
-                            xmlWriter.writeAttribute("dataType", "OBJECT");
-                            xmlWriter.writeStartElement("value");                     
-                            for (Integer i = 0; i < sd.msi.publications.size(); i++){
-                                Publication p = sd.msi.publications.get(i);
-                                if (p != null){
-                                    xmlWriter.writeStartElement("object");
-                                    xmlWriter.writeAttribute("id", "Pub"+i.toString());
-                                    xmlWriter.writeAttribute("class", "Publication");
-                                    xmlWriter.writeAttribute("classDefined", "true");
-        
-                                    writeAttribute(xmlWriter, "Publication PubMed ID", "true", "STRING", p.getPubMedID());
-                                    writeAttribute(xmlWriter, "Publication DOI", "true", "STRING", p.getDOI());
-                                    
-                                    xmlWriter.writeEndElement(); //object
-                                }
-                            }
-                            xmlWriter.writeEndElement(); //value
-                            xmlWriter.writeEndElement(); //publications
-                        }
-                        
-                        //term sources
-                        if (sd.msi.termSources.size() > 0){
-                            xmlWriter.writeStartElement("attribute");
-                            xmlWriter.writeAttribute("class", "Term Sources");
-                            xmlWriter.writeAttribute("classDefined", "true");
-                            xmlWriter.writeAttribute("dataType", "OBJECT");
-                            xmlWriter.writeStartElement("value");                     
-                            for (Integer i = 0; i < sd.msi.termSources.size(); i++){
-                                TermSource t = sd.msi.termSources.get(i);
-                                if (t != null && t.getName() != null){
-                                    xmlWriter.writeStartElement("object");
-                                    xmlWriter.writeAttribute("id", t.getName());
-                                    xmlWriter.writeAttribute("class", "Term Source");
-                                    xmlWriter.writeAttribute("classDefined", "true");
-        
-                                    writeAttribute(xmlWriter, "Term Source Name", "true", "STRING", t.getName());
-                                    writeAttribute(xmlWriter, "Term Source URI", "true", "STRING", t.getURI());
-                                    writeAttribute(xmlWriter, "Term Source Version", "true", "STRING", t.getVersion());
-                                    
-                                    xmlWriter.writeEndElement(); //object
-                                }
-                            }
-                            xmlWriter.writeEndElement(); //value
-                            xmlWriter.writeEndElement(); //term sources
-                        }
-                        
-                        //database entries
-                        if (sd.msi.databases.size() > 0){
-                            xmlWriter.writeStartElement("attribute");
-                            xmlWriter.writeAttribute("class", "Databases");
-                            xmlWriter.writeAttribute("classDefined", "true");
-                            xmlWriter.writeAttribute("dataType", "OBJECT");
-                            xmlWriter.writeStartElement("value");                     
-                            for (Integer i = 0; i < sd.msi.databases.size(); i++){
-                                Database d = sd.msi.databases.get(i);
-                                if (d != null){
-                                    xmlWriter.writeStartElement("object");
-                                    xmlWriter.writeAttribute("id", "Dat"+i.toString());
-                                    xmlWriter.writeAttribute("class", "Database");
-                                    xmlWriter.writeAttribute("classDefined", "true");
-        
-                                    writeAttribute(xmlWriter, "Database Name", "true", "STRING", d.getName());
-                                    writeAttribute(xmlWriter, "Database ID", "true", "STRING", d.getID());
-                                    writeAttribute(xmlWriter, "Database URI", "true", "STRING", d.getURI());
-                                    
-                                    xmlWriter.writeEndElement(); //object
-                                }
-                            }
-                            xmlWriter.writeEndElement(); //value
-                            xmlWriter.writeEndElement(); //databaases
-                        }
-                        
-                        Set<String> attributeTypes = new HashSet<String>();
-                        
-                        for (Node s : g.getParentNodes()) {
-                            log.debug("Node "+s.getNodeName());
-                            //these should all be samples, but have to check anyway...
-                            if (SampleNode.class.isInstance(s)) {
-                                SampleNode sample = (SampleNode) s;
-                                xmlWriter.writeStartElement("Sample");
-                                xmlWriter.writeAttribute("groupId", g.getGroupAccession());
-                                xmlWriter.writeAttribute("id", sample.getSampleAccession());
-
-                                writeAttribute(xmlWriter, "Name", "false", "STRING", sample.getNodeName());
-                                attributeTypes.add("Name");
-                                
-                                writeAttribute(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
-                                attributeTypes.add("Sample Accession");
-                                
-                                writeAttribute(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
-                                attributeTypes.add("Sample Description");
-                                
-                                for (SCDNodeAttribute a : sample.getAttributes()){
-                                    if (a.getAttributeValue() != null && a.getAttributeValue().length()>0){
-                                        synchronized(AbstractNodeAttributeOntology.class){
-                                            if (AbstractNodeAttributeOntology.class.isInstance(a)){
-                                                writeAttribute(xmlWriter, (AbstractNodeAttributeOntology) a, sd);
-                                            } else {
-                                                writeAttribute(xmlWriter, a.getAttributeType(), "false", "STRING", a.getAttributeValue());
-                                            }
-                                        }
-                                        attributeTypes.add(a.getAttributeType());
-                                        log.debug("Attribute "+a.getAttributeType()+" "+a.getAttributeValue());
-                                    }
-                                }
-                                
-                                //implicit derived from
-                                for (Node p : s.getParentNodes()) { 
-                                    //these should all be samples, but have to check anyway...
-                                    if (SampleNode.class.isInstance(p)) {
-                                        SampleNode parent = (SampleNode) p;
-                                        writeAttribute(xmlWriter, "Derived From", "false", "STRING", parent.getSampleAccession());
-                                        attributeTypes.add("Derived From");
-                                    }
-                                }
-                                
-                                xmlWriter.writeEndElement(); //Sample
-                            }
-                        }
-                        
-                        //write out precomputed attribute summary
-                        xmlWriter.writeCharacters("\n");
-                        xmlWriter.writeStartElement("SampleAttributes");
-                        for (String attributeType : attributeTypes){
-                            writeAttribute(xmlWriter, attributeType, "false", "STRING", null);
-                        }
-                        xmlWriter.writeEndElement(); //SampleAttributes
-                        
-                        xmlWriter.writeEndElement(); //SampleGroup
-                    }
+                    writeSampleData(xmlWriter, sd);
                 }
             }
             xmlWriter.writeEndDocument();
