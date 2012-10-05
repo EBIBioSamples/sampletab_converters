@@ -138,6 +138,37 @@ public class SampleTabToGUIXML {
         xmlWriter.writeEndElement(); //attribute
     }
     
+    private void preprocessSampleData(SampleData sd) throws ParseException{
+        //ensure all samples are in a group
+        //if any are not, create the group and put them in
+        
+
+        // All samples must be in a group
+        // so create a new group and add all non-grouped samples to it
+        GroupNode othergroup = new GroupNode("Other Group");
+        othergroup.setGroupAccession(sd.msi.submissionIdentifier);
+        for (SampleNode sample : sd.scd.getNodes(SampleNode.class)) {
+            // check there is not an existing group first...
+            boolean inGroup = false;
+            for (Node n : sample.getChildNodes()){
+                if (GroupNode.class.isInstance(n)){
+                    inGroup = true;
+                }
+            }
+            if (!inGroup){
+                log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
+                othergroup.addSample(sample);
+            }
+        }
+        //only add the new group if it has any samples
+        if (othergroup.getParentNodes().size() > 0){
+            sd.scd.addNode(othergroup);        
+            log.debug("Added Other group node");
+            // also need to accession the new node
+        }
+        
+    }
+    
     public void writeSampleData(XMLStreamWriter xmlWriter, SampleData sd) throws XMLStreamException{
 
         //NB. this assumes all samples are in a group. This is a condition of the .toload.txt files
@@ -427,7 +458,12 @@ public class SampleTabToGUIXML {
                         continue;
                     }
                     
-                    
+                    try {
+                        preprocessSampleData(sd);
+                    } catch (ParseException e) {
+                        log.error("Unable to preprocess "+inputFile, e);
+                        continue;
+                    }
                     writeSampleData(xmlWriter, sd);
                 }
             }
