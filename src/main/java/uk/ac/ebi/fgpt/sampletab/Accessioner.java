@@ -40,7 +40,7 @@ public class Accessioner {
 
     private String hostname;
 
-    private int port = 3306;
+    private int port;
 
     private String database;
 
