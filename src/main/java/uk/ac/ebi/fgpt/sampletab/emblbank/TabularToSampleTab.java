@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
@@ -65,7 +66,7 @@ public class TabularToSampleTab {
     
     private List<String> headers = null;
           
-    private SampleNode lineToSample(String[] nextLine){
+    private SampleNode lineToSample(String[] nextLine, SampleData st){
 
         SampleNode s = new SampleNode();
         
@@ -181,7 +182,7 @@ public class TabularToSampleTab {
                     for (SCDNodeAttribute a : s.getAttributes()){
                         if (OrganismAttribute.class.isInstance(a)){
                             OrganismAttribute o = (OrganismAttribute) a;
-                            o.setTermSourceREF(ncbitaxonomy.getName());
+                            o.setTermSourceREF(st.msi.getOrAddTermSource(ncbitaxonomy));
                             o.setTermSourceID(value);
                             found = true;
                         }
@@ -199,7 +200,7 @@ public class TabularToSampleTab {
                         if (o == null){
                             o = new OrganismAttribute(value);
                         }
-                        o.setTermSourceREF(ncbitaxonomy.getName());
+                        o.setTermSourceREF(st.msi.getOrAddTermSource(ncbitaxonomy));
                         o.setTermSourceID(value);
                         s.addAttribute(o);
                     }
@@ -244,6 +245,41 @@ public class TabularToSampleTab {
         return identifiers;
     }
     
+    private Set<Publication> getPublications(String[] line){
+        Set<Publication> pubSet = new HashSet<Publication>();
+        int doiindex = headers.indexOf("DOI");
+        int pubmedindex = headers.indexOf("PUBMED_ID");
+        
+        String[] doiStrings = line[doiindex].trim().split(",");
+        String[] pubmedStrings = line[pubmedindex].trim().split(",");
+        
+        int maxlength = doiStrings.length;
+        if (pubmedStrings.length > maxlength){
+            maxlength = pubmedStrings.length;
+        }
+
+        for (int i = 0; i < maxlength; i++){
+            String pubmed = null;
+            String doi = null;
+            
+            if (i < pubmedStrings.length){
+                pubmed = pubmedStrings[i];
+            }
+
+            
+            if (i < doiStrings.length){
+                doi = doiStrings[i];
+            }
+            if (pubmed != null || doi != null){
+                log.info("Publication "+pubmed+" "+doi);
+                Publication p = new Publication(pubmed, doi);
+                pubSet.add(p);
+            }
+        }
+        
+        return pubSet;
+    }
+    
     private void parseInput(File inputFile) throws IOException {
 
         CSVReader reader = null;
@@ -254,6 +290,8 @@ public class TabularToSampleTab {
         //when all the nodes of a pub are parsed, output to file
         
         Map<String, Set<String>> groupMap = new HashMap<String, Set<String>>();
+
+        Map<String, Set<Publication>> publicationMap = new HashMap<String, Set<Publication>>();
         
         Map<String, SampleData> stMap = new HashMap<String, SampleData>();
         
@@ -261,7 +299,7 @@ public class TabularToSampleTab {
         String [] nextLine;
         
         try {
-            reader = new CSVReader(new FileReader(inputFile));
+            reader = new CSVReader(new FileReader(inputFile), "\t".charAt(0));
             linecount = 0;
             while ((nextLine = reader.readNext()) != null) {
                 linecount += 1;
@@ -278,6 +316,7 @@ public class TabularToSampleTab {
                     }
                 
                     String accession = nextLine[0].trim();
+                    log.debug("First processing "+accession);
                     
                     for (String id : getGroupIdentifiers(nextLine)){
 
@@ -286,6 +325,9 @@ public class TabularToSampleTab {
                         }
                         groupMap.get(id).add(accession);
                     }
+                    
+                    publicationMap.put(accession, getPublications(nextLine));
+                    log.info(accession+" "+getPublications(nextLine).size());
                     
                 }
             }
@@ -301,7 +343,7 @@ public class TabularToSampleTab {
         }
 
         try {
-            reader = new CSVReader(new FileReader(inputFile));
+            reader = new CSVReader(new FileReader(inputFile), "\t".charAt(0));
             linecount = 0;
             while ((nextLine = reader.readNext()) != null) {
                 linecount += 1;
@@ -315,19 +357,14 @@ public class TabularToSampleTab {
                     if (nextLine.length > headers.size()){
                         log.warn("Line longer than headers "+linecount);
                     }
+
+                    String accession = nextLine[0].trim();
+                    log.debug("Second processing "+accession);
                     
-                    SampleNode s = lineToSample(nextLine);
-                    
-                    if (s.getNodeName() == null){
-                        log.error("Unable to add node with null name");
-                        continue;
-                    }
-                    
-                    //now we have a described node, but need to work out what publications to put it with
+                    //now we have a described node, but need to work out what samples to put it with
 
                     
                     for (String id : getGroupIdentifiers(nextLine)){
-                        
                         if (!groupMap.containsKey(id)){
                             continue;
                         }
@@ -337,6 +374,14 @@ public class TabularToSampleTab {
                         }
                     
                         SampleData st = stMap.get(id);
+
+
+                        SampleNode s = lineToSample(nextLine, st);
+                        
+                        if (s.getNodeName() == null){
+                            log.error("Unable to add node with null name");
+                            continue;
+                        }
                         
                         try {
                             if (s.getNodeName() == null){
@@ -365,6 +410,12 @@ public class TabularToSampleTab {
                             continue;
                         }
                         
+                        if (publicationMap.containsKey(accession)){
+                            st.msi.publications.addAll(publicationMap.get(accession));
+                            log.info(accession+" "+publicationMap.get(accession).size());
+                            log.info(accession+" "+st.msi.publications.size());
+                        }
+                        
                         groupMap.get(id).remove(s.getNodeName());
                         
                         if (groupMap.get(id).size() == 0){
@@ -391,10 +442,13 @@ public class TabularToSampleTab {
                                 }
                             }
                             
+                            log.info("No. of publications = "+st.msi.publications.size());
+                            log.info("Empty? "+st.msi.publications.isEmpty());
+                            
                             File outputSubDir = new File(outputFile, st.msi.submissionIdentifier);
                             File sampletabPre = new File(outputSubDir, "sampletab.pre.txt");
                             outputSubDir.mkdirs();
-                            log.debug("Writing "+sampletabPre);
+                            log.info("Writing "+sampletabPre);
                             SampleTabWriter sampletabwriter = null;
                             try {
                                 sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(sampletabPre)));
