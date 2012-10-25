@@ -29,6 +29,7 @@ public class SampleTabUtils {
         else if (submissionId.startsWith("GVA-")) return "dgva";
         else if (submissionId.startsWith("GCR-")) return "coriell";
         else if (submissionId.startsWith("GEN-")) return "sra";
+        else if (submissionId.startsWith("GEM-")) return "GEM";
         else if (submissionId.equals("GEN")) return "encode";
         else if (submissionId.equals("G1K")) return "g1k";
         else if (submissionId.startsWith("GHM")) return "hapmap";
