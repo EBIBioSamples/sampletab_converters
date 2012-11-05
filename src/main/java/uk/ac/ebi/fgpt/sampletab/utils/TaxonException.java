@@ -6,11 +6,13 @@ public class TaxonException extends Exception {
         super();
         // TODO Auto-generated constructor stub
     }
-
-    public TaxonException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-        // TODO Auto-generated constructor stub
-    }
+    
+    
+    //Java 7 only constructor
+//    public TaxonException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+//        super(message, cause, enableSuppression, writableStackTrace);
+//        // TODO Auto-generated constructor stub
+//    }
 
     public TaxonException(String message, Throwable cause) {
         super(message, cause);

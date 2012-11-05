@@ -16,14 +16,19 @@ public class ProcessUtils {
         ArrayList<String> bashcommand = new ArrayList<String>();
         bashcommand.add("/bin/bash");
         bashcommand.add("-c");
-        bashcommand.add(command);
 
         ProcessBuilder pb = new ProcessBuilder();
-        pb.redirectErrorStream(true);// merge stderr to stdout
-        if (logfile != null)
-            pb.redirectOutput(logfile);
+        if (logfile != null){
+            //this is Java 7 only shorthand
+            //pb.redirectOutput(logfile);
+            //pb.redirectErrorStream(true);// merge stderr to stdout
+            
+            //pre-Java 7 we do this using bash
+            command = command+" 2>&1 > "+logfile;
+            
+        }
+        bashcommand.add(command);
         pb.command(bashcommand);
-        // pb.command(command.split(" "));
 
         Process p;
         try {
