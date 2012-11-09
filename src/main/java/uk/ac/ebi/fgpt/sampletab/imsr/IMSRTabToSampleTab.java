@@ -35,6 +35,8 @@ public class IMSRTabToSampleTab {
 
     private static IMSRTabWebSummary summary = null;
 
+    private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
+    
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -245,7 +247,7 @@ public class IMSRTabToSampleTab {
             // all IMSR samples must be mice.
             OrganismAttribute organismattribute = new OrganismAttribute();
             organismattribute.setAttributeValue("Mus musculus");
-            organismattribute.setTermSourceREF("NCBI Taxonomy");
+            organismattribute.setTermSourceREF(st.msi.getOrAddTermSource(ncbitaxonomy));
             organismattribute.setTermSourceIDInteger(10090);
             newnode.addAttribute(organismattribute);
 
