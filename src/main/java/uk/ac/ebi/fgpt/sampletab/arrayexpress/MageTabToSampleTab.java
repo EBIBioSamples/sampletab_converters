@@ -45,6 +45,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
@@ -360,10 +361,12 @@ public class MageTabToSampleTab {
         convertPublications(mt, st);
         convertPeople(mt, st);
         convertOrganizations(mt,st);
-
-        st.msi.databases.add(new Database("ArrayExpress", 
+        
+        Database dblink = new Database("ArrayExpress", 
                 "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
-                mt.IDF.accession));
+                mt.IDF.accession);
+        
+        st.msi.databases.add(dblink);
 
         log.debug("Creating node names");
         for (SDRFNode sdrfnode : mt.SDRF.getRootNodes()) {
@@ -379,6 +382,12 @@ public class MageTabToSampleTab {
         if (st.scd.getAllNodes().size() == 0){
             log.error("Zero nodes converted");
             throw new ParseException("Zero nodes converted");
+        }
+        
+        //since ArrayExpress has no sample-level URIs, and we want them for the GUI, copy the study-level URI to the samples
+        for(SCDNode node : st.scd.getAllNodes()){
+            DatabaseAttribute dbattribute = new DatabaseAttribute(dblink.getName(), dblink.getID(), dblink.getURI());
+            node.addAttribute(dbattribute);
         }
         
         log.info("Finished convert()");
