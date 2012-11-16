@@ -143,11 +143,15 @@ public class SampleTabToLoad {
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
             // check there is not an existing group first...
             boolean inGroup = false;
-            for (Node n : sample.getChildNodes()){
-                if (GroupNode.class.isInstance(n)){
-                    inGroup = true;
-                }
-            }
+            //even if it has child nodes, both parent and child must be in a group
+            //this will lead to some weird looking row duplications, but since this is an internal 
+            //intermediate file it is not important
+//            for (Node n : sample.getChildNodes()){
+//                if (GroupNode.class.isInstance(n)){
+//                    inGroup = true;
+//                }
+//            }
+            
             if (!inGroup){
                 log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
                 othergroup.addSample(sample);
@@ -161,7 +165,6 @@ public class SampleTabToLoad {
         }
 
         // Copy msi information on to each group node
-
         for (SCDNode group : sampledata.scd.getNodes(GroupNode.class)) {
             group.addAttribute(new NamedAttribute("Submission Title", sampledata.msi.submissionTitle));
             group.addAttribute(new NamedAttribute("Submission Description", sampledata.msi.submissionDescription));
