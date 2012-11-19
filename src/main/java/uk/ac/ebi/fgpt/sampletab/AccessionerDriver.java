@@ -33,7 +33,7 @@ public class AccessionerDriver {
     private String hostname;
 
     @Option(name = "-t", aliases={"--port"}, usage = "server port")
-    private int port = 3306;
+    private int port;
 
     @Option(name = "-d", aliases={"--database"}, usage = "server database")
     private String database;

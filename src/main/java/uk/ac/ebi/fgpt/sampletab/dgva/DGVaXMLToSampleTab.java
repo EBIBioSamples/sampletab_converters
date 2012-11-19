@@ -51,7 +51,7 @@ public class DGVaXMLToSampleTab {
 
         String sciName;
         try {
-            sciName = TaxonUtils.getTaxonOfID(taxID);
+            sciName = TaxonUtils.getSpeciesOfID(taxID);
         } catch (TaxonException e) {
             log.warn("unable to find recognisable taxon "+taxID, e);
             return new OrganismAttribute(new Integer(taxID).toString());

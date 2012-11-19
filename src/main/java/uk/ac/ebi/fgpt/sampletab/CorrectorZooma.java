@@ -42,7 +42,8 @@ public class CorrectorZooma {
 
     private String getZoomaHit(String query) throws JsonParseException, JsonMappingException, IOException {
         //URL jsurl = new URL("http://megatron.windows.ebi.ac.uk:8080/zooma/v2/api/search?query="+URLEncoder.encode(attr.getAttributeValue(), "UTF-8"));
-        URL jsurl = new URL("http://orange.ebi.ac.uk:14086/zooma/v2/api/search?query="+URLEncoder.encode(query, "UTF-8"));
+        URL jsurl = new URL("http://wwwdev.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+URLEncoder.encode(query, "UTF-8"));
+        log.debug("URL "+jsurl.toExternalForm());
         
         ObjectMapper mapper = new ObjectMapper();                                                        
         JsonNode rootNode = mapper.readValue(jsurl, JsonNode.class); // src can be a File, URL, InputStream etc
@@ -54,10 +55,10 @@ public class CorrectorZooma {
             JsonNode tophit = results.get(0);
             if (tophit != null){
                 String fixName = tophit.get("name").getTextValue();
+                Float score = new Float(tophit.get("score").getTextValue());
                 String fixTermSourceID;
                 String fixTermSourceREF;
-                log.info(jsurl.toString());
-                log.info(query+" -> "+fixName);
+                log.info(query+" -> "+fixName+" ("+score+")");
                 return fixName;
             }
         }  
@@ -75,26 +76,18 @@ public class CorrectorZooma {
                 if (isAbstractNodeAttributeOntology){
                     try {
                         AbstractNodeAttributeOntology attr = (AbstractNodeAttributeOntology) a;
-                        //if it is not already mapped
-                        if (attr.getTermSourceID() == null || attr.getTermSourceREF() == null){
 
-                            String value = attr.getAttributeValue().trim();
-                            
-                            Pattern pattern = Pattern.compile("^[A-Za-z0-9_ ]+$");
-                            Matcher matcher = pattern.matcher(value);
-                            boolean found = false;
-                            while (matcher.find()) {
-                                found = true;
+                        String value = attr.getAttributeValue().trim();
+                        
+                        if (value.matches("[0-9.]+")){
+                            //do nothing
+                        } else {
+                        
+                            try {
+                                lookup.get(value);
+                            } catch (ExecutionException e) {
+                                throw e.getCause();
                             }
-                            
-                            if(found){
-                                try {
-                                    lookup.get(value);
-                                } catch (ExecutionException e) {
-                                    throw e.getCause();
-                                }
-                            }
-
                         }
                     } catch (UnsupportedEncodingException e) {
                         log.error("Error processing "+a, e);

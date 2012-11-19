@@ -185,10 +185,19 @@ public class MageTabBulk {
             } else if (idffilename.equals("E-GEOD-19553.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
+            } else if (idffilename.equals("E-GEOD-33213.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
             } else if (idffilename.equals("E-GEOD-39977.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
+            } else if (idffilename.equals("E-GEOD-40158.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
             } else if (idffilename.equals("E-GEOD-40727.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-40832.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
             } else if (idffilename.equals("E-CBIL-28.idf.txt")){
@@ -197,10 +206,7 @@ public class MageTabBulk {
             } else if (idffilename.equals("E-BUGS-62.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
-            } else if (idffilename.equals("E-GEOD-40158.idf.txt")){
-                log.warn("Skipping "+idffilename+" as it does not parse correctly");
-                return;
-            }
+            } 
             
             if (!idffile.exists() || !sdrffile.exists()) {
                 return;

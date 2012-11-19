@@ -202,7 +202,7 @@ public class Corrector {
             if (attr.getAttributeValue().matches("[0-9]+")){
                 Integer taxid = new Integer(attr.getAttributeValue());
                 try {
-                    String taxonName = TaxonUtils.getTaxonOfID(taxid);
+                    String taxonName = TaxonUtils.getSpeciesOfID(taxid);
                     attr.setAttributeValue(taxonName);
                     String ncbiTaxonomyName = sampledata.msi.getOrAddTermSource(ncbiTaxonomy);
                     attr.setTermSourceREF(ncbiTaxonomyName);

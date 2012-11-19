@@ -34,6 +34,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
@@ -58,6 +59,12 @@ public class TabularToSampleTab {
     
     @Option(name = "-wgs", usage = "is whole genome shotgun input?")
     private boolean wgs = false;
+    
+    @Option(name = "-tsa", usage = "is transcriptome shotgun input?")
+    private boolean tsa = false;
+    
+    @Option(name = "-bar", usage = "is barcode input?")
+    private boolean bar = false;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -65,6 +72,13 @@ public class TabularToSampleTab {
     Pattern latLongPattern = Pattern.compile("([0-9]+\\.?[0-9]*) ([NS]) ([0-9]+\\.?[0-9]*) ([EW])");
     
     private List<String> headers = null;
+    int doiindex = -1;
+    int pubmedindex = -1;
+    
+    int projheaderindex = -1;
+    int pubheaderindex = -1;
+    int collectedbyindex = -1;
+    int taxidindex = -1;
           
     private SampleNode lineToSample(String[] nextLine, SampleData st){
 
@@ -122,15 +136,22 @@ public class TabularToSampleTab {
                         if (m.group(2).equals("S")){
                             latitude = -latitude;
                         }
-                        s.addAttribute(new CharacteristicAttribute("Latitude", latitude.toString()));
-                        //TODO units, decimal degrees
+                        UnitAttribute decimaldegrees = new UnitAttribute();
+                        decimaldegrees.type = "unit";
+                        decimaldegrees.setAttributeValue("decimal degree");
+                        //TODO ontology term
+                        
+                        CharacteristicAttribute lat =new CharacteristicAttribute("Latitude", latitude.toString());
+                        lat.unit = decimaldegrees;
+                        s.addAttribute(lat);
                         
                         Float longitude = new Float(m.group(3));  
                         if (m.group(4).equals("W")){
                             longitude = -longitude;
                         }
-                        s.addAttribute(new CharacteristicAttribute("Longitude", latitude.toString()));
-                        //TODO units, decimal degrees
+                        CharacteristicAttribute longit = new CharacteristicAttribute("Longitude", longitude.toString());
+                        longit.unit = decimaldegrees;
+                        s.addAttribute(longit);
                     } else {
                         log.warn("Unable to match "+header+" : "+value);
                     }
@@ -193,7 +214,7 @@ public class TabularToSampleTab {
                         Integer taxID = new Integer(value);
                         OrganismAttribute o = null;
                         try {
-                            o = new OrganismAttribute(TaxonUtils.getTaxonOfID(taxID));
+                            o = new OrganismAttribute(TaxonUtils.getSpeciesOfID(taxID));
                         } catch (TaxonException e) {
                             log.warn("Problem getting taxid of "+value, e);
                         } 
@@ -217,11 +238,10 @@ public class TabularToSampleTab {
 
         List<String> identifiers = new ArrayList<String>();
         
-        int projheaderindex = headers.indexOf("PROJECT_ACC");
-        int pubheaderindex = headers.indexOf("ENA_PUBID");
-        
         String projString = null;
-        projString = line[projheaderindex].trim();
+        if (projheaderindex > 0){
+            projString = line[projheaderindex].trim();
+        }
         if (projString != null && projString.length() > 0){
             for(String projID : projString.split(",")){
                 projID = projID.trim();
@@ -239,6 +259,37 @@ public class TabularToSampleTab {
                 }
             }
         }
+        //no publications, fall back to collected by
+//        if (identifiers.size() == 0){
+//            String collectedby = line[collectedbyindex];
+//            collectedby = collectedby.replace(" ","_");
+//
+//            collectedby = collectedby.replaceAll("[^\\w_]", "");
+//            if (collectedby.length() > 0){
+//                identifiers.add(collectedby);
+//            }
+//        }
+        //still nothing, have to use species
+        //TODO maybe abstract this a level or two up the taxonomy?
+        if (identifiers.size() == 0){
+            String organism = null;
+            
+            //use division, not species
+            try {
+                organism = "taxon"+TaxonUtils.getDivisionOfID(new Integer(line[taxidindex]));
+            } catch (NumberFormatException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (TaxonException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            
+            if (organism != null && organism.length() > 0){
+                identifiers.add(organism);
+            }
+        }
+        
         if (identifiers.size() == 0){
             log.warn("No identifiers for "+line[0]);
         }
@@ -247,8 +298,6 @@ public class TabularToSampleTab {
     
     private Set<Publication> getPublications(String[] line){
         Set<Publication> pubSet = new HashSet<Publication>();
-        int doiindex = headers.indexOf("DOI");
-        int pubmedindex = headers.indexOf("PUBMED_ID");
         
         String[] doiStrings = line[doiindex].trim().split(",");
         String[] pubmedStrings = line[pubmedindex].trim().split(",");
@@ -263,14 +312,15 @@ public class TabularToSampleTab {
             String doi = null;
             
             if (i < pubmedStrings.length){
-                pubmed = pubmedStrings[i];
+                pubmed = pubmedStrings[i].trim();
             }
-
             
             if (i < doiStrings.length){
-                doi = doiStrings[i];
+                doi = doiStrings[i].trim();
             }
-            if (pubmed != null || doi != null){
+            
+            if ((pubmed != null && pubmed.length() > 0)
+                    || (doi != null && doi.length() > 0)){
                 log.info("Publication "+pubmed+" "+doi);
                 Publication p = new Publication(pubmed, doi);
                 pubSet.add(p);
@@ -304,12 +354,41 @@ public class TabularToSampleTab {
             while ((nextLine = reader.readNext()) != null) {
                 linecount += 1;
                                 
-                if (headers == null){
-                    headers = new ArrayList<String>();
+                if (this.headers == null || linecount == 0){
+                    this.headers = new ArrayList<String>();
                     for (String header : nextLine){
+                        //barcode has all headers prefixed with V_ for some reason...
+                        if (header.startsWith("V_")){
+                            header = header.substring(2);
+                        }
                         log.info("Found header : "+header);
                         headers.add(header);
                     }
+                    
+                    this.doiindex = this.headers.indexOf("DOI");
+                    if (this.doiindex < 0){
+                        throw new IOException("Headers does not contain DOI");
+                    }
+                    this.pubmedindex = this.headers.indexOf("PUBMED_ID");
+                    if (this.pubmedindex < 0){
+                        throw new IOException("Headers does not contain PUBMED_ID");
+                    }
+                    this.projheaderindex = this.headers.indexOf("PROJECT_ACC");
+                    //barcode does not have project acc
+                    this.pubheaderindex = this.headers.indexOf("ENA_PUBID");
+                    if (this.pubheaderindex < 0){
+                        throw new IOException("Headers does not contain ENA_PUBID");
+                    }
+                    this.collectedbyindex = this.headers.indexOf("COLLECTED_BY");
+                    if (this.collectedbyindex < 0){
+                        throw new IOException("Headers does not contain COLLECTED_BY");
+                    }
+                    this.taxidindex = this.headers.indexOf("TAX_ID");
+                    if (this.taxidindex < 0){
+                        throw new IOException("Headers does not contain TAX_ID");
+                    }
+                    
+                    
                 } else {
                     if (nextLine.length > headers.size()){
                         log.warn("Line longer than headers "+linecount);
@@ -348,13 +427,10 @@ public class TabularToSampleTab {
             while ((nextLine = reader.readNext()) != null) {
                 linecount += 1;
                                 
-                if (headers == null){
-                    headers = new ArrayList<String>();
-                    for (String header : nextLine){
-                        headers.add(header);
-                    }
+                if (this.headers == null || linecount == 0){
+                    //do nothing, headers already loaded
                 } else {
-                    if (nextLine.length > headers.size()){
+                    if (nextLine.length > this.headers.size()){
                         log.warn("Line longer than headers "+linecount);
                     }
 
@@ -412,8 +488,8 @@ public class TabularToSampleTab {
                         
                         if (publicationMap.containsKey(accession)){
                             st.msi.publications.addAll(publicationMap.get(accession));
-                            log.info(accession+" "+publicationMap.get(accession).size());
-                            log.info(accession+" "+st.msi.publications.size());
+                            log.debug(accession+" "+publicationMap.get(accession).size());
+                            log.debug(accession+" "+st.msi.publications.size());
                         }
                         
                         groupMap.get(id).remove(s.getNodeName());
@@ -440,10 +516,30 @@ public class TabularToSampleTab {
                                 } else {
                                     st.msi.submissionTitle = "Whole Genome Shotgun sequencing of "+speciesName;
                                 }
+                            } else if (tsa){
+                                //its a transcriptome shotgun sample, describe as such
+                                String speciesName = null;
+                                for (SampleNode sn : st.scd.getNodes(SampleNode.class)){
+                                    for (SCDNodeAttribute a : sn.getAttributes()){
+                                        if (OrganismAttribute.class.isInstance(a)){
+                                            OrganismAttribute oa = (OrganismAttribute) a;
+                                            speciesName = a.getAttributeValue();
+                                        }
+                                    }
+                                }
+                                if (speciesName == null){
+                                    log.warn("Unable to determine species name");
+                                } else {
+                                    st.msi.submissionTitle = "Transcriptome Shotgun sequencing of "+speciesName;
+                                }
+                            } else if (bar){
+                                //need to generate a title for the submission
+                                st.msi.submissionTitle = st.msi.submissionIdentifier;
+                                //TODO use the title of a publication, if one exists
                             }
                             
-                            log.info("No. of publications = "+st.msi.publications.size());
-                            log.info("Empty? "+st.msi.publications.isEmpty());
+                            log.debug("No. of publications = "+st.msi.publications.size());
+                            log.debug("Empty? "+st.msi.publications.isEmpty());
                             
                             File outputSubDir = new File(outputFile, st.msi.submissionIdentifier);
                             File sampletabPre = new File(outputSubDir, "sampletab.pre.txt");
