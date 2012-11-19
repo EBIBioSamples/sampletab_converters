@@ -16,7 +16,7 @@ public class DBmigrate {
     
     
     
-    private Connection getOracleConnection() throws ClassNotFoundException, SQLException{
+    private Connection getProdOracleConnection() throws ClassNotFoundException, SQLException{
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
         } catch (ClassNotFoundException e) {
@@ -25,9 +25,9 @@ public class DBmigrate {
         
         log.info("Found oracle.jdbc.driver.OracleDriver");
 
-        String hostname = "todd.ebi.ac.uk";
+        String hostname = "burns.ebi.ac.uk";
         String port = "1521";
-        String database = "AE2TST";
+        String database = "DWEP";
         String username = "bsd_acc";
         String password = "bsd_acc";
         
@@ -44,6 +44,36 @@ public class DBmigrate {
         log.info("connected to "+url+" with username/password "+username+"/"+password);
         return con;
     }
+    
+    private Connection getTestOracleConnection() throws ClassNotFoundException, SQLException{
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+        } catch (ClassNotFoundException e) {
+            throw e;
+        }
+        
+        log.info("Found oracle.jdbc.driver.OracleDriver");
+
+        String hostname = "bart.ebi.ac.uk";
+        String port = "1521";
+        String database = "BIOSDTST";
+        String username = "bsd_acc";
+        String password = "bsd_acc";
+        
+        String url = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
+
+        Connection con = null;
+        try {
+            con = DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            log.error("Unable to connect to "+url, e);
+            throw e;
+        }
+
+        log.info("connected to "+url+" with username/password "+username+"/"+password);
+        return con;
+    }
+    
     
     private Connection getMySQLConnection() throws ClassNotFoundException, SQLException{
         
@@ -76,36 +106,13 @@ public class DBmigrate {
         return con;
         
     }
+    
+    public void copyTable(String table_name, Connection target, Connection source){
 
-    public void doMain() {
-        Connection conOracle = null;
-        try {
-            conOracle = getOracleConnection();
-        } catch (ClassNotFoundException e) {
-            log.error("Unable to find oracle.jdbc.driver.OracleDriver", e);
-            return;
-        } catch (SQLException e) {
-            log.error("Unable to connect to Oracle", e);
-            return;
-        }
-
-        Connection conMySQL = null;        
-        try {
-            conMySQL = getMySQLConnection();
-        } catch (ClassNotFoundException e) {
-            log.error("Unable to find com.mysql.jdbc.Driver", e);
-            return;
-        } catch (SQLException e) {
-            log.error("Unable to connect to MySQL", e);
-            return;
-        }
-        
-        String sql;
         Statement statement = null;
-        sql = "SELECT * FROM sample_reference";
         try {
-            statement = conMySQL.createStatement();
-            ResultSet rs = statement.executeQuery(sql);
+            statement = source.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT * FROM "+table_name);
             while (rs.next()) {
                 Integer accession = rs.getInt("accession");
                 String userAccession = rs.getString("user_accession");
@@ -115,11 +122,11 @@ public class DBmigrate {
                 Date assigned = rs.getDate("date_assigned");
                 Integer deleted = rs.getInt("is_deleted");
                 
-                sql = "INSERT INTO SAMPLE_REFERENCE VALUES ( '"+accession+"' , '"+userAccession+"' , '"+submissionAccession+"' , to_date('"+assigned+"', 'YYYY-MM-DD') , '"+deleted+"' )";
+                String sql = "INSERT INTO "+table_name+" VALUES ( '"+accession+"' , '"+userAccession+"' , '"+submissionAccession+"' , to_date('"+assigned+"', 'YYYY-MM-DD') , '"+deleted+"' )";
 
                 Statement substatement = null;
                 try {
-                    substatement = conOracle.createStatement();
+                    substatement = target.createStatement();
                     substatement.execute(sql);
                     substatement.close();
                 } catch (SQLException e) {
@@ -148,9 +155,37 @@ public class DBmigrate {
                 }
             }
         }
+    }
+
+    public void doMain() {
+        Connection source = null;
+        Connection target = null;   
         
+        try {
+            //source = getMySQLConnection();
+            source = getProdOracleConnection();
+        } catch (ClassNotFoundException e) {
+            log.error("Unable to find driver", e);
+            return;
+        } catch (SQLException e) {
+            log.error("Unable to connect to execute", e);
+            return;
+        }  
         
+        try {
+            target = getTestOracleConnection();
+        } catch (ClassNotFoundException e) {
+            log.error("Unable to find driver", e);
+            return;
+        } catch (SQLException e) {
+            log.error("Unable to connect to execute", e);
+            return;
+        }
+   
         
+        copyTable("sample_reference", target, source);
+        copyTable("sample_assay", target, source);
+        copyTable("sample_groups", target, source);
         
     }
 
