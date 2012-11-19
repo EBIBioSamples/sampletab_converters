@@ -35,6 +35,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.Characteri
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
@@ -99,7 +100,147 @@ public class PRIDEXMLToSampleTab {
         }
         return this.projects;
     }
+    
 
+    private SCDNodeAttribute cvParamToAttribute(SampleData st, Element cvparam){
+        return  cvParamToAttribute(st, cvparam, null);
+    }
+
+    private SCDNodeAttribute cvParamToAttribute(SampleData st, Element cvparam, Integer subsampleid){
+
+        String name = cvparam.attributeValue("name").trim();
+        String value = cvparam.attributeValue("value");
+        if (value != null){
+            value = value.trim();
+        }
+        
+        if (subsampleid != null){
+            if (value != null && value.equals("SUBSAMPLE_"+subsampleid)){
+                //put the value as the name, but then no other name?
+                value = name;
+            } else if (value != null && value.startsWith("SUBSAMPLE_")){
+                //specific to a diffferent sub-sample, skip
+                return null;
+            } else {
+                //not a sub-sample specific element, continue
+            }
+        }
+        
+        String cvLabel = null;
+        if (cvparam.attributeValue("cvLabel") != null) {
+            cvLabel = cvparam.attributeValue("cvLabel").trim();
+            if (cvLabel.length() == 0){
+                cvLabel = null;
+            }
+        }
+        
+        String cvAccession = null;
+        if (cvparam.attributeValue("accession") != null) {
+            cvAccession = cvparam.attributeValue("accession").trim();
+            if (cvAccession.length() == 0){
+                cvAccession = null;
+            }
+        }
+        
+        if (value == null || value.length() == 0) {
+            //some PRIDE attributes have neither name nor value! e.g. 8695
+            if (name == null || name.length() == 0) {
+                return null;
+            }
+            //some PRIDE attributes are boolean
+            //set their value to be their name
+            value = name;
+        }
+        
+        SCDNodeAttribute attr = null;
+        //TODO use special attribute classes where appropriate
+        if ("NEWT".equals(cvLabel)) {
+            try {
+                Integer termSourceID = new Integer(cvAccession);
+                String termSourceREF = st.msi.getOrAddTermSource(ncbitaxonomy);
+                attr = new OrganismAttribute(name, termSourceREF, termSourceID);
+            } catch (NumberFormatException e){
+                attr = new OrganismAttribute(name);
+            }
+        } else {
+            CharacteristicAttribute charac = new CharacteristicAttribute(name, value);
+            if (cvLabel != null 
+                    && cvLabel.length() > 0 
+                    && cvAccession != null 
+                    && cvAccession.length() > 0){
+                cvLabel = getOrAddTermSource(st, cvLabel);
+                if (cvLabel != null) {
+                    charac.setTermSourceREF(cvLabel);
+                    charac.setTermSourceID(cvAccession);
+                }
+            }
+            attr = charac;
+        }
+        return attr;
+    }
+
+    private SCDNodeAttribute userParamToAttribute(SampleData st, Element userparam){
+        return  userParamToAttribute(st, userparam, null);
+    }
+    private SCDNodeAttribute userParamToAttribute(SampleData st, Element userparam, Integer subsampleid){
+        String name = userparam.attributeValue("name").trim();
+        String value = userparam.attributeValue("value");
+        if (value != null){
+            value = value.trim();
+        }
+        
+        if (subsampleid != null){
+            if (name.equals("SUBSAMPLE_"+subsampleid)){
+                //put the name as the value, but then no other value?
+                name = value;
+            } else if (name.startsWith("SUBSAMPLE_")){
+                //specific to a diffferent sub-sample, skip
+                return null;
+            } else {
+                if (value != null && value.equals("SUBSAMPLE_"+subsampleid)){
+                    //put the value as the name, but then no other name?
+                    value = name;
+                } else if (value != null && value.startsWith("SUBSAMPLE_")){
+                    //specific to a diffferent sub-sample, skip
+                    return null;
+                } else {
+                    //not a sub-sample specific element, continue
+                }
+            }
+        }
+        
+        if (value == null){
+            //some PRIDE attributes are boolean
+            //set their value to be their name
+            value = name;
+        } else {
+            value = value.trim();
+        }
+        CommentAttribute attr = new CommentAttribute(name, value);
+        return attr;
+    }
+    
+    private boolean isSubSample(Element sampledescription){
+        for (Element userparam : XMLUtils.getChildrenByName(sampledescription, "userParam")){
+            String name = userparam.attributeValue("name").trim();
+            if (name.startsWith("SUBSAMPLE_")){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private boolean hasSubSample(Element sampledescription, int subsampleid){
+        for (Element userparam : XMLUtils.getChildrenByName(sampledescription, "userParam")){
+            String name = userparam.attributeValue("name").trim();
+            if (name.startsWith("SUBSAMPLE_"+subsampleid)){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    
     public SampleData convert(Set<File> infiles) throws DocumentException, FileNotFoundException {
         
         SampleData st = new SampleData();
@@ -116,6 +257,7 @@ public class PRIDEXMLToSampleTab {
             Element description = XMLUtils.getChildByName(mzd, "description");
             Element admin = XMLUtils.getChildByName(description, "admin");
             Element sampledescription = XMLUtils.getChildByName(admin, "sampleDescription");
+            Element samplename = XMLUtils.getChildByName(admin, "sampleName");
             String accession = XMLUtils.getChildByName(exp, "ExperimentAccession").getTextTrim();
             
             if (st.msi.submissionTitle == null || st.msi.submissionTitle.length() == 0)
@@ -153,134 +295,109 @@ public class PRIDEXMLToSampleTab {
                     }
                 }
             }
-            
-            SampleNode sample = new SampleNode();
-            sample.setNodeName(accession);
-            
-            DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, "http://www.ebi.ac.uk/pride/showExperiment.do?experimentAccessionNumber="+accession);
-            sample.addAttribute(dbattr);
 
-            for (Element cvparam : XMLUtils.getChildrenByName(sampledescription, "cvParam")) {
-                String name = cvparam.attributeValue("name").trim();
-                String value = cvparam.attributeValue("value");
-                
-                String cvLabel = null;
-                if (cvparam.attributeValue("cvLabel") != null) {
-                    cvLabel = cvparam.attributeValue("cvLabel").trim();
-                    if (cvLabel.length() == 0){
-                        cvLabel = null;
-                    }
-                }
-                
-                String cvAccession = null;
-                if (cvparam.attributeValue("accession") != null) {
-                    cvAccession = cvparam.attributeValue("accession").trim();
-                    if (cvAccession.length() == 0){
-                        cvAccession = null;
-                    }
-                }
-                
-                if (value == null || value.length() == 0) {
-                    //some PRIDE attributes have neither name nor value! 8695
-                    if (name == null || name.length() == 0) {
-                        continue;
-                    }
-                    //some PRIDE attributes are boolean
-                    //set their value to be their name
-                    value = name;
-                } else {
-                    value = value.trim();
-                }
-                
-                //TODO  use special attribute classes where appropriate
-                if ("NEWT".equals(cvLabel)) {
-                    TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
-                    OrganismAttribute attr;
-                    try {
-                        Integer termSourceID = new Integer(cvAccession);
-                        String termSourceREF = st.msi.getOrAddTermSource(ncbitaxonomy);
-                        attr = new OrganismAttribute(name, termSourceREF, termSourceID);
-                    } catch (NumberFormatException e){
-                        attr = new OrganismAttribute(name);
-                    }
-                    sample.addAttribute(attr);
-                } else {
-                    CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
-                    if (cvLabel != null 
-                            && cvLabel.length() > 0 
-                            && cvAccession != null 
-                            && cvAccession.length() > 0){
-                        cvLabel = getOrAddTermSource(st, cvLabel);
-                        if (cvLabel != null) {
-                            attr.setTermSourceREF(cvLabel);
-                            attr.setTermSourceID(cvAccession);
-                        }
-                        
-                    }
-                    sample.addAttribute(attr);
-                }
-            }
+            DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, "http://www.ebi.ac.uk/pride/showExperiment.do?experimentAccessionNumber="+accession);
             
-            for (Element cvparam : XMLUtils.getChildrenByName(additional, "cvParam")){
-                String name = cvparam.attributeValue("name").trim();
-                String value = cvparam.attributeValue("value");
-                if (value == null || value.length() == 0){
-                    //some PRIDE attributes are boolean
-                    //set their value to be their name
-                    value = name;
-                } else {
-                    value = value.trim();
-                }
-                
-                CharacteristicAttribute attr = new CharacteristicAttribute(name, value);
-                if (cvparam.attributeValue("cvLabel") != null
-                        && cvparam.attributeValue("cvLabel").trim().length() > 0
-                        && cvparam.attributeValue("accession") != null
-                        && cvparam.attributeValue("accession").trim().length() > 0){
-                    String cvLabel = cvparam.attributeValue("cvLabel").trim();
-                    cvLabel = getOrAddTermSource(st, cvLabel);
-                    if (cvLabel != null) {
-                        attr.setTermSourceREF(cvLabel);
-                        attr.setTermSourceID(cvparam.attributeValue("accession").trim());
+            if (isSubSample(sampledescription)){
+                //this is a sub-sample thing
+                int subsampleid = 1;
+                while (hasSubSample(sampledescription, subsampleid)) {                    
+                    //create the sample
+                    SampleNode sample = new SampleNode();
+                    sample.setNodeName(accession+" subsample "+subsampleid);
+                    
+                    //TODO this ins't a great link for subsampled XMLs, but best PRIDE can do
+                    sample.addAttribute(dbattr);
+                    
+                    //find the applicable attributes
+                    for (Element cvparam : XMLUtils.getChildrenByName(sampledescription, "cvParam")) {
+                        SCDNodeAttribute attr = cvParamToAttribute(st, cvparam, subsampleid);
+                        if (attr != null){
+                            sample.addAttribute(attr);
+                        }
                     }
                     
+                    for (Element userparam : XMLUtils.getChildrenByName(sampledescription, "userParam")){
+                        SCDNodeAttribute attr = userParamToAttribute(st, userparam, subsampleid);
+                        if (attr != null){
+                            sample.addAttribute(attr);
+                        }
+                    }
+                    
+                    //additional information about the samples
+                    for (Element cvparam : XMLUtils.getChildrenByName(additional, "cvParam")){
+                        SCDNodeAttribute attr = cvParamToAttribute(st, cvparam, subsampleid);
+                        if (attr != null){
+                            sample.addAttribute(attr);
+                        }
+                    }
+                    
+                    for (Element userparam : XMLUtils.getChildrenByName(additional, "userParam")){
+                        SCDNodeAttribute attr = userParamToAttribute(st, userparam, subsampleid);
+                        if (attr != null){
+                            sample.addAttribute(attr);
+                        }
+                    }
+                                     
+                    try {
+                        st.scd.addNode(sample);
+                    } catch (ParseException e) {
+                        log.error("Unable to add node "+sample, e);
+                        continue;
+                    }
+                    //move to next subsample
+                    subsampleid += 1;   
                 }
-                sample.addAttribute(attr);
-            }
-            
-            for (Element userparam : XMLUtils.getChildrenByName(sampledescription, "userParam")){
-                String name = userparam.attributeValue("name").trim();
-                String value = userparam.attributeValue("value");
-                if (value == null){
-                    //some PRIDE attributes are boolean
-                    //set their value to be their name
-                    value = name;
-                } else {
-                    value = value.trim();
+                
+            } else {
+                SampleNode sample = new SampleNode();
+                //could use this, but no guarantee that this is unique over project
+                //String name = samplename.getTextTrim();
+                //sample.setNodeName(name);
+                sample.setNodeName(accession);
+                sample.addAttribute(dbattr);
+                
+                if (samplename != null){
+                    SCDNodeAttribute attr = new CommentAttribute("user name", samplename.getTextTrim());
+                    sample.addAttribute(attr);
                 }
-                CommentAttribute attr = new CommentAttribute(name, value);
-                sample.addAttribute(attr);
-            }
-            
-            for (Element userparam : XMLUtils.getChildrenByName(additional, "userParam")){
-                String name = userparam.attributeValue("name").trim();
-                String value = userparam.attributeValue("value");
-                if (value == null){
-                    //some PRIDE attributes are boolean
-                    //set their value to be their name
-                    value = name;
-                } else {
-                    value = value.trim();
+                
+    
+                for (Element cvparam : XMLUtils.getChildrenByName(sampledescription, "cvParam")) {
+                    SCDNodeAttribute attr = cvParamToAttribute(st, cvparam);
+                    if (attr != null){
+                        sample.addAttribute(attr);
+                    }
                 }
-                CommentAttribute attr = new CommentAttribute(name, value);
-                sample.addAttribute(attr);
-            }
-            
-            try {
-                st.scd.addNode(sample);
-            } catch (ParseException e) {
-                log.error("Unable to add node "+sample, e);
-                continue;
+                
+                for (Element userparam : XMLUtils.getChildrenByName(sampledescription, "userParam")){
+                    SCDNodeAttribute attr = userParamToAttribute(st, userparam);
+                    if (attr != null){
+                        sample.addAttribute(attr);
+                    }
+                }
+                
+                //additional information about the samples
+                for (Element cvparam : XMLUtils.getChildrenByName(additional, "cvParam")){
+                    SCDNodeAttribute attr = cvParamToAttribute(st, cvparam);
+                    if (attr != null){
+                        sample.addAttribute(attr);
+                    }
+                }
+                
+                for (Element userparam : XMLUtils.getChildrenByName(additional, "userParam")){
+                    SCDNodeAttribute attr = userParamToAttribute(st, userparam);
+                    if (attr != null){
+                        sample.addAttribute(attr);
+                    }
+                }
+                
+                try {
+                    st.scd.addNode(sample);
+                } catch (ParseException e) {
+                    log.error("Unable to add node "+sample, e);
+                    continue;
+                }
             }
             
         }
