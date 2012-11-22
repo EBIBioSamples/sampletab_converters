@@ -34,7 +34,10 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNamedAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DerivedFromAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.NamedAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
@@ -162,6 +165,40 @@ public class SampleTabToLoad {
             sampledata.scd.addNode(othergroup);
             log.info("Added Other group node");
             // also need to accession the new node
+        }
+        
+        //copy MSI database attribute to each sample that does not have a link to that database
+        for (Database databasemsi : sampledata.msi.databases){
+            for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
+                boolean hasdb = false;
+                for (SCDNodeAttribute attr : sample.getAttributes()){
+                    if (DatabaseAttribute.class.isInstance(attr)){
+                        DatabaseAttribute dbattr = (DatabaseAttribute) attr;
+                        if (dbattr.getAttributeValue().equals(databasemsi.getName())){
+                            hasdb = true;
+                        }
+                    }
+                }
+                if (!hasdb){
+                    DatabaseAttribute dbattr = new DatabaseAttribute(databasemsi.getName(), databasemsi.getID(), databasemsi.getURI());
+                    sample.addAttribute(dbattr);
+                }
+            }
+        }
+        
+        //replace implicit derived from with explicit derived from relationships
+        for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
+            if (sample.getParentNodes().size() > 0){
+                for (Node parent : sample.getParentNodes()){
+                    if (SampleNode.class.isInstance(parent)){
+                        SampleNode parentsample = (SampleNode) parent;
+                        DerivedFromAttribute attr = new DerivedFromAttribute(parentsample.getSampleAccession());
+                        sample.addAttribute(attr);
+                        sample.removeParentNode(parentsample);
+                        parentsample.removeChildNode(sample);
+                    }
+                }
+            }
         }
 
         // Copy msi information on to each group node
