@@ -56,6 +56,9 @@ public class SampleTabToLoad {
     @Option(name = "-o", aliases={"--output"}, usage = "output filename relative to input")
     private String outputFilename;
 
+    @Option(name = "-f", aliases={"--force"}, usage = "force replace existing newer files")
+    private boolean force;
+
     @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
     private String hostname;
 
@@ -168,23 +171,24 @@ public class SampleTabToLoad {
         }
         
         //copy MSI database attribute to each sample that does not have a link to that database
-        for (Database databasemsi : sampledata.msi.databases){
-            for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
-                boolean hasdb = false;
-                for (SCDNodeAttribute attr : sample.getAttributes()){
-                    if (DatabaseAttribute.class.isInstance(attr)){
-                        DatabaseAttribute dbattr = (DatabaseAttribute) attr;
-                        if (dbattr.getAttributeValue().equals(databasemsi.getName())){
-                            hasdb = true;
-                        }
-                    }
-                }
-                if (!hasdb){
-                    DatabaseAttribute dbattr = new DatabaseAttribute(databasemsi.getName(), databasemsi.getID(), databasemsi.getURI());
-                    sample.addAttribute(dbattr);
-                }
-            }
-        }
+        // no need to do this, GUI will handle it
+//        for (Database databasemsi : sampledata.msi.databases){
+//            for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
+//                boolean hasdb = false;
+//                for (SCDNodeAttribute attr : sample.getAttributes()){
+//                    if (DatabaseAttribute.class.isInstance(attr)){
+//                        DatabaseAttribute dbattr = (DatabaseAttribute) attr;
+//                        if (dbattr.getAttributeValue().equals(databasemsi.getName())){
+//                            hasdb = true;
+//                        }
+//                    }
+//                }
+//                if (!hasdb){
+//                    DatabaseAttribute dbattr = new DatabaseAttribute(databasemsi.getName(), databasemsi.getID(), databasemsi.getURI());
+//                    sample.addAttribute(dbattr);
+//                }
+//            }
+//        }
         
         //replace implicit derived from with explicit derived from relationships
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
@@ -444,8 +448,8 @@ public class SampleTabToLoad {
         for (File inputFile : inputFiles) {
             // System.out.println("Checking "+inputFile);
             File outputFile = new File(inputFile.getParentFile(), outputFilename);
-            // TODO also compare file ages
-            if (!outputFile.exists()
+            if (force 
+                    || !outputFile.exists()
                     || outputFile.lastModified() < inputFile.lastModified()) {
                 Runnable t = new ToLoadTask(inputFile, outputFile);
                 if (threaded) {

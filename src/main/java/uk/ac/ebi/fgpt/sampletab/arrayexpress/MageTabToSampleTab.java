@@ -45,7 +45,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
@@ -383,13 +382,7 @@ public class MageTabToSampleTab {
             log.error("Zero nodes converted");
             throw new ParseException("Zero nodes converted");
         }
-        
-        //since ArrayExpress has no sample-level URIs, and we want them for the GUI, copy the study-level URI to the samples
-        for(SCDNode node : st.scd.getAllNodes()){
-            DatabaseAttribute dbattribute = new DatabaseAttribute(dblink.getName(), dblink.getID(), dblink.getURI());
-            node.addAttribute(dbattribute);
-        }
-        
+                
         log.info("Finished convert()");
         
         return st;
