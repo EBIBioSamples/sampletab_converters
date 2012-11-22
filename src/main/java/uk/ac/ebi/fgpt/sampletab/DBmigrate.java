@@ -74,45 +74,61 @@ public class DBmigrate {
         return con;
     }
     
-    
-    private Connection getMySQLConnection() throws ClassNotFoundException, SQLException{
-        
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw e;
-        }
-        log.info("Found com.mysql.jdbc.Driver");
-        
-        //production environment
-        String hostname = "mysql-ae-autosubs.ebi.ac.uk";
-        String port = "4091";
-        String database = "ae_autosubs";
-        String username = "curator";
-        String password = "troajsp";
-        
-        String url = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
+    private void copyTable(String table_name, String seq_name, Connection target, Connection source){
 
-        Connection con = null;
+        Statement sourcestatement = null;
+        Statement targetstatement = null;
+        ResultSet rs;
+        String sql;
         try {
-            con = DriverManager.getConnection(url, username, password);
-        } catch (SQLException e) {
-            log.error("Unable to connect to "+url, e);
-            throw e;
-        }
+            sourcestatement = source.createStatement();
+            targetstatement = target.createStatement();
+            
+            //try to drop the table if it exists
+            try {
+                sql = "DROP TABLE "+table_name+"";
+                log.info(sql);
+                targetstatement.execute(sql);
+                //when droping a table, all indexs are dropped automatically
+                //sql = "DROP INDEX PK_"+table_name+"_ACC";
+                //log.info(sql);
+                //targetstatement.execute(sql);
+                //sql = "DROP INDEX UK_"+table_name+"_USACC";
+                //log.info(sql);
+                //targetstatement.execute(sql);
+            } catch (SQLException e){
+                if (e.getErrorCode() == 942){
+                    //table does not exist error
+                    //do nothing
+                } else {
+                    throw e;
+                }
+            }
+            
+            sql = "CREATE TABLE "+table_name+" ( accession NUMBER(11) NOT NULL, user_accession VARCHAR2(255) NOT NULL, submission_accession VARCHAR2(255) NOT NULL, date_assigned date NOT NULL, is_deleted NUMBER(11) DEFAULT 0 NOT NULL) TABLESPACE BSDACC_DATA NOCOMPRESS";
+            log.info(sql);
+            targetstatement.execute(sql);
 
-        log.info("connected to "+url+" with username/password "+username+"/"+password);
-        
-        return con;
-        
-    }
-    
-    public void copyTable(String table_name, Connection target, Connection source){
+            sql = "CREATE UNIQUE INDEX PK_"+table_name+"_ACC ON "+table_name+" (ACCESSION) TABLESPACE BSDACC_INDX";
+            log.info(sql);
+            targetstatement.execute(sql);
 
-        Statement statement = null;
-        try {
-            statement = source.createStatement();
-            ResultSet rs = statement.executeQuery("SELECT * FROM "+table_name);
+            sql = "CREATE UNIQUE INDEX UK_"+table_name+"_USACC ON "+table_name+" (USER_ACCESSION, SUBMISSION_ACCESSION) TABLESPACE BSDACC_INDX";
+            log.info(sql);
+            targetstatement.execute(sql);
+
+            sql = "ALTER TABLE "+table_name+" ADD ( CONSTRAINT PK_"+table_name+"_ACC PRIMARY KEY (ACCESSION) USING INDEX PK_"+table_name+"_ACC ENABLE VALIDATE )";
+            log.info(sql);
+            targetstatement.execute(sql);
+
+            sql = "ALTER TABLE "+table_name+" ADD ( CONSTRAINT UK_"+table_name+"_USACC UNIQUE (USER_ACCESSION, SUBMISSION_ACCESSION ) USING INDEX UK_"+table_name+"_USACC ENABLE VALIDATE )";
+            log.info(sql);
+            targetstatement.execute(sql);
+            
+            //sql = "CREATE OR REPLACE TRIGGER TRG_"+table_name+"_ACC BEFORE INSERT ON "+table_name+" REFERENCING OLD AS OLD NEW AS NEW FOR EACH ROW BEGIN\nSELECT "+seq_name+".nextval INTO :new.ACCESSION FROM dual;\nEND; /";
+            //targetstatement.execute(sql);
+            
+            rs = sourcestatement.executeQuery("SELECT * FROM "+table_name);
             while (rs.next()) {
                 Integer accession = rs.getInt("accession");
                 String userAccession = rs.getString("user_accession");
@@ -122,41 +138,56 @@ public class DBmigrate {
                 Date assigned = rs.getDate("date_assigned");
                 Integer deleted = rs.getInt("is_deleted");
                 
-                String sql = "INSERT INTO "+table_name+" VALUES ( '"+accession+"' , '"+userAccession+"' , '"+submissionAccession+"' , to_date('"+assigned+"', 'YYYY-MM-DD') , '"+deleted+"' )";
-
-                Statement substatement = null;
+                sql = "INSERT INTO "+table_name+" VALUES ( '"+accession+"' , '"+userAccession+"' , '"+submissionAccession+"' , to_date('"+assigned+"', 'YYYY-MM-DD') , '"+deleted+"' )";
+                log.debug(sql);
+                targetstatement.execute(sql);
+            }
+            
+            //now update sequence to match
+            rs = sourcestatement.executeQuery("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME = '"+seq_name+"'");
+            if (rs.next()) {
+                Integer lastNumber = rs.getInt("LAST_NUMBER");
+                //not sure if we have to increment, but better safe than sorry.
+                lastNumber += 1;
+                //try to drop it if it exists
                 try {
-                    substatement = target.createStatement();
-                    substatement.execute(sql);
-                    substatement.close();
-                } catch (SQLException e) {
+                    sql = "DROP SEQUENCE "+seq_name;
                     log.info(sql);
-                    log.warn ("Unable to process "+accession, e);
-                } finally {
-                    if (substatement != null){
-                        try {
-                            substatement.close();
-                        } catch (SQLException e) {
-                            //do nothing
-                        }
+                    targetstatement.execute(sql);
+                } catch (SQLException e){
+                    if (e.getErrorCode() == 2289){
+                        //sequence does not exist error
+                        //do nothing
+                    } else {
+                        throw e;
                     }
                 }
-                
+                sql = "CREATE SEQUENCE "+seq_name+" START WITH "+lastNumber+" MAXVALUE 1000000000000000000000000000 MINVALUE 1 NOCYCLE CACHE 20 NOORDER";
+                log.info(sql);
+                targetstatement.execute(sql);
             }
+            
         } catch (SQLException e) {
             log.error("Unable to process SQL", e);
             return;
         } finally {
-            if (statement != null){
+            if (sourcestatement != null){
                 try {
-                    statement.close();
+                    sourcestatement.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+            if (targetstatement != null){
+                try {
+                    targetstatement.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
             }
         }
     }
-
+    
     public void doMain() {
         Connection source = null;
         Connection target = null;   
@@ -182,11 +213,10 @@ public class DBmigrate {
             return;
         }
    
-        
-        copyTable("sample_reference", target, source);
-        copyTable("sample_assay", target, source);
-        copyTable("sample_groups", target, source);
-        
+
+        copyTable("SAMPLE_GROUPS", "SEQ_GROUPS", target, source);
+        copyTable("SAMPLE_REFERENCE", "SEQ_REFERENCE", target, source);
+        copyTable("SAMPLE_ASSAY", "SEQ_ASSAY", target, source);
     }
 
     public static void main(String[] args) {
