@@ -52,6 +52,8 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
 
             for (SampleNode node : sampledata.scd.getNodes(SampleNode.class)) {
                 List<String> bundle = new ArrayList<String>();
+                bundle.add("biosamples-service:"+node.getSampleAccession());
+                
                 for (SCDNodeAttribute attr : node.getAttributes()) {
                     boolean isDatabase;
                     synchronized(DatabaseAttribute.class){
@@ -60,19 +62,21 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
                     if (isDatabase){
                         DatabaseAttribute dbattr = (DatabaseAttribute) attr;
         
-                        String servicename = dbattr.getAttributeValue();
-                        if (servicename.equals("ENA SRA")){
+                        String servicename = null;
+                        if (dbattr.getAttributeValue().equals("ENA SRA")){
                             servicename = "ena-service";
                         }
-                        
-                        bundle.add("biosamples-service:"+node.getSampleAccession());
-                        
-                        bundle.add(servicename+":"+dbattr.databaseID);
-                        
+                        if (servicename != null){
+                            bundle.add(servicename+":"+dbattr.databaseID);
+                        }
                     }
                 }
-
-                emMgr.storeMappingBundle( (String[]) bundle.toArray() );
+                //convert the list into an array
+                String[] bundlearray = new String[bundle.size()];
+                for (int i = 0; i < bundle.size(); i++){
+                    bundlearray[i] = bundle.get(i);
+                }
+                emMgr.storeMappingBundle( bundlearray );
             }
         }
     }
