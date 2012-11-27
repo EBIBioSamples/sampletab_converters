@@ -78,6 +78,7 @@ public class TabularToSampleTab {
     int projheaderindex = -1;
     int pubheaderindex = -1;
     int collectedbyindex = -1;
+    int identifiedbyindex = -1;
     int taxidindex = -1;
           
     private SampleNode lineToSample(String[] nextLine, SampleData st){
@@ -259,16 +260,24 @@ public class TabularToSampleTab {
                 }
             }
         }
+        //no publications, fall back to identified by
+        if (identifiers.size() == 0){
+            String identifiedby = line[identifiedbyindex];
+            identifiedby = identifiedby.replaceAll("[^\\w]", "");
+            
+            if (identifiedby.length() > 0){
+                identifiers.add(identifiedby);
+            }
+        }
         //no publications, fall back to collected by
-//        if (identifiers.size() == 0){
-//            String collectedby = line[collectedbyindex];
-//            collectedby = collectedby.replace(" ","_");
-//
-//            collectedby = collectedby.replaceAll("[^\\w_]", "");
-//            if (collectedby.length() > 0){
-//                identifiers.add(collectedby);
-//            }
-//        }
+        if (identifiers.size() == 0){
+            String collectedby = line[collectedbyindex];
+            collectedby = collectedby.replaceAll("[^\\w]", "");
+            
+            if (collectedby.length() > 0){
+                identifiers.add(collectedby);
+            }
+        }
         //still nothing, have to use species
         //TODO maybe abstract this a level or two up the taxonomy?
         if (identifiers.size() == 0){
@@ -276,7 +285,12 @@ public class TabularToSampleTab {
             
             //use division, not species
             try {
-                organism = "taxon"+TaxonUtils.getDivisionOfID(new Integer(line[taxidindex]));
+                organism = TaxonUtils.getDivisionOfID(new Integer(line[taxidindex]));
+                organism.replaceAll(" ", "-");
+                organism.replaceAll("[^\\w_]", "");
+                while (organism.contains("--")){
+                    organism.replaceAll("--", "-");
+                }
             } catch (NumberFormatException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -286,6 +300,7 @@ public class TabularToSampleTab {
             }
             
             if (organism != null && organism.length() > 0){
+                organism = "taxon-"+organism;
                 identifiers.add(organism);
             }
         }
@@ -382,6 +397,10 @@ public class TabularToSampleTab {
                     this.collectedbyindex = this.headers.indexOf("COLLECTED_BY");
                     if (this.collectedbyindex < 0){
                         throw new IOException("Headers does not contain COLLECTED_BY");
+                    }
+                    this.identifiedbyindex = this.headers.indexOf("IDENTIFIED_BY");
+                    if (this.identifiedbyindex < 0){
+                        throw new IOException("Headers does not contain IDENTIFIED_BY");
                     }
                     this.taxidindex = this.headers.indexOf("TAX_ID");
                     if (this.taxidindex < 0){
