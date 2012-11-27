@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.zooma;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -29,9 +29,9 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAtt
 public class CorrectorZooma {
     
     // logging
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private static Logger log = LoggerFactory.getLogger(uk.ac.ebi.fgpt.sampletab.zooma.CorrectorZooma.class);
     
-    LoadingCache<String, String> lookup = CacheBuilder.newBuilder()
+    private static LoadingCache<String, String> lookup = CacheBuilder.newBuilder()
     .maximumSize(1000)
     .build(
         new CacheLoader<String, String>() {
@@ -40,7 +40,7 @@ public class CorrectorZooma {
           }
         });
 
-    private String getZoomaHit(String query) throws JsonParseException, JsonMappingException, IOException {
+    private static String getZoomaHit(String query) throws JsonParseException, JsonMappingException, IOException {
         //URL jsurl = new URL("http://megatron.windows.ebi.ac.uk:8080/zooma/v2/api/search?query="+URLEncoder.encode(attr.getAttributeValue(), "UTF-8"));
         URL jsurl = new URL("http://wwwdev.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+URLEncoder.encode(query, "UTF-8"));
         log.debug("URL "+jsurl.toExternalForm());
@@ -58,6 +58,7 @@ public class CorrectorZooma {
                 Float score = new Float(tophit.get("score").getTextValue());
                 String fixTermSourceID;
                 String fixTermSourceREF;
+                //TODO do follow up calls
                 log.info(query+" -> "+fixName+" ("+score+")");
                 return fixName;
             }
@@ -65,7 +66,7 @@ public class CorrectorZooma {
         return "";
     }
     
-    public void correct(SampleData sampledata) {        
+    public static void correct(SampleData sampledata) {        
         for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
             for (SCDNodeAttribute a : new ArrayList<SCDNodeAttribute>(s.getAttributes())) {
                 boolean isAbstractNodeAttributeOntology = false;

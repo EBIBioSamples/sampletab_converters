@@ -9,14 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,22 +17,12 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
-import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
-import uk.ac.ebi.fgpt.sampletab.SampleTabToLoad;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
 
-public class AttributeSummary {
-
-    @Option(name = "-h", usage = "display help")
-    private boolean help;
-
-    @Option(name = "-i", aliases={"--input"}, usage = "input filename or glob")
-    private String inputFilename;
+public class AttributeSummary extends AbstractInfileDriver<Runnable> {
     
     @Option(name = "-o", aliases={"--output"}, usage = "output filename")
     private String outputFilename;
@@ -51,10 +34,7 @@ public class AttributeSummary {
     private int cols = 100;
     
     @Option(name = "--organism", aliases={"--organism"}, usage = "organism to use")
-    private String organism = null;
-
-    @Option(name = "--threaded", usage = "use multiple threads?")
-    private boolean threaded = false;
+    protected String organism = null;
 
     @Option(name = "--totals", usage = "display total counts?")
     private boolean totals = false;
@@ -62,13 +42,17 @@ public class AttributeSummary {
 	// logging
 	private Logger log = LoggerFactory.getLogger(getClass());
 	
+	//main collection location for attributes
 	protected volatile Map<String, Map<String, Integer>> attributes = Collections
 			.synchronizedMap(new HashMap<String, Map<String, Integer>>());
 	
-	private class ProcessTask implements Runnable {
+	
+	public class ProcessTask implements Runnable {
 		private File inFile;
-		ProcessTask(File inFile){
+		private String organism;
+		ProcessTask(File inFile, String organism){
 			this.inFile = inFile;
+			this.organism = organism;
 		}
 		
 		public void run() {
@@ -89,47 +73,51 @@ public class AttributeSummary {
 			    }
 			}
 		}
-		
-	}
-    
-	protected boolean includeNode(SCDNode node){
-	    if (organism == null){
-	        return true;
-	    } else {
-	        //get organism of node
-	        String nodeorganism = null;
-	        for (SCDNodeAttribute attr : node.getAttributes()){
-	            if (OrganismAttribute.class.isInstance(attr)){
-	                nodeorganism = attr.getAttributeValue();
+	    
+	    protected boolean includeNode(SCDNode node){
+	        if (organism == null){
+	            return true;
+	        } else {
+	            //get organism of node
+	            String nodeorganism = null;
+	            for (SCDNodeAttribute attr : node.getAttributes()){
+	                if (OrganismAttribute.class.isInstance(attr)){
+	                    nodeorganism = attr.getAttributeValue();
+	                }
+	            }
+	            //compare to this.organism
+	            if (organism.equals(nodeorganism)){
+	                return true;
+	            }else {
+	                return false;
 	            }
 	        }
-	        //compare to this.organism
-	        if (organism.equals(nodeorganism)){
-	            return true;
-	        }else {
-	            return false;
+	    }
+	    
+	    protected void processAttribute(SCDNodeAttribute attribute){
+	        String key = attribute.getAttributeType();
+	        String value = attribute.getAttributeValue();
+	        if (!attributes.containsKey(key)) {
+	            attributes.put(key,
+	                    Collections
+	                            .synchronizedMap(new HashMap<String, Integer>()));
+	        }
+	        if (attributes.get(key).containsKey(value)) {
+	            int count = attributes.get(key).get(value).intValue();
+	            attributes.get(key).put(value,
+	                    count + 1);
+	        } else {
+	            attributes.get(key).put(value, new Integer(1));
 	        }
 	    }
 	}
+
+    @Override
+    protected ProcessTask getNewTask(File inputFile) {
+        return new ProcessTask(inputFile, organism);
+    }
 	
-	protected void processAttribute(SCDNodeAttribute attribute){
-        String key = attribute.getAttributeType();
-        String value = attribute.getAttributeValue();
-        if (!attributes.containsKey(key)) {
-            attributes.put(key,
-                    Collections
-                            .synchronizedMap(new HashMap<String, Integer>()));
-        }
-        if (attributes.get(key).containsKey(value)) {
-            int count = attributes.get(key).get(value).intValue();
-            attributes.get(key).put(value,
-                    count + 1);
-        } else {
-            attributes.get(key).put(value, new Integer(1));
-        }
-	}
-	
-	private class KeyComparator implements Comparator {
+	private class KeyComparator implements Comparator<Object> {
 		private final Map<String, Map<String, Integer>> map;
 		
 		public KeyComparator(Map<String, Map<String, Integer>> map){
@@ -158,7 +146,7 @@ public class AttributeSummary {
 		}
 	}
 	
-	class ValueComparator implements Comparator {
+	class ValueComparator implements Comparator<Object> {
 		private final Map<String, Integer> map;
 		
 		public ValueComparator(Map<String, Integer> map){
@@ -185,55 +173,7 @@ public class AttributeSummary {
     }
 
     public void doMain(String[] args) {
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments.
-            parser.parseArgument(args);
-            // TODO check for extra arguments?
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printSingleLineUsage(System.err);
-            System.err.println();
-            parser.printUsage(System.err);
-            System.err.println();
-            System.exit(1);
-            return;
-        }
-
-        log.info("Looking for input files "+inputFilename);
-        List<File> inputFiles = new ArrayList<File>();
-        inputFiles = FileUtils.getMatchesGlob(inputFilename);
-        log.info("Found " + inputFiles.size() + " input files");
-        Collections.sort(inputFiles);
-
-        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-
-        for (File inputFile : inputFiles) {
-            Runnable t = new ProcessTask(inputFile);
-            if (threaded) {
-                pool.execute(t);
-            } else {
-                t.run();
-            }
-        }
-        
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interupted awaiting thread pool termination", e);
-            }
-        }
-        log.info("Finished reading");
+        super.doMain(args);
         
         //now to write back out
         Writer out = null;
@@ -294,7 +234,6 @@ public class AttributeSummary {
             }
             System.out.println("Total number of attributes: "+total);
         }
-        
 	}
 
 }

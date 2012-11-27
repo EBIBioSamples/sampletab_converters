@@ -3,17 +3,14 @@ package uk.ac.ebi.fgpt.sampletab;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractDriver {
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     protected boolean help;
 
-    private Logger log = LoggerFactory.getLogger(getClass());
+    protected CmdLineParser cmdParser = new CmdLineParser(this);
     
     protected void doMain(String[] args){
-        CmdLineParser cmdParser = new CmdLineParser(this);
         try {
             // parse the arguments.
             cmdParser.parseArgument(args);
