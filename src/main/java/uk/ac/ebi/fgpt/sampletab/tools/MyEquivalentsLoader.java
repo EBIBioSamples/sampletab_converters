@@ -4,13 +4,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
@@ -23,6 +21,11 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
 
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
+
+
+    public static void main(String[] args) {
+        new MyEquivalentsLoader().doMain(args);
+    }
     
     @Override
     protected MyEquivalentsLoaderTask getNewTask(File inputFile) {
