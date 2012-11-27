@@ -125,9 +125,6 @@ public class DBmigrate {
             log.info(sql);
             targetstatement.execute(sql);
             
-            //sql = "CREATE OR REPLACE TRIGGER TRG_"+table_name+"_ACC BEFORE INSERT ON "+table_name+" REFERENCING OLD AS OLD NEW AS NEW FOR EACH ROW BEGIN\nSELECT "+seq_name+".nextval INTO :new.ACCESSION FROM dual;\nEND; /";
-            //targetstatement.execute(sql);
-            
             rs = sourcestatement.executeQuery("SELECT * FROM "+table_name);
             while (rs.next()) {
                 Integer accession = rs.getInt("accession");
@@ -166,6 +163,12 @@ public class DBmigrate {
                 log.info(sql);
                 targetstatement.execute(sql);
             }
+            
+            
+            //now create the trigger that uses the sequence
+            sql = "CREATE OR REPLACE TRIGGER TRG_"+table_name+"_ACC BEFORE INSERT ON "+table_name+" REFERENCING OLD AS OLD NEW AS NEW FOR EACH ROW BEGIN \"SELECT "+seq_name+".nextval INTO :new.ACCESSION FROM dual;\" END";
+            log.info(sql);
+            targetstatement.execute(sql);
             
         } catch (SQLException e) {
             log.error("Unable to process SQL", e);
