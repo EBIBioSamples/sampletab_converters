@@ -33,6 +33,12 @@
 			<url>http://biojava.org/download/maven/</url>
 		</repository>
 
+		
+		<repository>
+            <id>oerc-repo</id>
+            <name>OeRC Maven repository</name>
+            <url>http://frog.oerc.ox.ac.uk:8080/nexus-2.1.2/content/repositories/releases/</url>
+        </repository>
 
 		<!--  internal repository -->
 		<repository>
@@ -43,6 +49,13 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+		
+		<repository>
+			<id>ebi-repo</id>
+			<name>EBI Repository</name>
+			<url>http://www.ebi.ac.uk/~maven/m2repo/</url>
+		</repository>
+		
 	</repositories>
 
 	<dependencies>
@@ -141,6 +154,18 @@
 			<groupId>org.biojava</groupId>
 			<artifactId>core</artifactId>
 			<version>1.8.2</version>
+		</dependency>
+		            
+		<dependency>
+			<groupId>org.isatools</groupId>
+			<artifactId>import_layer</artifactId>
+			<version>1.5</version>
+		</dependency>
+		
+		<dependency>
+  			<groupId>uk.ac.ebi.fg</groupId>
+  			<artifactId>myequivalents-core</artifactId>
+  			<version>0.0</version>
 		</dependency>
 		            
 	</dependencies>
