@@ -339,7 +339,7 @@ public class IMSRTabToSampleTab {
         st.msi.organizations.add(new Organization("International Mouse Strain Resource", null, "http://www.findmice.org/", null, null));
         st.msi.organizations.add(new Organization(getSummary().facilities.get(index), null, "http://www.findmice.org/", null, "Biomaterial Provider"));
         
-        st.msi.databases.add(new Database("IMSR "+site, "http://www.findmice.org/summary?query=&repositories=CMMR"+site, site));
+        st.msi.databases.add(new Database("IMSR "+site, "http://www.findmice.org/summary?query=&repositories="+site, site));
     }
 
     public static void main(String[] args) {
