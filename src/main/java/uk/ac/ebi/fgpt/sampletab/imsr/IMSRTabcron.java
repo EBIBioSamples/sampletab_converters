@@ -105,13 +105,16 @@ public class IMSRTabcron {
             File raw = new File(new File(outdir, subID), "raw.tab.txt");
             if (!raw.exists()){
                 downloader.download(subID, raw);
-                submitConan(subID);
+                if (!noconan){
+                    submitConan(subID);
+                }
             } else {
                 Date fileDate = new Date(raw.lastModified());
                 if (summary.updates.get(i).after(fileDate)){
                     downloader.download(subID, raw);
-                    if (!noconan)
+                    if (!noconan){
                         submitConan(subID);
+                    }
                 }
             }
         }
