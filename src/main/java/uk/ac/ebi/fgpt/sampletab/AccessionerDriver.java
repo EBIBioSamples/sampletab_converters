@@ -1,10 +1,13 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +36,7 @@ public class AccessionerDriver {
     private String hostname;
 
     @Option(name = "-t", aliases={"--port"}, usage = "server port")
-    private int port;
+    private Integer port;
 
     @Option(name = "-d", aliases={"--database"}, usage = "server database")
     private String database;
@@ -75,7 +78,33 @@ public class AccessionerDriver {
             System.exit(1);
             return;
         }
+        
+        
+        //load defaults
+        Properties oracleProperties = new Properties();
+        try {
+            InputStream is = AccessionerDriver.class.getResourceAsStream("/oracle.properties");
+            oracleProperties.load(is);
+        } catch (IOException e) {
+            log.error("Unable to read resource oracle.properties", e);
+        }
+        if (hostname == null){
+            hostname = oracleProperties.getProperty("hostname");
+        }
+        if (port == null){
+            port = new Integer(oracleProperties.getProperty("port"));
+        }
+        if (database == null){
+            database = oracleProperties.getProperty("database");
+        }
+        if (username == null){
+            username = oracleProperties.getProperty("username");
+        }
+        if (password == null){
+            password = oracleProperties.getProperty("password");
+        }
 
+        //create the accessioner
         try {
             accessioner = new Accessioner(hostname, port, database, username, password);
         } catch (ClassNotFoundException e) {
