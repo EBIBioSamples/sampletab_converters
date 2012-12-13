@@ -519,6 +519,8 @@ public class TabularToSampleTab {
 
                             //create some information
                             st.msi.submissionIdentifier = prefix+"-"+id;
+                            st.msi.submissionIdentifier = st.msi.submissionIdentifier.replace(" ", "-");
+                            st.msi.submissionIdentifier = st.msi.submissionIdentifier.replace("&", "and");
                             if (wgs){
                                 //its a whole genome shotgun sample, describe as such
                                 String speciesName = null;
