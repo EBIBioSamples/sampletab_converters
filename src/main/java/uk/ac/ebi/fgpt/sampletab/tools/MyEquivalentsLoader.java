@@ -12,6 +12,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SameAsAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fg.myequivalents.managers.impl.base.BaseEntityMappingManager;
 import uk.ac.ebi.fg.myequivalents.managers.interfaces.EntityMappingManager;
@@ -59,15 +60,33 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
                     synchronized(DatabaseAttribute.class){
                         isDatabase = DatabaseAttribute.class.isInstance(attr);
                     }
+                    boolean isSameAs;
+                    synchronized(SameAsAttribute.class){
+                        isSameAs = SameAsAttribute.class.isInstance(attr);
+                    }
                     if (isDatabase){
                         DatabaseAttribute dbattr = (DatabaseAttribute) attr;
         
                         String servicename = null;
+                        String serviceaccession = null;
                         if (dbattr.getAttributeValue().equals("ENA SRA")){
                             servicename = "ena-service";
+                            serviceaccession = dbattr.databaseID;
+                        } else if (dbattr.getAttributeValue().equals("ArrayExpress")){
+                            //servicename = "arrayexpress-service";
+                            //serviceaccession = dbattr.databaseID;
+                            //dont do arrayexpress, no sample-specific accessions
+                        } else if (dbattr.getAttributeValue().equals("PRIDE")){
+                            servicename = "PRIDE-service";
+                            serviceaccession = dbattr.databaseID;
                         }
+                        
                         if (servicename != null){
-                            bundle.add(servicename+":"+dbattr.databaseID);
+                            bundle.add(servicename+":"+serviceaccession);
+                        }
+                    } else if (isSameAs){
+                        if (attr.getAttributeValue().matches("SAME[EN]A?[1-9][0-9]+")){
+                            bundle.add("biosamples-service:"+attr.getAttributeValue());
                         }
                     }
                 }
