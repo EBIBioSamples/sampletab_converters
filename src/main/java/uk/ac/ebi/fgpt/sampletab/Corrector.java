@@ -66,6 +66,7 @@ public class Corrector {
         //some UTF-8 hacks
         out = out.replaceAll("ÃƒÂ¼", "ü");
         out = out.replaceAll("\u2009", " "); //thin space
+        out = out.replaceAll("\u00A0", " "); //non-breaking space
         
         return out;
     }
