@@ -25,6 +25,10 @@ import junit.framework.TestCase;
 
 
 public class TestSampleTabAccessioner extends TestCase {
+    public void testTest(){
+        
+    }
+    
 	/*
 	private URL resource;
     private SampleTabParser parser;
