@@ -106,7 +106,7 @@ public class AccessionerDriver {
 
         //create the accessioner
         try {
-            accessioner = new Accessioner(hostname, port, database, username, password);
+            accessioner = new AccessionerENA(hostname, port, database, username, password);
         } catch (ClassNotFoundException e) {
             log.error("Unable to find interface class ", e);
             System.exit(2);

@@ -118,7 +118,7 @@ public class Accessioner {
         return convert(parser.parse(dataIn));
     }
 
-    private void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries) throws SQLException {
+    protected void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries) throws SQLException {
 
         Connection connect = null;
         PreparedStatement statement = null;
@@ -175,7 +175,7 @@ public class Accessioner {
         }
     }
 
-    private void bulkGroups(SampleData sd, String submissionID, int retries) throws SQLException {
+    protected void bulkGroups(SampleData sd, String submissionID, int retries) throws SQLException {
 
         Connection connect = null;
         PreparedStatement statement = null;
@@ -230,7 +230,7 @@ public class Accessioner {
         }
     }
 
-    private void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries) throws SQLException{
+    protected void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries) throws SQLException{
 
         Connection connect = null;
         PreparedStatement statement = null;
@@ -239,20 +239,8 @@ public class Accessioner {
         try {
             if (sample.getSampleAccession() == null) {
                 String name = sample.getNodeName().trim();
-
-                log.info("Assigning new accession for "+submissionID+" : "+name);
-                
-                //insert it if not exists
+                String accession = null;
                 connect = getConnection();
-                statement = connect
-                        .prepareStatement("INSERT INTO "
-                                + table
-                                + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
-                statement.setString(1, name);
-                statement.setString(2, submissionID);
-                log.trace(statement.toString());
-                statement.executeUpdate();
-                statement.close();
 
                 statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
                         + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
@@ -260,12 +248,35 @@ public class Accessioner {
                 statement.setString(2, submissionID);
                 log.trace(statement.toString());
                 results = statement.executeQuery();
-                results.next();
-                Integer accessionID = results.getInt(1);
-                String accession = prefix + accessionID;
-                statement.close();
-                results.close();
-
+                if (results.next()){
+                    accession = prefix + results.getInt(1);
+                    statement.close();
+                    results.close();
+                } else {
+                    log.info("Assigning new accession for "+submissionID+" : "+name);
+                    
+                    //insert it if not exists
+                    statement = connect
+                            .prepareStatement("INSERT INTO "
+                                    + table
+                                    + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
+                    statement.setString(1, name);
+                    statement.setString(2, submissionID);
+                    log.trace(statement.toString());
+                    statement.executeUpdate();
+                    statement.close();
+    
+                    statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
+                            + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
+                    statement.setString(1, name);
+                    statement.setString(2, submissionID);
+                    log.trace(statement.toString());
+                    results = statement.executeQuery();
+                    results.next();
+                    accession = prefix + results.getInt(1);
+                    statement.close();
+                    results.close();
+                }
                 log.debug("Assigning " + accession + " to " + name);
                 sample.setSampleAccession(accession);
             }
@@ -300,7 +311,7 @@ public class Accessioner {
         }
     }
 
-    private void singleGroup(SampleData sd, GroupNode group, String submissionID, int retries) throws SQLException{
+    protected void singleGroup(SampleData sd, GroupNode group, String submissionID, int retries) throws SQLException{
 
         Connection connect = null;
         PreparedStatement statement = null;
@@ -308,7 +319,11 @@ public class Accessioner {
         
         try {
             if (group.getGroupAccession() == null) {
+
                 String name = group.getNodeName();
+                
+                log.info("Assigning new accession for "+submissionID+" : "+name);
+                
                 connect = getConnection();
                 statement = connect
                         .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");

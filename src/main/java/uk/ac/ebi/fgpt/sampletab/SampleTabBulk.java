@@ -96,7 +96,7 @@ public class SampleTabBulk {
         this.password = mysqlProperties.getProperty("password");
         
         try {
-            accessioner = new Accessioner(hostname, 
+            accessioner = new AccessionerENA(hostname, 
                     port, database, username, password);
         } catch (ClassNotFoundException e) {
             log.error("Unable to create accessioner", e);
