@@ -64,9 +64,8 @@ public class Corrector {
         out = out.replaceAll("\\s*\\<[bB][rR]? ?/?\\>\\s*"," ");
         
         //some UTF-8 hacks
-        out = out.replaceAll("ÃƒÂ¼", "ü");
-        out = out.replaceAll("\u2009", " "); //thin space
-        out = out.replaceAll("\u00A0", " "); //non-breaking space
+        out = out.replace("ÃƒÂ¼", "ü");
+        //spaces handled by SampleTabWriter
         
         return out;
     }

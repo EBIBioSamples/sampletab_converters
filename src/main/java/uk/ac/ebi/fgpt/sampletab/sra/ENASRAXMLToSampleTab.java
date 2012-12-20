@@ -95,6 +95,7 @@ public class ENASRAXMLToSampleTab {
             } else {
                 log.warn("no STUDY_ABSTRACT or STUDY_DESCRIPTION");
             }
+            
         }
         if (description != null) {
             st.msi.submissionDescription = description;
@@ -245,7 +246,8 @@ public class ENASRAXMLToSampleTab {
             }
             
             if (sampledescription != null) {
-                samplenode.setSampleDescription(sampledescription.getTextTrim());
+                String descriptionstring = sampledescription.getTextTrim();
+                samplenode.setSampleDescription(descriptionstring);
             }
 
             // finally, any other attributes ENA SRA provides
