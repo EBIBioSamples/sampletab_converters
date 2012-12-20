@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,6 +204,9 @@ public class SampleTabBulk {
                     st = parser.parse(sampletabpre);
                 } catch (ParseException e) {
                     log.error("Problem processing "+sampletabpre, e);
+                    for (ErrorItem err : e.getErrorItems()){
+                        log.error(err.toString());
+                    }
                     return;
                 }
                 
@@ -211,6 +215,9 @@ public class SampleTabBulk {
                     accessioner.convert(st);
                 } catch (ParseException e) {
                     log.error("Problem processing "+sampletabpre, e);
+                    for (ErrorItem err : e.getErrorItems()){
+                        log.error(err.toString());
+                    }
                     return;
                 } catch (SQLException e) {
                     log.error("Problem processing "+sampletabpre, e);
