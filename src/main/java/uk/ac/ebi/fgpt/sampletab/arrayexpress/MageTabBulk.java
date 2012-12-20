@@ -116,6 +116,9 @@ public class MageTabBulk {
             } else if (idffilename.equals("E-GEOD-15448.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
                 return;
+            } else if (idffilename.equals("E-GEOD-16375.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
+                return;
             } else if (idffilename.equals("E-GEOD-17067.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it is has non-standard sdrfs");
                 return;
@@ -185,7 +188,136 @@ public class MageTabBulk {
             } else if (idffilename.equals("E-GEOD-19553.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
+            } else if (idffilename.equals("E-GEOD-20668.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-21161.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-21242.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-21427.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-21812.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-22067.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-22410.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-22478.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-22657.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-22763.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-22959.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-23316.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-23762.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-24565.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-25124.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-25308.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-26064.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-26284.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-26367.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-27221.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-28264.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-28269.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-28919.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-29362.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-30017.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-30171.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-30538.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-30724.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-31052.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-31211.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-31226.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-32045.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-33178.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
             } else if (idffilename.equals("E-GEOD-33213.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-33584.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-33600.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-34399.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-34415.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-35806.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-36029.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-37650.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-37858.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-37909.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-38575.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
             } else if (idffilename.equals("E-GEOD-39977.idf.txt")){
@@ -200,10 +332,73 @@ public class MageTabBulk {
             } else if (idffilename.equals("E-GEOD-40832.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
+            } else if (idffilename.equals("E-GEOD-5516.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
             } else if (idffilename.equals("E-CBIL-28.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
             } else if (idffilename.equals("E-BUGS-62.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MEXP-1671.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MEXP-268.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MEXP-3491.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MEXP-43.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MEXP-71.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MEXP-938.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MIMR-282.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MIMR-461.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MIMR-541.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MTAB-202.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MTAB-345.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MTAB-463.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MTAB-678.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MTAB-730.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-MTAB-777.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-NASC-8.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-TABM-213.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-TABM-294.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-TABM-443.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-TOXM-40.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
             } 

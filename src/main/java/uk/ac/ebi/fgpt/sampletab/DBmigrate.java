@@ -14,7 +14,36 @@ public class DBmigrate {
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    
+    private Connection getProdMySQLConnection() throws ClassNotFoundException, SQLException{
+        
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw e;
+        }
+        log.info("Found com.mysql.jdbc.Driver");
+        
+        //production environment
+        String hostname = "mysql-ae-autosubs.ebi.ac.uk";
+        String port = "4091";
+        String database = "ae_autosubs";
+        String username = "curator";
+        String password = "troajsp";
+        
+        String url = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
+ 
+        Connection con = null;
+        try {
+            con = DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            log.error("Unable to connect to "+url, e);
+            throw e;
+        }
+ 
+        log.info("connected to "+url+" with username/password "+username+"/"+password);
+        return con;
+        
+    }
     
     private Connection getProdOracleConnection() throws ClassNotFoundException, SQLException{
         try {
@@ -104,6 +133,35 @@ public class DBmigrate {
                     throw e;
                 }
             }
+
+            //make sure any triggers are dropped before adding the data
+            try {
+                sql = "DROP TRIGGER  TRG_"+table_name+"_ACC";
+                log.info(sql);
+                targetstatement.execute(sql);
+            } catch (SQLException e){
+                if (e.getErrorCode() == 4080){
+                    //trigger does not exist error
+                    //do nothing
+                } else {
+                    throw e;
+                }
+            }
+            
+            //try to drop sequence if it exists
+            try {
+                sql = "DROP SEQUENCE "+seq_name;
+                log.info(sql);
+                targetstatement.execute(sql);
+            } catch (SQLException e){
+                if (e.getErrorCode() == 2289){
+                    //sequence does not exist error
+                    //do nothing
+                } else {
+                    throw e;
+                }
+            }
+            
             
             sql = "CREATE TABLE "+table_name+" ( accession NUMBER(11) NOT NULL, user_accession VARCHAR2(255) NOT NULL, submission_accession VARCHAR2(255) NOT NULL, date_assigned date NOT NULL, is_deleted NUMBER(11) DEFAULT 0 NOT NULL) TABLESPACE BSDACC_DATA NOCOMPRESS";
             log.info(sql);
@@ -125,7 +183,7 @@ public class DBmigrate {
             log.info(sql);
             targetstatement.execute(sql);
             
-            rs = sourcestatement.executeQuery("SELECT * FROM "+table_name);
+            rs = sourcestatement.executeQuery("SELECT * FROM "+table_name.toLowerCase());
             while (rs.next()) {
                 Integer accession = rs.getInt("accession");
                 String userAccession = rs.getString("user_accession");
@@ -141,24 +199,12 @@ public class DBmigrate {
             }
             
             //now update sequence to match
-            rs = sourcestatement.executeQuery("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME = '"+seq_name+"'");
+            //rs = sourcestatement.executeQuery("SELECT LAST_NUMBER FROM user_sequences WHERE SEQUENCE_NAME = '"+seq_name+"'");
+            rs = sourcestatement.executeQuery("SELECT MAX(ACCESSION) FROM "+table_name.toLowerCase());
             if (rs.next()) {
-                Integer lastNumber = rs.getInt("LAST_NUMBER");
+                Integer lastNumber = rs.getInt(1);
                 //not sure if we have to increment, but better safe than sorry.
                 lastNumber += 1;
-                //try to drop it if it exists
-                try {
-                    sql = "DROP SEQUENCE "+seq_name;
-                    log.info(sql);
-                    targetstatement.execute(sql);
-                } catch (SQLException e){
-                    if (e.getErrorCode() == 2289){
-                        //sequence does not exist error
-                        //do nothing
-                    } else {
-                        throw e;
-                    }
-                }
                 sql = "CREATE SEQUENCE "+seq_name+" START WITH "+lastNumber+" MAXVALUE 1000000000000000000000000000 MINVALUE 1 NOCYCLE CACHE 20 NOORDER";
                 log.info(sql);
                 targetstatement.execute(sql);
@@ -166,7 +212,8 @@ public class DBmigrate {
             
             
             //now create the trigger that uses the sequence
-            sql = "CREATE OR REPLACE TRIGGER TRG_"+table_name+"_ACC BEFORE INSERT ON "+table_name+" REFERENCING OLD AS OLD NEW AS NEW FOR EACH ROW BEGIN \"SELECT "+seq_name+".nextval INTO :new.ACCESSION FROM dual;\" END";
+            
+            sql = "CREATE TRIGGER TRG_"+table_name+"_ACC BEFORE INSERT ON "+table_name+" REFERENCING OLD AS OLD NEW AS NEW FOR EACH ROW BEGIN SELECT "+seq_name+".nextval INTO :new.ACCESSION FROM dual; END;";
             log.info(sql);
             targetstatement.execute(sql);
             
@@ -196,8 +243,8 @@ public class DBmigrate {
         Connection target = null;   
         
         try {
-            //source = getMySQLConnection();
-            source = getProdOracleConnection();
+            source = getProdMySQLConnection();
+            //source = getProdOracleConnection();
         } catch (ClassNotFoundException e) {
             log.error("Unable to find driver", e);
             return;
@@ -208,6 +255,7 @@ public class DBmigrate {
         
         try {
             target = getTestOracleConnection();
+            //target = getProdOracleConnection();
         } catch (ClassNotFoundException e) {
             log.error("Unable to find driver", e);
             return;

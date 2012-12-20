@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.dom4j.DocumentException;
 import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,10 +46,12 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SameAsAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.CorrectorTermSource;
+import uk.ac.ebi.fgpt.sampletab.utils.BioSDUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class MageTabToSampleTab {
@@ -249,10 +252,22 @@ public class MageTabToSampleTab {
     private void processComments(Map<String, String> comments, SCDNode scdnode){
         if (comments != null ){
             for (String key : comments.keySet()) {
-                CommentAttribute comment = new CommentAttribute();
-                comment.type = key;
-                comment.setAttributeValue(comments.get(key));
-                scdnode.addAttribute(comment);
+                String value = comments.get(key);
+                if (key.equals("ENA_SAMPLE")){
+                    try {
+                        for (String biosdacc : BioSDUtils.getBioSDAccessionOf(value)){
+                            SameAsAttribute sameas = new SameAsAttribute(biosdacc);
+                            scdnode.addAttribute(sameas);
+                        }
+                    } catch (DocumentException e) {
+                        log.error("Problem getting accessions of "+value, e);
+                    }
+                } else {
+                    CommentAttribute comment = new CommentAttribute();
+                    comment.type = key;
+                    comment.setAttributeValue(value);
+                    scdnode.addAttribute(comment);
+                }
             }
         }
     }
