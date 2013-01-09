@@ -144,7 +144,7 @@ public class PRIDEcron {
         }
         
         //Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
-        Pattern regex = Pattern.compile("PRIDE_Exp_IdentOnly_Ac_([0-9]+)\\.xml\\.gz");
+        Pattern regex = Pattern.compile("PRIDE_Exp_mzData_Ac_([0-9]+)\\.xml\\.gz");
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
@@ -181,7 +181,7 @@ public class PRIDEcron {
             File trimmed = new File(subdir, "trimmed.xml");
             if (trimmed.exists()){
                 String prideAccession = subdir.getName().substring(4);
-                String ftpFilename = "PRIDE_Exp_IdentOnly_Ac_"+prideAccession+".xml.gz";
+                String ftpFilename = "PRIDE_Exp_mzData_Ac_"+prideAccession+".xml.gz";
                 
                 boolean exists = false;
                 for (FTPFile file : files) {
@@ -194,6 +194,7 @@ public class PRIDEcron {
                 
                 if (!exists){
                     //this has been deleted
+                    log.info("Detected deleted "+prideAccession);
                     deleted.add(prideAccession);
                     updated.add(prideAccession);
                 }
