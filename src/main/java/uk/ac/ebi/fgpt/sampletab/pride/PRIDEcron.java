@@ -112,6 +112,9 @@ public class PRIDEcron {
 						log.error("Error parsing file "+xmlfile, e);
 						return;
 					}
+					if (projects.size() == 0){
+					    log.warn("Unable to find any projects for "+subdir.getName());
+					}
                     for (String project : projects) {
                         // add it if it does not exist
                         synchronized (this.subs) {
@@ -143,8 +146,8 @@ public class PRIDEcron {
             return;
         }
         
-        //Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
-        Pattern regex = Pattern.compile("PRIDE_Exp_mzData_Ac_([0-9]+)\\.xml\\.gz");
+        Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
+        //Pattern regex = Pattern.compile("PRIDE_Exp_mzData_Ac_([0-9]+)\\.xml\\.gz");
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
@@ -181,7 +184,8 @@ public class PRIDEcron {
             File trimmed = new File(subdir, "trimmed.xml");
             if (trimmed.exists()){
                 String prideAccession = subdir.getName().substring(4);
-                String ftpFilename = "PRIDE_Exp_mzData_Ac_"+prideAccession+".xml.gz";
+                String ftpFilename = "PRIDE_Exp_Complete_Ac_"+prideAccession+".xml.gz";
+                //String ftpFilename = "PRIDE_Exp_mzData_Ac_"+prideAccession+".xml.gz";
                 
                 boolean exists = false;
                 for (FTPFile file : files) {

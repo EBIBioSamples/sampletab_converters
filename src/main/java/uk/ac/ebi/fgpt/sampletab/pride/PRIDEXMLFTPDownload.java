@@ -78,7 +78,7 @@ public class PRIDEXMLFTPDownload implements Runnable {
         // now we need to download, extract & filter the file
         try {
             //curl needs to redirect stderr to stdout
-            String bashcom = "curl -o - -s ftp://ftp.ebi.ac.uk/pub/databases/pride/PRIDE_Exp_mzData_Ac_" + accession + ".xml.gz 2>&1" 
+            String bashcom = "curl -o - -s ftp://ftp.ebi.ac.uk/pub/databases/pride/PRIDE_Exp_Complete_Ac_" + accession + ".xml.gz 2>&1" 
                 + " | gunzip -c -d"
                 + " | sed '/<GelFreeIdentification>/,/<\\/GelFreeIdentification>/d' "
                 + " | sed '/<TwoDimensionalIdentification>/,/<\\/TwoDimensionalIdentification>/d' "
