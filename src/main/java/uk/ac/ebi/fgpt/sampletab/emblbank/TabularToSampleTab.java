@@ -65,6 +65,9 @@ public class TabularToSampleTab {
     
     @Option(name = "-bar", usage = "is barcode input?")
     private boolean bar = false;
+    
+    @Option(name = "-cds", usage = "is coding sequence input?")
+    private boolean cds = false;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -280,7 +283,7 @@ public class TabularToSampleTab {
         }
         //still nothing, have to use species
         //TODO maybe abstract this a level or two up the taxonomy?
-        if (identifiers.size() == 0){
+        if (bar && identifiers.size() == 0){
             String organism = null;
             
             //use division, not species
@@ -307,6 +310,7 @@ public class TabularToSampleTab {
         
         if (identifiers.size() == 0){
             log.warn("No identifiers for "+line[0]);
+            identifiers.add(line[0]);
         }
         return identifiers;
     }
@@ -555,9 +559,17 @@ public class TabularToSampleTab {
                                 }
                             } else if (bar){
                                 //need to generate a title for the submission
-                                st.msi.submissionTitle = st.msi.submissionIdentifier;
+                                st.msi.submissionTitle = "EMBL-BANK barcode "+st.msi.submissionIdentifier;
                                 //TODO use the title of a publication, if one exists
+                            } else if (cds){
+                                //need to generate a title for the submission
+                                st.msi.submissionTitle = "EMBL-BANK coding sequence (CDS) "+st.msi.submissionIdentifier;
+                                //TODO use the title of a publication, if one exists
+                            } else {
+                                log.warn("No submission type indicated");
+                                
                             }
+                            
                             
                             log.debug("No. of publications = "+st.msi.publications.size());
                             log.debug("Empty? "+st.msi.publications.isEmpty());
