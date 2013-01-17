@@ -114,6 +114,7 @@ public class PRIDEcron {
 					}
 					if (projects.size() == 0){
 					    log.warn("Unable to find any projects for "+subdir.getName());
+					    projects.add(subdir.getName());
 					}
                     for (String project : projects) {
                         // add it if it does not exist

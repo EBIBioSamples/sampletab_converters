@@ -82,7 +82,7 @@ public class PRIDEXMLFTPDownload implements Runnable {
                 + " | gunzip -c -d"
                 + " | sed '/<GelFreeIdentification>/,/<\\/GelFreeIdentification>/d' "
                 + " | sed '/<TwoDimensionalIdentification>/,/<\\/TwoDimensionalIdentification>/d' "
-                + " | sed '/<spectrumList/,/<\\/spectrumList>/d' " 
+                + " | sed '/<spectrumList[^/]*>/,/<\\/spectrumList>/d' " 
                 + " > " + outfile;
             log.debug(bashcom);
 
