@@ -243,7 +243,7 @@ public class TabularToSampleTab {
         List<String> identifiers = new ArrayList<String>();
         
         String projString = null;
-        if (projheaderindex > 0){
+        if (projheaderindex > 0 && projheaderindex < line.length){
             projString = line[projheaderindex].trim();
         }
         if (projString != null && projString.length() > 0){
@@ -255,30 +255,36 @@ public class TabularToSampleTab {
             }
         } else {
             String pubString = null;
-            pubString = line[pubheaderindex];
-            for(String pubID : pubString.split(",")){
-                pubID = pubID.trim();
-                if (pubID.length() > 0){
-                    identifiers.add(pubID);
+            if (pubheaderindex > 0 && pubheaderindex < line.length){
+                pubString = line[pubheaderindex];
+                for(String pubID : pubString.split(",")){
+                    pubID = pubID.trim();
+                    if (pubID.length() > 0){
+                        identifiers.add(pubID);
+                    }
                 }
             }
         }
         //no publications, fall back to identified by
         if (identifiers.size() == 0){
-            String identifiedby = line[identifiedbyindex];
-            identifiedby = identifiedby.replaceAll("[^\\w]", "");
-            
-            if (identifiedby.length() > 0){
-                identifiers.add(identifiedby);
+            if (identifiedbyindex > 0 && identifiedbyindex < line.length){
+                String identifiedby = line[identifiedbyindex];
+                identifiedby = identifiedby.replaceAll("[^\\w]", "");
+                
+                if (identifiedby.length() > 0){
+                    identifiers.add(identifiedby);
+                }
             }
         }
         //no publications, fall back to collected by
         if (identifiers.size() == 0){
-            String collectedby = line[collectedbyindex];
-            collectedby = collectedby.replaceAll("[^\\w]", "");
-            
-            if (collectedby.length() > 0){
-                identifiers.add(collectedby);
+            if (collectedbyindex > 0 && collectedbyindex < line.length){
+                String collectedby = line[collectedbyindex];
+                collectedby = collectedby.replaceAll("[^\\w]", "");
+                
+                if (collectedby.length() > 0){
+                    identifiers.add(collectedby);
+                }
             }
         }
         //still nothing, have to use species
@@ -318,8 +324,15 @@ public class TabularToSampleTab {
     private Set<Publication> getPublications(String[] line){
         Set<Publication> pubSet = new HashSet<Publication>();
         
-        String[] doiStrings = line[doiindex].trim().split(",");
-        String[] pubmedStrings = line[pubmedindex].trim().split(",");
+        String[] doiStrings = new String[0];
+        if (doiindex > 0 && doiindex < line.length){
+            doiStrings = line[doiindex].trim().split(",");
+        }
+        
+        String[] pubmedStrings = new String[0];
+        if (pubmedindex > 0 && pubmedindex < line.length){
+            pubmedStrings = line[pubmedindex].trim().split(",");
+        }
         
         int maxlength = doiStrings.length;
         if (pubmedStrings.length > maxlength){
@@ -418,7 +431,7 @@ public class TabularToSampleTab {
                     }
                 
                     String accession = nextLine[0].trim();
-                    log.debug("First processing "+accession);
+                    log.info("First processing "+accession);
                     
                     for (String id : getGroupIdentifiers(nextLine)){
 
