@@ -19,11 +19,13 @@ fi
 
 #args environment variable can be used to provide java arguments
 
+#add some memory management
+if [ -z $java ]
+	args="-Xmx16g -XX:+UseConcMarkSweepGC $args"
+	
 #add proxy args
 args="-Dhttp.proxyHost=wwwcache.ebi.ac.uk -Dhttp.proxyPort=3128 -Dhttp.nonProxyHosts=*.ebi.ac.uk -DproxyHost=wwwcache.ebi.ac.uk -DproxyPort=3128 -DproxySet=true $args"
 
-#add some memory management
-args="-Xmx16g -XX:+UseConcMarkSweepGC $args"
 
 #Combine jar files used into one variable
 for file in `ls $base/lib`
