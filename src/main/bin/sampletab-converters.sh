@@ -21,7 +21,9 @@ fi
 
 #add some memory management
 if [ -z $java ]
-	args="-Xmx16g -XX:+UseConcMarkSweepGC $args"
+then
+  args="-Xmx16g -XX:+UseConcMarkSweepGC $args"
+fi
 	
 #add proxy args
 args="-Dhttp.proxyHost=wwwcache.ebi.ac.uk -Dhttp.proxyPort=3128 -Dhttp.nonProxyHosts=*.ebi.ac.uk -DproxyHost=wwwcache.ebi.ac.uk -DproxyPort=3128 -DproxySet=true $args"
