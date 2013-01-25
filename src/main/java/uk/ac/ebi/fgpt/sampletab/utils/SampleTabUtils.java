@@ -14,14 +14,14 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class SampleTabUtils {
     private static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils");
 
-    public static File submissionDir;
-
+    //make sure this is kept in sync with uk.ac.ebi.fgpt.conan.process.biosd.AbstractBioSDProcess.getPathPrefix
     public static String getPathPrefix(String submissionId){
         if (submissionId.startsWith("GMS-")) return "imsr";
         else if (submissionId.startsWith("GAE-")) return "ae";
@@ -29,18 +29,15 @@ public class SampleTabUtils {
         else if (submissionId.startsWith("GVA-")) return "dgva";
         else if (submissionId.startsWith("GCR-")) return "coriell";
         else if (submissionId.startsWith("GEN-")) return "sra";
-        else if (submissionId.startsWith("GEM-")) return "GEM";
+        else if (submissionId.startsWith("GEM-")){
+            File targetfile = new File("GEM", submissionId.substring(0,7));
+            return targetfile.getPath();
+        }
+        else if (submissionId.startsWith("GSB-")) return "GSB";
         else if (submissionId.equals("GEN")) return "encode";
         else if (submissionId.equals("G1K")) return "g1k";
         else if (submissionId.startsWith("GHM")) return "hapmap";
         else throw new IllegalArgumentException("Unable to get path prefix for "+submissionId);
-    }
-    
-    public static File getSubmissionFile(String submissionId){
-        File subdir = new File(submissionDir, getPathPrefix(submissionId));
-        File subsubdir = new File(subdir, submissionId);
-        File sampletabFile = new File(subsubdir, "sampletab.txt");
-        return sampletabFile;
     }
     
     public static boolean releaseInACentury(File sampletabFile) throws IOException, ParseException{
@@ -87,4 +84,25 @@ public class SampleTabUtils {
         }
         return false;
     }
+    
+    public static String generateSubmissionTitle(SampleData sd){
+        /*
+NUMBER SPECIES samples (from DATABASE)
+
+NUMBER
+    number of samples in group
+SPECIES
+    if all the same species latin (common) species name
+    if multiple species then omit
+         */
+        
+        for (SampleNode sample : sd.scd.getNodes(SampleNode.class)){
+            //TODO FINISH ME!
+        }
+        
+        return null;
+        
+        
+    }
+    
 }

@@ -315,7 +315,7 @@ public class TabularToSampleTab {
         }
         
         if (identifiers.size() == 0){
-            log.warn("No identifiers for "+line[0]);
+            log.debug(line[0]+" has  no identifiers.");
             identifiers.add(line[0]);
         }
         return identifiers;
@@ -353,7 +353,7 @@ public class TabularToSampleTab {
             
             if ((pubmed != null && pubmed.length() > 0)
                     || (doi != null && doi.length() > 0)){
-                log.info("Publication "+pubmed+" "+doi);
+                log.debug("Publication "+pubmed+" "+doi);
                 Publication p = new Publication(pubmed, doi);
                 pubSet.add(p);
             }
@@ -442,7 +442,7 @@ public class TabularToSampleTab {
                     }
                     
                     publicationMap.put(accession, getPublications(nextLine));
-                    log.info(accession+" "+getPublications(nextLine).size());
+                    log.debug(accession+" "+getPublications(nextLine).size());
                     
                 }
             }
@@ -457,6 +457,10 @@ public class TabularToSampleTab {
             }
         }
 
+        log.info("First pass complete");
+        log.info("No. of groups = "+groupMap.size());
+        log.info("Beginning second pass");
+        
         try {
             reader = new CSVReader(new FileReader(inputFile), "\t".charAt(0));
             linecount = 0;
@@ -471,7 +475,7 @@ public class TabularToSampleTab {
                     }
 
                     String accession = nextLine[0].trim();
-                    log.debug("Second processing "+accession);
+                    log.info("Second processing "+accession+" with cache size of "+stMap.size());
                     
                     //now we have a described node, but need to work out what samples to put it with
 
@@ -587,7 +591,12 @@ public class TabularToSampleTab {
                             log.debug("No. of publications = "+st.msi.publications.size());
                             log.debug("Empty? "+st.msi.publications.isEmpty());
                             
-                            File outputSubDir = new File(outputFile, st.msi.submissionIdentifier);
+                            
+                            
+
+                            //add an intermediate subdir layer based on the initial 7 characters (GEM-...)
+                            File outputSubDir = new File(outputFile, st.msi.submissionIdentifier.substring(0,7));
+                            outputSubDir = new File(outputSubDir, st.msi.submissionIdentifier);
                             File sampletabPre = new File(outputSubDir, "sampletab.pre.txt");
                             outputSubDir.mkdirs();
                             log.info("Writing "+sampletabPre);
