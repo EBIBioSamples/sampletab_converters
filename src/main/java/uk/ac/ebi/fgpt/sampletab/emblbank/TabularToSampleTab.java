@@ -36,6 +36,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAtt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 
@@ -232,8 +233,17 @@ public class TabularToSampleTab {
                 }
             }
         }
-        
-        s.addAttribute(new DatabaseAttribute("EMBL-Bank", s.getNodeName(), "http://www.ebi.ac.uk/ena/data/view/"+s.getNodeName()));
+        String dbname = "EMBL-Bank";
+        if (wgs){
+            dbname += " (wgs)";
+        } else if (tsa){
+            dbname += " (wgs-tsa)";
+        } else if (bar){
+            dbname += " (barcode)";
+        } else if (cds){
+            dbname += " (cds)";
+        }
+        s.addAttribute(new DatabaseAttribute(dbname, s.getNodeName(), "http://www.ebi.ac.uk/ena/data/view/"+s.getNodeName()));
         
         return s;
     }
@@ -427,11 +437,11 @@ public class TabularToSampleTab {
                     
                 } else {
                     if (nextLine.length > headers.size()){
-                        log.warn("Line longer than headers "+linecount);
+                        log.warn("Line longer than headers "+linecount+" ( "+nextLine.length+" vs "+headers.size()+" )");
                     }
                 
                     String accession = nextLine[0].trim();
-                    log.info("First processing "+accession);
+                    log.debug("First processing "+accession);
                     
                     for (String id : getGroupIdentifiers(nextLine)){
 
@@ -471,11 +481,11 @@ public class TabularToSampleTab {
                     //do nothing, headers already loaded
                 } else {
                     if (nextLine.length > this.headers.size()){
-                        log.warn("Line longer than headers "+linecount);
+                        log.debug("Line longer than headers "+linecount+" ( "+nextLine.length+" vs "+headers.size()+" )");
                     }
 
                     String accession = nextLine[0].trim();
-                    log.info("Second processing "+accession+" with cache size of "+stMap.size());
+                    log.debug("Second processing "+accession+" with cache size of "+stMap.size());
                     
                     //now we have a described node, but need to work out what samples to put it with
 
@@ -576,12 +586,11 @@ public class TabularToSampleTab {
                                 }
                             } else if (bar){
                                 //need to generate a title for the submission
-                                st.msi.submissionTitle = "EMBL-BANK barcode "+st.msi.submissionIdentifier;
+                                st.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(st);
                                 //TODO use the title of a publication, if one exists
                             } else if (cds){
                                 //need to generate a title for the submission
-                                st.msi.submissionTitle = "EMBL-BANK coding sequence (CDS) "+st.msi.submissionIdentifier;
-                                //TODO use the title of a publication, if one exists
+                                st.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(st);
                             } else {
                                 log.warn("No submission type indicated");
                                 
@@ -595,11 +604,14 @@ public class TabularToSampleTab {
                             
 
                             //add an intermediate subdir layer based on the initial 7 characters (GEM-...)
-                            File outputSubDir = new File(outputFile, st.msi.submissionIdentifier.substring(0,7));
+                            File outputSubDir = new File(outputFile, SampleTabUtils.getPathPrefix(st.msi.submissionIdentifier));
                             outputSubDir = new File(outputSubDir, st.msi.submissionIdentifier);
-                            File sampletabPre = new File(outputSubDir, "sampletab.pre.txt");
                             outputSubDir.mkdirs();
-                            log.info("Writing "+sampletabPre);
+                            File sampletabPre = new File(outputSubDir, "sampletab.pre.txt");
+                            
+                            
+                            
+                            log.debug("Writing "+sampletabPre);
                             SampleTabWriter sampletabwriter = null;
                             try {
                                 sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(sampletabPre)));
