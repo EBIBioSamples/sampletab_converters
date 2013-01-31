@@ -123,6 +123,32 @@ public class FileUtils {
         }
     }
     
+    
+    public static List<File> getRecursiveFiles(String filename){
+        File start = new File(".");
+        start = start.getAbsoluteFile();
+        start = start.getParentFile();
+        log.info("Start dir: "+start);
+        return getRecursiveFiles(filename, start);
+    }
+
+    
+    public static List<File> getRecursiveFiles(String filename, File startfile){
+        List<File> files = new ArrayList<File>();
+        File[] subfiles = startfile.listFiles();
+        Arrays.sort(subfiles);
+        for (File testfile : subfiles){
+            if (testfile.isDirectory()) {
+                files.addAll(getRecursiveFiles(filename, testfile));
+            } else if (testfile.isFile()) {
+                if (filename.equals(testfile.getName())){
+                   files.add(testfile.getAbsoluteFile()); 
+                }
+            }
+        }
+        return files;
+    }
+    
     public static void copy(File sourceFile, File destFile) throws IOException {
         sourceFile = sourceFile.getAbsoluteFile();
         destFile = destFile.getAbsoluteFile();
