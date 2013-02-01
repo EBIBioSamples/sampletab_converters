@@ -27,10 +27,10 @@ public class AttributeSummary extends AbstractInfileDriver<Runnable> {
     @Option(name = "-o", aliases={"--output"}, usage = "output filename")
     private String outputFilename;
     
-    @Option(name = "-r", aliases={"--rows"}, usage = "number of attributes")
+    @Option(name = "-a", aliases={"--attributes"}, usage = "number of attributes")
     private int rows = 100;
     
-    @Option(name = "-c", aliases={"--columns"}, usage = "number of values of attributes")
+    @Option(name = "-v", aliases={"--values"}, usage = "number of values of attributes")
     private int cols = 100;
     
     @Option(name = "--organism", aliases={"--organism"}, usage = "organism to use")
@@ -172,8 +172,7 @@ public class AttributeSummary extends AbstractInfileDriver<Runnable> {
         new AttributeSummary().doMain(args);
     }
 
-    public void doMain(String[] args) {
-        super.doMain(args);
+	protected void postProcess(){
         
         //now to write back out
         Writer out = null;

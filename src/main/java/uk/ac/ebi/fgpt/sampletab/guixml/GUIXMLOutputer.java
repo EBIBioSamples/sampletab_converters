@@ -1,7 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab.guixml;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,21 +28,26 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.Serializer.Property;
 
-@SuppressWarnings("restriction")
 public class GUIXMLOutputer {
 
     private XMLOutputFactory output = XMLOutputFactory.newInstance();
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    private File outputFile;
+    private final File outputFile;
     private XMLStreamWriter xmlWriter;
+    private boolean started = false;
     
     public GUIXMLOutputer(File outputFile){
         this.outputFile = outputFile;
     }
     
-    public void start() throws SaxonApiException, XMLStreamException {;
+    public synchronized void start() throws SaxonApiException, XMLStreamException {
+        if (started){
+            throw new RuntimeException("Cannot restart a GUIXMLOutputer instance");
+        }
+        started = true;
+        
         Processor processor = new Processor(false);
         Serializer serializer = processor.newSerializer(outputFile);
         serializer.setOutputProperty(Property.INDENT, "yes"); 
@@ -52,7 +56,7 @@ public class GUIXMLOutputer {
         xmlWriter.writeStartElement("Biosamples");
     }
     
-    public void process(SampleData sd) throws XMLStreamException{
+    public synchronized void process(SampleData sd) throws XMLStreamException{
 
         
         //if release date is in the future, dont output
@@ -102,6 +106,9 @@ public class GUIXMLOutputer {
     }
     
     public void end() throws XMLStreamException {
+        if (! started){
+            throw new RuntimeException("Cannot end a GUIXMLOutputer instance that has not started");
+        }
         xmlWriter.writeEndDocument();
         xmlWriter.close();
     }

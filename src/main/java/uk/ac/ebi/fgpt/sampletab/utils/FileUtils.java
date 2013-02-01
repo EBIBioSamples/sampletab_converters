@@ -70,10 +70,19 @@ public class FileUtils {
     }
     
     public static List<File> getMatchesRegex(String regex) {
+        return getMatchesRegex(regex, null);
+    }
+    
+    public static List<File> getMatchesRegex(String regex, File startfile) {
         log.debug("regex = " + regex);
         List<File> outfiles = new ArrayList<File>();
         
-        File regfile = new File(regex);
+        File regfile;
+        if (startfile == null){
+            regfile = new File(regex);
+        } else {
+            regfile = new File(startfile, regex);
+        }
         regfile = regfile.getAbsoluteFile();
         List<String> regparts = new ArrayList<String>();
         regparts.add(regfile.getName());
