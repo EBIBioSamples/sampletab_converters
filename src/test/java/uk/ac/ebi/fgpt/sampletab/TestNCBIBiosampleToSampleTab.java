@@ -10,6 +10,7 @@ import java.text.ParseException;
 import org.dom4j.DocumentException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.ncbi.NCBIBiosampleToSampleTab;
 
 import junit.framework.TestCase;
 
