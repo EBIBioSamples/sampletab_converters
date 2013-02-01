@@ -1,25 +1,5 @@
 package uk.ac.ebi.fgpt.sampletab.isa;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-/*
-import org.isatools.isatab.ISATABLoader;
-import org.isatools.isatab.ISATABValidator;
-import org.isatools.isatab.gui_invokers.GUIInvokerResult;
-import org.isatools.tablib.schema.FormatSetInstance;
-import org.isatools.tablib.utils.BIIObjectStore;
-*/
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
-import uk.ac.ebi.arrayexpress2.magetab.validator.Validator;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 
 public class MetabolightsToSampleTab {
 /*

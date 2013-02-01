@@ -1,13 +1,11 @@
 package uk.ac.ebi.fgpt.sampletab.guixml;
 
 import java.io.File;
-import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
 import net.sf.saxon.s9api.SaxonApiException;
 
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

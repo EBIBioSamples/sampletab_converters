@@ -2,7 +2,6 @@ package uk.ac.ebi.fgpt.sampletab.dgva;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.fgpt.sampletab.SampleTabBulk;
-import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 
 public class DGVaXMLcronBulk {
 

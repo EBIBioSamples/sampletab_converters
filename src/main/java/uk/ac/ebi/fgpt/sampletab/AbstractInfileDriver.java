@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
