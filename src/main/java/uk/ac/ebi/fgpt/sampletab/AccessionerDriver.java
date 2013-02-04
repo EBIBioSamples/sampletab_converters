@@ -20,14 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
-public class AccessionerDriver {
-
-    @Option(name = "-h", aliases={"--help"}, usage = "display help")
-    private boolean help;
-
-    @Option(name = "-i", aliases={"--input"}, usage = "input filename or glob")
-    private String inputFilename;
-
+public class AccessionerDriver extends AbstractInfileDriver<AccessionerTask> {
+    
     @Option(name = "-o", aliases={"--output"}, usage = "output filename")
     private String outputFilename;
 
@@ -45,9 +39,6 @@ public class AccessionerDriver {
 
     @Option(name = "-p", aliases={"--password"}, usage = "server password")
     private String password;
-    
-    @Option(name = "--threaded", usage = "use multiple threads?")
-    private boolean threaded = false;
 
     private Accessioner accessioner = null;
     
@@ -56,27 +47,9 @@ public class AccessionerDriver {
     public static void main(String[] args) {
         new AccessionerDriver().doMain(args);
     }
-    
-    public void doMain(String[] args) {
 
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments.
-            parser.parseArgument(args);
-            // TODO check for extra arguments?
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printSingleLineUsage(System.err);
-            System.err.println();
-            parser.printUsage(System.err);
-            System.exit(1);
-            return;
-        }
+    @Override
+    protected void preProcess(){
         
         
         //load defaults
@@ -115,62 +88,12 @@ public class AccessionerDriver {
             System.exit(2);
             return;
         }
-        
-        log.debug("Looking for input files");
-        List<File> inputFiles = new ArrayList<File>();
-        inputFiles = FileUtils.getMatchesGlob(inputFilename);
-        log.info("Found " + inputFiles.size() + " input files from "+inputFilename);
-        Collections.sort(inputFiles);
-        
-        if (inputFiles.size() == 0){
-            log.error("No input files found");
-            System.exit(3);
-            return;
-        }
-        
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+    }
+    
+    @Override
+    protected AccessionerTask getNewTask(File inputFile) {
+        File outputFile = new File(inputFile.getParentFile(), outputFilename);
         Corrector c = new Corrector();
-
-        for (File inputFile : inputFiles) {
-            // System.out.println("Checking "+inputFile);
-            File outputFile = new File(inputFile.getParentFile(), outputFilename);
-            if (!outputFile.exists() 
-                    || outputFile.lastModified() < inputFile.lastModified()) {
-                Runnable t = new AccessionTask(inputFile, outputFile, accessioner, c);
-                if (threaded){
-                    pool.execute(t);
-                } else {
-                    t.run();
-                }
-            }
-        }
-        
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination", e);
-                System.exit(4);
-            }
-        }
-        log.info("Finished processing");
-        
-        //check that all the required output files were created
-        int exitcode = 0;
-        for (File inputFile : inputFiles) {
-            // System.out.println("Checking "+inputFile);
-            File outputFile = new File(inputFile.getParentFile(), outputFilename);
-            if (!outputFile.exists() 
-                    || outputFile.lastModified() < inputFile.lastModified()) {
-                log.error("Unable to find output file "+outputFile);
-                exitcode = 5;
-            }
-        }
-        System.exit(exitcode);
+        return new AccessionerTask(inputFile, outputFile, accessioner, c);
     }
 }
