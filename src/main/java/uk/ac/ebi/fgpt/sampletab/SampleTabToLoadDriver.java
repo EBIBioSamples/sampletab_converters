@@ -3,7 +3,9 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.Properties;
 
 import org.kohsuke.args4j.Option;
 import org.mged.magetab.error.ErrorItem;
@@ -25,8 +27,8 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
     private String hostname;
 
-    @Option(name = "-t", aliases={"--port"}, usage = "server port")
-    private int port = 3306;
+    @Option(name = "--port", usage = "server port")
+    private Integer port;
 
     @Option(name = "-d", aliases={"--database"}, usage = "server database")
     private String database;
@@ -37,31 +39,10 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     @Option(name = "-p", aliases={"--password"}, usage = "server password")
     private String password;
 
-    private Accessioner accessioner;
-
     private Logger log = LoggerFactory.getLogger(getClass());
-
-    
     
     public SampleTabToLoadDriver() {
-        // do nothing
-    }
-
-    public SampleTabToLoadDriver(String host, int port, String database, String username, String password)
-            throws ClassNotFoundException {
-        this();
-        // Setup the connection with the DB
-        this.username = username;
-        this.password = password;
-        this.hostname = host;
-        this.port = port;
-        this.database = database;
-    }
-
-    public SampleTabToLoadDriver(Accessioner accessioner)
-            throws ClassNotFoundException {
-        this();
-        this.accessioner = accessioner;
+        
     }
     
     class ToLoadTask implements Runnable {
@@ -92,7 +73,7 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
                 return;
             }
 
-            log.info("sampletab read, preparing to convert");
+            log.info("sampletab read, preparing to convert " + inputFile);
             
             // do conversion
             SampleTabToLoad toloader;
@@ -118,7 +99,7 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
                 return;
             }
             
-            log.info("sampletab converted, preparing to validate");
+            log.info("sampletab converted, preparing to validate " + inputFile);
             
             //validate it
             LoadValidator validator = new LoadValidator();
@@ -132,7 +113,7 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
                 return;
             }
 
-            log.info("sampletab validated, preparing to output");
+            log.info("sampletab validated, preparing to output to " + outputFile);
             
             // write back out
             FileWriter out = null;
@@ -160,20 +141,32 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
         new SampleTabToLoadDriver().doMain(args);
     }
     
-
+    @Override
     protected void preProcess(){
         
-        if (accessioner == null){
-            try {
-                accessioner = new Accessioner(hostname, 
-                        port, database, username, password);
-            } catch (ClassNotFoundException e) {
-                log.error("Unable to create accessioner", e);
-            } catch (SQLException e) {
-                log.error("Unable to create accessioner", e);
-            }
+        //load defaults
+        Properties oracleProperties = new Properties();
+        try {
+            InputStream is = AccessionerDriver.class.getResourceAsStream("/oracle.properties");
+            oracleProperties.load(is);
+        } catch (IOException e) {
+            log.error("Unable to read resource oracle.properties", e);
         }
-        
+        if (hostname == null){
+            hostname = oracleProperties.getProperty("hostname");
+        }
+        if (port == null){
+            port = new Integer(oracleProperties.getProperty("port"));
+        }
+        if (database == null){
+            database = oracleProperties.getProperty("database");
+        }
+        if (username == null){
+            username = oracleProperties.getProperty("username");
+        }
+        if (password == null){
+            password = oracleProperties.getProperty("password");
+        }
     }
 
     @Override
