@@ -386,12 +386,12 @@ public class NCBISampleTabCombiner {
             private final Collection<File> files;
             private final String groupname;
             private final File outFile;
-            private final NCBIBiosampleToSampleTab converter;
+            private final NCBIBiosampleRunnable converter;
 
             public OutputTask(Set<File> files, String groupname, File outFile) {
                 this.files = files;
                 this.groupname = groupname;
-                this.converter = new NCBIBiosampleToSampleTab();
+                this.converter = new NCBIBiosampleRunnable(null, null);
                 this.outFile = outFile;
             }
 

@@ -1,5 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -10,7 +11,8 @@ import java.text.ParseException;
 import org.dom4j.DocumentException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-import uk.ac.ebi.fgpt.sampletab.ncbi.NCBIBiosampleToSampleTab;
+import uk.ac.ebi.fgpt.sampletab.ncbi.NCBIBiosampleDriver;
+import uk.ac.ebi.fgpt.sampletab.ncbi.NCBIBiosampleRunnable;
 
 import junit.framework.TestCase;
 
@@ -19,11 +21,11 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
 	
 	private URL resource;
 	
-	private NCBIBiosampleToSampleTab converter;
+	private NCBIBiosampleRunnable converter;
 
     public void setUp() {
         resource = getClass().getClassLoader().getResource("ncbibiosample/2.xml");
-        converter = new NCBIBiosampleToSampleTab();
+        converter = new NCBIBiosampleRunnable(null, null);
     }
 
     public void tearDown() {
@@ -34,7 +36,7 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
     public void testConversion() {
     	SampleData st;
 		try {
-			st = converter.convert(resource.getFile());
+			st = converter.convert(new File(resource.getFile()));
 			//assertSame("Titles should match", st.msi.submissionTitle, "ATCC 43183");
 			
 			StringWriter out = new StringWriter();
@@ -55,10 +57,7 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
 		} catch (DocumentException e) {
 			e.printStackTrace();
             fail();
-		} catch (MalformedURLException e) {
-            e.printStackTrace();
-            fail();
-        } catch (FileNotFoundException e) {
+		} catch (FileNotFoundException e) {
             e.printStackTrace();
             fail();
 		}
