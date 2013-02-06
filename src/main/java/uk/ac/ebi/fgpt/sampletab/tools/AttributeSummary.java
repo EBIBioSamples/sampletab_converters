@@ -44,7 +44,7 @@ public class AttributeSummary extends AbstractInfileDriver<Runnable> {
 	private Logger log = LoggerFactory.getLogger(getClass());
 	
 	//main collection location for attributes
-	protected volatile Map<String, Map<String, Integer>> attributes = Collections
+	protected Map<String, Map<String, Integer>> attributes = Collections
 			.synchronizedMap(new HashMap<String, Map<String, Integer>>());
 	
 	
@@ -74,42 +74,44 @@ public class AttributeSummary extends AbstractInfileDriver<Runnable> {
 			    }
 			}
 		}
-	    
-	    protected boolean includeNode(SCDNode node){
-	        if (organism == null){
-	            return true;
-	        } else {
-	            //get organism of node
-	            String nodeorganism = null;
-	            for (SCDNodeAttribute attr : node.getAttributes()){
-	                if (OrganismAttribute.class.isInstance(attr)){
-	                    nodeorganism = attr.getAttributeValue();
-	                }
-	            }
-	            //compare to this.organism
-	            if (organism.equals(nodeorganism)){
-	                return true;
-	            }else {
-	                return false;
-	            }
-	        }
-	    }
+        
+        protected boolean includeNode(SCDNode node){
+            if (organism == null){
+                return true;
+            } else {
+                //get organism of node
+                String nodeorganism = null;
+                for (SCDNodeAttribute attr : node.getAttributes()){
+                    if (OrganismAttribute.class.isInstance(attr)){
+                        nodeorganism = attr.getAttributeValue();
+                    }
+                }
+                //compare to this.organism
+                if (organism.equals(nodeorganism)){
+                    return true;
+                }else {
+                    return false;
+                }
+            }
+        }
 	    
 	    protected void processAttribute(SCDNodeAttribute attribute){
 	        String key = attribute.getAttributeType();
 	        String value = attribute.getAttributeValue();
-	        if (!attributes.containsKey(key)) {
-	            attributes.put(key,
-	                    Collections
-	                            .synchronizedMap(new HashMap<String, Integer>()));
-	        }
-	        if (attributes.get(key).containsKey(value)) {
-	            int count = attributes.get(key).get(value).intValue();
-	            attributes.get(key).put(value,
-	                    count + 1);
-	        } else {
-	            attributes.get(key).put(value, new Integer(1));
-	        }
+	        synchronized(attributes){
+    	        if (!attributes.containsKey(key)) {
+    	            attributes.put(key,
+    	                    Collections
+    	                            .synchronizedMap(new HashMap<String, Integer>()));
+    	        }
+    	        if (attributes.get(key).containsKey(value)) {
+        	            int count = attributes.get(key).get(value).intValue();
+        	            attributes.get(key).put(value,
+        	                    count + 1);
+    	        } else {
+    	            attributes.get(key).put(value, new Integer(1));
+    	        }
+            }
 	    }
 	}
 

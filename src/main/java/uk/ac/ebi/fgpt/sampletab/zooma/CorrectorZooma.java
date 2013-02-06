@@ -28,18 +28,18 @@ public class CorrectorZooma {
     // logging
     private static Logger log = LoggerFactory.getLogger(uk.ac.ebi.fgpt.sampletab.zooma.CorrectorZooma.class);
     
-    private static LoadingCache<String, String> lookup = CacheBuilder.newBuilder()
+    public static LoadingCache<String, JsonNode> lookupString = CacheBuilder.newBuilder()
     .maximumSize(1000)
     .build(
-        new CacheLoader<String, String>() {
-          public String load(String query) throws JsonParseException, JsonMappingException, IOException {
-            return getZoomaHit(query);
+        new CacheLoader<String, JsonNode>() {
+          public JsonNode load(String query) throws JsonParseException, JsonMappingException, IOException {
+            return getZoomaStringHit(query);
           }
         });
 
-    private static String getZoomaHit(String query) throws JsonParseException, JsonMappingException, IOException {
-        //URL jsurl = new URL("http://megatron.windows.ebi.ac.uk:8080/zooma/v2/api/search?query="+URLEncoder.encode(attr.getAttributeValue(), "UTF-8"));
-        URL jsurl = new URL("http://wwwdev.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+URLEncoder.encode(query, "UTF-8"));
+    public static JsonNode getZoomaStringHit(String query) throws JsonParseException, JsonMappingException, IOException {
+        query = URLEncoder.encode(query, "UTF-8");
+        URL jsurl = new URL("http://wwwdev.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+query);
         log.debug("URL "+jsurl.toExternalForm());
         
         ObjectMapper mapper = new ObjectMapper();                                                        
@@ -50,18 +50,43 @@ public class CorrectorZooma {
         JsonNode results = rootNode.get("result");
         if (results != null){
             JsonNode tophit = results.get(0);
-            if (tophit != null){
-                String fixName = tophit.get("name").getTextValue();
-                Float score = new Float(tophit.get("score").getTextValue());
-                String fixTermSourceID;
-                String fixTermSourceREF;
-                //TODO do follow up calls
-                log.info(query+" -> "+fixName+" ("+score+")");
-                return fixName;
-            }
+            return tophit;
         }  
-        return "";
+        return null;
     }
+    
+    public static LoadingCache<String[], JsonNode> lookupKeyValue = CacheBuilder.newBuilder()
+    .maximumSize(1000)
+    .build(
+        new CacheLoader<String[], JsonNode>() {
+          public JsonNode load(String[] query) throws JsonParseException, JsonMappingException, IOException {
+            return getZoomaKeyValueHit(query);
+          }
+        });
+
+    public static JsonNode getZoomaKeyValueHit(String[] query) throws JsonParseException, JsonMappingException, IOException {
+        return getZoomaKeyValueHit(query[0], query[1]);
+    }
+    
+    public static JsonNode getZoomaKeyValueHit(String key, String value) throws JsonParseException, JsonMappingException, IOException {
+        key = URLEncoder.encode(key, "UTF-8");
+        value = URLEncoder.encode(value, "UTF-8");
+        URL jsurl = new URL("http://wwwdev.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+value+"&type="+key);
+        log.debug("URL "+jsurl.toExternalForm());
+        
+        ObjectMapper mapper = new ObjectMapper();                                                        
+        JsonNode rootNode = mapper.readValue(jsurl, JsonNode.class); // src can be a File, URL, InputStream etc
+
+        log.debug(rootNode.toString());
+        
+        JsonNode results = rootNode.get("result");
+        if (results != null){
+            JsonNode tophit = results.get(0);
+            return tophit;
+        }  
+        return null;
+    }
+    
     
     public static void correct(SampleData sampledata) {        
         for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
@@ -80,11 +105,18 @@ public class CorrectorZooma {
                         if (value.matches("[0-9.]+")){
                             //do nothing
                         } else {
-                        
+                            JsonNode tophit = null;
                             try {
-                                lookup.get(value);
+                                tophit = lookupString.get(value);
                             } catch (ExecutionException e) {
                                 throw e.getCause();
+                            }
+                            if (tophit != null){
+                                String fixName = tophit.get("name").getTextValue();
+                                Float score = new Float(tophit.get("score").getTextValue());
+                                String fixTermSourceID;
+                                String fixTermSourceREF;
+                                //TODO finish
                             }
                         }
                     } catch (UnsupportedEncodingException e) {
