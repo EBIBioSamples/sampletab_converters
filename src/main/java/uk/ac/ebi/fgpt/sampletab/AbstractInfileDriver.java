@@ -84,8 +84,6 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
             }
         }
         
-        postProcess();
-        
         // run the pool and then close it afterwards
         // must synchronize on the pool object
         synchronized (pool) {
@@ -97,6 +95,9 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
                 log.error("Interupted awaiting thread pool termination", e);
             }
         }
+        
+        postProcess();
+        
         log.info("Finished reading");
     }
     

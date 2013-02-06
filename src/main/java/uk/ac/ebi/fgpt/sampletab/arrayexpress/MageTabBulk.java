@@ -430,7 +430,7 @@ public class MageTabBulk {
             }
             
             if (stcb == null){
-                stcb = new SampleTabBulk(hostname, port, database, username, password, agename, ageusername, agepassword, noload);
+                stcb = new SampleTabBulk(hostname, port, database, username, password);
             }
             stcb.process(subdir, scriptdir);
         }
