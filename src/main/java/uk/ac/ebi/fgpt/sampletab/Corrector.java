@@ -412,7 +412,8 @@ public class Corrector {
                             || cha.getAttributeValue().toLowerCase().equals("unknown")
                             || cha.getAttributeValue().toLowerCase().equals("--")
                             || cha.getAttributeValue().toLowerCase().equals("not applicable")
-                            || cha.getAttributeValue().toLowerCase().equals("null")) {
+                            || cha.getAttributeValue().toLowerCase().equals("null")
+                            || cha.getAttributeValue().toLowerCase().equals("missing")) {
                         //leave unknown-sex as is. implies it has been looked at and is non-determinate
                         s.removeAttribute(cha);
                         continue;
