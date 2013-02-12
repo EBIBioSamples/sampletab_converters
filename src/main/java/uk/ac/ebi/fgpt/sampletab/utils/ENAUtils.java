@@ -103,4 +103,36 @@ public class ENAUtils {
         }
         return sampleIDs;
     }
+    
+    public static Set<String> getSubmissionsForSample(String srsId) throws DocumentException {
+
+        String urlstr = "http://www.ebi.ac.uk/ena/data/view/" + srsId + "&display=xml";
+        Document doc = XMLUtils.getDocument(urlstr);
+
+        Element root = doc.getRootElement();
+        return getStudiesForSample(root);
+    }
+
+    public static Set<String> getSubmissionsForSample(Element root) {
+        Set<String> studyIDs = new HashSet<String>();
+        Element sample = XMLUtils.getChildByName(root, "SAMPLE");
+        if (sample != null) {
+            Element links = XMLUtils.getChildByName(sample, "SAMPLE_LINKS");
+            if (links != null) {
+                for (Element link : XMLUtils.getChildrenByName(links, "SAMPLE_LINK")) {
+                    Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
+                    if (xref != null) {
+                        Element db = XMLUtils.getChildByName(xref, "DB");
+                        Element id = XMLUtils.getChildByName(xref, "ID");
+                        if (db != null && db.getText().equals("ENA-SUBMISSION") && id != null) {
+                            studyIDs.addAll(getIdentifiers(id.getText()));
+                        }
+                    }
+                }
+            }
+        }
+        return studyIDs;
+    }
+    
+    
 }
