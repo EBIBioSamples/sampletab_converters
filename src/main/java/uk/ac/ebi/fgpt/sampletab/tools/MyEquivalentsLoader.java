@@ -16,8 +16,9 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SameAsAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
-import uk.ac.ebi.fg.myequivalents.managers.impl.base.BaseEntityMappingManager;
 import uk.ac.ebi.fg.myequivalents.managers.interfaces.EntityMappingManager;
+import uk.ac.ebi.fg.myequivalents.managers.interfaces.ManagerFactory;
+import uk.ac.ebi.fg.myequivalents.resources.Resources;
 import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
 
 public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sampletab.tools.MyEquivalentsLoader.MyEquivalentsLoaderTask> {
@@ -44,11 +45,14 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
     }
 
     public class MyEquivalentsLoaderTask implements Runnable {
-        private File inFile;
-        private EntityMappingManager emMgr = new BaseEntityMappingManager();
+        private final File inFile;
+        private final EntityMappingManager emMgr;
         
         MyEquivalentsLoaderTask(File inFile){
             this.inFile = inFile;
+            
+            ManagerFactory mgrFactory = Resources.getInstance().getMyEqManagerFactory();
+            emMgr = mgrFactory.newEntityMappingManager();
         }
         
         public void run() {
