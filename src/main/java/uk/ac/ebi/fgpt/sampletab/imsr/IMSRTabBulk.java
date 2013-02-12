@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.fgpt.sampletab.SampleTabBulk;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 
 public class IMSRTabBulk {
 
@@ -46,18 +46,6 @@ public class IMSRTabBulk {
 
     @Option(name = "-p", aliases={"--password"}, usage = "MySQL server password")
     private String password = null;
-
-    @Option(name = "--agename", usage = "Age server hostname")
-    private String agename = null;
-
-    @Option(name = "--ageusername", usage = "Age server username")
-    private String ageusername = null;
-
-    @Option(name = "--agepassword", usage = "Age server password")
-    private String agepassword = null;
-
-    @Option(name = "--no-load", usage = "Do not load into Age")
-    private boolean noload = false;
     
     
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -156,7 +144,7 @@ public class IMSRTabBulk {
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
                
         for (String inputFilename : inputFilenames){
-            for (File subdir : FileUtils.getMatchesGlob(inputFilename)){
+            for (File subdir : new FileGlobIterable(inputFilename)){
                 if (subdir.isDirectory()) {
                     Runnable t = new DoProcessFile(subdir, scriptdir);
                     if (threaded) {

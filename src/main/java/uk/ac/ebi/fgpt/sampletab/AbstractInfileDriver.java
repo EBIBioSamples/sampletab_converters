@@ -1,11 +1,7 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +11,8 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileRecursiveIterable;
+import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 
 public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractDriver {
 
@@ -23,13 +20,13 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
     protected List<String> inputFilenames;
 
     @Option(name = "--threaded", aliases = { "-t" }, usage = "use multiple threads?")
-    private boolean threaded = false;
+    protected boolean threaded = false;
        
     @Option(name = "--recursive", aliases = { "-r" }, usage="recusively match filename?")
-    private boolean recusive = false;
+    protected boolean recursive = false;
     
     @Option(name = "--startpath", aliases = { "-s" }, usage="starting path for matching")
-    private File startpath;
+    protected File startpath;
     
     private Logger log = LoggerFactory.getLogger(getClass());
         
@@ -50,26 +47,15 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
         super.doMain(args);
         
 
-        List<File> inputFiles = new ArrayList<File>();
+        Iterable<File> inputFiles = null;
         for (String inputFilename : inputFilenames){
             log.info("Looking for input files "+inputFilename);
-            if (recusive){
-                inputFiles.addAll(FileUtils.getRecursiveFiles(inputFilename, startpath));
+            if (recursive){
+                inputFiles = new FileRecursiveIterable(inputFilename, startpath);
             } else {
-                inputFiles.addAll(FileUtils.getMatchesGlob(inputFilename));
+                inputFiles = new FileGlobIterable(inputFilename);
             }
         }
-        log.info("Found " + inputFiles.size() + " input files");
-        Collections.sort(inputFiles);
-        
-        //remove duplicates
-        Set<File> inputFileSet = new HashSet<File>();
-        inputFileSet.addAll(inputFiles);
-        inputFiles.clear();
-        inputFiles.addAll(inputFileSet);
-        
-        //put into reliable order
-        Collections.sort(inputFiles);
 
         ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 

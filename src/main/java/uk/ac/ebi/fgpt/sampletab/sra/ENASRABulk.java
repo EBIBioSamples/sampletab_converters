@@ -2,8 +2,6 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.fgpt.sampletab.SampleTabBulk;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 
 public class ENASRABulk {
 
@@ -49,18 +47,6 @@ public class ENASRABulk {
 
     @Option(name = "-p", aliases={"--password"}, usage = "MySQL server password")
     private String password = null;
-
-    @Option(name = "--agename", usage = "Age server hostname")
-    private String agename = null;
-
-    @Option(name = "--ageusername", usage = "Age server username")
-    private String ageusername = null;
-
-    @Option(name = "--agepassword", usage = "Age server password")
-    private String agepassword = null;
-
-    @Option(name = "--no-load", usage = "Do not load into Age")
-    private boolean noload = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -151,22 +137,16 @@ public class ENASRABulk {
 
         int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
-        log.info("Looking for input files");
-        List<File> inputFiles = new ArrayList<File>();
+
         for (String inputFilename : inputFilenames){
-            inputFiles.addAll(FileUtils.getMatchesGlob(inputFilename));
-        }
-        log.info("Found " + inputFiles.size() + " input files");
-        //TODO no duplicates
-        Collections.sort(inputFiles);
-        
-        for(File subdir : inputFiles){
-            if (subdir.isDirectory()) {
-                Runnable t = new DoProcessFile(subdir, scriptdir);
-                if (threaded) {
-                    pool.execute(t);
-                } else {
-                    t.run();
+            for(File subdir : new FileGlobIterable(inputFilename)){
+                if (subdir.isDirectory()) {
+                    Runnable t = new DoProcessFile(subdir, scriptdir);
+                    if (threaded) {
+                        pool.execute(t);
+                    } else {
+                        t.run();
+                    }
                 }
             }
         }

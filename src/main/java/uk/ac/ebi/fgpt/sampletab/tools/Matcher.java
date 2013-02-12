@@ -1,9 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab.tools;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -16,7 +13,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 
 public class Matcher {
 
@@ -62,7 +59,7 @@ public class Matcher {
         try {
             // parse the arguments.
             parser.parseArgument(args);
-            // TODO check for extra arguments?
+            //TODO check for extra arguments?
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
             help = true;
@@ -77,12 +74,8 @@ public class Matcher {
             System.exit(1);
             return;
         }
-
-        List<File> inputFiles = new ArrayList<File>();
-        inputFiles = FileUtils.getMatchesGlob(inputFilename);
-        Collections.sort(inputFiles);
         
-        for (File inputFile : inputFiles){
+        for (File inputFile : new FileGlobIterable(inputFilename)){
         	process(inputFile);
         }
     }

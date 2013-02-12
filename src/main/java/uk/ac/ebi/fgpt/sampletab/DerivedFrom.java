@@ -28,7 +28,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAtt
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.CachedParser;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 
 public class DerivedFrom {
     
@@ -271,7 +271,7 @@ public class DerivedFrom {
 
         for (String inputFilename : arguments) {
             log.trace("inputFilename: "+inputFilename);
-            for (File inputFile : FileUtils.getMatchesGlob(inputFilename)) {
+            for (File inputFile : new FileGlobIterable(inputFilename)) {
                 log.trace("inputFile: "+inputFile);
 
                 File outputFile = new File(inputFile.getParentFile(), outputFilename);

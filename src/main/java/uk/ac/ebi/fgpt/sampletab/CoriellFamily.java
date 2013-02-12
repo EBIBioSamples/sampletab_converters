@@ -1,10 +1,7 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.kohsuke.args4j.CmdLineException;
@@ -19,7 +16,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 
 public class CoriellFamily {
 
@@ -28,10 +25,7 @@ public class CoriellFamily {
 
     @Option(name = "-i", aliases = { "--input" }, usage = "glob of input files")
     private String inputFilename;
-
-    @Option(name = "-o", aliases = { "--output" }, usage = "output directory")
-    private String outputFilename;
-
+    
     private Logger log = LoggerFactory.getLogger(getClass());
 
     private final SampleTabSaferParser parser = new SampleTabSaferParser();
@@ -149,12 +143,8 @@ public class CoriellFamily {
         }
         
         log.debug("Looking for input files");
-        List<File> inputFiles = new ArrayList<File>();
-        inputFiles = FileUtils.getMatchesGlob(inputFilename);
-        log.info("Found " + inputFiles.size() + " input files from "+inputFilename);
-        Collections.sort(inputFiles);
 
-        for(File inputFile : inputFiles){
+        for(File inputFile : new FileGlobIterable(inputFilename)){
             SampleData st = null;
             try {
                 st = this.parser.parse(inputFile);
