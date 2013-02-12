@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,13 +18,12 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,196 +32,302 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
-public class NCBISampleTabCombiner {
-
-    @Option(name = "-h", usage = "display help")
-    private boolean help;
-
-    @Option(name = "-i", usage = "input filename or glob")
-    private String inputFilename;
+public class NCBISampleTabCombiner extends AbstractInfileDriver {
 
     @Option(name = "-o", usage = "output filename")
     private String outputFilename;
-
-    @Option(name = "--threaded", usage = "use multiple threads?")
-    private boolean threaded = false;
-
-    // receives other command line parameters than options
-    @Argument
-    private List<String> arguments = new ArrayList<String>();
+    
+    @Option(name = "-p", usage = "project filename")
+    private String projectFilename = "ncbi_projects.txt";
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, Set<File>> groupings;
+    private final Map<String, Set<File>> groupings = new ConcurrentHashMap<String, Set<File>>();
 
-    public NCBISampleTabCombiner() {
-        // private constructor
-        groupings = new ConcurrentHashMap<String, Set<File>>();
-    }
+    class GroupIDsTask implements Runnable {
+        private final File inFile;
+        private Logger log = LoggerFactory.getLogger(getClass());
 
-    private File getFileByIdent(int ident) {
-        File subdir = new File(this.inputFilename, "GNC-" + ident);
-        File xmlfile = new File(subdir, "raw.xml");
-        return xmlfile;
-    }
+        GroupIDsTask(File inFile) {
+            this.inFile = inFile;
+        }
 
-    private void makeGroupings(List<File> inFiles) throws DocumentException, SQLException {
-
-        class GroupIDsTask implements Runnable {
-            private final File inFile;
-            private int ncbiid = -1;
-            private Logger log = LoggerFactory.getLogger(getClass());
-
-            GroupIDsTask(File inFile) {
-                this.inFile = inFile;
-            }
-
-            public Collection<String> getGroupIds() throws DocumentException, FileNotFoundException {
-
-                log.info("Trying " + this.inFile);
-
-                Collection<String> groupids = new ArrayList<String>();
-                
-
-                Document xml = XMLUtils.getDocument(this.inFile);
-                Element root = xml.getRootElement();
-                Element ids = XMLUtils.getChildByName(root, "Ids");
-                Element attributes = XMLUtils.getChildByName(root, "Attributes");
-                for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
-                    String dbname = id.attributeValue("db");
-                    String sampleid = id.getText();
-                    if (dbname.equals("SRA")) {
-                        // group by sra study
-                        log.debug("Getting studies of SRA sample " + sampleid);
-                        Collection<String> studyids = ENAUtils.getStudiesForSample(sampleid);
-                        if (studyids != null) {
-                            //groupids.addAll(studyids);
+        public Collection<String> getGroupIds(Document xml) throws DocumentException, FileNotFoundException {
+            Collection<String> groupids = new ArrayList<String>();
+            Element root = xml.getRootElement();
+            Element ids = XMLUtils.getChildByName(root, "Ids");
+            Element attributes = XMLUtils.getChildByName(root, "Attributes");
+            for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
+                String dbname = id.attributeValue("db");
+                String sampleid = id.getText();
+                if (dbname == null) {
+                    //id with no db
+                    log.info("id with no db "+sampleid);
+                } else if (dbname.equals("SRA")) {
+                    // group by sra study
+                    log.debug("Getting studies of SRA sample " + sampleid);
+                    Collection<String> studyids = ENAUtils.getStudiesForSample(sampleid);
+                    if (studyids == null || studyids.size() == 0){
+                        //no study found, fall back to submission
+                        studyids = ENAUtils.getSubmissionsForSample(sampleid);
+                    }
+                    if (studyids != null && studyids.size() > 0 ) {
+                        groupids.addAll(studyids);
+                    }
+                } else if (dbname.equals("dbGaP")) {
+                    // group by dbGaP project
+                    for (Element attribute : XMLUtils.getChildrenByName(attributes, "Attribute")) {
+                        if (attribute.attributeValue("attribute_name").equals("gap_accession")) {
+                            groupids.add(attribute.getText());
                         }
-                    } else if (dbname.equals("dbGaP")) {
-                        // group by dbGaP project
-                        for (Element attribute : XMLUtils.getChildrenByName(attributes, "Attribute")) {
-                            if (attribute.attributeValue("attribute_name").equals("gap_accession")) {
-                                //groupids.add(attribute.getText());
-                            }
-                        }
-                    } else if (dbname.equals("EST") || dbname.equals("GSS")) {
-                        // EST == Expressed Sequence Tag
-                        // GSS == Genome Survey Sequence
-                        // group by owner
-                        //
-                        // Element owner = XMLUtils.getChildByName(root, "Owner");
-                        // Element name = XMLUtils.getChildByName(owner, "Name");
-                        // if (name != null) {
-                        // String ownername = name.getText();
-                        // // clean ownername
-                        // ownername = ownername.toLowerCase();
-                        // ownername = ownername.trim();
-                        // String cleanname = "";
-                        // for (int j = 0; j < ownername.length(); j++) {
-                        // String c = ownername.substring(j, j + 1);
-                        // if (c.matches("[a-z0-9]")) {
-                        // cleanname += c;
-                        // }
-                        // }
-                        // groupids.add(cleanname);
-                        // }
-
-                        // // This doesnt work so well by owner, so dont bother.
-                        // // May need to group samples from the same owner in a post-hoc manner?
-                        //groupids.add(sampleid);
-                    } else {
-                        // could group by others, but some of them are very big
+                    }
+                } else if (dbname.equals("ESS") || dbname.equals("GSS")) { 
+                    //dont' use these if possible
+                } else if (dbname.equals("ATCC")) { 
+                    groupids.add("ATCC");
+                } else if (dbname.equals("Coriell")) { 
+                    groupids.add("Coriell");
+                } else if (dbname.equals("HapMap")) { 
+                    groupids.add("HapMap");
+                } else if (dbname.equals("DSMZ")) { 
+                    groupids.add("DSMZ");
+                } else {
+                    // could group by others, but it is messy
+                    //just throw them in a big group for the moment - 95% is either SRA or dbGaP
+                    if (!groupids.contains("NCBI_BioSamples")){
+                        groupids.add("NCBI_BioSamples");
                     }
                 }
-                return groupids;
+            }
+            if (groupids.size() > 1){
+                groupids.remove("NCBI_BioSamples");
+            }
+            return groupids;
+        }
+        
+        public void run() {
+
+            Document xml =null;
+            try {
+                xml = XMLUtils.getDocument(inFile);
+            } catch (FileNotFoundException e) {
+                log.error("Unable to find "+inFile, e);
+                return;
+            } catch (DocumentException e) {
+                log.error("Unable to read "+inFile, e);
+                return;
             }
             
-            public int getNCBIid(){
-                if (this.ncbiid == -1){
-                    Document xml;
-                    try {
-                        xml = XMLUtils.getDocument(this.inFile);
-                    } catch (FileNotFoundException e) {
-                        log.error("Unable to parse xml", e);
-                        return -1;
-                    } catch (DocumentException e) {
-                        log.error("Unable to parse xml", e);
-                        return -1;
-                    }
-                    Element root = xml.getRootElement();
-                    this.ncbiid = new Integer(root.attributeValue("id"));
-                }
-                return this.ncbiid;
-            }
-
-            public void run() {
-
-                if (inFile.exists()) {
-                    Collection<String> groupids = null;
-//                    try {
-//                        groupids = this.getGroupIds();
-//                    } catch (DocumentException e) {
-//                        e.printStackTrace();
-//                        return;
-//                    } catch (FileNotFoundException e) {
-//                        e.printStackTrace();
-//                        return;
-//                    }
-                    //For the moment, but everything in a group of one.
-                    groupids = new ArrayList<String>();
-                    
-                    groupids.add(""+this.getNCBIid());
-
-                    if (groupids.size() > 1) {
-                        log.error("Multiple groups for " + this.inFile);
-                    }
-                    if (groupids.size() == 0) {
-                        log.error("No groups for " + this.inFile);
-                    }
-
-                    for (String groupid : groupids) {
-                        Set<File> group;
-                        if (groupings.containsKey(groupid)) {
-                            group = groupings.get(groupid);
-                        } else {
-                            group = new ConcurrentSkipListSet<File>();
-                            groupings.put(groupid, group);
-                        }
-                        group.add(this.inFile);
-                    }
-                }
-            }
-        }
-
-        int nocpus = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nocpus);
-        for (File file : inFiles) {
-            Runnable t = new GroupIDsTask(file);
-            if (threaded) {
-                pool.submit(t);
-            } else {
-                t.run();
-            }
-        }
-        log.info("All GroupIDsTask tasks submitted");
-
-        synchronized (pool) {
-            pool.shutdown();
+            Collection<String> groupids = null;
             try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination", e);
+                groupids = getGroupIds(xml);
+            } catch (DocumentException e) {
+                e.printStackTrace();
+                return;
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                return;
+            }
+
+//            if (groupids.size() > 1) {
+//                log.warn("Multiple groups for " + inFile);
+//            }
+            if (groupids.size() == 0) {
+                log.error("No groups for " + inFile);
+            }
+
+            for (String groupid : groupids) {
+                Set<File> group;
+                if (groupings.containsKey(groupid)) {
+                    group = groupings.get(groupid);
+                } else {
+                    group = new ConcurrentSkipListSet<File>();
+                    groupings.put(groupid, group);
+                }
+                group.add(inFile);
             }
         }
+    }
+
+    public SampleData combine(Collection<SampleData> indata) {
+
+        SampleData sampleout = new SampleData();
+        for (SampleData sampledata : indata) {
+            
+            sampleout.msi.persons.addAll(sampledata.msi.persons);
+            sampleout.msi.organizations.addAll(sampledata.msi.organizations);
+            sampleout.msi.termSources.addAll(sampledata.msi.termSources);
+            sampleout.msi.databases.addAll(sampledata.msi.databases);
+            sampleout.msi.publications.addAll(sampledata.msi.publications);
+
+            //if (sampleout.msi.submissionDescription == null || sampleout.msi.submissionDescription.trim().equals(""))
+            //    sampleout.msi.submissionDescription = sampledata.msi.submissionDescription;
+            //if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals(""))
+            //    sampleout.msi.submissionTitle = sampledata.msi.submissionTitle;
+
+            if (sampledata.msi.submissionReleaseDate != null) {
+                if (sampleout.msi.submissionReleaseDate == null) {
+                    sampleout.msi.submissionReleaseDate = sampledata.msi.submissionReleaseDate;
+                } else {
+                    // use the most recent of the two dates
+                    Date datadate = sampledata.msi.submissionReleaseDate;
+                    Date outdate = sampleout.msi.submissionReleaseDate;
+                    if (datadate != null && outdate != null && datadate.after(outdate)) {
+                        sampleout.msi.submissionReleaseDate = sampledata.msi.submissionReleaseDate;
+
+                    }
+                }
+            }
+            if (sampledata.msi.submissionUpdateDate != null) {
+                if (sampleout.msi.submissionUpdateDate == null) {
+                    sampleout.msi.submissionUpdateDate = sampledata.msi.submissionUpdateDate;
+                } else {
+                    // use the most recent of the two dates
+                    Date datadate = sampledata.msi.submissionUpdateDate;
+                    Date outdate = sampleout.msi.submissionUpdateDate;
+                    if (datadate != null && outdate != null && datadate.after(outdate)) {
+                        sampleout.msi.submissionUpdateDate = sampledata.msi.submissionUpdateDate;
+
+                    }
+                }
+            }
+
+            // add nodes from here to parent
+            for (SCDNode node : sampledata.scd.getRootNodes()) {
+                try {
+                    //check if the names are the 
+                    sampleout.scd.addNode(node);
+                    if (SampleNode.class.isInstance(node)) {
+                        // apply node metainformation to msi if missing
+                        /*
+                        if (sampleout.msi.submissionDescription == null
+                                || sampleout.msi.submissionDescription.trim().equals("")){
+                            log.debug("Using description from sample");
+                            sampleout.msi.submissionDescription = ((SampleNode) node).getSampleDescription();
+                        }
+                        if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals("")){
+                            log.debug("Using title from sample");
+                            sampleout.msi.submissionTitle = ((SampleNode) node).getNodeName();
+                        }
+                        */
+                    }
+                } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e4) {
+                    log.warn("Unable to add node " + node.getNodeName(), e4);
+                    continue;
+                }
+            }
+        }
+/*
+        if (sampleout.msi.submissionDescription == null || sampleout.msi.submissionDescription.trim().equals("")) {
+            log.warn("null submission description");
+            sampleout.msi.submissionDescription = "No description avaliable";
+        }
+        if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals("")) {
+            log.warn("null submission title");
+            sampleout.msi.submissionTitle = sampleout.msi.submissionIdentifier;
+        }
+*/
+        sampleout.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(sampleout);
+        return sampleout;
+    }
+    
+    class OutputTask implements Runnable {
+        private final List<File> files;
+        private final NCBIBiosampleRunnable converter;
+
+        public OutputTask(List<File> files) {
+            this.files = files;
+            this.converter = new NCBIBiosampleRunnable(null, null);
+        }
+
+        public void run() {
+            List<SampleData> sampledatas = new ArrayList<SampleData>();
+            for (File xmlFile : files) {
+                log.debug("converting " + xmlFile);
+                try {
+                    sampledatas.add(this.converter.convert(xmlFile));
+                } catch (ParseException e2) {
+                    log.warn("Unable to convert " + xmlFile, e2);
+                    continue;
+                } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e2) {
+                    log.warn("Unable to convert " + xmlFile, e2);
+                    continue;
+                } catch (DocumentException e2) {
+                    log.warn("Unable to convert " + xmlFile, e2);
+                    continue;
+                } catch (FileNotFoundException e2) {
+                    log.warn("Unable to convert " + xmlFile, e2);
+                    continue;
+                }
+            }
+            SampleData sampleout = combine(sampledatas);
+            
+            String identifier = null;
+            int used_i = 0;
+            for(int i = 0 ; i < sampledatas.size(); i++){
+                SampleData sd = sampledatas.get(i);
+                if (identifier == null){
+                    identifier = sd.msi.submissionIdentifier;
+                    used_i = i;
+                } else {
+                    Pattern p = Pattern.compile("GNC-([0-9]*)");
+                    Matcher m1 = p.matcher(identifier);
+                    Matcher m2 = p.matcher(sd.msi.submissionIdentifier);
+                    if (!m1.matches() || !m2.matches()){
+                        if (!m1.matches()){
+                            log.warn("Unable to find numbers in "+identifier);
+                        }
+                        if (!m2.matches()){
+                            log.warn("Unable to find numbers in "+sd.msi.submissionIdentifier);
+                        }
+                    } else {
+                        Integer i1 = new Integer(m1.group(1));
+                        Integer i2 = new Integer(m2.group(1));
+                        if (i1 < i2){
+                            identifier = sd.msi.submissionIdentifier;
+                            used_i = i;
+                        }
+                    }
+                }
+            }
+            
+            sampleout.msi.submissionIdentifier = identifier;
+            sampleout.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(sampleout);
+
+            // more sanity checks
+            if (sampleout.scd.getRootNodes().size() != this.files.size()) {
+                log.warn("unequal group size " + sampleout.msi.submissionIdentifier);
+            }
+            
+            
+            File outFile = files.get(used_i);
+            outFile = new File(outFile.getParentFile(), outputFilename);
+            
+            SampleTabWriter writer;
+            try {
+                writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outFile)));
+                writer.write(sampleout);
+                writer.close();
+                log.error("Wrote to " + outFile);
+            } catch (IOException e) {
+                log.error("Unable to write " + outFile, e);
+                return;
+            }
+
+        }
+    }
+    
+    @Override 
+    public void postProcess(){
 
         // at this point, subs is a mapping from the project name to a set of BioSample accessions
         // output them to a file
-        File projout = new File("projects.tab.txt");
+        File projout = new File(projectFilename);
         BufferedWriter projoutwrite = null;
         try {
             projoutwrite = new BufferedWriter(new FileWriter(projout));
@@ -259,237 +363,42 @@ public class NCBISampleTabCombiner {
                 }
             }
         }
-    }
-
-    public SampleData combine(Collection<SampleData> indata) {
-
-        SampleData sampleout = new SampleData();
-        for (SampleData sampledata : indata) {
-            
-            sampleout.msi.persons.addAll(sampledata.msi.persons);
-            sampleout.msi.organizations.addAll(sampledata.msi.organizations);
-            sampleout.msi.termSources.addAll(sampledata.msi.termSources);
-            sampleout.msi.databases.addAll(sampledata.msi.databases);
-            sampleout.msi.publications.addAll(sampledata.msi.publications);
-
-            if (sampleout.msi.submissionDescription == null || sampleout.msi.submissionDescription.trim().equals(""))
-                sampleout.msi.submissionDescription = sampledata.msi.submissionDescription;
-            if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals(""))
-                sampleout.msi.submissionTitle = sampledata.msi.submissionTitle;
-
-            if (sampledata.msi.submissionReleaseDate != null) {
-                if (sampleout.msi.submissionReleaseDate == null) {
-                    sampleout.msi.submissionReleaseDate = sampledata.msi.submissionReleaseDate;
-                } else {
-                    // use the most recent of the two dates
-                    Date datadate = sampledata.msi.submissionReleaseDate;
-                    Date outdate = sampleout.msi.submissionReleaseDate;
-                    if (datadate != null && outdate != null && datadate.after(outdate)) {
-                        sampleout.msi.submissionReleaseDate = sampledata.msi.submissionReleaseDate;
-
-                    }
-                }
-            }
-            if (sampledata.msi.submissionUpdateDate != null) {
-                if (sampleout.msi.submissionUpdateDate == null) {
-                    sampleout.msi.submissionUpdateDate = sampledata.msi.submissionUpdateDate;
-                } else {
-                    // use the most recent of the two dates
-                    Date datadate = sampledata.msi.submissionUpdateDate;
-                    Date outdate = sampleout.msi.submissionUpdateDate;
-                    if (datadate != null && outdate != null && datadate.after(outdate)) {
-                        sampleout.msi.submissionUpdateDate = sampledata.msi.submissionUpdateDate;
-
-                    }
-                }
-            }
-
-            // add nodes from here to parent
-            for (SCDNode node : sampledata.scd.getRootNodes()) {
-                try {
-                    sampleout.scd.addNode(node);
-                    if (SampleNode.class.isInstance(node)) {
-                        // apply node metainformation to msi if missing
-                        if (sampleout.msi.submissionDescription == null
-                                || sampleout.msi.submissionDescription.trim().equals("")){
-                            log.debug("Using description from sample");
-                            sampleout.msi.submissionDescription = ((SampleNode) node).getSampleDescription();
-                        }
-                        if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals("")){
-                            log.debug("Using title from sample");
-                            sampleout.msi.submissionTitle = ((SampleNode) node).getNodeName();
-                        }
-                    }
-                } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e4) {
-                    log.warn("Unable to add node " + node.getNodeName(), e4);
-                    continue;
-                }
-            }
-        }
-
-        if (sampleout.msi.submissionDescription == null || sampleout.msi.submissionDescription.trim().equals("")) {
-            if (sampleout.msi.submissionDescription == null)
-                log.warn("null submission description");
-            sampleout.msi.submissionDescription = "No description avaliable";
-        }
-        if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals("")) {
-            log.warn("null submission title");
-            sampleout.msi.submissionTitle = sampleout.msi.submissionIdentifier;
-        }
-
-        return sampleout;
-    }
-
-    public static void main(String[] args) throws IOException {
-        new NCBISampleTabCombiner().doMain(args);
-    }
-
-    public void doMain(String[] args) throws IOException {
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments.
-            parser.parseArgument(args);
-            // TODO check for extra arguments?
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printSingleLineUsage(System.err);
-            System.err.println();
-            parser.printUsage(System.err);
-            System.err.println();
-            System.exit(1);
-            return;
-        }
-
-        log.info("Starting combiner...");
-        log.info(inputFilename);
-        List<File> inFiles = FileUtils.getMatchesGlob(inputFilename);
-        log.info("Found "+inFiles.size()+" input files");
-
-        try {
-            log.debug("Getting groupings...");
-            makeGroupings(inFiles);
-            log.debug("Got groupings...");
-        } catch (DocumentException e) {
-            log.error("Unable to group", e);
-            return;
-        } catch (SQLException e) {
-            log.error("Unable to group", e);
-            return;
-        }
-
-        class OutputTask implements Runnable {
-            private final Collection<File> files;
-            private final String groupname;
-            private final File outFile;
-            private final NCBIBiosampleRunnable converter;
-
-            public OutputTask(Set<File> files, String groupname, File outFile) {
-                this.files = files;
-                this.groupname = groupname;
-                this.converter = new NCBIBiosampleRunnable(null, null);
-                this.outFile = outFile;
-            }
-
-            public void run() {
-
-                // log.info("Size of group : " + group + " : " + groups.get(group).size());
-
-                // log.info("Group : " + group);
-                Collection<SampleData> sampledatas = new ArrayList<SampleData>();
-                //TODO sort files?
-                for (File xmlFile : files) {
-                    log.info("converting " + xmlFile);
-                    try {
-                        sampledatas.add(this.converter.convert(xmlFile));
-                    } catch (ParseException e2) {
-                        log.warn("Unable to convert " + xmlFile, e2);
-                        continue;
-                    } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e2) {
-                        log.warn("Unable to convert " + xmlFile, e2);
-                        continue;
-                    } catch (DocumentException e2) {
-                        log.warn("Unable to convert " + xmlFile, e2);
-                        continue;
-                    } catch (FileNotFoundException e2) {
-                        log.warn("Unable to convert " + xmlFile, e2);
-                        continue;
-                    }
-                }
-                SampleData sampleout = combine(sampledatas);
-
-                sampleout.msi.submissionIdentifier = "GNC-" + this.groupname;
-                log.debug("submissionIdentifier: " + sampleout.msi.submissionIdentifier);
-
-                // more sanity checks
-                if (sampleout.scd.getRootNodes().size() != this.files.size()) {
-                    log.warn("unequal group size " + sampleout.msi.submissionIdentifier);
-                }
-
-                SampleTabWriter writer;
-                try {
-                    writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outFile)));
-                    writer.write(sampleout);
-                    writer.close();
-                    log.error("Wrote to " + outFile);
-                } catch (IOException e) {
-                    log.error("Unable to write " + outFile, e);
-                    return;
-                }
-
-            }
-        }
-
-        // sort them to put them in a sensible order
+        
+        //TODO trigger all the output processes
+        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        
         List<String> projects = new ArrayList<String>(groupings.keySet());
-        Collections.sort(projects);
-
-        int nocpus = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nocpus);
-
-        for (String groupname : projects) {
-
-            if (groupname == null || groupname.equals("")) {
-                log.debug("Skipping empty group name");
-                continue;
-            }
-            if (groupings.get(groupname).size() < 1) {
-                continue;
-            }
-            log.debug("Using groupname " + groupname);
-
-            
-            File minFile = Collections.min(groupings.get(groupname));
-            File outFile = new File(minFile.getParentFile(), outputFilename);
-            // TODO also compare file ages
-            // TODO also check output file is size > 0
-            log.debug("outfile " + outFile);
-            if (!outFile.exists()) {
-                outFile.getParentFile().mkdirs();
-                // TODO make this operate on inputfiles and outputfiles
-                Runnable t = new OutputTask(groupings.get(groupname), groupname, outFile);
-                if (threaded) {
-                    pool.execute(t);
-                } else {
-                    t.run();
-                }
+        for (String project : projects) {
+            List<File> files = new ArrayList<File>(groupings.get(project));
+            Runnable t = new OutputTask(files);
+            if (threaded) {
+                pool.execute(t);
+            } else {
+                t.run();
             }
         }
-        log.info("All OutputTask tasks submitted");
+        
+        // run the pool and then close it afterwards
+        // must synchronize on the pool object
         synchronized (pool) {
             pool.shutdown();
             try {
                 // allow 24h to execute. Rather too much, but meh
                 pool.awaitTermination(1, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination", e);
+                log.error("Interupted awaiting thread pool termination", e);
             }
         }
+        
+    }
 
+    public static void main(String[] args) throws IOException {
+        new NCBISampleTabCombiner().doMain(args);
+    }
+
+    @Override
+    protected Runnable getNewTask(File inputFile) {
+        return new GroupIDsTask(inputFile);
     }
 
 }

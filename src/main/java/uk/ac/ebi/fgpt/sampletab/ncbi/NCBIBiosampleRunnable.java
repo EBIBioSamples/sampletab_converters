@@ -4,20 +4,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +24,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAtt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBIBiosampleRunnable implements Runnable {
@@ -203,8 +195,9 @@ public class NCBIBiosampleRunnable implements Runnable {
 		st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null));
 
 		SampleNode scdnode = new SampleNode();
-		scdnode.setNodeName(st.msi.submissionTitle);
-		scdnode.setSampleDescription(st.msi.submissionDescription);
+		//name nodes by identifier to guarantee they won't overwrite when combined.
+		scdnode.setNodeName("SAMN" + root.attributeValue("id"));
+		scdnode.setSampleDescription(title.getTextTrim());
 		scdnode.setSampleAccession("SAMN" + root.attributeValue("id"));
 		OrganismAttribute organismAttrib = new OrganismAttribute();
 		organismAttrib.setAttributeValue(organism
@@ -230,13 +223,12 @@ public class NCBIBiosampleRunnable implements Runnable {
 			CommentAttribute attrib = new CommentAttribute();
 			attrib.setAttributeValue(attribute.getTextTrim());
 			attrib.type = attribute.attributeValue("attribute_name");
-			// Dictionary name is kind of like ontology, but not.
-			// TODO ensure that the dictionary name is included in the msi
-			// section
-			if (attribute.attributeValue("dictionary_name") != null) {
-				attrib.setTermSourceREF(attribute
-						.attributeValue("dictionary_name"));
-			}
+			// Dictionary name is more like a template than an ontology
+			//  do not use 
+//			if (attribute.attributeValue("dictionary_name") != null) {
+//				attrib.setTermSourceREF(attribute
+//						.attributeValue("dictionary_name"));
+//			}
 			scdnode.addAttribute(attrib);
 		}
 
