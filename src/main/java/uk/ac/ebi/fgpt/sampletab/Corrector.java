@@ -56,7 +56,12 @@ public class Corrector {
         out = out.trim();
         
         //<br>
-        out = out.replaceAll("\\s*\\<[bB][rR]? ?/?\\>\\s*"," ");
+        //<b>
+        out = out.replaceAll("\\s*\\</?[bB][rR]? ?/?\\>\\s*"," ");
+        //<p>
+        out = out.replaceAll("\\s*\\</?[pP] ?/?\\>\\s*"," ");
+        //<i>
+        out = out.replaceAll("\\s*\\</?[iI] ?/?\\>\\s*"," ");
         
         //some UTF-8 hacks
         out = out.replace("ÃƒÂ¼", "ü");
