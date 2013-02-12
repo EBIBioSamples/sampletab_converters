@@ -56,6 +56,12 @@
 			<url>http://www.ebi.ac.uk/~maven/m2repo/</url>
 		</repository>
 		
+		<repository>
+			<id>ebi-repo-snapshot</id>
+			<name>EBI Repository</name>
+			<url>http://www.ebi.ac.uk/~maven/m2repo_snapshots/</url>
+		</repository>
+		
 	</repositories>
 
 	<dependencies>
