@@ -25,6 +25,7 @@ public class GUIXMLRunnable implements Runnable {
 
     @Override
     public void run() {
+        log.info("Processing "+inputFile.getParentFile().getName());
         SampleTabSaferParser stParser = new SampleTabSaferParser();
         SampleData sd = null;
         try {
@@ -32,12 +33,16 @@ public class GUIXMLRunnable implements Runnable {
         } catch (ParseException e) {
             log.error("Error parsing "+inputFile, e);
         }
-        if (sd != null){
-            try {
-                outputer.process(sd);
-            } catch (XMLStreamException e) {
-                log.error("Error outputing "+inputFile, e);
+        log.info("Read "+inputFile.getParentFile().getName());
+        if (sd != null) {
+            synchronized(outputer) {
+                try {
+                    outputer.process(sd);
+                } catch (XMLStreamException e) {
+                    log.error("Error outputing "+inputFile, e);
+                }
             }
         }
+        log.info("Processed "+inputFile.getParentFile().getName());
     }
 }

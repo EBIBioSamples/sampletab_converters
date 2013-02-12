@@ -39,6 +39,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SameAsAttr
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 
@@ -219,156 +220,147 @@ public class SampleTabFromGUIXML {
             System.exit(1);
             return;
         }
-
-        log.info("Looking for input files");
-        List<File> inputFiles = new ArrayList<File>();
-        for (String inputFilename : inputFilenames){
-            inputFiles.addAll(FileUtils.getMatchesGlob(inputFilename));
-        }
-        log.info("Found " + inputFiles.size() + " input files");
-        //TODO no duplicates
-        Collections.sort(inputFiles);
-
         SampleData st = new SampleData();
-        
-        for (File inputFile : inputFiles){
-            try {
-                Document xml = XMLUtils.getDocument(inputFile);
-                
-                Element root = xml.getRootElement();
-                
-                for (Element group : XMLUtils.getChildrenByName(root, "SampleGroup")){
-                    GroupNode groupNode = new GroupNode();
-                    groupNode.setGroupAccession(group.attributeValue("id"));
+        for (String inputFilename : inputFilenames){
+            for (File inputFile : new FileGlobIterable(inputFilename)){
+                try {
+                    Document xml = XMLUtils.getDocument(inputFile);
                     
-                    for (Element attribute : XMLUtils.getChildrenByName(group, "attribute")){
-                        Element value = XMLUtils.getChildByName(attribute, "value");
-                        String attrKey = attribute.attributeValue("class");
-                        if (value != null){
-                            //TODO check if these are a different value before overwriting
-                            if (attrKey.equals("Submission Title")){
-                                st.msi.submissionTitle = value.getTextTrim();
-                            } else if (attrKey.equals("Submission Identifier")){
-                                st.msi.submissionIdentifier = value.getTextTrim();
-                            } else if (attrKey.equals("Submission Description")){
-                                st.msi.submissionDescription = value.getTextTrim();
-                            } else if (attrKey.equals("Submission Version")){
-                                st.msi.submissionVersion = value.getTextTrim();
-                            } else if (attrKey.equals("Submission Reference Layer")){
-                                if (value.getTextTrim().equals("true")){
-                                    st.msi.submissionReferenceLayer = true;
-                                } else {
-                                    st.msi.submissionReferenceLayer = false;   
-                                }
-                            } else if (attrKey.equals("Submission Release Date")){
-                                synchronized (simpledateformat){
-                                    try {
-                                        st.msi.submissionReleaseDate = simpledateformat.parse(value.getTextTrim());
-                                    } catch (java.text.ParseException e) {
-                                        log.warn("Unable to parse release date "+value.getTextTrim());
-                                    }
-                                }
-                            } else if (attrKey.equals("Submission Update Date") || attrKey.equals("Submission Modification Date") ){
-                                synchronized (simpledateformat){
-                                    try {
-                                        st.msi.submissionUpdateDate = simpledateformat.parse(value.getTextTrim());
-                                    } catch (java.text.ParseException e) {
-                                        log.warn("Unable to parse update date "+value.getTextTrim());
-                                    }
-                                }
-                            } else if (attrKey.equals("Organizations")){
-                                for (Element org : XMLUtils.getChildrenByName(value, "object")){
-                                    Organization o = parseOrganization(org);
-                                    st.msi.organizations.add(o);
-                                }
-                            } else if (attrKey.equals("Persons")){
-                                for (Element per : XMLUtils.getChildrenByName(value, "object")){
-                                    Person o = parsePerson(per);
-                                    st.msi.persons.add(o);
-                                }
-                            } else if (attrKey.equals("Publications")){
-                                for (Element pub : XMLUtils.getChildrenByName(value, "object")){
-                                    Publication o = parsePublication(pub);
-                                    st.msi.publications.add(o);
-                                }
-                            } else if (attrKey.equals("Term Sources")){
-                                for (Element ts : XMLUtils.getChildrenByName(value, "object")){
-                                    TermSource o = parseTermSource(ts);
-                                    st.msi.termSources.add(o);
-                                }
-                            } else if (attrKey.equals("Databases")){
-                                for (Element db : XMLUtils.getChildrenByName(value, "object")){
-                                    Database o = parseDatabase(db);
-                                    st.msi.databases.add(o);
-                                }
-                            } else {
-                                log.warn("Unrecognised attribute "+attrKey+":"+value.getTextTrim());
-                            }
-                            //TODO group nodes and attributes
-                        }
-                    }
+                    Element root = xml.getRootElement();
                     
-                    //now process samples
-                    for (Element sample : XMLUtils.getChildrenByName(group, "Sample")){
-                        SampleNode sampleNode = new SampleNode();
-                        sampleNode.setSampleAccession(sample.attributeValue("id"));
-
+                    for (Element group : XMLUtils.getChildrenByName(root, "SampleGroup")){
+                        GroupNode groupNode = new GroupNode();
+                        groupNode.setGroupAccession(group.attributeValue("id"));
                         
-                        for (Element attribute : XMLUtils.getChildrenByName(sample, "attribute")){
+                        for (Element attribute : XMLUtils.getChildrenByName(group, "attribute")){
                             Element value = XMLUtils.getChildByName(attribute, "value");
                             String attrKey = attribute.attributeValue("class");
                             if (value != null){
                                 //TODO check if these are a different value before overwriting
-                                if (attrKey.equals("Name")){
-                                    sampleNode.setNodeName(value.getTextTrim());
-                                } else if (attrKey.equals("Sample Description")){
-                                    sampleNode.setSampleDescription(value.getTextTrim());
-                                } else if (attrKey.equals("Material")){
-                                    AbstractNodeAttributeOntology a = new MaterialAttribute(value.getTextTrim());
-                                    applyTermSource(value, a);
-                                    sampleNode.addAttribute(a);
-                                } else if (attrKey.equals("Sex")){
-                                    AbstractNodeAttributeOntology a = new SexAttribute(value.getTextTrim());
-                                    applyTermSource(value, a);
-                                    sampleNode.addAttribute(a);
-                                } else if (attrKey.equals("Organism")){
-                                    AbstractNodeAttributeOntology a = new OrganismAttribute(value.getTextTrim());
-                                    applyTermSource(value, a);
-                                    sampleNode.addAttribute(a);
-                                } else if (attrKey.startsWith("characteristic[")){
-                                    String charType = attrKey.substring(15,attrKey.length()-1);
-                                    AbstractNodeAttributeOntology a = new CharacteristicAttribute(charType, value.getTextTrim());
-                                    applyTermSource(value, a);
-                                    sampleNode.addAttribute(a);
-                                } else if (attrKey.startsWith("comment[")){
-                                    String charType = attrKey.substring(8,attrKey.length()-1);
-                                    AbstractNodeAttributeOntology a = new CommentAttribute(charType, value.getTextTrim());
-                                    applyTermSource(value, a);
-                                    sampleNode.addAttribute(a);
-                                } else if (attrKey.equals("Child Of")){
-                                    sampleNode.addAttribute(new ChildOfAttribute(value.getTextTrim()));
-                                } else if (attrKey.equals("Same As")){
-                                    sampleNode.addAttribute(new SameAsAttribute(value.getTextTrim()));
-                                } else if (attrKey.equals("Derived From")){
-                                    sampleNode.addAttribute(new DerivedFromAttribute(value.getTextTrim()));
-                                } 
+                                if (attrKey.equals("Submission Title")){
+                                    st.msi.submissionTitle = value.getTextTrim();
+                                } else if (attrKey.equals("Submission Identifier")){
+                                    st.msi.submissionIdentifier = value.getTextTrim();
+                                } else if (attrKey.equals("Submission Description")){
+                                    st.msi.submissionDescription = value.getTextTrim();
+                                } else if (attrKey.equals("Submission Version")){
+                                    st.msi.submissionVersion = value.getTextTrim();
+                                } else if (attrKey.equals("Submission Reference Layer")){
+                                    if (value.getTextTrim().equals("true")){
+                                        st.msi.submissionReferenceLayer = true;
+                                    } else {
+                                        st.msi.submissionReferenceLayer = false;   
+                                    }
+                                } else if (attrKey.equals("Submission Release Date")){
+                                    synchronized (simpledateformat){
+                                        try {
+                                            st.msi.submissionReleaseDate = simpledateformat.parse(value.getTextTrim());
+                                        } catch (java.text.ParseException e) {
+                                            log.warn("Unable to parse release date "+value.getTextTrim());
+                                        }
+                                    }
+                                } else if (attrKey.equals("Submission Update Date") || attrKey.equals("Submission Modification Date") ){
+                                    synchronized (simpledateformat){
+                                        try {
+                                            st.msi.submissionUpdateDate = simpledateformat.parse(value.getTextTrim());
+                                        } catch (java.text.ParseException e) {
+                                            log.warn("Unable to parse update date "+value.getTextTrim());
+                                        }
+                                    }
+                                } else if (attrKey.equals("Organizations")){
+                                    for (Element org : XMLUtils.getChildrenByName(value, "object")){
+                                        Organization o = parseOrganization(org);
+                                        st.msi.organizations.add(o);
+                                    }
+                                } else if (attrKey.equals("Persons")){
+                                    for (Element per : XMLUtils.getChildrenByName(value, "object")){
+                                        Person o = parsePerson(per);
+                                        st.msi.persons.add(o);
+                                    }
+                                } else if (attrKey.equals("Publications")){
+                                    for (Element pub : XMLUtils.getChildrenByName(value, "object")){
+                                        Publication o = parsePublication(pub);
+                                        st.msi.publications.add(o);
+                                    }
+                                } else if (attrKey.equals("Term Sources")){
+                                    for (Element ts : XMLUtils.getChildrenByName(value, "object")){
+                                        TermSource o = parseTermSource(ts);
+                                        st.msi.termSources.add(o);
+                                    }
+                                } else if (attrKey.equals("Databases")){
+                                    for (Element db : XMLUtils.getChildrenByName(value, "object")){
+                                        Database o = parseDatabase(db);
+                                        st.msi.databases.add(o);
+                                    }
+                                } else {
+                                    log.warn("Unrecognised attribute "+attrKey+":"+value.getTextTrim());
+                                }
+                                //TODO group nodes and attributes
                             }
                         }
-                        try {
-                            st.scd.addNode(sampleNode);
-                        } catch (ParseException e) {
-                            log.error("Unable to add sample "+sampleNode, e);
+                        
+                        //now process samples
+                        for (Element sample : XMLUtils.getChildrenByName(group, "Sample")){
+                            SampleNode sampleNode = new SampleNode();
+                            sampleNode.setSampleAccession(sample.attributeValue("id"));
+    
+                            
+                            for (Element attribute : XMLUtils.getChildrenByName(sample, "attribute")){
+                                Element value = XMLUtils.getChildByName(attribute, "value");
+                                String attrKey = attribute.attributeValue("class");
+                                if (value != null){
+                                    //TODO check if these are a different value before overwriting
+                                    if (attrKey.equals("Name")){
+                                        sampleNode.setNodeName(value.getTextTrim());
+                                    } else if (attrKey.equals("Sample Description")){
+                                        sampleNode.setSampleDescription(value.getTextTrim());
+                                    } else if (attrKey.equals("Material")){
+                                        AbstractNodeAttributeOntology a = new MaterialAttribute(value.getTextTrim());
+                                        applyTermSource(value, a);
+                                        sampleNode.addAttribute(a);
+                                    } else if (attrKey.equals("Sex")){
+                                        AbstractNodeAttributeOntology a = new SexAttribute(value.getTextTrim());
+                                        applyTermSource(value, a);
+                                        sampleNode.addAttribute(a);
+                                    } else if (attrKey.equals("Organism")){
+                                        AbstractNodeAttributeOntology a = new OrganismAttribute(value.getTextTrim());
+                                        applyTermSource(value, a);
+                                        sampleNode.addAttribute(a);
+                                    } else if (attrKey.startsWith("characteristic[")){
+                                        String charType = attrKey.substring(15,attrKey.length()-1);
+                                        AbstractNodeAttributeOntology a = new CharacteristicAttribute(charType, value.getTextTrim());
+                                        applyTermSource(value, a);
+                                        sampleNode.addAttribute(a);
+                                    } else if (attrKey.startsWith("comment[")){
+                                        String charType = attrKey.substring(8,attrKey.length()-1);
+                                        AbstractNodeAttributeOntology a = new CommentAttribute(charType, value.getTextTrim());
+                                        applyTermSource(value, a);
+                                        sampleNode.addAttribute(a);
+                                    } else if (attrKey.equals("Child Of")){
+                                        sampleNode.addAttribute(new ChildOfAttribute(value.getTextTrim()));
+                                    } else if (attrKey.equals("Same As")){
+                                        sampleNode.addAttribute(new SameAsAttribute(value.getTextTrim()));
+                                    } else if (attrKey.equals("Derived From")){
+                                        sampleNode.addAttribute(new DerivedFromAttribute(value.getTextTrim()));
+                                    } 
+                                }
+                            }
+                            try {
+                                st.scd.addNode(sampleNode);
+                            } catch (ParseException e) {
+                                log.error("Unable to add sample "+sampleNode, e);
+                            }
                         }
                     }
+                    
+                    
+                } catch (FileNotFoundException e) {
+                    log.error("Unable to access "+inputFile, e);
+                } catch (DocumentException e) {
+                    log.error("Unable to parse "+inputFile, e);
                 }
                 
-                
-            } catch (FileNotFoundException e) {
-                log.error("Unable to access "+inputFile, e);
-            } catch (DocumentException e) {
-                log.error("Unable to parse "+inputFile, e);
             }
-            
         }
         
         //write it out to disk

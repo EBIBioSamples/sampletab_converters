@@ -32,7 +32,7 @@ public class GUIXMLDriver extends AbstractInfileDriver<GUIXMLRunnable> {
     }
     
     @Override
-    protected void preProcess(){
+    protected void preProcess() {
         
         File outputFile = new File(outputFilename);
         outputFile = outputFile.getAbsoluteFile();
@@ -53,6 +53,7 @@ public class GUIXMLDriver extends AbstractInfileDriver<GUIXMLRunnable> {
     
     @Override
     protected void postProcess(){
+        log.info("postProcess-ing");
         try {
             outputer.end();
         } catch (XMLStreamException e) {

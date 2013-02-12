@@ -30,8 +30,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAtt
 
 public class GUIXMLOutputer {
 
-    private XMLOutputFactory output = XMLOutputFactory.newInstance();
-
     private Logger log = LoggerFactory.getLogger(getClass());
     
     private final File outputFile;
