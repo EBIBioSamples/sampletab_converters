@@ -43,7 +43,16 @@ public class CorrectorZooma {
         log.debug("URL "+jsurl.toExternalForm());
         
         ObjectMapper mapper = new ObjectMapper();                                                        
-        JsonNode rootNode = mapper.readValue(jsurl, JsonNode.class); // src can be a File, URL, InputStream etc
+        JsonNode rootNode = null;
+        try{
+            rootNode = mapper.readValue(jsurl, JsonNode.class); // src can be a File, URL, InputStream etc
+        } catch (IOException e) {
+            if (e.getMessage().contains("Server returned HTTP response code: 500 for URL")){
+                return null;
+            } else {
+                throw e;
+            }
+        }
 
         log.debug(rootNode.toString());
         
@@ -74,8 +83,17 @@ public class CorrectorZooma {
         URL jsurl = new URL("http://wwwdev.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+value+"&type="+key);
         log.debug("URL "+jsurl.toExternalForm());
         
-        ObjectMapper mapper = new ObjectMapper();                                                        
-        JsonNode rootNode = mapper.readValue(jsurl, JsonNode.class); // src can be a File, URL, InputStream etc
+        ObjectMapper mapper = new ObjectMapper();                                                                                                           
+        JsonNode rootNode = null;
+        try{
+            rootNode = mapper.readValue(jsurl, JsonNode.class); // src can be a File, URL, InputStream etc
+        } catch (IOException e) {
+            if (e.getMessage().contains("Server returned HTTP response code: 500 for URL")){
+                return null;
+            } else {
+                throw e;
+            }
+        }
 
         log.debug(rootNode.toString());
         

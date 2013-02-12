@@ -7,18 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.codehaus.jackson.JsonNode;
@@ -37,13 +25,13 @@ public class ZoomaTester {
     @Argument(required=true, index=0, metaVar="INPUT", usage = "input filename")
     protected String inputFilename;
     
-    @Option(name = "-h", aliases={"--help"}, usage = "display help")
+    @Option(name = "--help", aliases={"--h"}, usage = "display help")
     protected boolean help;
     
-    @Option(name = "-o", aliases={"--output"}, usage = "output filename")
+    @Option(name = "--output", aliases={"-o"}, usage = "output filename")
     protected String outputFilename = "zooma.txt";
 
-    @Option(name = "-m", aliases={"--minimum"}, usage = "minimum count")
+    @Option(name = "--minimum", aliases={"-m"}, usage = "minimum count")
     protected int minimumcount = 10;
     
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -128,31 +116,14 @@ public class ZoomaTester {
                                 String fixName = null;
                                 Float score = null;
                                 
-                                JsonNode tophit = null;
-                                try{
-                                    tophit = CorrectorZooma.getZoomaKeyValueHit(key, value);
-                                } catch (IOException e) {
-                                    if (e.getMessage().contains("Server returned HTTP response code: 500 for URL")){
-                                        //do nothing
-                                    } else {
-                                        throw e;
-                                    }
-                                }
+                                JsonNode tophit = CorrectorZooma.getZoomaKeyValueHit(key, value);
                                 if (tophit != null){
                                     direct = true;
                                     fixName = tophit.get("name").getTextValue();
                                     score = new Float(tophit.get("score").getTextValue());
                                 } else {
                                     //retry without key
-                                    try{
-                                        tophit = CorrectorZooma.getZoomaStringHit(value);
-                                    } catch (IOException e) {
-                                        if (e.getMessage().contains("Server returned HTTP response code: 500 for URL")){
-                                            //do nothing
-                                        } else {
-                                            throw e;
-                                        }
-                                    }
+                                    tophit = CorrectorZooma.getZoomaStringHit(value);
                                     if (tophit != null){
                                         direct = false;
                                         fixName = tophit.get("name").getTextValue();
