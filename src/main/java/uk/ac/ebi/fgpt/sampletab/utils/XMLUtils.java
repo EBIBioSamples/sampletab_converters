@@ -20,7 +20,7 @@ public class XMLUtils {
 
 	private static ConcurrentLinkedQueue<SAXReader> readerQueue = new ConcurrentLinkedQueue<SAXReader>();
 
-	public synchronized static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException{
+	public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException{
 		SAXReader reader = readerQueue.poll();
 		if (reader == null){
 			reader = new SAXReader();
