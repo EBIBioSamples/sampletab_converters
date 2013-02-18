@@ -131,13 +131,17 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
                         }
                     }
                 }
-                //convert the list into an array
-                String[] bundlearray = new String[bundle.size()];
-                for (int i = 0; i < bundle.size(); i++){
-                    bundlearray[i] = bundle.get(i);
-                }
                 
-                emMgr.storeMappingBundle( bundlearray );
+                //convert the list into an array
+                if (bundle.size() >= 2){
+                    String[] bundlearray = new String[bundle.size()];
+                    for (int i = 0; i < bundle.size(); i++){
+                        bundlearray[i] = bundle.get(i);
+                    }
+                    
+                    
+                    emMgr.storeMappingBundle( bundlearray );
+                }
             }
         }
     }
