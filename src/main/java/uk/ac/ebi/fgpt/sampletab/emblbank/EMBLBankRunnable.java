@@ -137,7 +137,11 @@ public class EMBLBankRunnable implements Runnable{
                 } else if (header.equals("ISOLATION_SOURCE")){
                     s.addAttribute(new CharacteristicAttribute("Isolation Source", value));
                 } else if (header.equals("LAT_LON")){
-                    Matcher m = latLongPattern.matcher(value);    
+                    Matcher m = latLongPattern.matcher(value);
+                    //fails at these values
+                    // 19.02 N 72.46
+                    // 19.02 N 72.
+                    
                     if (m.lookingAt()){
                         Float latitude = new Float(m.group(1));  
                         if (m.group(2).equals("S")){
@@ -237,13 +241,13 @@ public class EMBLBankRunnable implements Runnable{
         }
         String dbname = "EMBL-Bank";
         if (wgs){
-            dbname += " (wgs)";
+            dbname += " (WGS)";
         } else if (tsa){
-            dbname += " (wgs-tsa)";
+            dbname += " (TSA)";
         } else if (bar){
-            dbname += " (barcode)";
+            dbname += " (Barcode)";
         } else if (cds){
-            dbname += " (cds)";
+            dbname += " (CDS)";
         }
         s.addAttribute(new DatabaseAttribute(dbname, s.getNodeName(), "http://www.ebi.ac.uk/ena/data/view/"+s.getNodeName()));
         
@@ -374,7 +378,6 @@ public class EMBLBankRunnable implements Runnable{
         return pubSet;
     }
 
-    @Override
     public void run() {
         String accession = line[0].trim();
         log.debug("Second processing "+accession+" with cache size of "+stMap.size());
