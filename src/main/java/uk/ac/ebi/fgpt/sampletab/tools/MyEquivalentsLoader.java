@@ -17,7 +17,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAtt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SameAsAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fg.myequivalents.managers.interfaces.EntityMappingManager;
-import uk.ac.ebi.fg.myequivalents.managers.interfaces.ManagerFactory;
 import uk.ac.ebi.fg.myequivalents.resources.Resources;
 import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
 
@@ -30,6 +29,8 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
     private static String ENAGROUPSSERVICE = "ebi.ena.groups";
     private static String ARRAYEXPRESSGROUPSERVICE = "ebi.arrayexpress.groups";
     private static String PRIDESAMPLESERVICE = "ebi.pride.samples";
+
+    private final EntityMappingManager emMgr = Resources.getInstance().getMyEqManagerFactory().newEntityMappingManager();
     
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -46,13 +47,10 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
 
     public class MyEquivalentsLoaderTask implements Runnable {
         private final File inFile;
-        private final EntityMappingManager emMgr;
         
         MyEquivalentsLoaderTask(File inFile){
             this.inFile = inFile;
             
-            ManagerFactory mgrFactory = Resources.getInstance().getMyEqManagerFactory();
-            emMgr = mgrFactory.newEntityMappingManager();
         }
         
         public void run() {
@@ -82,17 +80,21 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
                         serviceaccession = database.getID();
                     }
                     
-                    if (servicename != null){
+                    if (servicename != null && servicename.length() > 0 
+                            && serviceaccession != null && serviceaccession.length() > 0){
                         bundle.add(servicename+":"+serviceaccession);
                     }
                 }
-                //convert the list into an array
-                String[] bundlearray = new String[bundle.size()];
-                for (int i = 0; i < bundle.size(); i++){
-                    bundlearray[i] = bundle.get(i);
-                }
                 
-                emMgr.storeMappingBundle( bundlearray );
+                //convert the list into an array
+                if (bundle.size() >= 2){
+                    String[] bundlearray = new String[bundle.size()];
+                    bundle.toArray(bundlearray);
+                    
+                    synchronized(emMgr){
+                        emMgr.storeMappingBundle( bundlearray );
+                    }
+                }
             }
 
             //store sample mappings
@@ -114,7 +116,8 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
         
                         String servicename = null;
                         String serviceaccession = null;
-                        if (dbattr.getAttributeValue().equals("ENA SRA")){
+                        if (dbattr.getAttributeValue().equals("ENA SRA")
+                                || dbattr.getAttributeValue().startsWith("EMBL-bank")){
                             servicename = ENASAMPLESSERVICE;
                             serviceaccession = dbattr.databaseID;
                         } else if (dbattr.getAttributeValue().equals("PRIDE")){
@@ -135,12 +138,11 @@ public class MyEquivalentsLoader extends AbstractInfileDriver<uk.ac.ebi.fgpt.sam
                 //convert the list into an array
                 if (bundle.size() >= 2){
                     String[] bundlearray = new String[bundle.size()];
-                    for (int i = 0; i < bundle.size(); i++){
-                        bundlearray[i] = bundle.get(i);
+                    bundle.toArray(bundlearray);
+
+                    synchronized(emMgr){
+                        emMgr.storeMappingBundle( bundlearray );
                     }
-                    
-                    
-                    emMgr.storeMappingBundle( bundlearray );
                 }
             }
         }
