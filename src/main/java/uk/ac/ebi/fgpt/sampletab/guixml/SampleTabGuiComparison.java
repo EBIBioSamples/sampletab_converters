@@ -16,7 +16,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 
 
-@SuppressWarnings("restriction")
+
 public class SampleTabGuiComparison {
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")

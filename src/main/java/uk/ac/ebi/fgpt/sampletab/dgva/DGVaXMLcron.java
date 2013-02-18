@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -132,9 +131,6 @@ public class DGVaXMLcron {
         ExecutorService pool = Executors.newFixedThreadPool(nothreads);
         
 		if (ftpfiles != null) {
-			//convert the subdir FTPFile objects to string names
-			//otherwise the time it takes to process GEOD causes problems.
-			Collection<String> subdirstrs = new ArrayList<String>();
 			for (FTPFile ftpfile : ftpfiles) {
 				log.info("working on " + ftpfile);
 

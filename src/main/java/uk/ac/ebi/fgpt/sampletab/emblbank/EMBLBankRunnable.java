@@ -3,23 +3,16 @@ package uk.ac.ebi.fgpt.sampletab.emblbank;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +32,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
-import au.com.bytecode.opencsv.CSVReader;
 
 public class EMBLBankRunnable implements Runnable{
 
@@ -453,7 +445,6 @@ public class EMBLBankRunnable implements Runnable{
                     for (SampleNode sn : st.scd.getNodes(SampleNode.class)){
                         for (SCDNodeAttribute a : sn.getAttributes()){
                             if (OrganismAttribute.class.isInstance(a)){
-                                OrganismAttribute oa = (OrganismAttribute) a;
                                 speciesName = a.getAttributeValue();
                             }
                         }
@@ -469,7 +460,6 @@ public class EMBLBankRunnable implements Runnable{
                     for (SampleNode sn : st.scd.getNodes(SampleNode.class)){
                         for (SCDNodeAttribute a : sn.getAttributes()){
                             if (OrganismAttribute.class.isInstance(a)){
-                                OrganismAttribute oa = (OrganismAttribute) a;
                                 speciesName = a.getAttributeValue();
                             }
                         }

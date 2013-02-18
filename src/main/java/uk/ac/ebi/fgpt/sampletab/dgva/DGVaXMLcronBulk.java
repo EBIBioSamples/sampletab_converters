@@ -46,19 +46,7 @@ public class DGVaXMLcronBulk {
 
     @Option(name = "-p", aliases={"--password"}, usage = "MySQL server password")
     private String password = null;
-
-    @Option(name = "--agename", usage = "Age server hostname")
-    private String agename = null;
-
-    @Option(name = "--ageusername", usage = "Age server username")
-    private String ageusername = null;
-
-    @Option(name = "--agepassword", usage = "Age server password")
-    private String agepassword = null;
-
-    @Option(name = "--no-load", usage = "Do not load into Age")
-    private boolean noload = false;
-    
+  
     
     private Logger log = LoggerFactory.getLogger(getClass());
 

@@ -33,7 +33,6 @@ public class MageTabFTPDownload {
 	}
 	
 	public void download(String accession, File outdir) throws IOException{
-		boolean error = false;
 		FTPClient ftp = new FTPClient();
 		String server = "ftp.ebi.ac.uk";
 		try {
