@@ -424,6 +424,9 @@ public class EMBLBankRunnable implements Runnable{
             }
             
             if (publicationMap.containsKey(accession) && publicationMap.get(accession).size() > 0){
+                while(publicationMap.get(accession).contains(null)){
+                    publicationMap.get(accession).remove(null);
+                }
                 st.msi.publications.addAll(publicationMap.get(accession));
                 log.debug(accession+" "+publicationMap.get(accession).size());
                 log.debug(accession+" "+st.msi.publications.size());
