@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,8 +49,8 @@ public class DerivedFrom {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public List<String> coriellSubmissionIDs = null;
-    public List<String> coriellSampleIDs = new ArrayList<String>();
-    public List<String> coriellSampleAccessions = new ArrayList<String>();
+    public List<String> coriellSampleIDs = Collections.synchronizedList(new ArrayList<String>());
+    public List<String> coriellSampleAccessions = Collections.synchronizedList(new ArrayList<String>());
     
     private Map<String, SampleNode> sampleAccessiontoNode = new HashMap<String, SampleNode>();
     
@@ -96,38 +97,39 @@ public class DerivedFrom {
     public void setup() {
         if (coriellSubmissionIDs == null){
             log.info("Running setup()...");
-            coriellSubmissionIDs = new ArrayList<String>();
-            coriellSubmissionIDs.add("GCR-ada");
-            coriellSubmissionIDs.add("GCR-autism");
-            coriellSubmissionIDs.add("GCR-cohort");
-            coriellSubmissionIDs.add("GCR-leiomyosarcoma");
-            coriellSubmissionIDs.add("GCR-nhgri");
-            coriellSubmissionIDs.add("GCR-nia");
-            coriellSubmissionIDs.add("GCR-niaid");
-            coriellSubmissionIDs.add("GCR-ninds");
-            coriellSubmissionIDs.add("GCR-nigms");
-            coriellSubmissionIDs.add("GCR-primate");
-            coriellSubmissionIDs.add("GCR-winstar");
-            coriellSubmissionIDs.add("GCR-yerkes");
-            
-
-            for (String coriellID : coriellSubmissionIDs){
-                File coriellFile = getFile(coriellID);
-                SampleData sd = null;
-                try {
-                    sd = CachedParser.get(coriellFile);
-                } catch (ParseException e) {
-                    log.error("Unable to read "+coriellFile, e);
-                    continue;
-                }
+            synchronized(coriellSubmissionIDs){
+                coriellSubmissionIDs.add("GCR-ada");
+                coriellSubmissionIDs.add("GCR-autism");
+                coriellSubmissionIDs.add("GCR-cohort");
+                coriellSubmissionIDs.add("GCR-leiomyosarcoma");
+                coriellSubmissionIDs.add("GCR-nhgri");
+                coriellSubmissionIDs.add("GCR-nia");
+                coriellSubmissionIDs.add("GCR-niaid");
+                coriellSubmissionIDs.add("GCR-ninds");
+                coriellSubmissionIDs.add("GCR-nigms");
+                coriellSubmissionIDs.add("GCR-primate");
+                coriellSubmissionIDs.add("GCR-winstar");
+                coriellSubmissionIDs.add("GCR-yerkes");
                 
-                for (SampleNode s : sd.scd.getNodes(SampleNode.class)) {
-                    if (coriellSampleIDs.contains(s.getNodeName())){
-                        log.warn("Duplicate coriell IDs "+s.getNodeName());
-                    } else {
-                        coriellSampleIDs.add(s.getNodeName());
-                        coriellSampleAccessions.add(s.getSampleAccession());
-                        sampleAccessiontoNode.put(s.getSampleAccession(), s);
+    
+                for (String coriellID : coriellSubmissionIDs){
+                    File coriellFile = getFile(coriellID);
+                    SampleData sd = null;
+                    try {
+                        sd = CachedParser.get(coriellFile);
+                    } catch (ParseException e) {
+                        log.error("Unable to read "+coriellFile, e);
+                        continue;
+                    }
+                    
+                    for (SampleNode s : sd.scd.getNodes(SampleNode.class)) {
+                        if (coriellSampleIDs.contains(s.getNodeName())){
+                            log.warn("Duplicate coriell IDs "+s.getNodeName());
+                        } else {
+                            coriellSampleIDs.add(s.getNodeName());
+                            coriellSampleAccessions.add(s.getSampleAccession());
+                            sampleAccessiontoNode.put(s.getSampleAccession(), s);
+                        }
                     }
                 }
             }
