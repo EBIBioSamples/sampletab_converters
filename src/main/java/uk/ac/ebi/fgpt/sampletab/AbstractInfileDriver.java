@@ -26,7 +26,7 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
     protected boolean recursive = false;
     
     @Option(name = "--startpath", aliases = { "-s" }, usage="starting path for matching")
-    protected File startpath;
+    protected File startpath = null;
     
     private Logger log = LoggerFactory.getLogger(getClass());
         
@@ -50,7 +50,11 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
         Iterable<File> inputFiles = null;
         for (String inputFilename : inputFilenames){
             if (recursive){
-                log.info("Looking recursively for input files named "+inputFilename);                
+                if (startpath == null){
+                    log.info("Looking recursively for input files named "+inputFilename);                
+                } else {
+                    log.info("Looking recursively for input files named "+inputFilename+" from "+startpath);
+                }
                 inputFiles = new FileRecursiveIterable(inputFilename, startpath);
             } else {
                 log.info("Looking for input files in glob "+inputFilename);   
