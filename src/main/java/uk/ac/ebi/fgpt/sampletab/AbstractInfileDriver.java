@@ -49,10 +49,11 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
 
         Iterable<File> inputFiles = null;
         for (String inputFilename : inputFilenames){
-            log.info("Looking for input files "+inputFilename);
             if (recursive){
+                log.info("Looking recursively for input files named "+inputFilename);                
                 inputFiles = new FileRecursiveIterable(inputFilename, startpath);
             } else {
+                log.info("Looking for input files in glob "+inputFilename);   
                 inputFiles = new FileGlobIterable(inputFilename);
             }
         }

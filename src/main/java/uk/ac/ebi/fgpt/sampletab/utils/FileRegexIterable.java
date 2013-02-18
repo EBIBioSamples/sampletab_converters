@@ -20,7 +20,6 @@ public class FileRegexIterable implements Iterable<File> {
         this.regex = regex;
     }
 
-    @Override
     public Iterator<File> iterator() {
         return new FileRegexIterator(regex);
     }
@@ -37,7 +36,7 @@ public class FileRegexIterable implements Iterable<File> {
             thread = new Thread(new FileRegexRunnable(regex, filequeue));
             thread.start();
         }
-        @Override
+        
         public boolean hasNext() {
             while (thread.isAlive()) {
                 
@@ -61,7 +60,6 @@ public class FileRegexIterable implements Iterable<File> {
             }
         }
     
-        @Override
         public File next() {
             try {
                 return filequeue.take();
@@ -71,7 +69,6 @@ public class FileRegexIterable implements Iterable<File> {
             }
         }
     
-        @Override
         public void remove() {
             throw new RuntimeException("GlobIterator.remove() not implemented");
         }
@@ -87,7 +84,6 @@ public class FileRegexIterable implements Iterable<File> {
                 this.filequeue = filequeue;
             }
     
-            @Override
             public void run() {
                 try {
                     addMatchesRegex(null);

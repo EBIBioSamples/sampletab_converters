@@ -23,7 +23,6 @@ public class GUIXMLRunnable implements Runnable {
         this.inputFile = inputFile;
     }
 
-    @Override
     public void run() {
         log.info("Processing "+inputFile.getParentFile().getName());
         SampleTabSaferParser stParser = new SampleTabSaferParser();

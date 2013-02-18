@@ -25,7 +25,6 @@ public class FileRecursiveIterable implements Iterable<File> {
         this.startfile = startfile;
     }
 
-    @Override
     public Iterator<File> iterator() {
         return new FileRecursiveIterator(name, startfile);
     }
@@ -43,7 +42,6 @@ public class FileRecursiveIterable implements Iterable<File> {
             thread.start();
         }
         
-        @Override
         public boolean hasNext() {
             while (thread.isAlive()) {
                 
@@ -67,7 +65,6 @@ public class FileRecursiveIterable implements Iterable<File> {
             }
         }
     
-        @Override
         public File next() {
             while (thread.isAlive()) {
                 if (!filequeue.isEmpty()) {
@@ -100,7 +97,6 @@ public class FileRecursiveIterable implements Iterable<File> {
             }
         }
     
-        @Override
         public void remove() {
             throw new RuntimeException("GlobIterator.remove() not implemented");
         }
@@ -118,7 +114,6 @@ public class FileRecursiveIterable implements Iterable<File> {
                 this.filequeue = filequeue;
             }
     
-            @Override
             public void run() {
                 try {
                     getRecursiveFiles(startfile);

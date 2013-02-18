@@ -249,7 +249,9 @@ public class NCBIBiosampleRunnable implements Runnable {
 				// databaseURI has different construction rules for different
 				// databases
 				// TODO clear up potential URL encoding problems
-				if (dbname.equals("SRA")) {
+				if (dbname == null){
+				    //do nothing
+				} else if (dbname.equals("SRA")) {
 					databaseAttrib.databaseURI = "http://www.ebi.ac.uk/ena/data/view/"
 							+ id.getTextTrim();
 				} else if (dbname.equals("Coriell")) {
@@ -281,7 +283,6 @@ public class NCBIBiosampleRunnable implements Runnable {
 		return st;
 	}
 
-    @Override
     public void run() {
         SampleData st = null;
         try {
