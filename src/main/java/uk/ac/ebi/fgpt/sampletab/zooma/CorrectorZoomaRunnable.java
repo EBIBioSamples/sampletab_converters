@@ -21,7 +21,6 @@ public class CorrectorZoomaRunnable implements Runnable {
         this.inputFile = inputFile;
     }
 
-    @Override
     public void run() {
         SampleData sd;
         try {
