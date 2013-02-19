@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
@@ -298,8 +297,10 @@ public class GUIXMLOutputer {
                 writeAttribute(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
                 attributeTypes.add("Sample Accession");
                 
-                writeAttribute(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
-                attributeTypes.add("Sample Description");
+                if (sample.getSampleDescription() != null && sample.getSampleDescription().trim().length() > 0){
+                    writeAttribute(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
+                    attributeTypes.add("Sample Description");
+                }
                 
                 for (SCDNodeAttribute a : sample.getAttributes()){
                     if (a.getAttributeValue() != null && a.getAttributeValue().length()>0){
