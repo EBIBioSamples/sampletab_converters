@@ -240,24 +240,25 @@ public class MageTabToSampleTab {
         }
     }
     
-    private void processComments(Map<String, String> comments, SCDNode scdnode){
+    private void processComments(Map<String, List<String>> comments, SCDNode scdnode){
         if (comments != null ){
             for (String key : comments.keySet()) {
-                String value = comments.get(key);
-                if (key.equals("ENA_SAMPLE")){
-                    try {
-                        for (String biosdacc : BioSDUtils.getBioSDAccessionOf(value)){
-                            SameAsAttribute sameas = new SameAsAttribute(biosdacc);
-                            scdnode.addAttribute(sameas);
+                for (String value: comments.get(key)) {
+                    if (key.equals("ENA_SAMPLE")) {
+                        try {
+                            for (String biosdacc : BioSDUtils.getBioSDAccessionOf(value)){
+                                SameAsAttribute sameas = new SameAsAttribute(biosdacc);
+                                scdnode.addAttribute(sameas);
+                            }
+                        } catch (DocumentException e) {
+                            log.error("Problem getting accessions of "+value, e);
                         }
-                    } catch (DocumentException e) {
-                        log.error("Problem getting accessions of "+value, e);
+                    } else {
+                        CommentAttribute comment = new CommentAttribute();
+                        comment.type = key;
+                        comment.setAttributeValue(value);
+                        scdnode.addAttribute(comment);
                     }
-                } else {
-                    CommentAttribute comment = new CommentAttribute();
-                    comment.type = key;
-                    comment.setAttributeValue(value);
-                    scdnode.addAttribute(comment);
                 }
             }
         }
@@ -267,7 +268,7 @@ public class MageTabToSampleTab {
 
         boolean useable = false;
         List<CharacteristicsAttribute> characteristics = null;
-        Map<String, String> comments = null;
+        Map<String, List<String>> comments = null;
         String prefix = null;
         
         // horribly long class references due to namespace collision
