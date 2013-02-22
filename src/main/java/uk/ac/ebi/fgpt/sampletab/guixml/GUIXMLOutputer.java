@@ -1,8 +1,13 @@
 package uk.ac.ebi.fgpt.sampletab.guixml;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
@@ -25,6 +30,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttributeOntology;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 
 public class GUIXMLOutputer {
@@ -80,15 +86,15 @@ public class GUIXMLOutputer {
             xmlWriter.writeStartElement("SampleGroup");
             xmlWriter.writeAttribute("id", g.getGroupAccession());
 
-            writeAttribute(xmlWriter, "Submission Title", "true", "STRING", sd.msi.submissionTitle);
-            writeAttribute(xmlWriter, "Submission Identifier", "true", "STRING", sd.msi.submissionIdentifier);
-            writeAttribute(xmlWriter, "Submission Description", "true", "STRING", sd.msi.submissionDescription);
-            writeAttribute(xmlWriter, "Submission Version", "true", "STRING", sd.msi.submissionVersion);
-            writeAttribute(xmlWriter, "Submission Reference Layer", "true", "BOOLEAN", sd.msi.submissionReferenceLayer.toString());
-            writeAttribute(xmlWriter, "Submission Release Date", "true", "STRING", sd.msi.getSubmissionReleaseDateAsString());
-            writeAttribute(xmlWriter, "Submission Modification Date", "true", "STRING", sd.msi.getSubmissionUpdateDateAsString());
-            writeAttribute(xmlWriter, "Name", "true", "BOOLEAN", g.getNodeName());
-            writeAttribute(xmlWriter, "Group Accession", "true", "BOOLEAN", g.getGroupAccession());
+            writeAttributeValue(xmlWriter, "Submission Title", "true", "STRING", sd.msi.submissionTitle);
+            writeAttributeValue(xmlWriter, "Submission Identifier", "true", "STRING", sd.msi.submissionIdentifier);
+            writeAttributeValue(xmlWriter, "Submission Description", "true", "STRING", sd.msi.submissionDescription);
+            writeAttributeValue(xmlWriter, "Submission Version", "true", "STRING", sd.msi.submissionVersion);
+            writeAttributeValue(xmlWriter, "Submission Reference Layer", "true", "BOOLEAN", sd.msi.submissionReferenceLayer.toString());
+            writeAttributeValue(xmlWriter, "Submission Release Date", "true", "STRING", sd.msi.getSubmissionReleaseDateAsString());
+            writeAttributeValue(xmlWriter, "Submission Modification Date", "true", "STRING", sd.msi.getSubmissionUpdateDateAsString());
+            writeAttributeValue(xmlWriter, "Name", "true", "BOOLEAN", g.getNodeName());
+            writeAttributeValue(xmlWriter, "Group Accession", "true", "BOOLEAN", g.getGroupAccession());
             //group description?
             
             writeOrganizations(xmlWriter, sd);
@@ -96,7 +102,7 @@ public class GUIXMLOutputer {
             writePublications(xmlWriter, sd);
             writeTermSources(xmlWriter, sd);
             writeDatabases(xmlWriter, sd);
-            writeSamples(xmlWriter, g);
+            writeSamples(xmlWriter, g, sd);
             
             xmlWriter.writeEndElement(); //SampleGroup
         }
@@ -134,15 +140,67 @@ public class GUIXMLOutputer {
         return out.toString();
     } 
 
-    private void writeAttribute(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, String value) throws XMLStreamException{
+    private void writeAttribute(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType) throws XMLStreamException{
+        List<String> attrs = new ArrayList<String>();
+        writeAttributeValue(xmlWriter, cls, classDefined, dataType, attrs);
+    }
+    
+    private void writeAttributeValue(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, String value) throws XMLStreamException{
+        List<String> values = new ArrayList<String>();
+        values.add(value);
+        writeAttributeValue(xmlWriter, cls, classDefined, dataType, values);
+    }
+    
+    private void writeAttributeValue(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, List<String> values) throws XMLStreamException{
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", cls);
         xmlWriter.writeAttribute("classDefined", classDefined);
         xmlWriter.writeAttribute("dataType", dataType);
-        if (value != null){
+        for (String value : values){
             xmlWriter.writeStartElement("value");
-            
             value = stripNonValidXMLCharacters(value);
+            xmlWriter.writeCharacters(value);
+            xmlWriter.writeEndElement(); //value
+        }
+        xmlWriter.writeEndElement(); //attribute
+    }
+    
+    private void writeAttribute(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, List<AbstractNodeAttributeOntology> attrs, SampleData st) throws XMLStreamException{
+        xmlWriter.writeStartElement("attribute");
+        xmlWriter.writeAttribute("class", cls);
+        xmlWriter.writeAttribute("classDefined", classDefined);
+        xmlWriter.writeAttribute("dataType", dataType);
+        for (AbstractNodeAttributeOntology attr : attrs){
+            xmlWriter.writeStartElement("value");
+            String value = attr.getAttributeValue();
+            value = stripNonValidXMLCharacters(value);
+            //handle term source, if present
+            TermSource ts = st.msi.getTermSource(attr.getTermSourceREF());
+            if (ts != null ){
+                xmlWriter.writeStartElement("attribute");
+                xmlWriter.writeAttribute("class", "Term Source REF");
+                xmlWriter.writeAttribute("classDefined", "true");
+                xmlWriter.writeAttribute("dataType", "OBJECT");
+                xmlWriter.writeStartElement("value");
+                xmlWriter.writeStartElement("object");
+                xmlWriter.writeAttribute("id", attr.getTermSourceREF());
+                xmlWriter.writeAttribute("class", "Term Source");
+                xmlWriter.writeAttribute("classDefined", "true");
+                writeAttributeValue(xmlWriter, "Term Source Name", "true", "STRING", ts.getName());
+                writeAttributeValue(xmlWriter, "Term Source URI", "true", "STRING", ts.getURI());
+                xmlWriter.writeEndElement(); //object
+                xmlWriter.writeEndElement(); //value of TermSourceREF
+                xmlWriter.writeEndElement(); //attribute of TermSourceREF
+                xmlWriter.writeStartElement("attribute");
+                xmlWriter.writeAttribute("class", "Term Source ID");
+                xmlWriter.writeAttribute("classDefined", "true");
+                xmlWriter.writeAttribute("dataType", "OBJECT");
+                xmlWriter.writeStartElement("value");
+                xmlWriter.writeCharacters(attr.getTermSourceID());
+                xmlWriter.writeEndElement(); //value of TermSourceID
+                xmlWriter.writeEndElement(); //attribute of TermSourceID
+            }
+            
             xmlWriter.writeCharacters(value);
             xmlWriter.writeEndElement(); //value
         }
@@ -163,11 +221,11 @@ public class GUIXMLOutputer {
                 xmlWriter.writeAttribute("class", "Organization");
                 xmlWriter.writeAttribute("classDefined", "true");
 
-                writeAttribute(xmlWriter, "Organization Name", "true", "STRING", o.getName());
-                writeAttribute(xmlWriter, "Organization Address", "true", "STRING", o.getAddress());
-                writeAttribute(xmlWriter, "Organization URI", "true", "STRING", o.getURI());
-                writeAttribute(xmlWriter, "Organization Email", "true", "STRING", o.getEmail());
-                writeAttribute(xmlWriter, "Organization Role", "true", "STRING", o.getRole());
+                writeAttributeValue(xmlWriter, "Organization Name", "true", "STRING", o.getName());
+                writeAttributeValue(xmlWriter, "Organization Address", "true", "STRING", o.getAddress());
+                writeAttributeValue(xmlWriter, "Organization URI", "true", "STRING", o.getURI());
+                writeAttributeValue(xmlWriter, "Organization Email", "true", "STRING", o.getEmail());
+                writeAttributeValue(xmlWriter, "Organization Role", "true", "STRING", o.getRole());
                 
                 xmlWriter.writeEndElement(); //object
             }
@@ -190,11 +248,11 @@ public class GUIXMLOutputer {
                 xmlWriter.writeAttribute("class", "Person");
                 xmlWriter.writeAttribute("classDefined", "true");
 
-                writeAttribute(xmlWriter, "Person Last Name", "true", "STRING", p.getLastName());
-                writeAttribute(xmlWriter, "Person Initials", "true", "STRING", p.getInitials());
-                writeAttribute(xmlWriter, "Person First Name", "true", "STRING", p.getFirstName());
-                writeAttribute(xmlWriter, "Person Email", "true", "STRING", p.getEmail());
-                writeAttribute(xmlWriter, "Person Role", "true", "STRING", p.getRole());
+                writeAttributeValue(xmlWriter, "Person Last Name", "true", "STRING", p.getLastName());
+                writeAttributeValue(xmlWriter, "Person Initials", "true", "STRING", p.getInitials());
+                writeAttributeValue(xmlWriter, "Person First Name", "true", "STRING", p.getFirstName());
+                writeAttributeValue(xmlWriter, "Person Email", "true", "STRING", p.getEmail());
+                writeAttributeValue(xmlWriter, "Person Role", "true", "STRING", p.getRole());
                 
                 xmlWriter.writeEndElement(); //object
             }
@@ -217,8 +275,8 @@ public class GUIXMLOutputer {
                 xmlWriter.writeAttribute("class", "Publication");
                 xmlWriter.writeAttribute("classDefined", "true");
 
-                writeAttribute(xmlWriter, "Publication PubMed ID", "true", "STRING", p.getPubMedID());
-                writeAttribute(xmlWriter, "Publication DOI", "true", "STRING", p.getDOI());
+                writeAttributeValue(xmlWriter, "Publication PubMed ID", "true", "STRING", p.getPubMedID());
+                writeAttributeValue(xmlWriter, "Publication DOI", "true", "STRING", p.getDOI());
                 
                 xmlWriter.writeEndElement(); //object
             }
@@ -242,9 +300,9 @@ public class GUIXMLOutputer {
                 xmlWriter.writeAttribute("class", "Term Source");
                 xmlWriter.writeAttribute("classDefined", "true");
 
-                writeAttribute(xmlWriter, "Term Source Name", "true", "STRING", t.getName());
-                writeAttribute(xmlWriter, "Term Source URI", "true", "STRING", t.getURI());
-                writeAttribute(xmlWriter, "Term Source Version", "true", "STRING", t.getVersion());
+                writeAttributeValue(xmlWriter, "Term Source Name", "true", "STRING", t.getName());
+                writeAttributeValue(xmlWriter, "Term Source URI", "true", "STRING", t.getURI());
+                writeAttributeValue(xmlWriter, "Term Source Version", "true", "STRING", t.getVersion());
                 
                 xmlWriter.writeEndElement(); //object
             }
@@ -267,9 +325,9 @@ public class GUIXMLOutputer {
                 xmlWriter.writeAttribute("class", "Database");
                 xmlWriter.writeAttribute("classDefined", "true");
 
-                writeAttribute(xmlWriter, "Database Name", "true", "STRING", d.getName());
-                writeAttribute(xmlWriter, "Database ID", "true", "STRING", d.getID());
-                writeAttribute(xmlWriter, "Database URI", "true", "STRING", d.getURI());
+                writeAttributeValue(xmlWriter, "Database Name", "true", "STRING", d.getName());
+                writeAttributeValue(xmlWriter, "Database ID", "true", "STRING", d.getID());
+                writeAttributeValue(xmlWriter, "Database URI", "true", "STRING", d.getURI());
                 
                 xmlWriter.writeEndElement(); //object
             }
@@ -278,7 +336,8 @@ public class GUIXMLOutputer {
         xmlWriter.writeEndElement(); //databases
     }
     
-    private void writeSamples(XMLStreamWriter xmlWriter, GroupNode g) throws XMLStreamException {
+    
+    private void writeSamples(XMLStreamWriter xmlWriter, GroupNode g, SampleData st) throws XMLStreamException {
 
         Set<String> attributeTypes = new HashSet<String>();
         
@@ -291,22 +350,50 @@ public class GUIXMLOutputer {
                 xmlWriter.writeAttribute("groupId", g.getGroupAccession());
                 xmlWriter.writeAttribute("id", sample.getSampleAccession());
 
-                writeAttribute(xmlWriter, "Name", "false", "STRING", sample.getNodeName());
+                //this should not be null and not be zero-length
+                writeAttributeValue(xmlWriter, "Name", "false", "STRING", sample.getNodeName());
                 attributeTypes.add("Name");
                 
-                writeAttribute(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
+                //this should not be null and not be zero-length
+                writeAttributeValue(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
                 attributeTypes.add("Sample Accession");
                 
                 if (sample.getSampleDescription() != null && sample.getSampleDescription().trim().length() > 0){
-                    writeAttribute(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
+                    writeAttributeValue(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
                     attributeTypes.add("Sample Description");
                 }
                 
-                for (SCDNodeAttribute a : sample.getAttributes()){
-                    if (a.getAttributeValue() != null && a.getAttributeValue().length()>0){
-                        writeAttribute(xmlWriter, a.getAttributeType(), "false", "STRING", a.getAttributeValue());
-                        attributeTypes.add(a.getAttributeType());
-                        log.debug("Attribute "+a.getAttributeType()+" "+a.getAttributeValue());
+                Map<String, List<SCDNodeAttribute>> orderedAttributes = new HashMap<String, List<SCDNodeAttribute>>();
+
+                //TODO note that this does not maintain consistent ordering with that in the SampleTab
+                for (SCDNodeAttribute a : sample.getAttributes()) {
+                    if (a.getAttributeValue() != null && a.getAttributeValue().length() > 0) {
+                        if (!orderedAttributes.containsKey(a.getAttributeType())){
+                            orderedAttributes.put(a.getAttributeType(), new ArrayList<SCDNodeAttribute>());
+                        }
+                        orderedAttributes.get(a.getAttributeType()).add(a);
+                    }
+                }
+                for(String attrType : orderedAttributes.keySet()) {
+                    List<SCDNodeAttribute> attrlist = orderedAttributes.get(attrType);
+                    List<AbstractNodeAttributeOntology> abstractattrlist = new ArrayList<AbstractNodeAttributeOntology>();
+                    synchronized(AbstractNodeAttributeOntology.class){
+                        for (SCDNodeAttribute a : attrlist){
+                            if (AbstractNodeAttributeOntology.class.isInstance(a)) {
+                                abstractattrlist.add((AbstractNodeAttributeOntology) a);
+                            }
+                        }
+                    }
+                    
+                    if (abstractattrlist.size() == attrlist.size()) {
+                        writeAttribute(xmlWriter, attrType, "false", "STRING", abstractattrlist, st);
+                    } else {
+                        //handle non-ontology attributes e.g. database, same as, etc
+                        List<String> attrvaluelist = new ArrayList<String>();
+                        for (SCDNodeAttribute a : attrlist){
+                            attrvaluelist.add(a.getAttributeValue());
+                        }
+                        writeAttributeValue(xmlWriter, attrType, "false", "STRING", attrvaluelist);
                     }
                 }
                 
@@ -315,7 +402,7 @@ public class GUIXMLOutputer {
                     //these should all be samples, but have to check anyway...
                     if (SampleNode.class.isInstance(p)) {
                         SampleNode parent = (SampleNode) p;
-                        writeAttribute(xmlWriter, "derived from", "false", "STRING", parent.getSampleAccession());
+                        writeAttributeValue(xmlWriter, "derived from", "false", "STRING", parent.getSampleAccession());
                         attributeTypes.add("derived from");
                     }
                 }
@@ -328,7 +415,7 @@ public class GUIXMLOutputer {
         xmlWriter.writeCharacters("\n");
         xmlWriter.writeStartElement("SampleAttributes");
         for (String attributeType : attributeTypes){
-            writeAttribute(xmlWriter, attributeType, "false", "STRING", null);
+            writeAttribute(xmlWriter, attributeType, "false", "STRING");
         }
         xmlWriter.writeEndElement(); //SampleAttributes
     }
