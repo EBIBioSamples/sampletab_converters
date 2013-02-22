@@ -243,8 +243,8 @@ public class DBmigrate {
         Connection target = null;   
         
         try {
-            source = getProdMySQLConnection();
-            //source = getProdOracleConnection();
+            //source = getProdMySQLConnection();
+            source = getProdOracleConnection();
         } catch (ClassNotFoundException e) {
             log.error("Unable to find driver", e);
             return;
