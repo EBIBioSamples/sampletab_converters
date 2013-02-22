@@ -467,6 +467,7 @@ public class Corrector {
                     }
                 }
 
+                
                 //comparison by identity
                 //replace in same position
                 if (updated != a){

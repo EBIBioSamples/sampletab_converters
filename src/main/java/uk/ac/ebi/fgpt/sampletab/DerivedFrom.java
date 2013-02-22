@@ -97,6 +97,7 @@ public class DerivedFrom {
     public void setup() {
         if (coriellSubmissionIDs == null){
             log.info("Running setup()...");
+            coriellSubmissionIDs = Collections.synchronizedList(new ArrayList<String>());
             synchronized(coriellSubmissionIDs){
                 coriellSubmissionIDs.add("GCR-ada");
                 coriellSubmissionIDs.add("GCR-autism");

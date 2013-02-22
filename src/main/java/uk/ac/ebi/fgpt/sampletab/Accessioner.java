@@ -111,6 +111,8 @@ public class Accessioner {
 
     protected void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries) throws SQLException {
 
+        //TODO check there are unaccessioned samples first
+        
         Connection connect = null;
         PreparedStatement statement = null;
         ResultSet results = null;
