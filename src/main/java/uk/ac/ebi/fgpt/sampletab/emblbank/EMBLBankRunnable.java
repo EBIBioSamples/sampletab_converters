@@ -33,7 +33,7 @@ import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 
-public class EMBLBankRunnable implements Runnable{
+public class EMBLBankRunnable implements Runnable {
 
 
 
@@ -64,7 +64,7 @@ public class EMBLBankRunnable implements Runnable{
             Map<String, Set<String>> groupMap, 
             Map<String, Set<Publication>> publicationMap, 
             Map<String, SampleData> stMap,
-            File outputDir, String prefix, boolean wgs, boolean tsa, boolean bar, boolean cds){
+            File outputDir, String prefix, boolean wgs, boolean tsa, boolean bar, boolean cds) {
         this.headers = headers;
         this.line = line;
         this.groupMap = groupMap;
@@ -499,7 +499,7 @@ public class EMBLBankRunnable implements Runnable{
                 
                 
                 
-                log.debug("Writing "+sampletabPre);
+                log.info("Writing "+sampletabPre);
                 synchronized(SampleTabWriter.class){
                     SampleTabWriter sampletabwriter = null;
                     try {
