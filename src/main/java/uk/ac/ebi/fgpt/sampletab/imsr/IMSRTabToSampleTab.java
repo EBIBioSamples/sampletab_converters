@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
@@ -250,6 +252,7 @@ public class IMSRTabToSampleTab {
             organismattribute.setTermSourceIDInteger(10090);
             newnode.addAttribute(organismattribute);
 
+            //add the mutations as characteristics
             if (mutations.containsKey(name)) {
                 for (List<String> thismutation : mutations.get(name)) {
                     alleleSymbol = thismutation.get(0);
@@ -266,6 +269,11 @@ public class IMSRTabToSampleTab {
                     }
                 }
             }
+            
+            //add per strain links to IMSR
+            String url = "http://www.findmice.org/summary?query="+URLEncoder.encode(name, "UTF-8")+"&repositories="+URLEncoder.encode(site, "UTF-8");
+            DatabaseAttribute dbattr = new DatabaseAttribute(site, name, url);
+            newnode.addAttribute(dbattr);
         }
         getLog().info("Finished convert()");
         return st;
