@@ -112,6 +112,24 @@
   			<groupId>uk.ac.ebi.fg</groupId>
   			<artifactId>myequivalents-db</artifactId>
   			<version>0.2-SNAPSHOT</version>
+  			<exclusions>
+  				<exclusion>
+  					<artifactId>commons-io</artifactId>
+  					<groupId>commons-io</groupId>
+  				</exclusion>
+  				<exclusion>
+  					<artifactId>commons-lang</artifactId>
+  					<groupId>commons-lang</groupId>
+  				</exclusion>
+  				<exclusion>
+  					<artifactId>jaxb-api</artifactId>
+  					<groupId>javax.xml.bind</groupId>
+  				</exclusion>
+  				<exclusion>
+  					<artifactId>jutils</artifactId>
+  					<groupId>uk.ac.ebi</groupId>
+  				</exclusion>
+  			</exclusions>
 		</dependency>
 		<!--  to access via the web interface -->
 		<dependency>
@@ -122,6 +140,10 @@
   				<exclusion>
   					<artifactId>logback-classic</artifactId>
   					<groupId>ch.qos.logback</groupId>
+  				</exclusion>
+  				<exclusion>
+  					<artifactId>commons-lang</artifactId>
+  					<groupId>commons-lang</groupId>
   				</exclusion>
   			</exclusions>
 		</dependency>
@@ -185,11 +207,47 @@
 			<groupId>org.apache.cxf</groupId>
 			<artifactId>cxf-rt-frontend-jaxws</artifactId>
 			<version>2.2.3</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-lang</artifactId>
+					<groupId>commons-lang</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jaxb-api</artifactId>
+					<groupId>javax.xml.bind</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>spring-beans</artifactId>
+					<groupId>org.springframework</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>spring-context</artifactId>
+					<groupId>org.springframework</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>spring-core</artifactId>
+					<groupId>org.springframework</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.cxf</groupId>
 			<artifactId>cxf-rt-transports-http</artifactId>
 			<version>2.2.3</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>spring-beans</artifactId>
+					<groupId>org.springframework</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>spring-context</artifactId>
+					<groupId>org.springframework</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>spring-core</artifactId>
+					<groupId>org.springframework</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		            
 	</dependencies>
