@@ -9,11 +9,11 @@ import junit.framework.TestCase;
 
 
 public class TestEuroPMCUtils extends TestCase {
-/*
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public void testBioSD() {
         String title = null;
+        /*
         try {
             title = EuroPMCUtils.getTitleByPUBMEDid(22096232);
         } catch (QueryException_Exception e) {
@@ -22,6 +22,6 @@ public class TestEuroPMCUtils extends TestCase {
             fail();
         }
         assertEquals("The BioSample Database (BioSD) at the European Bioinformatics Institute.", title);
-    }
 */
+    }
 }
