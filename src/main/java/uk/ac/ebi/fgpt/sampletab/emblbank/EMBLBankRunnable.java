@@ -492,7 +492,7 @@ public class EMBLBankRunnable implements Runnable {
                 
 
                 //add an intermediate subdir layer based on the initial 7 characters (GEM-...)
-                File outputSubDir = new File(outputDir, SampleTabUtils.getPathPrefix(st.msi.submissionIdentifier));
+                File outputSubDir = new File(outputDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
                 outputSubDir = new File(outputSubDir, st.msi.submissionIdentifier);
                 outputSubDir.mkdirs();
                 File sampletabPre = new File(outputSubDir, "sampletab.pre.txt");

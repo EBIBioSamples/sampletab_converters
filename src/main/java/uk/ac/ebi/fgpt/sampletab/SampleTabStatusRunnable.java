@@ -151,7 +151,7 @@ public class SampleTabStatusRunnable implements Runnable {
         }
             	
         //calculate isPublic
-    	File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(inputFile.getName())); 
+    	File ftpSubDir = new File(ftpDir, SampleTabUtils.getSubmissionDirPath(inputFile.getName())); 
 		File ftpSubSubDir = new File(ftpSubDir, inputFile.getName());
 		File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
     	if (ftpFile.exists()){
@@ -295,7 +295,7 @@ public class SampleTabStatusRunnable implements Runnable {
     }
     
     private File getFTPFile(){
-        File ftpSubDir = new File(ftpDir, SampleTabUtils.getPathPrefix(inputFile.getName())); 
+        File ftpSubDir = new File(ftpDir, SampleTabUtils.getSubmissionDirPath(inputFile.getName())); 
         File ftpSubSubDir = new File(ftpSubDir, inputFile.getName());
         File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
         return ftpFile;
