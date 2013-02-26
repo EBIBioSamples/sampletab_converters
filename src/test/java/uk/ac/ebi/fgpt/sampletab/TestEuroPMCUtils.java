@@ -13,16 +13,15 @@ public class TestEuroPMCUtils extends TestCase {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public void testBioSD() {
-        //commented out until bamboo proxying works
-//        String title = null;
-//        try {
-//            title = EuroPMCUtils.getTitleByPUBMEDid(22096232);
-//        } catch (QueryException_Exception e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//            fail();
-//        }
-//        assertEquals("The BioSample Database (BioSD) at the European Bioinformatics Institute.", title);
+        String title = null;
+        try {
+            title = EuroPMCUtils.getTitleByPUBMEDid(22096232);
+        } catch (QueryException_Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            fail();
+        }
+        assertEquals("The BioSample Database (BioSD) at the European Bioinformatics Institute.", title);
     }
 
 }
