@@ -519,6 +519,10 @@ public class EMBLBankRunnable implements Runnable {
                 //remove from mappings
                 groupMap.remove(id);
                 stMap.remove(id);
+                
+                if (groupMap.size() % 100 == 0){
+                    log.info("Number of groups remaining "+groupMap.size());
+                }
             }
         }
     }
