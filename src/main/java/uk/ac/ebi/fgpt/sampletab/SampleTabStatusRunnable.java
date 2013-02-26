@@ -296,8 +296,7 @@ public class SampleTabStatusRunnable implements Runnable {
     
     private File getFTPFile(){
         File ftpSubDir = new File(ftpDir, SampleTabUtils.getSubmissionDirPath(inputFile.getName())); 
-        File ftpSubSubDir = new File(ftpSubDir, inputFile.getName());
-        File ftpFile = new File(ftpSubSubDir, "sampletab.txt");
+        File ftpFile = new File(ftpSubDir, "sampletab.txt");
         return ftpFile;
         
     }

@@ -31,8 +31,13 @@ public class SampleTabUtils {
 
     //make sure this is kept in sync with uk.ac.ebi.fgpt.conan.process.biosd.AbstractBioSDProcess.getPathPrefix
     public static String getSubmissionDirPath(String submissionID) {
-        if (submissionID.startsWith("GMS-")) return "imsr";
-        else if (submissionID.startsWith("GAE-")) {
+        return getSubmissionDirFile(submissionID).getAbsolutePath();
+    }
+    
+    public static File getSubmissionDirFile(String submissionID) {
+        if (submissionID.startsWith("GMS-")) { 
+            return new File("imsr", submissionID);
+        } else if (submissionID.startsWith("GAE-")) {
             //split by pipeline
             String pipe = submissionID.split("-")[1];
             String ident = submissionID.split("-")[2];
@@ -40,17 +45,21 @@ public class SampleTabUtils {
             int i = 7;
             int groupsize = 3;
             while (i < ident.length()){
-                targetfile = new File(targetfile, "GAE-"+pipe+"-"+ident.substring(0,i));
+                targetfile = new File(targetfile, submissionID);
                 i += groupsize;   
             }
             //return targetfile.getPath();
-            return "ae";
+            return new File("ae", submissionID);
         }
-        else if (submissionID.startsWith("GPR-")) return "pride";
-        else if (submissionID.startsWith("GVA-")) return "dgva";
-        else if (submissionID.startsWith("GCR-")) return "coriell";
-        else if (submissionID.startsWith("GEN-")) return "sra";
-        else if (submissionID.startsWith("GEM-")){
+        else if (submissionID.startsWith("GPR-")) {
+            return new File("pride", submissionID);
+        } else if (submissionID.startsWith("GVA-")) { 
+            return new File("dgva", submissionID);
+        } else if (submissionID.startsWith("GCR-")) { 
+            return new File("coriell", submissionID);
+        } else if (submissionID.startsWith("GEN-")) { 
+            return new File("sra", submissionID);
+        } else if (submissionID.startsWith("GEM-")) {
             File targetfile = new File("GEM");
             int i = 7;
             int groupsize = 3;
@@ -58,17 +67,18 @@ public class SampleTabUtils {
                 targetfile = new File(targetfile, submissionID.substring(0,i));
                 i += groupsize;   
             }
-            return targetfile.getPath();
+            return new File(targetfile, submissionID);
+        } else if (submissionID.startsWith("GSB-")) {
+            return new File("GSB", submissionID);
+        } else if (submissionID.equals("GEN")) { 
+            return new File("encode", submissionID);
+        } else if (submissionID.equals("G1K")) { 
+            return new File("g1k", submissionID);
+        } else if (submissionID.startsWith("GHM")) { 
+            return new File("hapmap", submissionID);
+        } else {
+            throw new IllegalArgumentException("Unable to get path prefix for "+submissionID);
         }
-        else if (submissionID.startsWith("GSB-")) return "GSB";
-        else if (submissionID.equals("GEN")) return "encode";
-        else if (submissionID.equals("G1K")) return "g1k";
-        else if (submissionID.startsWith("GHM")) return "hapmap";
-        else throw new IllegalArgumentException("Unable to get path prefix for "+submissionID);
-    }
-    
-    public static File getSubmissionDirFile(String submissionID) {
-        return new File(getSubmissionDirPath(submissionID));
     }
     
     public static boolean releaseInACentury(File sampletabFile) throws IOException, ParseException{
