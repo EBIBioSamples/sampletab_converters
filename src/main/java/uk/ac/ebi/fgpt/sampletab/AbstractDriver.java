@@ -10,7 +10,7 @@ public abstract class AbstractDriver {
 
     protected CmdLineParser cmdParser = new CmdLineParser(this);
     
-    protected void doMain(String[] args){
+    protected void doMain(String[] args) {
         try {
             // parse the arguments.
             cmdParser.parseArgument(args);
