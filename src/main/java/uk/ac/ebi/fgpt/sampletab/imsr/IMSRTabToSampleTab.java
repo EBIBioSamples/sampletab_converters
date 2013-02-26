@@ -31,6 +31,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.Normalizer;
 
 public class IMSRTabToSampleTab {
 
@@ -276,6 +277,10 @@ public class IMSRTabToSampleTab {
             newnode.addAttribute(dbattr);
         }
         getLog().info("Finished convert()");
+        
+        Normalizer norm = new Normalizer();
+        norm.normalize(st);
+        
         return st;
     }
 

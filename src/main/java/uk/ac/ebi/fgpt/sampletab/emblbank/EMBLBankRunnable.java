@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.sf.saxon.serialize.codenorm.Normalizer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -496,7 +498,8 @@ public class EMBLBankRunnable implements Runnable {
                 outputSubDir.mkdirs();
                 File sampletabPre = new File(outputSubDir, "sampletab.pre.txt");
                 
-                
+                uk.ac.ebi.fgpt.sampletab.Normalizer norm = new uk.ac.ebi.fgpt.sampletab.Normalizer();
+                norm.normalize(st);
                 
                 log.info("Writing "+sampletabPre);
                 synchronized(SampleTabWriter.class){

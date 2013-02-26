@@ -37,6 +37,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.Normalizer;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 import uk.ac.ebi.fgpt.sampletab.utils.TermSourceUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
@@ -421,6 +422,9 @@ public class PRIDEXMLToSampleTab {
 
         //Validator<SampleData> validator = new SampleTabValidator();
         //validator.validate(st);
+
+        Normalizer norm = new Normalizer();
+        norm.normalize(st);
         
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
         sampletabwriter.write(st);

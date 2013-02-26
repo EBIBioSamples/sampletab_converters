@@ -15,6 +15,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 
@@ -395,7 +396,11 @@ public class Corrector {
     
     public void correct(SampleData sampledata) {
         //TODO handle nulls here with dummy text
-        sampledata.msi.submissionTitle = stripHTML(sampledata.msi.submissionTitle);
+        if (sampledata.msi.submissionTitle == null) {
+            sampledata.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(sampledata);
+        } else {
+            sampledata.msi.submissionTitle = stripHTML(sampledata.msi.submissionTitle);
+        }
         sampledata.msi.submissionDescription = stripHTML(sampledata.msi.submissionDescription);
         
         
@@ -480,7 +485,12 @@ public class Corrector {
             }
         }
         
+        //correct term sources
         CorrectorTermSource cts = new CorrectorTermSource();
         cts.correct(sampledata);
+        
+        //try to normalize the object model
+        Normalizer norm = new Normalizer();
+        norm.normalize(sampledata);
     }
 }

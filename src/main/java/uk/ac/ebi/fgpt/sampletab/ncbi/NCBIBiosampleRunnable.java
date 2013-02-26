@@ -24,6 +24,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAtt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.Normalizer;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBIBiosampleRunnable implements Runnable {
@@ -309,6 +310,9 @@ public class NCBIBiosampleRunnable implements Runnable {
             log.error("Error opening " + outputfile, e);
             return;
         }
+
+        Normalizer norm = new Normalizer();
+        norm.normalize(st);
 
         SampleTabWriter sampletabwriter = new SampleTabWriter(out);
         try {

@@ -33,6 +33,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
+import uk.ac.ebi.fgpt.sampletab.Normalizer;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
@@ -303,7 +304,9 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
             if (sampleout.scd.getRootNodes().size() != this.files.size()) {
                 log.warn("unequal group size " + sampleout.msi.submissionIdentifier);
             }
-            
+
+            Normalizer norm = new Normalizer();
+            norm.normalize(sampleout);
             
             File outFile = files.get(used_i);
             outFile = new File(outFile.getParentFile(), outputFilename);
