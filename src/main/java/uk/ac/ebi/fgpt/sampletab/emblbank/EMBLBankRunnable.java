@@ -45,7 +45,7 @@ public class EMBLBankRunnable implements Runnable {
     private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     Pattern latLongPattern = Pattern.compile("([0-9]+\\.?[0-9]*) ([NS]) ([0-9]+\\.?[0-9]*) ([EW])");
     
-    private final File inputFile;
+    private final List<String[]> lines;
     
     private final Map<String, Set<String>> groupMap;
     
@@ -63,11 +63,11 @@ public class EMBLBankRunnable implements Runnable {
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public EMBLBankRunnable(File inputFile, 
+    public EMBLBankRunnable(List<String[]> lines, 
             Map<String, Set<String>> groupMap,
             String groupID,
             File outputDir, String prefix, boolean wgs, boolean tsa, boolean bar, boolean cds) {
-        this.inputFile = inputFile;
+        this.lines = lines;
         this.groupMap = groupMap;
         this.groupID = groupID;
         this.outputDir = outputDir;
@@ -301,73 +301,52 @@ public class EMBLBankRunnable implements Runnable {
         Set<String> groupIDs = groupMap.get(groupID);
         groupMap.remove(groupID);
         
-
-        CSVReader reader = null;
         
         EMBLBankHeaders headers = null;
         
-        int linecount;
-        String [] nextLine;
-        
-        try {
-            reader = new CSVReader(new FileReader(inputFile), "\t".charAt(0));
-            linecount = 0;
-            while ((nextLine = reader.readNext()) != null) {
-                linecount += 1;
-                                
-                if (headers == null || linecount == 0){
+        for (String[] nextLine : lines) {
+            if (headers == null){
+                try {
                     headers = new EMBLBankHeaders(nextLine);
-                } else {
-                    if (nextLine.length > headers.size()) {
-                        log.warn("Line longer than headers "+linecount+" ( "+nextLine.length+" vs "+headers.size()+" )");
-                    }
-                
-                    String accession = nextLine[0].trim();
-                    log.debug("First processing "+accession);
-                    if (groupIDs.contains(accession)) {
+                } catch (IOException e) {
+                    log.error("Problem using headers", e);
+                    return;
+                }
+            } else {
+            
+                String accession = nextLine[0].trim();
+                log.debug("First processing "+accession);
+                if (groupIDs.contains(accession)) {
 
-                        SampleNode s = lineToSample(nextLine, headers);
+                    SampleNode s = lineToSample(nextLine, headers);
 
-                        try {
-                            if (s.getNodeName() == null) {
-                                log.error("Unable to add node with null name");
-                            } else if (st.scd.getNode(s.getNodeName(), SampleNode.class) != null) {
-                                //this node name has already been used
-                                log.error("Unable to add duplicate node with name "+s.getNodeName());
-                            } else if (s.getAttributes().size() <= 1) {
-                                //dont add uninformative samples
-                                //will always have one database attribute
-                                log.warn("Refusing to add sample "+s.getNodeName()+" without attributes");
-                            } else {
-                                st.scd.addNode(s);
-                            }
-                        } catch (ParseException e) {
-                            log.error("Unable to add node "+s.getNodeName(), e);
-                        }     
-                        
-                        //add publications
-                        for (Publication publication : getPublications(nextLine, headers)) {
-                            if (publication != null && 
-                                    !st.msi.publications.contains(publication)) {
-                                st.msi.publications.add(publication);
-                            }
+                    try {
+                        if (s.getNodeName() == null) {
+                            log.error("Unable to add node with null name");
+                        } else if (st.scd.getNode(s.getNodeName(), SampleNode.class) != null) {
+                            //this node name has already been used
+                            log.error("Unable to add duplicate node with name "+s.getNodeName());
+                        } else if (s.getAttributes().size() <= 1) {
+                            //dont add uninformative samples
+                            //will always have one database attribute
+                            log.warn("Refusing to add sample "+s.getNodeName()+" without attributes");
+                        } else {
+                            st.scd.addNode(s);
+                        }
+                    } catch (ParseException e) {
+                        log.error("Unable to add node "+s.getNodeName(), e);
+                    }     
+                    
+                    //add publications
+                    for (Publication publication : getPublications(nextLine, headers)) {
+                        if (publication != null && 
+                                !st.msi.publications.contains(publication)) {
+                            st.msi.publications.add(publication);
                         }
                     }
                 }
             }
-            reader.close();
-        } catch (IOException e) {
-            log.error("Problem reading "+inputFile, e);
-        } finally {
-            try {
-                if (reader != null){
-                    reader.close();
-                }
-            } catch (IOException e){
-                //do nothing
-            }
-        }
-        
+        }        
 
         //create some information
         st.msi.submissionIdentifier = prefix+"-"+groupID;

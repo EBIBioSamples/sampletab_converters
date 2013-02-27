@@ -1,12 +1,17 @@
 package uk.ac.ebi.fgpt.sampletab.emblbank;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +26,8 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import au.com.bytecode.opencsv.CSVReader;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
@@ -83,6 +90,57 @@ public class EMBLBankDriver {
     
     
     
+    private List<String[]> getLines(File inputFile){
+
+        CSVReader reader = null;
+        
+        EMBLBankHeaders headers = null;
+        
+        int linecount;
+        String [] nextLine;
+        
+        List<String[]> lines = new LinkedList<String[]>();
+        
+        Set<String> accessions = new HashSet<String>();
+        for (Set<String> group : groupMap.values()) {
+            accessions.addAll(group);
+        }
+        
+        try {
+            reader = new CSVReader(new FileReader(inputFile), "\t".charAt(0));
+            linecount = 0;
+            while ((nextLine = reader.readNext()) != null) {
+                linecount += 1;
+                                
+                if (headers == null || linecount == 0) {
+                    headers = new EMBLBankHeaders(nextLine);
+                    lines.add(nextLine);
+                } else {
+                    if (nextLine.length > headers.size()) {
+                        log.warn("Line longer than headers "+linecount+" ( "+nextLine.length+" vs "+headers.size()+" )");
+                    }
+                    
+                    String accession = nextLine[0].trim();
+                    if (accessions.contains(accession)) {
+                        lines.add(nextLine);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            log.error("Problem reading "+inputFile, e);
+        } finally {
+            try {
+                if (reader != null){
+                    reader.close();
+                }
+            } catch (IOException e){
+                //do nothing
+            }
+        }
+        
+        return lines;
+    }
+    
     private void parseInput(File inputFile) throws IOException {
         
         //read the file through once, construct mapping of pub to acc
@@ -110,11 +168,11 @@ public class EMBLBankDriver {
         }
         
         log.info("Beginning second pass");
-
+        List<String[]> lines = getLines(inputFile);
+        
         ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-
         for (String groupID : groupMap.keySet()){
-            Runnable t = new EMBLBankRunnable(inputFile, groupMap, groupID, outputFile, prefix, wgs, tsa, bar, cds);
+            Runnable t = new EMBLBankRunnable(lines, groupMap, groupID, outputFile, prefix, wgs, tsa, bar, cds);
             pool.execute(t);
         }
         
@@ -126,7 +184,7 @@ public class EMBLBankDriver {
                 long starttime = System.currentTimeMillis();
                 int startcount = groupMap.keySet().size();
                 DateFormat dateformat = new SimpleDateFormat();
-                while (!pool.awaitTermination(1, TimeUnit.SECONDS)){
+                while (!pool.awaitTermination(1, TimeUnit.MINUTES)){
                     int pendingcount = groupMap.keySet().size();
                     float percentagedone = new Float(startcount-pendingcount) / new Float(startcount);
                     long totaltime = (long) (new Float(System.currentTimeMillis()-starttime) / percentagedone);
