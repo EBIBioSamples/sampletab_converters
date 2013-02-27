@@ -31,7 +31,10 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttributeOntology;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.renderer.scd.SCDNodeFactory;
+import uk.ac.ebi.arrayexpress2.sampletab.renderer.scd.SCDTableBuilder;
 
 public class GUIXMLOutputer {
 
@@ -102,6 +105,8 @@ public class GUIXMLOutputer {
             writePublications(xmlWriter, sd);
             writeTermSources(xmlWriter, sd);
             writeDatabases(xmlWriter, sd);
+            
+            //write out the samples
             writeSamples(xmlWriter, g, sd);
             
             xmlWriter.writeEndElement(); //SampleGroup
@@ -339,7 +344,8 @@ public class GUIXMLOutputer {
     
     private void writeSamples(XMLStreamWriter xmlWriter, GroupNode g, SampleData st) throws XMLStreamException {
 
-        Set<String> attributeTypes = new HashSet<String>();
+        //write out precomputed attribute summary
+        writeSampleAttributes(xmlWriter, st);
         
         for (Node s : g.getParentNodes()) {
             log.debug("Node "+s.getNodeName());
@@ -352,15 +358,12 @@ public class GUIXMLOutputer {
 
                 //this should not be null and not be zero-length
                 writeAttributeValue(xmlWriter, "Name", "false", "STRING", sample.getNodeName());
-                attributeTypes.add("Name");
                 
                 //this should not be null and not be zero-length
                 writeAttributeValue(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
-                attributeTypes.add("Sample Accession");
                 
                 if (sample.getSampleDescription() != null && sample.getSampleDescription().trim().length() > 0){
                     writeAttributeValue(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
-                    attributeTypes.add("Sample Description");
                 }
                 
                 Map<String, List<SCDNodeAttribute>> orderedAttributes = new HashMap<String, List<SCDNodeAttribute>>();
@@ -389,11 +392,31 @@ public class GUIXMLOutputer {
                         writeAttribute(xmlWriter, attrType, "false", "STRING", abstractattrlist, st);
                     } else {
                         //handle non-ontology attributes e.g. database, same as, etc
-                        List<String> attrvaluelist = new ArrayList<String>();
-                        for (SCDNodeAttribute a : attrlist){
-                            attrvaluelist.add(a.getAttributeValue());
+                        boolean isDatabase = false;
+                        synchronized(DatabaseAttribute.class){
+                            isDatabase = DatabaseAttribute.class.isInstance(attrlist.get(0));
                         }
-                        writeAttributeValue(xmlWriter, attrType, "false", "STRING", attrvaluelist);
+                        if (isDatabase){
+                            //TODO full handle composite attribute eg. database
+                            List<String> databaseNames = new ArrayList<String>(attrlist.size());
+                            List<String> databaseIDs = new ArrayList<String>(attrlist.size());
+                            List<String> databaseURIs = new ArrayList<String>(attrlist.size());
+                            for (SCDNodeAttribute a : attrlist) {
+                                DatabaseAttribute dba = (DatabaseAttribute) a;
+                                databaseNames.add(dba.getAttributeValue());
+                                databaseIDs.add(dba.databaseID);
+                                databaseURIs.add(dba.databaseURI);
+                            }
+                            writeAttributeValue(xmlWriter, "Database Name", "false", "STRING", databaseNames);
+                            writeAttributeValue(xmlWriter, "Database ID", "false", "STRING", databaseIDs);
+                            writeAttributeValue(xmlWriter, "Database URI", "false", "STRING", databaseURIs);
+                        } else {
+                            List<String> attrvaluelist = new ArrayList<String>();
+                            for (SCDNodeAttribute a : attrlist) {
+                                attrvaluelist.add(a.getAttributeValue());
+                            }
+                            writeAttributeValue(xmlWriter, attrType, "false", "STRING", attrvaluelist);
+                        }
                     }
                 }
                 
@@ -403,7 +426,6 @@ public class GUIXMLOutputer {
                     if (SampleNode.class.isInstance(p)) {
                         SampleNode parent = (SampleNode) p;
                         writeAttributeValue(xmlWriter, "derived from", "false", "STRING", parent.getSampleAccession());
-                        attributeTypes.add("derived from");
                     }
                 }
                 
@@ -411,11 +433,36 @@ public class GUIXMLOutputer {
             }
         }
         
-        //write out precomputed attribute summary
-        xmlWriter.writeCharacters("\n");
+    }
+
+    private void writeSampleAttributes(XMLStreamWriter xmlWriter, SampleData st) throws XMLStreamException {
         xmlWriter.writeStartElement("SampleAttributes");
-        for (String attributeType : attributeTypes){
-            writeAttribute(xmlWriter, attributeType, "false", "STRING");
+        List<List<String>> table;
+        //need to ensure only one thread is doing this at a time
+        synchronized(SCDNodeFactory.class){
+            SCDTableBuilder tb = new SCDTableBuilder(st.scd.getRootNodes());
+            log.debug("Starting to assemble table...");
+            table = tb.getTable(); 
+            log.debug("Table assembled");
+            
+            //recreate the node factory to flush its internal cache
+            SCDNodeFactory.clear();
+        }
+        List<String> headers = table.get(0);
+        List<String> used = new ArrayList<String>();
+        for (String header : headers){
+            if (header.equals("Unit")){
+                //do nothing
+            } else if (header.equals("Term Source REF")) {
+                //do nothing
+            } else if (header.equals("Term Source ID")) {
+                //do nothing
+            } else if (used.contains(header)) {
+                //do nothing
+            } else {
+                writeAttribute(xmlWriter, header, "false", "STRING");
+                used.add(header);
+            }
         }
         xmlWriter.writeEndElement(); //SampleAttributes
     }
