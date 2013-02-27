@@ -31,11 +31,7 @@ public class SampleTabUtils {
 
     //make sure this is kept in sync with uk.ac.ebi.fgpt.conan.process.biosd.AbstractBioSDProcess.getPathPrefix
     public static String getSubmissionDirPath(String submissionID) {
-        if (getSubmissionDirFile(submissionID).isAbsolute()){
-            return getSubmissionDirFile(submissionID).getPath();
-        } else {
-            return getSubmissionDirFile(submissionID).getAbsolutePath();
-        }
+        return getSubmissionDirFile(submissionID).getPath();
     }
     
     public static File getSubmissionDirFile(String submissionID) {
