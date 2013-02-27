@@ -402,7 +402,7 @@ public class EMBLBankRunnable implements Runnable {
         uk.ac.ebi.fgpt.sampletab.Normalizer norm = new uk.ac.ebi.fgpt.sampletab.Normalizer();
         norm.normalize(st);
         
-        log.debug("Writing "+sampletabPre);
+        log.info("Writing "+sampletabPre);
         synchronized(SampleTabWriter.class){
             SampleTabWriter sampletabwriter = null;
             try {
