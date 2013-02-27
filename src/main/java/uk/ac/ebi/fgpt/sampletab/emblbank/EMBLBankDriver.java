@@ -1,10 +1,12 @@
 package uk.ac.ebi.fgpt.sampletab.emblbank;
 
-
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashSet;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
-import au.com.bytecode.opencsv.CSVReader;
 
 public class EMBLBankDriver {
 
@@ -40,23 +41,33 @@ public class EMBLBankDriver {
     @Option(name = "-p", usage = "prefix")
     private String prefix = "GEM";
     
-    @Option(name = "-wgs", usage = "is whole genome shotgun input?")
+    @Option(name = "--wgs", usage = "is whole genome shotgun input?")
     private boolean wgs = false;
     
-    @Option(name = "-tsa", usage = "is transcriptome shotgun input?")
+    @Option(name = "--tsa", usage = "is transcriptome shotgun input?")
     private boolean tsa = false;
     
-    @Option(name = "-bar", usage = "is barcode input?")
+    @Option(name = "--bar", usage = "is barcode input?")
     private boolean bar = false;
     
-    @Option(name = "-cds", usage = "is coding sequence input?")
+    @Option(name = "--cds", usage = "is coding sequence input?")
     private boolean cds = false;
+
+    
+    @Option(name = "-g", usage = "grouping filename")
+    private String groupFilename = null;
+    
+    @Option(name = "-i", usage = "grouping index")
+    private int groupIndex = 0;
+    
+    @Option(name = "-j", usage = "grouping offset")
+    private int groupOffset = 0;
+    
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
     Pattern latLongPattern = Pattern.compile("([0-9]+\\.?[0-9]*) ([NS]) ([0-9]+\\.?[0-9]*) ([EW])");
     
-    private EMBLBankHeaders headers = null;
     int doiindex = -1;
     int pubmedindex = -1;
     
@@ -71,104 +82,57 @@ public class EMBLBankDriver {
     Map<String, SampleData> stMap = new ConcurrentHashMap<String, SampleData>();
     
     
+    
     private void parseInput(File inputFile) throws IOException {
-
-        CSVReader reader = null;
-        
         
         //read the file through once, construct mapping of pub to acc
         //read the file again, parsing each acc to a node
         //when all the nodes of a pub are parsed, output to file
         
-        EMBLBankRunnable dummy = null;
-        
-        
-        int linecount;
-        String [] nextLine;
-        
-        try {
-            reader = new CSVReader(new FileReader(inputFile), "\t".charAt(0));
-            linecount = 0;
-            while ((nextLine = reader.readNext()) != null) {
-                linecount += 1;
-                                
-                if (this.headers == null || linecount == 0){
-                    this.headers = new EMBLBankHeaders(nextLine);
-                    dummy = new EMBLBankRunnable(headers, nextLine, groupMap, publicationMap, stMap, outputFile, prefix, wgs, tsa, bar, cds);
-                } else {
-                    if (nextLine.length > headers.size()){
-                        log.warn("Line longer than headers "+linecount+" ( "+nextLine.length+" vs "+headers.size()+" )");
-                    }
-                
-                    String accession = nextLine[0].trim();
-                    log.debug("First processing "+accession);
-                    
-                    for (String id : dummy.getGroupIdentifiers(nextLine)){
-
-                        if(!groupMap.containsKey(id)){
-                            groupMap.put(id, new HashSet<String>());
-                        }
-                        groupMap.get(id).add(accession);
-                    }
-                    
-                    publicationMap.put(accession, dummy.getPublications(nextLine));
-                    log.debug(accession+" "+dummy.getPublications(nextLine).size());
-                    
-                }
-            }
-            reader.close();
-        } finally {
-            try {
-                if (reader != null){
-                    reader.close();
-                }
-            } catch (IOException e){
-                //do nothing
-            }
+        File groupFile = null; ;
+        if (groupFilename != null) {
+            groupFile = new File(groupFilename);
         }
-
-        log.info("First pass complete");
-        log.info("No. of groups = "+groupMap.size());
+        EMBLBankGrouper grouper = new EMBLBankGrouper(groupFile, groupMap, bar);
+        
+        if (groupIndex == 0) {
+            //if a group index is specified, then we don't need to create the grouping file
+            grouper.process(inputFile);
+            
+            if (groupFile != null) {
+                //wrote groupings to a file,
+                //end here
+                return;
+            }
+        } else {
+            //need to read existing group file to populate groupMap
+            grouper.readGrouping(groupIndex, groupOffset);
+        }
+        
         log.info("Beginning second pass");
 
         ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        
-        try {
-            reader = new CSVReader(new FileReader(inputFile), "\t".charAt(0));
-            linecount = 0;
-            while ((nextLine = reader.readNext()) != null) {
-                linecount += 1;
-                                
-                if (this.headers == null || linecount == 0){
-                    //do nothing, headers already loaded
-                } else {
-                    if (nextLine.length > this.headers.size()){
-                        log.debug("Line longer than headers "+linecount+" ( "+nextLine.length+" vs "+headers.size()+" )");
-                    }
 
-
-                    Runnable t = new EMBLBankRunnable(headers, nextLine, groupMap, publicationMap, stMap, outputFile, prefix, wgs, tsa, bar, cds);
-                    pool.execute(t);
-                }
-            }
-            reader.close();
-        } finally {
-            try {
-                if (reader != null){
-                    reader.close();
-                }
-            } catch (IOException e){
-                //do nothing
-            }
+        for (String groupID : groupMap.keySet()){
+            Runnable t = new EMBLBankRunnable(inputFile, groupMap, groupID, outputFile, prefix, wgs, tsa, bar, cds);
+            pool.execute(t);
         }
         
-        // run the pool and then close it afterwards
+                // run the pool and then close it afterwards
         // must synchronize on the pool object
         synchronized (pool) {
             pool.shutdown();
             try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
+                long starttime = System.currentTimeMillis();
+                int startcount = groupMap.keySet().size();
+                DateFormat dateformat = new SimpleDateFormat();
+                while (!pool.awaitTermination(1, TimeUnit.SECONDS)){
+                    int pendingcount = groupMap.keySet().size();
+                    float percentagedone = new Float(startcount-pendingcount) / new Float(startcount);
+                    long totaltime = (long) (new Float(System.currentTimeMillis()-starttime) / percentagedone);
+                    Date enddate = new Date(starttime+totaltime);
+                    log.info("Waiting on "+pendingcount+" groups, ETA "+dateformat.format(enddate));
+                }
             } catch (InterruptedException e) {
                 log.error("Interupted awaiting thread pool termination", e);
             }

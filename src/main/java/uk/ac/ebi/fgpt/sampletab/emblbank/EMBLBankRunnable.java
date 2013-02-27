@@ -3,6 +3,7 @@ package uk.ac.ebi.fgpt.sampletab.emblbank;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,6 +18,8 @@ import net.sf.saxon.serialize.codenorm.Normalizer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import au.com.bytecode.opencsv.CSVReader;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
@@ -42,13 +45,11 @@ public class EMBLBankRunnable implements Runnable {
     private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     Pattern latLongPattern = Pattern.compile("([0-9]+\\.?[0-9]*) ([NS]) ([0-9]+\\.?[0-9]*) ([EW])");
     
-    private final EMBLBankHeaders headers;
-          
-    private final String[] line;
+    private final File inputFile;
     
     private final Map<String, Set<String>> groupMap;
-    private final Map<String, Set<Publication>> publicationMap;
-    private final Map<String, SampleData> stMap;
+    
+    private final String groupID;
     
     private final File outputDir;
     
@@ -62,16 +63,13 @@ public class EMBLBankRunnable implements Runnable {
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public EMBLBankRunnable(EMBLBankHeaders headers, String[] line, 
-            Map<String, Set<String>> groupMap, 
-            Map<String, Set<Publication>> publicationMap, 
-            Map<String, SampleData> stMap,
+    public EMBLBankRunnable(File inputFile, 
+            Map<String, Set<String>> groupMap,
+            String groupID,
             File outputDir, String prefix, boolean wgs, boolean tsa, boolean bar, boolean cds) {
-        this.headers = headers;
-        this.line = line;
+        this.inputFile = inputFile;
         this.groupMap = groupMap;
-        this.publicationMap = publicationMap;
-        this.stMap = stMap;
+        this.groupID = groupID;
         this.outputDir = outputDir;
         this.prefix = prefix;
         this.wgs = wgs;
@@ -81,13 +79,13 @@ public class EMBLBankRunnable implements Runnable {
         
     }
     
-    private SampleNode lineToSample(String[] nextLine, SampleData st){
+    private SampleNode lineToSample(String[] line, EMBLBankHeaders headers){
 
         SampleNode s = new SampleNode();
         
-        for (int i = 0; i < nextLine.length && i < headers.size(); i++){
+        for (int i = 0; i < line.length && i < headers.size(); i++){
             String header = headers.get(i).trim();
-            String value = nextLine[i].trim();
+            String value = line[i].trim();
             if (value != null && value.length() > 0){
                 log.debug(header+" : "+value);
                 
@@ -208,7 +206,7 @@ public class EMBLBankRunnable implements Runnable {
                     for (SCDNodeAttribute a : s.getAttributes()){
                         if (OrganismAttribute.class.isInstance(a)){
                             OrganismAttribute o = (OrganismAttribute) a;
-                            o.setTermSourceREF(st.msi.getOrAddTermSource(ncbitaxonomy));
+                            o.setTermSourceREF(ncbitaxonomy.getName());
                             o.setTermSourceID(value);
                             found = true;
                         }
@@ -226,7 +224,7 @@ public class EMBLBankRunnable implements Runnable {
                         if (o == null){
                             o = new OrganismAttribute(value);
                         }
-                        o.setTermSourceREF(st.msi.getOrAddTermSource(ncbitaxonomy));
+                        o.setTermSourceREF(ncbitaxonomy.getName());
                         o.setTermSourceID(value);
                         s.addAttribute(o);
                     }
@@ -248,90 +246,7 @@ public class EMBLBankRunnable implements Runnable {
         return s;
     }
     
-    public List<String> getGroupIdentifiers(String[] line){
-
-        List<String> identifiers = new ArrayList<String>();
-        
-        String projString = null;
-        if (headers.projheaderindex > 0 && headers.projheaderindex < line.length){
-            projString = line[headers.projheaderindex].trim();
-        }
-        if (projString != null && projString.length() > 0){
-            for(String projID : projString.split(",")){
-                projID = projID.trim();
-                if (projID.length() > 0){
-                    identifiers.add(projID);
-                }
-            }
-        } else {
-            String pubString = null;
-            if (headers.pubheaderindex > 0 && headers.pubheaderindex < line.length){
-                pubString = line[headers.pubheaderindex];
-                for(String pubID : pubString.split(",")){
-                    pubID = pubID.trim();
-                    if (pubID.length() > 0){
-                        identifiers.add(pubID);
-                    }
-                }
-            }
-        }
-        //no publications, fall back to identified by
-        if (identifiers.size() == 0){
-            if (headers.identifiedbyindex > 0 && headers.identifiedbyindex < line.length){
-                String identifiedby = line[headers.identifiedbyindex];
-                identifiedby = identifiedby.replaceAll("[^\\w]", "");
-                
-                if (identifiedby.length() > 0){
-                    identifiers.add(identifiedby);
-                }
-            }
-        }
-        //no publications, fall back to collected by
-        if (identifiers.size() == 0){
-            if (headers.collectedbyindex > 0 && headers.collectedbyindex < line.length){
-                String collectedby = line[headers.collectedbyindex];
-                collectedby = collectedby.replaceAll("[^\\w]", "");
-                
-                if (collectedby.length() > 0){
-                    identifiers.add(collectedby);
-                }
-            }
-        }
-        //still nothing, have to use species
-        //TODO maybe abstract this a level or two up the taxonomy?
-        if (bar && identifiers.size() == 0){
-            String organism = null;
-            
-            //use division, not species
-            try {
-                organism = TaxonUtils.getDivisionOfID(new Integer(line[headers.taxidindex]));
-                organism.replaceAll(" ", "-");
-                organism.replaceAll("[^\\w_]", "");
-                while (organism.contains("--")){
-                    organism.replaceAll("--", "-");
-                }
-            } catch (NumberFormatException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (TaxonException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            
-            if (organism != null && organism.length() > 0){
-                organism = "taxon-"+organism;
-                identifiers.add(organism);
-            }
-        }
-        
-        if (identifiers.size() == 0){
-            log.debug(line[0]+" has  no identifiers.");
-            identifiers.add(line[0]);
-        }
-        return identifiers;
-    }
-    
-    public Set<Publication> getPublications(String[] line){
+    public Set<Publication> getPublications(String[] line, EMBLBankHeaders headers){
         Set<Publication> pubSet = new HashSet<Publication>();
         
         String[] doiStrings = new String[0];
@@ -363,7 +278,7 @@ public class EMBLBankRunnable implements Runnable {
             
             if ((pubmed != null && pubmed.length() > 0)
                     || (doi != null && doi.length() > 0)){
-                log.debug("Publication "+pubmed+" "+doi);
+                //log.debug("Publication "+pubmed+" "+doi);
                 Publication p = new Publication(pubmed, doi);
                 pubSet.add(p);
             }
@@ -373,166 +288,168 @@ public class EMBLBankRunnable implements Runnable {
     }
 
     public void run() {
-        String accession = line[0].trim();
-        log.debug("Second processing "+accession+" with cache size of "+stMap.size());
         
-        //now we have a described node, but need to work out what samples to put it with
-
         
-        for (String id : getGroupIdentifiers(line)){
-            if (!groupMap.containsKey(id)){
-                continue;
-            }
-            
-            if(!stMap.containsKey(id)){
-                stMap.put(id, new SampleData());
-            }
+        //get a group to process
+        //loop over the inputFile
+        //if you find a line that matches it, then process it
+        //add that sample to the sampletab file
+        //output sampletab file
+
+        SampleData st = new SampleData();
+        st.msi.termSources.add(ncbitaxonomy);
+        Set<String> groupIDs = groupMap.get(groupID);
+        groupMap.remove(groupID);
         
-            SampleData st = stMap.get(id);
 
+        CSVReader reader = null;
+        
+        EMBLBankHeaders headers = null;
+        
+        int linecount;
+        String [] nextLine;
+        
+        try {
+            reader = new CSVReader(new FileReader(inputFile), "\t".charAt(0));
+            linecount = 0;
+            while ((nextLine = reader.readNext()) != null) {
+                linecount += 1;
+                                
+                if (headers == null || linecount == 0){
+                    headers = new EMBLBankHeaders(nextLine);
+                } else {
+                    if (nextLine.length > headers.size()) {
+                        log.warn("Line longer than headers "+linecount+" ( "+nextLine.length+" vs "+headers.size()+" )");
+                    }
+                
+                    String accession = nextLine[0].trim();
+                    log.debug("First processing "+accession);
+                    if (groupIDs.contains(accession)) {
 
-            SampleNode s = lineToSample(line, st);
-            
-            if (s.getNodeName() == null){
-                log.error("Unable to add node with null name");
-                continue;
+                        SampleNode s = lineToSample(nextLine, headers);
+
+                        try {
+                            if (s.getNodeName() == null) {
+                                log.error("Unable to add node with null name");
+                            } else if (st.scd.getNode(s.getNodeName(), SampleNode.class) != null) {
+                                //this node name has already been used
+                                log.error("Unable to add duplicate node with name "+s.getNodeName());
+                            } else if (s.getAttributes().size() <= 1) {
+                                //dont add uninformative samples
+                                //will always have one database attribute
+                                log.warn("Refusing to add sample "+s.getNodeName()+" without attributes");
+                            } else {
+                                st.scd.addNode(s);
+                            }
+                        } catch (ParseException e) {
+                            log.error("Unable to add node "+s.getNodeName(), e);
+                        }     
+                        
+                        //add publications
+                        for (Publication publication : getPublications(nextLine, headers)) {
+                            if (publication != null && 
+                                    !st.msi.publications.contains(publication)) {
+                                st.msi.publications.add(publication);
+                            }
+                        }
+                    }
+                }
             }
-            
+            reader.close();
+        } catch (IOException e) {
+            log.error("Problem reading "+inputFile, e);
+        } finally {
             try {
-                if (s.getNodeName() == null){
-                    log.error("Unable to add node with null name");
-                } else if (st.scd.getNode(s.getNodeName(), SampleNode.class) != null) {
-                    //this node name has already been used
-                    log.error("Unable to add duplicate node with name "+s.getNodeName());
-                } else if (s.getAttributes().size() <= 1){
-                    //dont add uninformative samples
-                    //will always have one database attribute
-                    log.warn("Refusing to add sample "+s.getNodeName()+" without attributes");
-                } else {
-                    st.scd.addNode(s);
+                if (reader != null){
+                    reader.close();
                 }
-            } catch (ParseException e) {
-                log.error("Unable to add node "+s.getNodeName(), e);
-            }     
-            
-            if (!groupMap.containsKey(id)){
-                log.error("Problem locating publication ID "+id+" in publication maping");
-                continue;
+            } catch (IOException e){
+                //do nothing
             }
-            
-            if (!groupMap.get(id).contains(s.getNodeName())){
-                log.error("Problem removing sample "+s.getNodeName()+" from publication maping");
-                continue;
-            }
-            
-            if (publicationMap.containsKey(accession) && publicationMap.get(accession).size() > 0){
-                while(publicationMap.get(accession).contains(null)){
-                    publicationMap.get(accession).remove(null);
-                }
-                st.msi.publications.addAll(publicationMap.get(accession));
-                log.debug(accession+" "+publicationMap.get(accession).size());
-                log.debug(accession+" "+st.msi.publications.size());
-            }
-            
-            groupMap.get(id).remove(s.getNodeName());
-            
-            if (groupMap.get(id).size() == 0){
-                //no more accessions to be added to this sampletab
-                //export it
+        }
+        
 
-                //create some information
-                st.msi.submissionIdentifier = prefix+"-"+id;
-                st.msi.submissionIdentifier = st.msi.submissionIdentifier.replace(" ", "-");
-                st.msi.submissionIdentifier = st.msi.submissionIdentifier.replace("&", "and");
-                if (wgs){
-                    //its a whole genome shotgun sample, describe as such
-                    String speciesName = null;
-                    for (SampleNode sn : st.scd.getNodes(SampleNode.class)){
-                        for (SCDNodeAttribute a : sn.getAttributes()){
-                            if (OrganismAttribute.class.isInstance(a)){
-                                speciesName = a.getAttributeValue();
-                            }
-                        }
+        //create some information
+        st.msi.submissionIdentifier = prefix+"-"+groupID;
+        st.msi.submissionIdentifier = st.msi.submissionIdentifier.replace(" ", "-");
+        st.msi.submissionIdentifier = st.msi.submissionIdentifier.replace("&", "and");
+        if (wgs) {
+            //its a whole genome shotgun sample, describe as such
+            String speciesName = null;
+            for (SampleNode sn : st.scd.getNodes(SampleNode.class)){
+                for (SCDNodeAttribute a : sn.getAttributes()){
+                    if (OrganismAttribute.class.isInstance(a)){
+                        speciesName = a.getAttributeValue();
                     }
-                    if (speciesName == null){
-                        log.warn("Unable to determine species name");
-                    } else {
-                        st.msi.submissionTitle = "Whole Genome Shotgun sequencing of "+speciesName;
-                    }
-                } else if (tsa){
-                    //its a transcriptome shotgun sample, describe as such
-                    String speciesName = null;
-                    for (SampleNode sn : st.scd.getNodes(SampleNode.class)){
-                        for (SCDNodeAttribute a : sn.getAttributes()){
-                            if (OrganismAttribute.class.isInstance(a)){
-                                speciesName = a.getAttributeValue();
-                            }
-                        }
-                    }
-                    if (speciesName == null){
-                        log.warn("Unable to determine species name");
-                    } else {
-                        st.msi.submissionTitle = "Transcriptome Shotgun sequencing of "+speciesName;
-                    }
-                } else if (bar){
-                    //need to generate a title for the submission
-                    st.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(st);
-                    //TODO use the title of a publication, if one exists
-                } else if (cds){
-                    //need to generate a title for the submission
-                    st.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(st);
-                } else {
-                    log.warn("No submission type indicated");
-                    
                 }
-                
-                
-                log.debug("No. of publications = "+st.msi.publications.size());
-                log.debug("Empty? "+st.msi.publications.isEmpty());
-                
-                
-                
+            }
+            if (speciesName == null){
+                log.warn("Unable to determine species name");
+            } else {
+                st.msi.submissionTitle = "Whole Genome Shotgun sequencing of "+speciesName;
+            }
+        } else if (tsa){
+            //its a transcriptome shotgun sample, describe as such
+            String speciesName = null;
+            for (SampleNode sn : st.scd.getNodes(SampleNode.class)){
+                for (SCDNodeAttribute a : sn.getAttributes()){
+                    if (OrganismAttribute.class.isInstance(a)){
+                        speciesName = a.getAttributeValue();
+                    }
+                }
+            }
+            if (speciesName == null){
+                log.warn("Unable to determine species name");
+            } else {
+                st.msi.submissionTitle = "Transcriptome Shotgun sequencing of "+speciesName;
+            }
+        } else if (bar){
+            //need to generate a title for the submission
+            st.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(st);
+            //TODO use the title of a publication, if one exists
+        } else if (cds){
+            //need to generate a title for the submission
+            st.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(st);
+        } else {
+            log.warn("No submission type indicated");
+            
+        }
+        
+        
+        log.debug("No. of publications = "+st.msi.publications.size());
+        log.debug("Empty? "+st.msi.publications.isEmpty());
+        
+        
+        
 
-                //add an intermediate subdir layer based on the initial 7 characters (GEM-...)
-                File outputSubDir = new File(outputDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
-                outputSubDir.mkdirs();
-                File sampletabPre = new File(outputSubDir, "sampletab.pre.txt");
-                
-                uk.ac.ebi.fgpt.sampletab.Normalizer norm = new uk.ac.ebi.fgpt.sampletab.Normalizer();
-                norm.normalize(st);
-                
-                log.info("Writing "+sampletabPre);
-                synchronized(SampleTabWriter.class){
-                    SampleTabWriter sampletabwriter = null;
+        //add an intermediate subdir layer based on the initial 7 characters (GEM-...)
+        File outputSubDir = new File(outputDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
+        outputSubDir.mkdirs();
+        File sampletabPre = new File(outputSubDir, "sampletab.pre.txt");
+        
+        uk.ac.ebi.fgpt.sampletab.Normalizer norm = new uk.ac.ebi.fgpt.sampletab.Normalizer();
+        norm.normalize(st);
+        
+        log.debug("Writing "+sampletabPre);
+        synchronized(SampleTabWriter.class){
+            SampleTabWriter sampletabwriter = null;
+            try {
+                sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(sampletabPre)));
+                sampletabwriter.write(st);
+            } catch (IOException e) {
+                log.error("Unable to write to "+sampletabPre, e);
+            } finally {
+                if (sampletabwriter != null){
                     try {
-                        sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(sampletabPre)));
-                        sampletabwriter.write(st);
+                        sampletabwriter.close();
                     } catch (IOException e) {
-                        log.error("Unable to write to "+sampletabPre, e);
-                    } finally {
-                        if (sampletabwriter != null){
-                            try {
-                                sampletabwriter.close();
-                            } catch (IOException e) {
-                                //do nothing
-                            }
-                        }
+                        //do nothing
                     }
-                }
-                //remove from mappings
-                groupMap.remove(id);
-                stMap.remove(id);
-                
-                if (groupMap.size() % 100 == 0){
-                    log.info("Number of groups remaining "+groupMap.size());
                 }
             }
         }
+        //remove this group from the groupmap
+        groupMap.remove(groupID);
+        
     }
-    
-    
-    
-    
-    
-
 }

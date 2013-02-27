@@ -28,7 +28,8 @@ public class EMBLBankHeaders {
             if (header.startsWith("V_")){
                 header = header.substring(2);
             }
-            log.info("Found header : "+header);
+            header = header.trim();
+            log.debug("Found header : "+header);
             headers.add(header);
         }
         
