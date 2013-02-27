@@ -3,10 +3,8 @@ package uk.ac.ebi.fgpt.sampletab.emblbank;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +12,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.sf.saxon.serialize.codenorm.Normalizer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import au.com.bytecode.opencsv.CSVReader;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
@@ -299,7 +293,6 @@ public class EMBLBankRunnable implements Runnable {
         SampleData st = new SampleData();
         st.msi.termSources.add(ncbitaxonomy);
         Set<String> groupIDs = groupMap.get(groupID);
-        groupMap.remove(groupID);
         
         
         EMBLBankHeaders headers = null;

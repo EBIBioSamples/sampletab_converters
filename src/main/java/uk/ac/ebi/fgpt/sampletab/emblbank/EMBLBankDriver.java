@@ -5,10 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,10 +24,9 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import au.com.bytecode.opencsv.CSVReader;
-
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
+import au.com.bytecode.opencsv.CSVReader;
 
 public class EMBLBankDriver {
 
@@ -169,14 +165,16 @@ public class EMBLBankDriver {
         
         log.info("Beginning second pass");
         List<String[]> lines = getLines(inputFile);
+        log.info("Starting tasks");
         
         ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         for (String groupID : groupMap.keySet()){
             Runnable t = new EMBLBankRunnable(lines, groupMap, groupID, outputFile, prefix, wgs, tsa, bar, cds);
             pool.execute(t);
         }
-        
-                // run the pool and then close it afterwards
+
+        log.info("All tasks pending");
+        // run the pool and then close it afterwards
         // must synchronize on the pool object
         synchronized (pool) {
             pool.shutdown();
