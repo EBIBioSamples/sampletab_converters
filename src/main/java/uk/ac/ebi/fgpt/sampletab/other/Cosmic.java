@@ -195,7 +195,7 @@ public class Cosmic extends AbstractDriver {
                     
                     for (String part : line.get("Comments").split(",")){
                         part = part.trim();
-                        String[] splitDash = part.split("-");
+                        String[] splitDash = part.split(" - ");
                         String[] splitColon = part.split(":");
                         if (part.length() == 0){
                             //do nothing
