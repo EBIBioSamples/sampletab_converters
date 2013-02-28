@@ -59,7 +59,7 @@ public class Cosmic extends AbstractDriver {
             reader = new CSVReader(new FileReader(inputFile), "\t".charAt(0));
             while ((nextLine = reader.readNext()) != null) {
                 linecount += 1;
-                if (linecount % 100 == 0){
+                if (linecount % 10000 == 0){
                     log.info("processing line "+linecount);
                 }
                                 

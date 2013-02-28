@@ -63,7 +63,7 @@ public class TCGA extends AbstractDriver {
                 linecount = 0;
                 while ((nextLine = reader.readNext()) != null) {
                     linecount += 1;
-                    if (linecount % 100 == 0){
+                    if (linecount % 10000 == 0){
                         log.info("processing line "+linecount);
                     }
                                     
@@ -115,7 +115,7 @@ public class TCGA extends AbstractDriver {
                 linecount = 0;
                 while ((nextLine = reader.readNext()) != null) {
                     linecount += 1;
-                    if (linecount % 100 == 0){
+                    if (linecount % 10000 == 0){
                         log.info("processing line "+linecount);
                     }
                                     
