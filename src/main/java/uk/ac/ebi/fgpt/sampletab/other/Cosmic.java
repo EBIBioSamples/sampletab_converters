@@ -29,6 +29,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class Cosmic extends AbstractDriver {
 
@@ -46,7 +47,7 @@ public class Cosmic extends AbstractDriver {
     }    
     
     
-    private Map<String, List<String[]>> getGrouping(File inputFile){
+    private Map<String, List<String[]>> getGrouping(File inputFile) {
 
         Map<String, List<String[]>> grouping = new HashMap<String, List<String[]>>();
         
@@ -111,7 +112,7 @@ public class Cosmic extends AbstractDriver {
         super.doMain(args);
         
         File inputFile = new File(inputFilename);
-        if (!inputFile.exists()){
+        if (!inputFile.exists()) {
             log.error("File "+inputFile+" does not exist!");
             return;
         }
@@ -137,7 +138,7 @@ public class Cosmic extends AbstractDriver {
             st.msi.submissionReferenceLayer = true;
             
             //add publication if groupid is pubmed id
-            if (groupid.matches("[0-9]+")){
+            if (groupid.matches("[0-9]+")) {
                 st.msi.publications.add(new Publication(groupid, null));
             }
             
@@ -219,7 +220,7 @@ public class Cosmic extends AbstractDriver {
             
             //write output
             SampleTabWriter writer = null ; 
-            File outputFile = new File(outputDirName, st.msi.submissionIdentifier);
+            File outputFile = new File(outputDirName, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
             outputFile.mkdirs();
             outputFile = new File(outputFile, "sampletab.pre.txt");
             try {
@@ -229,7 +230,7 @@ public class Cosmic extends AbstractDriver {
             } catch (IOException e) {
                 log.error("Error writing to "+outputFile, e);
             } finally {
-                if (writer != null){
+                if (writer != null) {
                     try {
                         writer.close();
                     } catch (IOException e) {
