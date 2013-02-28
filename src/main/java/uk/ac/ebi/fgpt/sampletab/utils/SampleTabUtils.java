@@ -33,7 +33,8 @@ public class SampleTabUtils {
     public static String getSubmissionDirPath(String submissionID) {
         return getSubmissionDirFile(submissionID).getPath();
     }
-    
+
+    //make sure this is kept in sync with uk.ac.ebi.fgpt.conan.process.biosd.AbstractBioSDProcess.getPathPrefix
     public static File getSubmissionDirFile(String submissionID) {
         if (submissionID.startsWith("GMS-")) { 
             return new File("imsr", submissionID);
@@ -60,6 +61,7 @@ public class SampleTabUtils {
         } else if (submissionID.startsWith("GEN-")) { 
             return new File("sra", submissionID);
         } else if (submissionID.startsWith("GEM-")) {
+            //EMBLbank
             File targetfile = new File("GEM");
             int i = 7;
             int groupsize = 3;
@@ -68,7 +70,30 @@ public class SampleTabUtils {
                 i += groupsize;   
             }
             return new File(targetfile, submissionID);
-        } else if (submissionID.startsWith("GSB-")) {
+        } else if (submissionID.startsWith("GNC-")) {
+            //NCBI biosamples
+            File targetfile = new File("GNC");
+            int i = 7;
+            int groupsize = 3;
+            while (i < submissionID.length()){
+                targetfile = new File(targetfile, submissionID.substring(0,i));
+                i += groupsize;   
+            }
+            return new File(targetfile, submissionID);
+        }  else if (submissionID.startsWith("GCM-")) {
+            //COSMIC
+            File targetfile = new File("GCM");
+            int i = 7;
+            int groupsize = 3;
+            while (i < submissionID.length()){
+                targetfile = new File(targetfile, submissionID.substring(0,i));
+                i += groupsize;   
+            }
+            return new File(targetfile, submissionID);
+        }  else if (submissionID.startsWith("GCG-")) {
+            //TCGA - The Cancer Genome Atlas
+            return new File("GCG", submissionID);
+        }  else if (submissionID.startsWith("GSB-")) {
             return new File("GSB", submissionID);
         } else if (submissionID.equals("GEN")) { 
             return new File("encode", submissionID);
