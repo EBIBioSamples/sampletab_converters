@@ -283,7 +283,8 @@ public class TCGA extends AbstractDriver {
         SampleTabWriter writer = null ; 
         File outputFile = new File(outputFilename, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
         outputFile.mkdirs();
-        outputFile = new File(outputFile, "sampetab.pre.txt");
+        outputFile = new File(outputFile, "sampletab.pre.txt");
+        log.info("writing "+outputFile);
         try {
             writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outputFile)));
             writer.write(st);

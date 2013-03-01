@@ -42,6 +42,10 @@ public class Cosmic extends AbstractDriver {
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
+    TermSource efo = new TermSource("EFO", "http://www.ebi.ac.uk/efo/", "2.23");
+    TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy", null);
+    
+    
     public static void main(String[] args) {
         new Cosmic().doMain(args);
     }    
@@ -126,10 +130,6 @@ public class Cosmic extends AbstractDriver {
             st.msi.submissionTitle = "COSMIC - Catalogue Of Somatic Mutations In Cancer";
             st.msi.submissionDescription = "All cancers arise as a result of the acquisition of a series of fixed DNA sequence abnormalities, mutations, many of which ultimately confer a growth advantage upon the cells in which they have occurred. There is a vast amount of information available in the published scientific literature about these changes. COSMIC is designed to store and display somatic mutation information and related details and contains information relating to human cancers.";
             //TODO add sanger organization
-            TermSource efo = new TermSource("EFO", "http://www.ebi.ac.uk/efo/", "2.23");
-            st.msi.termSources.add(efo);
-            TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy", null);
-            st.msi.termSources.add(ncbitaxonomy);
             
             //TODO decide if to put cosmic on its own, or roll it into GSB
             st.msi.submissionIdentifier = "GCM-"+groupid;
@@ -167,7 +167,7 @@ public class Cosmic extends AbstractDriver {
 
                     sample.addAttribute(new CommentAttribute("synonym", sampleName));
                     sample.addAttribute(new CommentAttribute("ID tumor", line.get("ID_tumor")));
-                    sample.addAttribute(new OrganismAttribute("Homo sapiens", ncbitaxonomy, 9606));
+                    sample.addAttribute(new OrganismAttribute("Homo sapiens", st.msi.getOrAddTermSource(ncbitaxonomy), 9606));
                     
                     
                     if (!line.get("Primary site").equals("NS")) {
@@ -223,6 +223,7 @@ public class Cosmic extends AbstractDriver {
             File outputFile = new File(outputDirName, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
             outputFile.mkdirs();
             outputFile = new File(outputFile, "sampletab.pre.txt");
+            log.info("writing "+outputFile);
             try {
                 writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outputFile)));
                 writer.write(st);
