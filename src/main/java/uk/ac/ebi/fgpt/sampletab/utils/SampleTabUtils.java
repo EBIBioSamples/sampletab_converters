@@ -45,7 +45,7 @@ public class SampleTabUtils {
             File targetfile = new File("ae", "GAE-"+pipe);
             int i = 7;
             int groupsize = 3;
-            while (i < ident.length()){
+            while (i < ident.length()) {
                 targetfile = new File(targetfile, submissionID);
                 i += groupsize;   
             }
@@ -65,7 +65,7 @@ public class SampleTabUtils {
             File targetfile = new File("GEM");
             int i = 7;
             int groupsize = 3;
-            while (i < submissionID.length()){
+            while (i < submissionID.length()) {
                 targetfile = new File(targetfile, submissionID.substring(0,i));
                 i += groupsize;   
             }
@@ -75,7 +75,7 @@ public class SampleTabUtils {
             File targetfile = new File("GNC");
             int i = 7;
             int groupsize = 3;
-            while (i < submissionID.length()){
+            while (i < submissionID.length()) {
                 targetfile = new File(targetfile, submissionID.substring(0,i));
                 i += groupsize;   
             }
