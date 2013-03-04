@@ -371,10 +371,11 @@ public class GUIXMLOutputer {
                 //TODO note that this does not maintain consistent ordering with that in the SampleTab
                 for (SCDNodeAttribute a : sample.getAttributes()) {
                     if (a.getAttributeValue() != null && a.getAttributeValue().length() > 0) {
-                        if (!orderedAttributes.containsKey(a.getAttributeType())){
-                            orderedAttributes.put(a.getAttributeType(), new ArrayList<SCDNodeAttribute>());
+                        String header = a.headers()[0];
+                        if (!orderedAttributes.containsKey(header)){
+                            orderedAttributes.put(header, new ArrayList<SCDNodeAttribute>());
                         }
-                        orderedAttributes.get(a.getAttributeType()).add(a);
+                        orderedAttributes.get(header).add(a);
                     }
                 }
                 for(String attrType : orderedAttributes.keySet()) {
@@ -450,8 +451,15 @@ public class GUIXMLOutputer {
         }
         List<String> headers = table.get(0);
         List<String> used = new ArrayList<String>();
+        boolean inSample = false;
         for (String header : headers){
-            if (header.equals("Unit")){
+            if (header.equals("Sample Name")){
+                inSample = true;
+                writeAttribute(xmlWriter, header, "false", "STRING");
+                used.add(header);
+            } else if (header.equals("Group Name")){
+                inSample = false;
+            } else if (header.equals("Unit")){
                 //do nothing
             } else if (header.equals("Term Source REF")) {
                 //do nothing
@@ -459,7 +467,7 @@ public class GUIXMLOutputer {
                 //do nothing
             } else if (used.contains(header)) {
                 //do nothing
-            } else {
+            } else if (inSample) {
                 writeAttribute(xmlWriter, header, "false", "STRING");
                 used.add(header);
             }
