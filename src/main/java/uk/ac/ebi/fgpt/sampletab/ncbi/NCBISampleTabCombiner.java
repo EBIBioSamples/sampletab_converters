@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
 import uk.ac.ebi.fgpt.sampletab.Normalizer;
@@ -48,7 +47,7 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, Set<File>> groupings = new ConcurrentHashMap<String, Set<File>>();
+    private final ConcurrentMap<String, Set<File>> groupings = new ConcurrentHashMap<String, Set<File>>();
 
     class GroupIDsTask implements Runnable {
         private final File inFile;
@@ -144,15 +143,16 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
             }
 
             for (String groupid : groupids) {
-                Set<File> group;
-                synchronized (groupings){
-                    if (groupings.containsKey(groupid)) {
-                        group = groupings.get(groupid);
-                    } else {
-                        group = new ConcurrentSkipListSet<File>();
-                        groupings.put(groupid, group);
+                
+                Set<File> group = groupings.get(groupid);
+                if (group == null) {
+                    final Set<File> value = Collections.synchronizedSet(new HashSet<File>());
+                    group = groupings.putIfAbsent(groupid, value);
+                    if (group == null) {
+                        group = value;
                     }
                 }
+                
                 group.add(inFile);
             }
         }
