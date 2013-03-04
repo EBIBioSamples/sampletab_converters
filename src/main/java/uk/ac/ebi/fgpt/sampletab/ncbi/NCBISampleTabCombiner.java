@@ -73,7 +73,7 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
                     // group by sra study
                     log.debug("Getting studies of SRA sample " + sampleid);
                     Collection<String> studyids = ENAUtils.getStudiesForSample(sampleid);
-                    if (studyids == null || studyids.size() == 0){
+                    if (studyids == null || studyids.size() == 0) {
                         //no study found, fall back to submission
                         studyids = ENAUtils.getSubmissionsForSample(sampleid);
                     }
@@ -87,7 +87,7 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
                             groupids.add(attribute.getText());
                         }
                     }
-                } else if (dbname.equals("ESS") || dbname.equals("GSS")) { 
+                } else if (dbname.equals("EST") || dbname.equals("GSS")) { 
                     //dont' use these if possible
                 } else if (dbname.equals("ATCC")) { 
                     groupids.add("ATCC");
@@ -138,17 +138,20 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
 //            if (groupids.size() > 1) {
 //                log.warn("Multiple groups for " + inFile);
 //            }
+            
             if (groupids.size() == 0) {
                 log.error("No groups for " + inFile);
             }
 
             for (String groupid : groupids) {
                 Set<File> group;
-                if (groupings.containsKey(groupid)) {
-                    group = groupings.get(groupid);
-                } else {
-                    group = new ConcurrentSkipListSet<File>();
-                    groupings.put(groupid, group);
+                synchronized (groupings){
+                    if (groupings.containsKey(groupid)) {
+                        group = groupings.get(groupid);
+                    } else {
+                        group = new ConcurrentSkipListSet<File>();
+                        groupings.put(groupid, group);
+                    }
                 }
                 group.add(inFile);
             }
@@ -201,38 +204,13 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
             // add nodes from here to parent
             for (SCDNode node : sampledata.scd.getRootNodes()) {
                 try {
-                    //check if the names are the 
                     sampleout.scd.addNode(node);
-                    if (SampleNode.class.isInstance(node)) {
-                        // apply node metainformation to msi if missing
-                        /*
-                        if (sampleout.msi.submissionDescription == null
-                                || sampleout.msi.submissionDescription.trim().equals("")){
-                            log.debug("Using description from sample");
-                            sampleout.msi.submissionDescription = ((SampleNode) node).getSampleDescription();
-                        }
-                        if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals("")){
-                            log.debug("Using title from sample");
-                            sampleout.msi.submissionTitle = ((SampleNode) node).getNodeName();
-                        }
-                        */
-                    }
                 } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e4) {
                     log.warn("Unable to add node " + node.getNodeName(), e4);
                     continue;
                 }
             }
         }
-/*
-        if (sampleout.msi.submissionDescription == null || sampleout.msi.submissionDescription.trim().equals("")) {
-            log.warn("null submission description");
-            sampleout.msi.submissionDescription = "No description avaliable";
-        }
-        if (sampleout.msi.submissionTitle == null || sampleout.msi.submissionTitle.trim().equals("")) {
-            log.warn("null submission title");
-            sampleout.msi.submissionTitle = sampleout.msi.submissionIdentifier;
-        }
-*/
         sampleout.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(sampleout);
         return sampleout;
     }

@@ -251,7 +251,7 @@ public class NCBIBiosampleRunnable implements Runnable {
 				// databases
 				// TODO clear up potential URL encoding problems
 				if (dbname == null){
-				    //do nothing
+				    //do nothing more
 				} else if (dbname.equals("SRA")) {
 					databaseAttrib.databaseURI = "http://www.ebi.ac.uk/ena/data/view/"
 							+ id.getTextTrim();
@@ -274,6 +274,8 @@ public class NCBIBiosampleRunnable implements Runnable {
 					// that sample 
 					// Can Search by the LIBGSS_xxxxxxxx identifier in free text to
 					// find them but no way to encode this search in the URL
+				} else if (dbname.equals("BioSample")) {
+				    //already have a biosamples identifier, so ignore this one.
 				}
 				scdnode.addAttribute(databaseAttrib);
 			}
