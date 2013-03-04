@@ -11,6 +11,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractRelationshipAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
@@ -26,7 +27,7 @@ public class Corrector {
     private TermSource efo = new TermSource("EFO", "http://www.ebi.ac.uk/efo/", null);
     private TermSource ncbiTaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
 
-    public String getInitialCapitals(String in){
+    public String getInitialCapitals(String in) {
         StringBuilder sb = new StringBuilder();
         boolean space = true;
         for (Character currentChar : in.toCharArray()) {
@@ -48,7 +49,7 @@ public class Corrector {
         return sb.toString();
     }
     
-    public String stripHTML(String in){
+    public String stripHTML(String in) {
         if (in == null){
             return in;
         }
@@ -72,7 +73,7 @@ public class Corrector {
     }
     
     
-    private UnitAttribute correctUnit(UnitAttribute unit){
+    private UnitAttribute correctUnit(UnitAttribute unit) {
         String lcval = unit.getAttributeValue().toLowerCase();
         if (lcval.equals("alphanumeric")
                 || lcval.equals("na")
@@ -197,7 +198,7 @@ public class Corrector {
         return attr;
     }
     
-    private SCDNodeAttribute correctOrganism(OrganismAttribute attr, SampleData sampledata){
+    private SCDNodeAttribute correctOrganism(OrganismAttribute attr, SampleData sampledata) {
 
         if (attr.getTermSourceREF() == null){
             if (attr.getAttributeValue().matches("[0-9]+")){
@@ -228,7 +229,7 @@ public class Corrector {
                     attr.setTermSourceREF(ncbiTaxonomyName);
                 }
             }
-        } else if (attr.getTermSourceID().startsWith("http://purl.org/obo/owl/NCBITaxon#NCBITaxon_")){
+        } else if (attr.getTermSourceID().startsWith("http://purl.org/obo/owl/NCBITaxon#NCBITaxon_")) {
             Integer taxid = new Integer(attr.getTermSourceID().substring("http://purl.org/obo/owl/NCBITaxon#NCBITaxon_".length(), attr.getTermSourceID().length()));
             attr.setTermSourceIDInteger(taxid);
             String ncbiTaxonomyName = sampledata.msi.getOrAddTermSource(ncbiTaxonomy);
@@ -238,12 +239,12 @@ public class Corrector {
         return attr;
     }
     
-    private SCDNodeAttribute correctCharacteristic(CharacteristicAttribute attr, SampleData sampledata){        
+    private SCDNodeAttribute correctCharacteristic(CharacteristicAttribute attr, SampleData sampledata) {        
         //bulk replace underscore with space in types
         attr.type = attr.type.replace("_", " ");
 
         //remove technical attributes
-        if (attr.type.toLowerCase().equals("channel")){
+        if (attr.type.toLowerCase().equals("channel")) {
             return null;
         }
                             
@@ -283,7 +284,7 @@ public class Corrector {
             attr.type = "ecotype";
             if (attr.getAttributeValue().toLowerCase().equals("col-0")
                     || attr.getAttributeValue().toLowerCase().equals("columbia-0")
-                    || attr.getAttributeValue().toLowerCase().equals("columbia (col0) ")){
+                    || attr.getAttributeValue().toLowerCase().equals("columbia (col0) ")) {
                     attr.setAttributeValue("Columbia-0");
             } else if (attr.getAttributeValue().toLowerCase().equals("columbia")
                     || attr.getAttributeValue().toLowerCase().equals("col")) {
@@ -312,11 +313,11 @@ public class Corrector {
                 ||attr.type.toLowerCase().equals("organismpart")
                 ||attr.type.toLowerCase().equals("tissue")) {
             attr.type = "organism part";
-            if (attr.getAttributeValue().toLowerCase().equals("blood")){
+            if (attr.getAttributeValue().toLowerCase().equals("blood")) {
                 attr.setAttributeValue("blood");
                 attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
-            } else if (attr.getAttributeValue().toLowerCase().equals("skin")){
+            } else if (attr.getAttributeValue().toLowerCase().equals("skin")) {
                 attr.setAttributeValue("skin");
                 attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000962");
@@ -433,15 +434,19 @@ public class Corrector {
                 SCDNodeAttribute updated = a;
                 
                 boolean isCharacteristic = false;
-                synchronized(CharacteristicAttribute.class){
+                synchronized(CharacteristicAttribute.class) {
                     isCharacteristic = CharacteristicAttribute.class.isInstance(a);
                 }
+                boolean isComment = false;
+                synchronized(CommentAttribute.class) {
+                    isComment = CommentAttribute.class.isInstance(a);
+                }
                 boolean isSex = false;
-                synchronized(SexAttribute.class){
+                synchronized(SexAttribute.class) {
                     isSex = SexAttribute.class.isInstance(a);
                 }
                 boolean isOrganism = false;
-                synchronized(OrganismAttribute.class){
+                synchronized(OrganismAttribute.class) {
                     isOrganism = OrganismAttribute.class.isInstance(a);
                 }
                 // tidy all characteristics
@@ -451,23 +456,24 @@ public class Corrector {
                     updated = correctSex((SexAttribute) a, sampledata);
                 } else if (isOrganism) {
                     updated = correctOrganism((OrganismAttribute) a, sampledata);
+                } else if (isComment) {
+                    //TODO comments
                 }
                 
-                //TODO comments
                 //TODO promote some comments to characteristics
 
                 boolean isRelationship = false;
-                synchronized(AbstractRelationshipAttribute.class){
+                synchronized(AbstractRelationshipAttribute.class) {
                     isRelationship = AbstractRelationshipAttribute.class.isInstance(a);
                 }
                 
-                if (isRelationship){
+                if (isRelationship) {
                     //Relationships may refer to other samples in the same submission by name
                     //It is better to refer by BioSD accession.
                     AbstractRelationshipAttribute rela = (AbstractRelationshipAttribute) a;
                     String targetName = rela.getAttributeValue();
                     SampleNode target = sampledata.scd.getNode(targetName, SampleNode.class);
-                    if (target != null && target.getSampleAccession() != null){
+                    if (target != null && target.getSampleAccession() != null) {
                         rela.setAttributeValue(target.getSampleAccession());
                     }
                 }
@@ -475,10 +481,10 @@ public class Corrector {
                 
                 //comparison by identity
                 //replace in same position
-                if (updated != a){
+                if (updated != a) {
                     int i = s.getAttributes().indexOf(a);
                     s.removeAttribute(a);
-                    if (updated != null){
+                    if (updated != null) {
                         s.addAttribute(updated, i);
                     }
                 }
