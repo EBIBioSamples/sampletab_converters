@@ -11,6 +11,8 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterables;
+
 import uk.ac.ebi.fgpt.sampletab.utils.FileRecursiveIterable;
 import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 
@@ -26,7 +28,7 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
     protected boolean recursive = false;
     
     @Option(name = "--startpath", aliases = { "-s" }, usage="starting path for matching")
-    protected File startpath = null;
+    protected List<File> startpaths = null;
     
     private Logger log = LoggerFactory.getLogger(getClass());
         
@@ -50,15 +52,31 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
         Iterable<File> inputFiles = null;
         for (String inputFilename : inputFilenames){
             if (recursive){
-                if (startpath == null){
-                    log.info("Looking recursively for input files named "+inputFilename);                
+                if (startpaths == null){
+                    log.info("Looking recursively for input files named "+inputFilename);
+                    if (inputFiles == null) {
+                        inputFiles = new FileRecursiveIterable(inputFilename, null);
+                    } else {
+                        inputFiles = Iterables.concat(inputFiles, new FileRecursiveIterable(inputFilename, null));
+                    }
+                    
                 } else {
-                    log.info("Looking recursively for input files named "+inputFilename+" from "+startpath);
+                    log.info("Looking recursively for input files named "+inputFilename+" from "+startpaths);
+                    for (File startpath : startpaths) {
+                        if (inputFiles == null) {
+                            inputFiles = new FileRecursiveIterable(inputFilename, startpath);
+                        } else {
+                            inputFiles = Iterables.concat(inputFiles, new FileRecursiveIterable(inputFilename, startpath));
+                        }
+                    }
                 }
-                inputFiles = new FileRecursiveIterable(inputFilename, startpath);
             } else {
                 log.info("Looking for input files in glob "+inputFilename);   
-                inputFiles = new FileGlobIterable(inputFilename);
+                if (inputFiles == null) {
+                    inputFiles = new FileGlobIterable(inputFilename);
+                } else {
+                    inputFiles = Iterables.concat(inputFiles,new FileGlobIterable(inputFilename));
+                }
             }
         }
 
