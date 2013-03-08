@@ -2,13 +2,10 @@ package uk.ac.ebi.fgpt.sampletab.guixml;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -448,30 +445,31 @@ public class GUIXMLOutputer {
             
             //recreate the node factory to flush its internal cache
             SCDNodeFactory.clear();
-        }
-        List<String> headers = table.get(0);
-        List<String> used = new ArrayList<String>();
-        boolean inSample = false;
-        for (String header : headers){
-            if (header.equals("Sample Name")){
-                inSample = true;
-                writeAttribute(xmlWriter, header, "false", "STRING");
-                used.add(header);
-            } else if (header.equals("Group Name")){
-                inSample = false;
-            } else if (header.equals("Unit")){
-                //do nothing
-            } else if (header.equals("Term Source REF")) {
-                //do nothing
-            } else if (header.equals("Term Source ID")) {
-                //do nothing
-            } else if (used.contains(header)) {
-                //do nothing
-            } else if (inSample) {
-                writeAttribute(xmlWriter, header, "false", "STRING");
-                used.add(header);
+            
+            List<String> headers = table.get(0);
+            List<String> used = new ArrayList<String>();
+            boolean inSample = false;
+            for (String header : headers){
+                if (header.equals("Sample Name")){
+                    inSample = true;
+                    writeAttribute(xmlWriter, header, "false", "STRING");
+                    used.add(header);
+                } else if (header.equals("Group Name")){
+                    inSample = false;
+                } else if (header.equals("Unit")){
+                    //do nothing
+                } else if (header.equals("Term Source REF")) {
+                    //do nothing
+                } else if (header.equals("Term Source ID")) {
+                    //do nothing
+                } else if (used.contains(header)) {
+                    //do nothing
+                } else if (inSample) {
+                    writeAttribute(xmlWriter, header, "false", "STRING");
+                    used.add(header);
+                }
             }
+            xmlWriter.writeEndElement(); //SampleAttributes
         }
-        xmlWriter.writeEndElement(); //SampleAttributes
     }
 }
