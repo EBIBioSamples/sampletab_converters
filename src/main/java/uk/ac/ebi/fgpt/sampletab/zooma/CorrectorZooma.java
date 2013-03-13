@@ -19,6 +19,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttributeOntology;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 
+import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -28,81 +29,90 @@ public class CorrectorZooma {
     // logging
     private static Logger log = LoggerFactory.getLogger(uk.ac.ebi.fgpt.sampletab.zooma.CorrectorZooma.class);
     
-    public static LoadingCache<String, JsonNode> lookupString = CacheBuilder.newBuilder()
+    private static LoadingCache<String[], Optional<JsonNode>> lookupString = CacheBuilder.newBuilder()
     .maximumSize(1000)
     .build(
-        new CacheLoader<String, JsonNode>() {
-          public JsonNode load(String query) throws JsonParseException, JsonMappingException, IOException {
-            return getZoomaStringHit(query);
+        new CacheLoader<String[], Optional<JsonNode>>() {
+          public Optional<JsonNode> load(String[] query) throws JsonParseException, JsonMappingException, IOException {
+              String key = query[0];
+              String value = query[1];
+              URL jsurl = null;
+              value = URLEncoder.encode(value, "UTF-8");
+              if (key != null){
+                  key = URLEncoder.encode(value, "UTF-8");
+                  jsurl = new URL("http://www.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+value+"&type="+key);
+              } else {
+                  jsurl = new URL("http://www.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+value);
+              }
+              log.debug("URL "+jsurl.toExternalForm());
+              
+              ObjectMapper mapper = new ObjectMapper();                                                                                                           
+              JsonNode rootNode = null;
+              try{
+                  rootNode = mapper.readValue(jsurl, JsonNode.class); // src can be a File, URL, InputStream etc
+              } catch (IOException e) {
+                  if (e.getMessage().contains("Server returned HTTP response code: 500 for URL")){
+                      return Optional.absent();
+                  } else {
+                      throw e;
+                  }
+              }
+
+              log.debug(rootNode.toString());
+              
+              JsonNode results = rootNode.get("result");
+              Optional<JsonNode> toReturn = Optional.fromNullable(results); 
+              return toReturn;
           }
         });
+    
+    
+    public static String getTopStringOfValueQuery(String value) throws ExecutionException, JsonParseException, JsonMappingException, IOException {
+        return getTopNodeOfValueQuery(value).get("name").getTextValue();
+    }
+    
+    public static JsonNode getTopNodeOfValueQuery(String value) throws ExecutionException, JsonParseException, JsonMappingException, IOException {
+        return getTopNodeOfKeyValueQuery(null, value);
+    }
+    
+    public static String getTopStringOfKeyValueQuery(String key, String value) throws ExecutionException, JsonParseException, JsonMappingException, IOException {
+        return getTopNodeOfKeyValueQuery(key, value).get("name").getTextValue();
+    }
+    
+    public static JsonNode getTopNodeOfKeyValueQuery(String key, String value) throws ExecutionException, JsonParseException, JsonMappingException, IOException {
+        return getAllNodesOfKeyValueQuery(key, value).get(0);
+    }
 
-    public static JsonNode getZoomaStringHit(String query) throws JsonParseException, JsonMappingException, IOException {
-        query = URLEncoder.encode(query, "UTF-8");
-        URL jsurl = new URL("http://wwwdev.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+query);
-        log.debug("URL "+jsurl.toExternalForm());
-        
-        ObjectMapper mapper = new ObjectMapper();                                                        
-        JsonNode rootNode = null;
-        try{
-            rootNode = mapper.readValue(jsurl, JsonNode.class); // src can be a File, URL, InputStream etc
-        } catch (IOException e) {
-            if (e.getMessage().contains("Server returned HTTP response code: 500 for URL")){
-                return null;
-            } else {
+    public static JsonNode getAllNodesOfValueQuery(String value) throws ExecutionException, JsonParseException, JsonMappingException, IOException {
+        return getAllNodesOfKeyValueQuery(null, value);
+    }
+    
+    public static JsonNode getAllNodesOfKeyValueQuery(String key, String value) throws ExecutionException, JsonParseException, JsonMappingException, IOException {
+        String[] query = new String[2];
+        query[0] = key;
+        query[1] = value;
+        Optional<JsonNode> returned = null;
+        try {
+             returned = lookupString.get(query);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (JsonParseException e2) {
+                throw e2;
+            } catch(JsonMappingException e2) {
+                throw e2;
+            } catch (IOException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                log.error("Unexpected exception", e2);
                 throw e;
             }
         }
-
-        log.debug(rootNode.toString());
-        
-        JsonNode results = rootNode.get("result");
-        if (results != null){
-            JsonNode tophit = results.get(0);
-            return tophit;
-        }  
-        return null;
-    }
-    
-    public static LoadingCache<String[], JsonNode> lookupKeyValue = CacheBuilder.newBuilder()
-    .maximumSize(1000)
-    .build(
-        new CacheLoader<String[], JsonNode>() {
-          public JsonNode load(String[] query) throws JsonParseException, JsonMappingException, IOException {
-            return getZoomaKeyValueHit(query);
-          }
-        });
-
-    public static JsonNode getZoomaKeyValueHit(String[] query) throws JsonParseException, JsonMappingException, IOException {
-        return getZoomaKeyValueHit(query[0], query[1]);
-    }
-    
-    public static JsonNode getZoomaKeyValueHit(String key, String value) throws JsonParseException, JsonMappingException, IOException {
-        key = URLEncoder.encode(key, "UTF-8");
-        value = URLEncoder.encode(value, "UTF-8");
-        URL jsurl = new URL("http://wwwdev.ebi.ac.uk/fgpt/zooma/v2/api/search?query="+value+"&type="+key);
-        log.debug("URL "+jsurl.toExternalForm());
-        
-        ObjectMapper mapper = new ObjectMapper();                                                                                                           
-        JsonNode rootNode = null;
-        try{
-            rootNode = mapper.readValue(jsurl, JsonNode.class); // src can be a File, URL, InputStream etc
-        } catch (IOException e) {
-            if (e.getMessage().contains("Server returned HTTP response code: 500 for URL")){
-                return null;
-            } else {
-                throw e;
-            }
+        if (returned == null){
+            return null;
+        } else{
+            return returned.orNull();
         }
-
-        log.debug(rootNode.toString());
-        
-        JsonNode results = rootNode.get("result");
-        if (results != null){
-            JsonNode tophit = results.get(0);
-            return tophit;
-        }  
-        return null;
     }
     
     
@@ -125,7 +135,7 @@ public class CorrectorZooma {
                         } else {
                             JsonNode tophit = null;
                             try {
-                                tophit = lookupString.get(value);
+                                tophit = getTopNodeOfValueQuery(value);
                             } catch (ExecutionException e) {
                                 throw e.getCause();
                             }
