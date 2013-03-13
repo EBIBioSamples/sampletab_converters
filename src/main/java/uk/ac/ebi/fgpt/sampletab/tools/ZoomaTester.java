@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.codehaus.jackson.JsonNode;
@@ -33,6 +35,13 @@ public class ZoomaTester {
 
     @Option(name = "--minimum", aliases={"-m"}, usage = "minimum count")
     protected int minimumcount = 10;
+
+    @Option(name = "--maximum", aliases={"-x"}, usage = "maximum query length")
+    protected int maximumlength = 100;
+    
+    @Option(name = "--standalone", aliases={"-a"}, usage = "output for standalone tool")
+    protected boolean standalone;
+    
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -74,7 +83,9 @@ public class ZoomaTester {
             reader = new BufferedReader(new FileReader(inputFile));
             writer = new BufferedWriter(new FileWriter(outputFile));
 
-            writer.write("Key\tValue\tmatch\tscore\tdirect\n");
+            if (!standalone) {
+                writer.write("Key\tValue\tmatch\tscore\tdirect\tcorrect?\n");
+            }
             
             String line = null;  
             while ((line = reader.readLine()) != null){  
@@ -108,33 +119,71 @@ public class ZoomaTester {
                             String value = m.group(1);
                             
                             Integer count = new Integer(m.group(2));
-                            if (count >= minimumcount){
                             
-                                //log.info(key+"\t"+value+"\t"+count);
+                            if (count >= minimumcount 
+                                    && value.length() <= maximumlength
+                                    && !value.matches("[0-9\\-.]+")
+                                    && !value.equals("n\\a")
+                                    && !value.equals("N\\A")
+                                    && !value.equals("none")
+                                    && !value.equals("NONE")
+                                    && !value.equals("None")) {
+                                log.info(key+", "+value+", "+count);
                                 
-                                Boolean direct = null;
-                                String fixName = null;
-                                Float score = null;
-                                
-                                JsonNode tophit = CorrectorZooma.getZoomaKeyValueHit(key, value);
-                                if (tophit != null){
-                                    direct = true;
-                                    fixName = tophit.get("name").getTextValue();
-                                    score = new Float(tophit.get("score").getTextValue());
+
+                                if (standalone) {
+                                    //output two records for standalone, one with key one without
+                                    writer.write(value+"\t"+key+"\n");
+                                    writer.write(value+"\t\n");
                                 } else {
-                                    //retry without key
-                                    tophit = CorrectorZooma.getZoomaStringHit(value);
-                                    if (tophit != null){
-                                        direct = false;
-                                        fixName = tophit.get("name").getTextValue();
-                                        score = new Float(tophit.get("score").getTextValue());
+                                    boolean direct = true;
+                                    
+                                    int j = 0;
+                                    
+                                    JsonNode allHits = CorrectorZooma.getAllNodesOfKeyValueQuery(key, value);
+                                    if (allHits == null) {
+                                        //did not find any hits
+                                    } else {
+                                        //found at least one hit
+                                        int k = 0;
+                                        JsonNode hit = allHits.get(k);
+                                        while (hit != null && j < 3) {
+                                            String fixName = hit.get("name").getTextValue();
+                                            String score = hit.get("score").getTextValue();
+                                            writer.write(key+"\t"+value+"\t"+fixName+"\t"+score+"\t"+direct+"\n");
+                                            
+                                            j++;
+                                            k++;
+                                            hit = allHits.get(k);
+                                        }
+                                    }
+                                    
+                                    //fall back to indirect
+                                    direct = false;
+                                    allHits = CorrectorZooma.getAllNodesOfValueQuery(value);
+                                    if (allHits == null) {
+                                        //did not find any hits
+                                        //end the outer look
+                                    } else {
+                                        //found at least one hit
+                                        int k = 0;
+                                        JsonNode hit = allHits.get(k);
+                                        while (hit != null && j < 3) {
+                                            String fixName = hit.get("name").getTextValue();
+                                            String score = hit.get("score").getTextValue();
+                                            writer.write(key+"\t"+value+"\t"+fixName+"\t"+score+"\t"+direct+"\n");
+                                            
+                                            j++;
+                                            k++;
+                                            hit = allHits.get(k);
+                                        }
+                                    }
+                                    
+                                    if (j == 0){
+                                        //output at least the key & value once
+                                        writer.write(key+"\t"+value+"\n");
                                     }
                                 }
-                                writer.write(key+"\t"+value);
-                                if (fixName != null){
-                                    writer.write("\t"+fixName+"\t"+score+"\t"+direct);
-                                }
-                                writer.write("\n");
                             }
                         }
                     }
