@@ -74,17 +74,15 @@ public class Accessioner {
         return convert(parser.parse(dataIn));
     }
 
-    protected void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries, DataSource ds) throws SQLException {
+    protected void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries, Connection connect, DataSource ds) throws SQLException {
 
         //TODO check there are unaccessioned samples first
         
-        Connection connect = null;
         PreparedStatement statement = null;
         ResultSet results = null;
         
         try {
             //first do one query to retrieve all that have already got accessions
-            connect = ds.getConnection();
             statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM " + table
                     + " WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
             statement.setString(1, submissionID);
@@ -105,7 +103,7 @@ public class Accessioner {
         } catch (SQLRecoverableException e) {
             log.warn("Trying to recover from exception", e);
             if (retries > 0){
-                bulkSamples(sd, submissionID, prefix, table, retries -1, ds);
+                bulkSamples(sd, submissionID, prefix, table, retries-1, connect, ds);
             } else {
                 throw e;
             }
@@ -124,24 +122,15 @@ public class Accessioner {
                     //do nothing
                 }
             }
-            if (connect != null){
-                try {
-                    connect.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
         }
     }
 
-    protected void bulkGroups(SampleData sd, String submissionID, int retries, DataSource ds) throws SQLException {
+    protected void bulkGroups(SampleData sd, String submissionID, int retries, Connection connect, DataSource ds) throws SQLException {
 
-        Connection connect = null;
         PreparedStatement statement = null;
         ResultSet results = null;
         
         try {
-            connect = ds.getConnection();
             statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM SAMPLE_GROUPS WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
             statement.setString(1, submissionID);
             log.trace(statement.toString());
@@ -161,7 +150,7 @@ public class Accessioner {
         } catch (SQLRecoverableException e) {
             log.warn("Trying to recover from exception", e);
             if (retries > 0){
-                bulkGroups(sd, submissionID, retries -1, ds);
+                bulkGroups(sd, submissionID, retries-1, connect, ds);
             } else {
                 throw e;
             }
@@ -180,19 +169,11 @@ public class Accessioner {
                     //do nothing
                 }
             }
-            if (connect != null){
-                try {
-                    connect.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
         }
     }
 
-    protected void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries, DataSource ds) throws SQLException{
+    protected void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries, Connection connect, DataSource ds) throws SQLException{
 
-        Connection connect = null;
         PreparedStatement statement = null;
         ResultSet results = null;
 
@@ -200,8 +181,7 @@ public class Accessioner {
             try {
                     String name = sample.getNodeName().trim();
                     String accession = null;
-                    connect = ds.getConnection();
-    
+                    
                     statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
                             + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
                     statement.setString(1, name);
@@ -242,7 +222,7 @@ public class Accessioner {
             } catch (SQLRecoverableException e) {
                 log.warn("Trying to recover from exception", e);
                 if (retries > 0){
-                    singleSample(sd, sample, submissionID, prefix, table, retries -1, ds);
+                    singleSample(sd, sample, submissionID, prefix, table, retries-1, connect, ds);
                 } else {
                     throw e;
                 }
@@ -261,20 +241,12 @@ public class Accessioner {
                         //do nothing
                     }
                 }
-                if (connect != null){
-                    try {
-                        connect.close();
-                    } catch (SQLException e) {
-                        //do nothing
-                    }
-                }
             }
         }
     }
 
-    protected void singleGroup(SampleData sd, GroupNode group, String submissionID, int retries, DataSource ds) throws SQLException{
+    protected void singleGroup(SampleData sd, GroupNode group, String submissionID, int retries, Connection connect, DataSource ds) throws SQLException{
 
-        Connection connect = null;
         PreparedStatement statement = null;
         ResultSet results = null;
         
@@ -285,7 +257,6 @@ public class Accessioner {
                 
                 log.info("Assigning new accession for "+submissionID+" : "+name);
                 
-                connect = ds.getConnection();
                 statement = connect
                         .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
                 statement.setString(1, name);
@@ -313,7 +284,7 @@ public class Accessioner {
         } catch (SQLRecoverableException e) {
             log.warn("Trying to recover from exception", e);
             if (retries > 0){
-                singleGroup(sd, group, submissionID, retries -1, ds);
+                singleGroup(sd, group, submissionID, retries-1, connect, ds);
             } else {
                 throw e;
             }
@@ -382,34 +353,39 @@ public class Accessioner {
                 ds = dsB;
             }
         }
-        
+
+        Connection connect = null;
         try {     
+            
+            connect = ds.getConnection();
             
             //first do one query to retrieve all that have already got accessions
             log.info("Starting bulkSamples");
-            bulkSamples(sampleIn, submission, prefix, table, 0, ds);   
+            bulkSamples(sampleIn, submission, prefix, table, 0, connect, ds);   
             log.info("Starting bulkGroups");      
-            bulkGroups(sampleIn, submission, 0, ds);                      
+            bulkGroups(sampleIn, submission, 0, connect, ds);                      
             
             
             //now assign and retrieve accessions for samples that do not have them
             log.info("Starting singleSample");      
             Collection<SampleNode> samples = sampleIn.scd.getNodes(SampleNode.class);
             for (SampleNode sample : samples) {
-                singleSample(sampleIn, sample, submission, prefix, table, 0, ds);
+                singleSample(sampleIn, sample, submission, prefix, table, 0, connect, ds);
             }
 
             log.info("Starting singleGroup");      
             Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
             log.debug("got " + groups.size() + " groups.");
             for (GroupNode group : groups) {
-                singleGroup(sampleIn, group, submission, 0, ds);
+                singleGroup(sampleIn, group, submission, 0, connect, ds);
             }
             
         } catch (SQLException e) {
             throw e;
         } finally {
-            
+            if (connect != null) {
+                connect.close();
+            }
         }
 
         return sampleIn;

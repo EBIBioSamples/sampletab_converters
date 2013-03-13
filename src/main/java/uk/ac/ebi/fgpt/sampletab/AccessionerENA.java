@@ -1,5 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
@@ -29,21 +30,21 @@ public class AccessionerENA extends Accessioner {
     }
 
     @Override
-    protected void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries, DataSource ds) throws SQLException{
+    protected void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries, Connection connect, DataSource ds) throws SQLException{
         if (isENA(submissionID)){
             submissionID = "ENA";
         } 
-        super.singleSample(sd, sample, submissionID, prefix, table, retries, ds);
+        super.singleSample(sd, sample, submissionID, prefix, table, retries, connect, ds);
     }
 
     @Override
-    protected void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries, DataSource ds) throws SQLException {
+    protected void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries, Connection connect, DataSource ds) throws SQLException {
         if (isENA(submissionID)){
             submissionID = "ENA";
             //don't do as a bulk, but iterate over samples
             //doesn't report missing samples, but is tractable
         } else {
-            super.bulkSamples(sd, submissionID, prefix, table, retries, ds);
+            super.bulkSamples(sd, submissionID, prefix, table, retries, connect, ds);
         }
     }
     
