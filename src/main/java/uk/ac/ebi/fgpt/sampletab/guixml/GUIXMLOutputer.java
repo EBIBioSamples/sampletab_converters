@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab.guixml;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -341,8 +342,8 @@ public class GUIXMLOutputer {
     
     private void writeSamples(XMLStreamWriter xmlWriter, GroupNode g, SampleData st) throws XMLStreamException {
 
-        //write out precomputed attribute summary
-        writeSampleAttributes(xmlWriter, st);
+        
+        List<String> attributeHeaders =  new ArrayList<String>();
         
         for (Node s : g.getParentNodes()) {
             log.debug("Node "+s.getNodeName());
@@ -355,12 +356,15 @@ public class GUIXMLOutputer {
 
                 //this should not be null and not be zero-length
                 writeAttributeValue(xmlWriter, "Name", "false", "STRING", sample.getNodeName());
+                if (!attributeHeaders.contains("Name")) attributeHeaders.add("Name");
                 
                 //this should not be null and not be zero-length
                 writeAttributeValue(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
+                if (!attributeHeaders.contains("Sample Accession")) attributeHeaders.add("Sample Accession");
                 
                 if (sample.getSampleDescription() != null && sample.getSampleDescription().trim().length() > 0){
                     writeAttributeValue(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
+                    if (!attributeHeaders.contains("Sample Description")) attributeHeaders.add("Sample Description");
                 }
                 
                 Map<String, List<SCDNodeAttribute>> orderedAttributes = new HashMap<String, List<SCDNodeAttribute>>();
@@ -388,6 +392,7 @@ public class GUIXMLOutputer {
                     
                     if (abstractattrlist.size() == attrlist.size()) {
                         writeAttribute(xmlWriter, attrType, "false", "STRING", abstractattrlist, st);
+                        if (!attributeHeaders.contains(attrType)) attributeHeaders.add(attrType);
                     } else {
                         //handle non-ontology attributes e.g. database, same as, etc
                         boolean isDatabase = false;
@@ -408,12 +413,16 @@ public class GUIXMLOutputer {
                             writeAttributeValue(xmlWriter, "Database Name", "false", "STRING", databaseNames);
                             writeAttributeValue(xmlWriter, "Database ID", "false", "STRING", databaseIDs);
                             writeAttributeValue(xmlWriter, "Database URI", "false", "STRING", databaseURIs);
+                            if (!attributeHeaders.contains("Database Name")) attributeHeaders.add("Database Name");
+                            if (!attributeHeaders.contains("Database ID")) attributeHeaders.add("Database ID");
+                            if (!attributeHeaders.contains("Database URI")) attributeHeaders.add("Database URI");
                         } else {
                             List<String> attrvaluelist = new ArrayList<String>();
                             for (SCDNodeAttribute a : attrlist) {
                                 attrvaluelist.add(a.getAttributeValue());
                             }
                             writeAttributeValue(xmlWriter, attrType, "false", "STRING", attrvaluelist);
+                            if (!attributeHeaders.contains(attrType)) attributeHeaders.add(attrType);
                         }
                     }
                 }
@@ -430,14 +439,24 @@ public class GUIXMLOutputer {
                 xmlWriter.writeEndElement(); //Sample
             }
         }
-        
+
+        //write out precomputed attribute summary
+        writeSampleAttributes(xmlWriter, attributeHeaders);
+    }
+
+    private void writeSampleAttributes(XMLStreamWriter xmlWriter, Collection<String> attributes) throws XMLStreamException {
+        xmlWriter.writeStartElement("SampleAttributes");
+        for (String header : attributes) {
+            writeAttribute(xmlWriter, header, "false", "STRING");
+        }
+        xmlWriter.writeEndElement(); //SampleAttributes
     }
 
     private void writeSampleAttributes(XMLStreamWriter xmlWriter, SampleData st) throws XMLStreamException {
         xmlWriter.writeStartElement("SampleAttributes");
         List<List<String>> table;
         //need to ensure only one thread is doing this at a time
-        synchronized(SCDNodeFactory.class){
+        synchronized(SCDNodeFactory.class) {
             SCDTableBuilder tb = new SCDTableBuilder(st.scd.getRootNodes());
             log.debug("Starting to assemble table...");
             table = tb.getTable(); 
