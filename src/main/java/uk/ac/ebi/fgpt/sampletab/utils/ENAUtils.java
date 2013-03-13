@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -11,10 +12,27 @@ import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+
 public class ENAUtils {
 
     private static Logger log = LoggerFactory.getLogger(ENAUtils.class);
 
+    private static LoadingCache<String, Element> lookupElement = CacheBuilder.newBuilder()
+    .maximumSize(1000)
+    .build(
+        new CacheLoader<String, Element>() {
+          public Element load(String id) throws DocumentException {
+              String urlstr = "http://www.ebi.ac.uk/ena/data/view/" + id + "&display=xml";
+              Document doc = XMLUtils.getDocument(urlstr);
+
+              Element root = doc.getRootElement();
+              return root;
+          }
+        });
+    
     public static Collection<String> getIdentifiers(String input) {
         ArrayList<String> idents = new ArrayList<String>();
         if (input.contains(",")) {
@@ -45,12 +63,19 @@ public class ENAUtils {
     }
 
     public static Set<String> getStudiesForSample(String srsId) throws DocumentException {
-
-        String urlstr = "http://www.ebi.ac.uk/ena/data/view/" + srsId + "&display=xml";
-        Document doc = XMLUtils.getDocument(urlstr);
-
-        Element root = doc.getRootElement();
-        return getStudiesForSample(root);
+        Element elem = null;
+        try {
+            elem = lookupElement.get(srsId);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (DocumentException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                throw new RuntimeException("Unrecognised ExecutionException", e2);
+            }
+        }
+        return getStudiesForSample(elem);
     }
 
     public static Set<String> getStudiesForSample(Element root) {
@@ -75,12 +100,19 @@ public class ENAUtils {
     }
     
     public static Set<String> getSamplesForStudy(String srsId) throws DocumentException {
-
-        String urlstr = "http://www.ebi.ac.uk/ena/data/view/" + srsId + "&display=xml";
-        Document doc = XMLUtils.getDocument(urlstr);
-
-        Element root = doc.getRootElement();
-        return getSamplesForStudy(root);
+        Element elem = null;
+        try {
+            elem = lookupElement.get(srsId);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (DocumentException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                throw new RuntimeException("Unrecognised ExecutionException", e2);
+            }
+        }
+        return getSamplesForStudy(elem);
     }
 
     public static Set<String> getSamplesForStudy(Element root) {
@@ -105,12 +137,19 @@ public class ENAUtils {
     }
     
     public static Set<String> getSubmissionsForSample(String srsId) throws DocumentException {
-
-        String urlstr = "http://www.ebi.ac.uk/ena/data/view/" + srsId + "&display=xml";
-        Document doc = XMLUtils.getDocument(urlstr);
-
-        Element root = doc.getRootElement();
-        return getStudiesForSample(root);
+        Element elem = null;
+        try {
+            elem = lookupElement.get(srsId);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (DocumentException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                throw new RuntimeException("Unrecognised ExecutionException", e2);
+            }
+        }
+        return getSubmissionsForSample(elem);
     }
 
     public static Set<String> getSubmissionsForSample(Element root) {
@@ -133,6 +172,79 @@ public class ENAUtils {
         }
         return studyIDs;
     }
+
+    public static Set<String> getStudiesForSubmission(String srsId) throws DocumentException {
+        Element elem = null;
+        try {
+            elem = lookupElement.get(srsId);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (DocumentException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                throw new RuntimeException("Unrecognised ExecutionException", e2);
+            }
+        }
+        return getStudiesForSubmission(elem);
+    }
+
+    public static Set<String> getStudiesForSubmission(Element root) {
+        Set<String> studyIDs = new HashSet<String>();
+        Element sample = XMLUtils.getChildByName(root, "SUBMISSION");
+        if (sample != null) {
+            Element links = XMLUtils.getChildByName(sample, "SUBMISSION_LINKS");
+            if (links != null) {
+                for (Element link : XMLUtils.getChildrenByName(links, "SUBMISSION_LINK")) {
+                    Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
+                    if (xref != null) {
+                        Element db = XMLUtils.getChildByName(xref, "DB");
+                        Element id = XMLUtils.getChildByName(xref, "ID");
+                        if (db != null && db.getText().equals("ENA-STUDY") && id != null) {
+                            studyIDs.addAll(getIdentifiers(id.getText()));
+                        }
+                    }
+                }
+            }
+        }
+        return studyIDs;
+    }
     
+    public static Set<String> getSamplesForSubmission(String srsId) throws DocumentException {
+        Element elem = null;
+        try {
+            elem = lookupElement.get(srsId);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (DocumentException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                throw new RuntimeException("Unrecognised ExecutionException", e2);
+            }
+        }
+        return getSamplesForSubmission(elem);
+    }
+
+    public static Set<String> getSamplesForSubmission(Element root) {
+        Set<String> sampleIDs = new HashSet<String>();
+        for (Element study : XMLUtils.getChildrenByName(root, "SUBMISSION")) {
+            for (Element studyLinks : XMLUtils.getChildrenByName(study, "SUBMISSION_LINKS")) {
+                for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "SUBMISSION_LINK")) {
+                    for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
+                        Element db = XMLUtils.getChildByName(xrefLink, "DB");
+                        Element id = XMLUtils.getChildByName(xrefLink, "ID");
+                        if (db.getText().equals("ENA-SAMPLE")) {
+                            if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
+                                log.debug("Processing samples "+id.getText() );
+                                sampleIDs.addAll(getIdentifiers(id.getText()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return sampleIDs;
+    }
     
 }
