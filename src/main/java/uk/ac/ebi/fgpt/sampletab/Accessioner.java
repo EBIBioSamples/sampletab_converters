@@ -254,31 +254,46 @@ public class Accessioner {
             if (group.getGroupAccession() == null) {
 
                 String name = group.getNodeName();
-                
-                log.info("Assigning new accession for "+submissionID+" : "+name);
+                String accession = null;
                 
                 statement = connect
-                        .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
-                statement.setString(1, name);
-                statement.setString(2, submissionID);
-                log.info(name);
-                log.info(submissionID);
-                statement.executeUpdate();
-                statement.close();
-
-                statement = connect
-                        .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
+                    .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
                 statement.setString(1, name);
                 statement.setString(2, submissionID);
                 log.trace(statement.toString());
                 results = statement.executeQuery();
-                results.next();
-                int accessionID = results.getInt(1);
-                String accession = "SAMEG" + accessionID;
-                statement.close();
-                results.close();
-
-                log.debug("Assigning " + accession + " to " + name);
+                
+                if (results.next()){
+                    accession = "SAMEG" + results.getInt(1);
+                    statement.close();
+                    results.close();
+                } else {
+                
+                    log.info("Assigning new accession for "+submissionID+" : "+name);
+                    
+                    statement = connect
+                            .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
+                    statement.setString(1, name);
+                    statement.setString(2, submissionID);
+                    log.info(name);
+                    log.info(submissionID);
+                    statement.executeUpdate();
+                    statement.close();
+    
+                    statement = connect
+                            .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
+                    statement.setString(1, name);
+                    statement.setString(2, submissionID);
+                    log.trace(statement.toString());
+                    results = statement.executeQuery();
+                    results.next();
+                    int accessionID = results.getInt(1);
+                    accession = "SAMEG" + accessionID;
+                    statement.close();
+                    results.close();
+    
+                    log.debug("Assigning " + accession + " to " + name);
+                }
                 group.setGroupAccession(accession);
             }
         } catch (SQLRecoverableException e) {
@@ -360,10 +375,10 @@ public class Accessioner {
             connect = ds.getConnection();
             
             //first do one query to retrieve all that have already got accessions
-            log.info("Starting bulkSamples");
-            bulkSamples(sampleIn, submission, prefix, table, 0, connect, ds);   
-            log.info("Starting bulkGroups");      
-            bulkGroups(sampleIn, submission, 0, connect, ds);                      
+            //log.info("Starting bulkSamples");
+            //bulkSamples(sampleIn, submission, prefix, table, 0, connect, ds);   
+            //log.info("Starting bulkGroups");      
+            //bulkGroups(sampleIn, submission, 0, connect, ds);                      
             
             
             //now assign and retrieve accessions for samples that do not have them
