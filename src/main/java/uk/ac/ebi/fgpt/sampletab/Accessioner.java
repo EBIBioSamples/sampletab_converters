@@ -12,11 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLRecoverableException;
 import java.util.Collection;
-import java.util.Properties;
 
 import javax.sql.DataSource;
-
-import oracle.jdbc.pool.OracleDataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +41,10 @@ public class Accessioner {
     private String password;
 
     private final SampleTabValidator validator = new SampleTabValidator();
+    
     private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
+    
+    private DataSource ds = null;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -355,7 +355,6 @@ public class Accessioner {
             throw new ParseException("Must specify a Submission Reference Layer MSI attribute.");
         }
 
-        String name;
         String submission = sampleIn.msi.submissionIdentifier;
         if (submission == null){
             throw new ParseException("Submission Identifier cannot be null");
@@ -374,12 +373,17 @@ public class Accessioner {
             return null;
         }
         
-        BoneCPDataSource ds = null;
-        try {
-            ds = new BoneCPDataSource();
-            ds.setJdbcUrl(connectURI);
-            ds.setUsername(username);
-            ds.setPassword(password);        
+        synchronized(this) {
+            if (ds == null) {
+                BoneCPDataSource dsB = new BoneCPDataSource();
+                dsB.setJdbcUrl(connectURI);
+                dsB.setUsername(username);
+                dsB.setPassword(password);
+                ds = dsB;
+            }
+        }
+        
+        try {     
             
             //first do one query to retrieve all that have already got accessions
             bulkSamples(sampleIn, submission, prefix, table, 0, ds);         
@@ -401,9 +405,6 @@ public class Accessioner {
         } catch (SQLException e) {
             throw e;
         } finally {
-            if (ds != null){
-                ds.close();
-            }
             
         }
 

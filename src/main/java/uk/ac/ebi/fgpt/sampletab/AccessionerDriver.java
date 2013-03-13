@@ -42,27 +42,27 @@ public class AccessionerDriver extends AbstractInfileDriver<AccessionerTask> {
         
         
         //load defaults
-        Properties oracleProperties = new Properties();
+        Properties properties = new Properties();
         try {
             InputStream is = AccessionerDriver.class.getResourceAsStream("/oracle.properties");
-            oracleProperties.load(is);
+            properties.load(is);
         } catch (IOException e) {
             log.error("Unable to read resource oracle.properties", e);
         }
         if (hostname == null){
-            hostname = oracleProperties.getProperty("hostname");
+            hostname = properties.getProperty("hostname");
         }
         if (port == null){
-            port = new Integer(oracleProperties.getProperty("port"));
+            port = new Integer(properties.getProperty("port"));
         }
         if (database == null){
-            database = oracleProperties.getProperty("database");
+            database = properties.getProperty("database");
         }
         if (username == null){
-            username = oracleProperties.getProperty("username");
+            username = properties.getProperty("username");
         }
         if (password == null){
-            password = oracleProperties.getProperty("password");
+            password = properties.getProperty("password");
         }
 
         //create the accessioner
