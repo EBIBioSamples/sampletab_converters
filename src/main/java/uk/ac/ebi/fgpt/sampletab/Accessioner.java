@@ -386,16 +386,20 @@ public class Accessioner {
         try {     
             
             //first do one query to retrieve all that have already got accessions
-            bulkSamples(sampleIn, submission, prefix, table, 0, ds);         
+            log.info("Starting bulkSamples");
+            bulkSamples(sampleIn, submission, prefix, table, 0, ds);   
+            log.info("Starting bulkGroups");      
             bulkGroups(sampleIn, submission, 0, ds);                      
             
             
             //now assign and retrieve accessions for samples that do not have them
+            log.info("Starting singleSample");      
             Collection<SampleNode> samples = sampleIn.scd.getNodes(SampleNode.class);
             for (SampleNode sample : samples) {
                 singleSample(sampleIn, sample, submission, prefix, table, 0, ds);
             }
-    
+
+            log.info("Starting singleGroup");      
             Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
             log.debug("got " + groups.size() + " groups.");
             for (GroupNode group : groups) {
