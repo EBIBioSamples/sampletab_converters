@@ -2,6 +2,8 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +21,7 @@ public class AccessionerENA extends Accessioner {
 
     //special case for ENA subs
     private boolean isENA(String submission) {
-        if (submission.matches("^GEN-[ESD]RP[0-9]{6,}$")){
+        if (submission.matches("^GEN-[ESD]R[AP][0-9]{6,}$")){
             log.info("Identified an ENA submission :"+submission);
             return true;
         }
@@ -27,21 +29,21 @@ public class AccessionerENA extends Accessioner {
     }
 
     @Override
-    protected void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries) throws SQLException{
+    protected void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries, DataSource ds) throws SQLException{
         if (isENA(submissionID)){
             submissionID = "ENA";
         } 
-        super.singleSample(sd, sample, submissionID, prefix, table, retries);
+        super.singleSample(sd, sample, submissionID, prefix, table, retries, ds);
     }
 
     @Override
-    protected void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries) throws SQLException {
+    protected void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries, DataSource ds) throws SQLException {
         if (isENA(submissionID)){
             submissionID = "ENA";
             //don't do as a bulk, but iterate over samples
             //doesn't report missing samples, but is tractable
         } else {
-            super.bulkSamples(sd, submissionID, prefix, table, retries);
+            super.bulkSamples(sd, submissionID, prefix, table, retries, ds);
         }
     }
     
