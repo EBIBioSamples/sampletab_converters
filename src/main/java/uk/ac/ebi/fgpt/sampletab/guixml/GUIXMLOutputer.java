@@ -359,12 +359,12 @@ public class GUIXMLOutputer {
                 if (!attributeHeaders.contains("Name")) attributeHeaders.add("Name");
                 
                 //this should not be null and not be zero-length
-                writeAttributeValue(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
-                if (!attributeHeaders.contains("Sample Accession")) attributeHeaders.add("Sample Accession");
+                writeAttributeValue(xmlWriter, "Accession", "false", "STRING", sample.getSampleAccession());
+                if (!attributeHeaders.contains("Accession")) attributeHeaders.add("Accession");
                 
                 if (sample.getSampleDescription() != null && sample.getSampleDescription().trim().length() > 0){
-                    writeAttributeValue(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
-                    if (!attributeHeaders.contains("Sample Description")) attributeHeaders.add("Sample Description");
+                    writeAttributeValue(xmlWriter, "Description", "false", "STRING", sample.getSampleDescription());
+                    if (!attributeHeaders.contains("Description")) attributeHeaders.add("Description");
                 }
                 
                 Map<String, List<SCDNodeAttribute>> orderedAttributes = new HashMap<String, List<SCDNodeAttribute>>();
@@ -450,45 +450,5 @@ public class GUIXMLOutputer {
             writeAttribute(xmlWriter, header, "false", "STRING");
         }
         xmlWriter.writeEndElement(); //SampleAttributes
-    }
-
-    private void writeSampleAttributes(XMLStreamWriter xmlWriter, SampleData st) throws XMLStreamException {
-        xmlWriter.writeStartElement("SampleAttributes");
-        List<List<String>> table;
-        //need to ensure only one thread is doing this at a time
-        synchronized(SCDNodeFactory.class) {
-            SCDTableBuilder tb = new SCDTableBuilder(st.scd.getRootNodes());
-            log.debug("Starting to assemble table...");
-            table = tb.getTable(); 
-            log.debug("Table assembled");
-            
-            //recreate the node factory to flush its internal cache
-            SCDNodeFactory.clear();
-            
-            List<String> headers = table.get(0);
-            List<String> used = new ArrayList<String>();
-            boolean inSample = false;
-            for (String header : headers){
-                if (header.equals("Sample Name")){
-                    inSample = true;
-                    writeAttribute(xmlWriter, header, "false", "STRING");
-                    used.add(header);
-                } else if (header.equals("Group Name")){
-                    inSample = false;
-                } else if (header.equals("Unit")){
-                    //do nothing
-                } else if (header.equals("Term Source REF")) {
-                    //do nothing
-                } else if (header.equals("Term Source ID")) {
-                    //do nothing
-                } else if (used.contains(header)) {
-                    //do nothing
-                } else if (inSample) {
-                    writeAttribute(xmlWriter, header, "false", "STRING");
-                    used.add(header);
-                }
-            }
-            xmlWriter.writeEndElement(); //SampleAttributes
-        }
     }
 }
