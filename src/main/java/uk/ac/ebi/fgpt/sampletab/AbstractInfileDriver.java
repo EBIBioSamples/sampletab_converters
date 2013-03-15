@@ -61,8 +61,8 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
                     }
                     
                 } else {
-                    log.info("Looking recursively for input files named "+inputFilename+" from "+startpaths);
                     for (File startpath : startpaths) {
+                        log.info("Looking recursively for input files named "+inputFilename+" from "+startpath);
                         if (inputFiles == null) {
                             inputFiles = new FileRecursiveIterable(inputFilename, startpath);
                         } else {
