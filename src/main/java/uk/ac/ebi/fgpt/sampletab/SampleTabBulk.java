@@ -51,18 +51,18 @@ public class SampleTabBulk extends AbstractInfileDriver {
     public SampleTabBulk(){
         //load defaults from file
         //will be overriden by command-line options later
-        Properties mysqlProperties = new Properties();
+        Properties properties = new Properties();
         try {
             InputStream is = SampleTabBulk.class.getResourceAsStream("/oracle.properties");
-            mysqlProperties.load(is);
+            properties.load(is);
         } catch (IOException e) {
             log.error("Unable to read resource oracle.properties", e);
         }
-        this.hostname = mysqlProperties.getProperty("hostname");
-        this.port = new Integer(mysqlProperties.getProperty("port"));
-        this.database = mysqlProperties.getProperty("database");
-        this.username = mysqlProperties.getProperty("username");
-        this.password = mysqlProperties.getProperty("password");
+        this.hostname = properties.getProperty("hostname");
+        this.port = new Integer(properties.getProperty("port"));
+        this.database = properties.getProperty("database");
+        this.username = properties.getProperty("username");
+        this.password = properties.getProperty("password");
         
         try {
             accessioner = new AccessionerENA(hostname, 
