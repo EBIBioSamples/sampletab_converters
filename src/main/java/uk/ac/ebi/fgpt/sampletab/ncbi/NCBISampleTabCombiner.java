@@ -57,7 +57,7 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
             this.inFile = inFile;
         }
 
-        public Collection<String> getGroupIds(Document xml) throws DocumentException, FileNotFoundException {
+        public Collection<String> getGroupIds(Document xml) throws DocumentException, IOException {
             Collection<String> groupids = new ArrayList<String>();
             Element root = xml.getRootElement();
             Element ids = XMLUtils.getChildByName(root, "Ids");
@@ -127,10 +127,13 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
             try {
                 groupids = getGroupIds(xml);
             } catch (DocumentException e) {
-                e.printStackTrace();
+                log.error("unable to get groupIds of "+inFile, e);
                 return;
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                log.error("unable to get groupIds of "+inFile, e);
+                return;
+            } catch (IOException e) {
+                log.error("unable to get groupIds of "+inFile, e);
                 return;
             }
 

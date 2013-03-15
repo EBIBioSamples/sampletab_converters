@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -252,6 +253,10 @@ public class MageTabToSampleTab {
                             }
                         } catch (DocumentException e) {
                             log.error("Problem getting accessions of "+value, e);
+                        } catch (MalformedURLException e) {
+                            log.error("Problem getting accessions of "+value, e);
+                        } catch (IOException e) {
+                            log.error("Problem getting accessions of "+value, e);
                         }
                     } else {
                         CommentAttribute comment = new CommentAttribute();
@@ -347,7 +352,7 @@ public class MageTabToSampleTab {
         SampleData st = new SampleData();
         st.msi.submissionTitle = mt.IDF.investigationTitle;
         st.msi.submissionDescription = mt.IDF.experimentDescription;
-        if (mt.IDF.publicReleaseDate == null){
+        if (mt.IDF.publicReleaseDate == null) {
             //null release date
             //ArrayExpress defaults to private
             //so set a date in the far future
@@ -368,11 +373,27 @@ public class MageTabToSampleTab {
         convertPeople(mt, st);
         convertOrganizations(mt,st);
         
+        //add link to AE
         Database dblink = new Database("ArrayExpress", 
                 "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
                 mt.IDF.accession);
-        
         st.msi.databases.add(dblink);
+        
+        //add link to SRA if present
+        if (mt.IDF.getComments().containsKey("SecondaryAccession")) {
+            for (String secondary : mt.IDF.getComments().get("SecondaryAccession")) {
+                if (secondary.matches("[DES]RP[0-9]+")) {
+                    log.info("This has an ENA SRA reference");
+                    
+                    dblink = new Database("ENA SRA", 
+                            "http://www.ebi.ac.uk/ena/data/view/" + secondary,
+                            secondary);
+                    st.msi.databases.add(dblink);
+                    
+                }
+            }
+        }
+        
 
         log.debug("Creating node names");
         for (SDRFNode sdrfnode : mt.SDRF.getRootNodes()) {

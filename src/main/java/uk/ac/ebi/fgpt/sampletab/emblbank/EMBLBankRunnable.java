@@ -237,10 +237,13 @@ public class EMBLBankRunnable implements Runnable {
         }
         s.addAttribute(new DatabaseAttribute(dbname, s.getNodeName(), "http://www.ebi.ac.uk/ena/data/view/"+s.getNodeName()));
         
+        //special actions for some types
+        
+        
         return s;
     }
     
-    public Set<Publication> getPublications(String[] line, EMBLBankHeaders headers){
+    public Set<Publication> getPublications(String[] line, EMBLBankHeaders headers) {
         Set<Publication> pubSet = new HashSet<Publication>();
         
         String[] doiStrings = new String[0];

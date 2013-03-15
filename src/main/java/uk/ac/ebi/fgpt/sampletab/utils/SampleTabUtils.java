@@ -106,12 +106,12 @@ public class SampleTabUtils {
         }
     }
     
-    public static boolean releaseInACentury(File sampletabFile) throws IOException, ParseException{
+    public static void releaseInACentury(File sampletabFile) throws IOException, ParseException{
         SampleTabSaferParser parser = new SampleTabSaferParser();
         SampleData sd = parser.parse(sampletabFile);
         if (sd == null){
             log.error("Failed to parse "+sampletabFile);
-            return false;
+            throw new IOException("Problem reading "+sampletabFile);
         } else if(sd.msi.submissionReleaseDate.before(new Date())) {
             //if its already public, then release it in 100 years
             Writer writer = null;
@@ -130,10 +130,8 @@ public class SampleTabUtils {
                     }
                 }
             }
-
-            return true;
         } else {
-            return false;
+            //date is in the future, no need to do anything
         }
     }
     

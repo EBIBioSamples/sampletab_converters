@@ -4,14 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 
 import org.dom4j.DocumentException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-import uk.ac.ebi.fgpt.sampletab.ncbi.NCBIBiosampleDriver;
 import uk.ac.ebi.fgpt.sampletab.ncbi.NCBIBiosampleRunnable;
 
 import junit.framework.TestCase;

@@ -2,10 +2,13 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -42,7 +45,7 @@ public class ENASRAWebDownload {
     public boolean download(String accession, File outdir) throws DocumentException, IOException {
         // TODO check accession is actually an ENA SRA study accession
 
-        String url = "http://www.ebi.ac.uk/ena/data/view/" + accession + "&display=xml";
+        URL url = new URL("http://www.ebi.ac.uk/ena/data/view/" + accession + "&display=xml");
 
         log.debug("Prepared for download "+accession);
 
@@ -71,7 +74,6 @@ public class ENASRAWebDownload {
         
         //check that it does not already exist
         boolean studyWriteOut = true;
-        boolean sampleWriteOut = true;
         
         if (studyFile.exists()){
             //conpare the document in memory with the document on disk
@@ -123,66 +125,64 @@ public class ENASRAWebDownload {
         // now there is a set of sample accessions they each need to be retrieved.
         log.debug("Prepared for ENA SRA sample XML download.");
         for (String sampleSRAAccession : sampleSRAAccessions) {
-            String sampleURL = "http://www.ebi.ac.uk/ena/data/view/" + sampleSRAAccession + "&display=xml";
-            File sampleFile = new File(outdir.getAbsoluteFile(), sampleSRAAccession + ".xml");
-            Document sampledoc = XMLUtils.getDocument(sampleURL);
-            
-            sampleWriteOut = false;
-            
-            if (!sampleFile.exists()){
-                //if it does not exist, it needs to be written
-                sampleWriteOut = true;
-            } else {
-                sampleWriteOut = true;
-                //compare the document in memory with the document on disk
-                //first need them to be in the right class for XMLTest to use
-                
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder builder;
-                try {
-                    builder = factory.newDocumentBuilder();
-                    org.w3c.dom.Document docA = builder.parse(new InputSource(new StringReader(sampledoc.asXML())));
-                    org.w3c.dom.Document docB = builder.parse(sampleFile);
-                    Diff diff = new Diff(docA, docB);
-                    if (diff.similar()){
-                        sampleWriteOut = false;
-                    }
-                } catch (ParserConfigurationException e) {
-                    //do nothing, file will be overwritten
-                } catch (SAXException e) {
-                    //do nothing, file will be overwritten
-                }
-            }
-            
-            if (sampleWriteOut){
-                //update the study write out variable if any of the samples were updated
-                //this is so it can return the correct value
-                
-                studyWriteOut = true;
-                log.info("Downloading "+sampleSRAAccession+" to disk");
-                //write the sample xml to disk
-                os = null;
-                try {
-                    os = new BufferedOutputStream(new FileOutputStream(sampleFile));
-                    //this pretty printing is messing up comparisons by trimming whitespace WITHIN an element
-                    //OutputFormat format = OutputFormat.createPrettyPrint();
-                    //XMLWriter writer = new XMLWriter(os, format);
-                    XMLWriter writer = new XMLWriter(os);
-                    writer.write(sampledoc);
-                    writer.flush();
-                    os.close();
-                } finally {
-                    if (os != null) {
-                        os.close();
-                    }
-                }
-            } else {
-                log.debug("Skipping "+sampleSRAAccession);
-            }
+            studyWriteOut |= downloadXML(sampleSRAAccession, outdir);
         }
         log.debug("ENA SRA study download complete.");
         return studyWriteOut;
-
+    }
+    
+    public boolean downloadXML(String sampleID, File outdir) throws IOException, DocumentException{
+        URL url = new URL("http://www.ebi.ac.uk/ena/data/view/" + sampleID + "&display=xml");
+        File sampleFile = new File(outdir.getAbsoluteFile(), sampleID + ".xml");
+        Document sampledoc = XMLUtils.getDocument(url);
+        
+        if (!sampleFile.exists()){
+            //if it does not exist, it needs to be written
+        } else {
+            //compare the document in memory with the document on disk
+            //first need them to be in the right class for XMLTest to use
+            
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder;
+            try {
+                builder = factory.newDocumentBuilder();
+                org.w3c.dom.Document docA = builder.parse(new InputSource(new StringReader(sampledoc.asXML())));
+                org.w3c.dom.Document docB = builder.parse(sampleFile);
+                Diff diff = new Diff(docA, docB);
+                if (diff.similar()){
+                    //equivalent to last file, no update needed
+                    return false;
+                }
+            } catch (ParserConfigurationException e) {
+                //do nothing, file will be overwritten
+            } catch (SAXException e) {
+                //do nothing, file will be overwritten
+            }
+        }
+        
+        log.info("Downloading "+sampleID+" to disk");
+        outdir.mkdirs();
+        //write the sample xml to disk
+        OutputStream os = null;
+        try {
+            os = new BufferedOutputStream(new FileOutputStream(sampleFile));
+            //this pretty printing is messing up comparisons by trimming whitespace WITHIN an element
+            //OutputFormat format = OutputFormat.createPrettyPrint();
+            //XMLWriter writer = new XMLWriter(os, format);
+            XMLWriter writer = new XMLWriter(os);
+            writer.write(sampledoc);
+            writer.flush();
+            os.close();
+        } finally {
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+        }
+        return true;
     }
 
     public static void main(String[] args) {

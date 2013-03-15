@@ -1,5 +1,8 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -24,9 +27,10 @@ public class ENAUtils {
     .maximumSize(1000)
     .build(
         new CacheLoader<String, Element>() {
-          public Element load(String id) throws DocumentException {
+          public Element load(String id) throws DocumentException, MalformedURLException, IOException {
               String urlstr = "http://www.ebi.ac.uk/ena/data/view/" + id + "&display=xml";
-              Document doc = XMLUtils.getDocument(urlstr);
+              URL url = new URL(urlstr);
+              Document doc = XMLUtils.getDocument(url);
 
               Element root = doc.getRootElement();
               return root;
@@ -62,7 +66,7 @@ public class ENAUtils {
         return newidents;
     }
 
-    public static Set<String> getStudiesForSample(String srsId) throws DocumentException {
+    public static Set<String> getStudiesForSample(String srsId) throws DocumentException, IOException {
         Element elem = null;
         try {
             elem = lookupElement.get(srsId);
@@ -70,6 +74,10 @@ public class ENAUtils {
             try {
                 throw e.getCause();
             } catch (DocumentException e2) {
+                throw e2;
+            } catch (MalformedURLException e2) {
+                throw e2;
+            } catch (IOException e2) {
                 throw e2;
             } catch (Throwable e2) {
                 throw new RuntimeException("Unrecognised ExecutionException", e2);
@@ -99,7 +107,7 @@ public class ENAUtils {
         return studyIDs;
     }
     
-    public static Set<String> getSamplesForStudy(String srsId) throws DocumentException {
+    public static Set<String> getSamplesForStudy(String srsId) throws DocumentException, IOException {
         Element elem = null;
         try {
             elem = lookupElement.get(srsId);
@@ -107,6 +115,10 @@ public class ENAUtils {
             try {
                 throw e.getCause();
             } catch (DocumentException e2) {
+                throw e2;
+            } catch (MalformedURLException e2) {
+                throw e2;
+            } catch (IOException e2) {
                 throw e2;
             } catch (Throwable e2) {
                 throw new RuntimeException("Unrecognised ExecutionException", e2);
@@ -136,7 +148,7 @@ public class ENAUtils {
         return sampleIDs;
     }
     
-    public static Set<String> getSubmissionsForSample(String srsId) throws DocumentException {
+    public static Set<String> getSubmissionsForSample(String srsId) throws DocumentException, IOException {
         Element elem = null;
         try {
             elem = lookupElement.get(srsId);
@@ -144,6 +156,10 @@ public class ENAUtils {
             try {
                 throw e.getCause();
             } catch (DocumentException e2) {
+                throw e2;
+            } catch (MalformedURLException e2) {
+                throw e2;
+            } catch (IOException e2) {
                 throw e2;
             } catch (Throwable e2) {
                 throw new RuntimeException("Unrecognised ExecutionException", e2);
@@ -173,7 +189,7 @@ public class ENAUtils {
         return studyIDs;
     }
 
-    public static Set<String> getStudiesForSubmission(String srsId) throws DocumentException {
+    public static Set<String> getStudiesForSubmission(String srsId) throws DocumentException, IOException {
         Element elem = null;
         try {
             elem = lookupElement.get(srsId);
@@ -181,6 +197,10 @@ public class ENAUtils {
             try {
                 throw e.getCause();
             } catch (DocumentException e2) {
+                throw e2;
+            } catch (MalformedURLException e2) {
+                throw e2;
+            } catch (IOException e2) {
                 throw e2;
             } catch (Throwable e2) {
                 throw new RuntimeException("Unrecognised ExecutionException", e2);
@@ -210,7 +230,7 @@ public class ENAUtils {
         return studyIDs;
     }
     
-    public static Set<String> getSamplesForSubmission(String srsId) throws DocumentException {
+    public static Set<String> getSamplesForSubmission(String srsId) throws DocumentException, IOException {
         Element elem = null;
         try {
             elem = lookupElement.get(srsId);
@@ -218,6 +238,10 @@ public class ENAUtils {
             try {
                 throw e.getCause();
             } catch (DocumentException e2) {
+                throw e2;
+            } catch (MalformedURLException e2) {
+                throw e2;
+            } catch (IOException e2) {
                 throw e2;
             } catch (Throwable e2) {
                 throw new RuntimeException("Unrecognised ExecutionException", e2);

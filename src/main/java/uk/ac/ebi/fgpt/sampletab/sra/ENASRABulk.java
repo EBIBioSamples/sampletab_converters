@@ -33,19 +33,19 @@ public class ENASRABulk {
     @Option(name = "--threaded", usage = "use multiple threads?")
     private boolean threaded = false;
 
-    @Option(name = "-n", aliases={"--hostname"}, usage = "MySQL server hostname")
+    @Option(name = "-n", aliases={"--hostname"}, usage = "Accession server hostname")
     private String hostname = null;
 
-    @Option(name = "-t", aliases={"--port"}, usage = "MySQL server port")
+    @Option(name = "-t", aliases={"--port"}, usage = "Accession server port")
     private Integer port = null;
 
-    @Option(name = "-d", aliases={"--database"}, usage = "MySQL server database")
+    @Option(name = "-d", aliases={"--database"}, usage = "Accession server database")
     private String database = null;
 
-    @Option(name = "-u", aliases={"--username"}, usage = "MySQL server username")
+    @Option(name = "-u", aliases={"--username"}, usage = "Accession server username")
     private String username = null;
 
-    @Option(name = "-p", aliases={"--password"}, usage = "MySQL server password")
+    @Option(name = "-p", aliases={"--password"}, usage = "Accession server password")
     private String password = null;
     
     private Logger log = LoggerFactory.getLogger(getClass());

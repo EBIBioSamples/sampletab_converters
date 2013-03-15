@@ -5,7 +5,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -21,51 +24,42 @@ public class XMLUtils {
 	private static ConcurrentLinkedQueue<SAXReader> readerQueue = new ConcurrentLinkedQueue<SAXReader>();
 
 	public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException{
-		SAXReader reader = readerQueue.poll();
-		if (reader == null){
-			reader = new SAXReader();
-		}
-		
-		//now do actual parsing
-		Document xml = null;
-		Reader r = null;
-		try {
-			r = new BufferedReader(new FileReader(xmlFile));
-			xml = reader.read(r);
-		} finally {
-			if (r != null){
-				try {
-					r.close();
-				} catch (IOException e){
-					//do nothing
-				}
-			}
-			//return the reader back to the queue
-			reader.resetHandlers();
-			readerQueue.add(reader);
-		}
-		
-		return xml;
+        return getDocument(new BufferedReader(new FileReader(xmlFile)));
 	}
 
-	public static Document getDocument(String xmlURL) throws DocumentException {
-		SAXReader reader = readerQueue.poll();
-		if (reader == null) {
-			reader = new SAXReader();
-		}
-
-		// now do actual parsing
-		Document xml = null;
-		try {
-			xml = reader.read(xmlURL);
-		} finally {
-			// return the reader back to the queue
-			reader.resetHandlers();
-			readerQueue.add(reader);
-		}
-
-		return xml;
+	public static Document getDocument(URL url) throws DocumentException, IOException {
+        return getDocument(new BufferedReader(new InputStreamReader(url.openStream())));
 	}
+
+    public static Document getDocument(String xmlString) throws DocumentException {
+        return getDocument(new StringReader(xmlString));
+    }
+    
+    public static Document getDocument(Reader r) throws DocumentException{
+        SAXReader reader = readerQueue.poll();
+        if (reader == null){
+            reader = new SAXReader();
+        }
+        
+        //now do actual parsing
+        Document xml = null;
+        try {
+            xml = reader.read(r);
+        } finally {
+            if (r != null){
+                try {
+                    r.close();
+                } catch (IOException e){
+                    //do nothing
+                }
+            }
+            //return the reader back to the queue
+            reader.resetHandlers();
+            readerQueue.add(reader);
+        }
+        
+        return xml;
+    }
 
 	public static Element getChildByName(Element parent, String name) {
 		if (parent == null)
