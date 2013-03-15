@@ -23,7 +23,10 @@ public class AccessionerENA extends Accessioner {
     //special case for ENA subs
     private boolean isENA(String submission) {
         if (submission.matches("^GEN-[ESD]R[AP][0-9]{6,}$")){
-            log.info("Identified an ENA submission :"+submission);
+            log.info("Identified an ENA SRA submission : "+submission);
+            return true;
+        } else if (submission.matches("^GEM-.*$")){
+            log.info("Identified an ENA EMBL-Bank submission : "+submission);
             return true;
         }
         return false;
