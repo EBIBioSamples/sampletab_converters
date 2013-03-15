@@ -424,7 +424,9 @@ public class Corrector {
                             || cha.getAttributeValue().toLowerCase().equals("--")
                             || cha.getAttributeValue().toLowerCase().equals("not applicable")
                             || cha.getAttributeValue().toLowerCase().equals("null")
-                            || cha.getAttributeValue().toLowerCase().equals("missing")) {
+                            || cha.getAttributeValue().toLowerCase().equals("missing")
+                            || cha.getAttributeValue().toLowerCase().equals("[not reported]")
+                            || cha.getAttributeValue().toLowerCase().equals("[not requested]")) {
                         //leave unknown-sex as is. implies it has been looked at and is non-determinate
                         s.removeAttribute(cha);
                         continue;
@@ -461,6 +463,10 @@ public class Corrector {
                 }
                 
                 //TODO promote some comments to characteristics
+                //age
+                //gender
+                //strain
+                //tissue
 
                 boolean isRelationship = false;
                 synchronized(AbstractRelationshipAttribute.class) {
