@@ -271,4 +271,35 @@ public class ENAUtils {
         return sampleIDs;
     }
     
+    public static Set<String> getSecondaryAccessions(String enaId)  throws DocumentException, IOException {
+        Element elem = null;
+        try {
+            elem = lookupElement.get(enaId);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (DocumentException e2) {
+                throw e2;
+            } catch (MalformedURLException e2) {
+                throw e2;
+            } catch (IOException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                throw new RuntimeException("Unrecognised ExecutionException", e2);
+            }
+        }
+        return getSecondaryAccessions(elem);
+    }
+    
+    public static Set<String> getSecondaryAccessions(Element root) {
+        Set<String> secondarys = new HashSet<String>();
+        for (Element entry : XMLUtils.getChildrenByName(root, "entry")) {
+            for (Element secondary : XMLUtils.getChildrenByName(entry, "secondaryAccession")) {
+                secondarys.add(secondary.getTextTrim());
+            }
+        }
+        return secondarys;
+    }
+    
+    
 }
