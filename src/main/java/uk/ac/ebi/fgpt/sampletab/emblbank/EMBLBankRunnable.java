@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.dom4j.DocumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAtt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
@@ -237,7 +239,17 @@ public class EMBLBankRunnable implements Runnable {
         }
         s.addAttribute(new DatabaseAttribute(dbname, s.getNodeName(), "http://www.ebi.ac.uk/ena/data/view/"+s.getNodeName()));
         
-        //special actions for some types
+        //query embl-bank for synonyms
+        try {
+            for (String secondaryAccession : ENAUtils.getSecondaryAccessions(s.getNodeName())) {
+                CommentAttribute synonymattrib = new CommentAttribute("Synonym", secondaryAccession);
+                s.addAttribute(synonymattrib, 0);
+            }
+        } catch (DocumentException e) {
+            log.error("Problem getting secondary accessions of s.getNodeName()", e);
+        } catch (IOException e) {
+            log.error("Problem getting secondary accessions of s.getNodeName()", e);
+        }
         
         
         return s;
@@ -406,7 +418,7 @@ public class EMBLBankRunnable implements Runnable {
         norm.normalize(st);
         
         log.info("Writing "+sampletabPre);
-        synchronized(SampleTabWriter.class){
+        synchronized(SampleTabWriter.class) {
             SampleTabWriter sampletabwriter = null;
             try {
                 sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(sampletabPre)));
@@ -414,7 +426,7 @@ public class EMBLBankRunnable implements Runnable {
             } catch (IOException e) {
                 log.error("Unable to write to "+sampletabPre, e);
             } finally {
-                if (sampletabwriter != null){
+                if (sampletabwriter != null) {
                     try {
                         sampletabwriter.close();
                     } catch (IOException e) {
