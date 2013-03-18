@@ -38,7 +38,7 @@ public class AccessionerDriver extends AbstractInfileDriver<AccessionerTask> {
     }
 
     @Override
-    protected void preProcess(){
+    protected void preProcess() {
         
         
         //load defaults
@@ -49,19 +49,19 @@ public class AccessionerDriver extends AbstractInfileDriver<AccessionerTask> {
         } catch (IOException e) {
             log.error("Unable to read resource oracle.properties", e);
         }
-        if (hostname == null){
+        if (hostname == null) {
             hostname = properties.getProperty("hostname");
         }
         if (port == null){
             port = new Integer(properties.getProperty("port"));
         }
-        if (database == null){
+        if (database == null) {
             database = properties.getProperty("database");
         }
-        if (username == null){
+        if (username == null) {
             username = properties.getProperty("username");
         }
-        if (password == null){
+        if (password == null) {
             password = properties.getProperty("password");
         }
 
@@ -84,5 +84,12 @@ public class AccessionerDriver extends AbstractInfileDriver<AccessionerTask> {
         File outputFile = new File(inputFile.getParentFile(), outputFilename);
         Corrector c = new Corrector();
         return new AccessionerTask(inputFile, outputFile, accessioner, c);
+    }
+    
+    @Override
+    protected void postProcess() {
+        if (accessioner != null){
+            accessioner.close();
+        }
     }
 }

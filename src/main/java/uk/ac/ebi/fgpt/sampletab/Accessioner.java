@@ -44,7 +44,7 @@ public class Accessioner {
     
     private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
     
-    private DataSource ds = null;
+    private BoneCPDataSource ds = null;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -56,6 +56,12 @@ public class Accessioner {
         this.hostname = host;
         this.port = port;
         this.database = database;
+    }
+    
+    public void close() {
+        if (ds != null) {
+            ds.close();
+        }
     }
     
     public SampleData convert(String sampleTabFilename) throws IOException, ParseException, SQLException {
@@ -361,11 +367,10 @@ public class Accessioner {
         
         synchronized(this) {
             if (ds == null) {
-                BoneCPDataSource dsB = new BoneCPDataSource();
-                dsB.setJdbcUrl(connectURI);
-                dsB.setUsername(username);
-                dsB.setPassword(password);
-                ds = dsB;
+                BoneCPDataSource ds = new BoneCPDataSource();
+                ds.setJdbcUrl(connectURI);
+                ds.setUsername(username);
+                ds.setPassword(password);
             }
         }
 
