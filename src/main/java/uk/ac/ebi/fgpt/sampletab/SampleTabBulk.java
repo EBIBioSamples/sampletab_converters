@@ -38,6 +38,9 @@ public class SampleTabBulk extends AbstractInfileDriver {
 
     @Option(name = "--password", aliases={"-p"}, usage = "server password")
     private String password  = null;
+    
+    @Option(name = "--force", aliases={"-f"}, usage = "overwrite targets")
+    private boolean force = false;
 
 
     private Corrector corrector = new Corrector();
@@ -89,7 +92,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
     }
     
     public void process(File subdir, File scriptdir){
-        Runnable t = new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, derivedFrom);
+        Runnable t = new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, derivedFrom, force);
         t.run();
     }
     
@@ -102,10 +105,11 @@ public class SampleTabBulk extends AbstractInfileDriver {
         private final SameAs sameAs;
         private final DerivedFrom derivedFrom;
         private final Accessioner accessioner;
+        private final boolean force;
         
         private Logger log = LoggerFactory.getLogger(getClass());
         
-        public DoProcessFile(File subdir, File scriptdir, Corrector corrector, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom){
+        public DoProcessFile(File subdir, File scriptdir, Corrector corrector, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom, boolean force){
             
             sampletabpre = new File(subdir, "sampletab.pre.txt");
             sampletab = new File(subdir, "sampletab.txt");
@@ -115,12 +119,14 @@ public class SampleTabBulk extends AbstractInfileDriver {
             this.sameAs = sameAs;
             this.derivedFrom = derivedFrom;
             this.accessioner = accessioner;
+            this.force = force;
         }
 
         public void run() {
             
             // accession sampletab.pre.txt to sampletab.txt
-            if (!sampletab.exists()
+            if (force
+                    || !sampletab.exists()
                     || sampletab.length() == 0
                     || sampletab.lastModified() < sampletabpre.lastModified()) {
                 log.info("Processing " + sampletab);
@@ -202,7 +208,8 @@ public class SampleTabBulk extends AbstractInfileDriver {
             }
 
             // preprocess to load
-            if (!sampletabtoload.exists()
+            if (force 
+                    || !sampletabtoload.exists()
                     || sampletabtoload.length() == 0
                     || sampletabtoload.lastModified() < sampletab.lastModified()) {
                 log.info("Processing " + sampletabtoload);
@@ -256,7 +263,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
     protected Runnable getNewTask(File inputFile) {
         File scriptdir = new File(scriptDirname);
         File subdir = inputFile.getAbsoluteFile().getParentFile();
-        return new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, derivedFrom);
+        return new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, derivedFrom, force);
     }
     
 }
