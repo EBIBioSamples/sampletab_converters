@@ -371,6 +371,12 @@ public class Accessioner {
                 ds.setJdbcUrl(connectURI);
                 ds.setUsername(username);
                 ds.setPassword(password);
+                
+                //remember, there is a limit of 500 on the database
+                //set each accessioner to a limit of 10, and always run less than 50 cluster jobs
+                ds.setPartitionCount(1); 
+                ds.setMaxConnectionsPerPartition(10); 
+                ds.setAcquireIncrement(2); 
             }
         }
 
