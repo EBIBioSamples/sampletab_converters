@@ -1,6 +1,9 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.concurrent.ExecutionException;
 
@@ -51,17 +54,21 @@ public class TaxonUtils {
             .build(new CacheLoader<String, Integer>() {
                 public Integer load(String taxName) throws TaxonException {
                  // TODO add meta information identifying this tool
-                    String URL;
+                    URL url;
                     try {
-                        URL = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=taxonomy&term="
-                                + URLEncoder.encode(taxName, "UTF-8");
+                        url = new URL("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=taxonomy&term="
+                                + URLEncoder.encode(taxName, "UTF-8"));
                     } catch (UnsupportedEncodingException e) {
+                        throw new TaxonException(e);
+                    } catch (MalformedURLException e) {
                         throw new TaxonException(e);
                     }
                     Document doc;
                     try {
-                        doc = XMLUtils.getDocument(URL);
+                        doc = XMLUtils.getDocument(url);
                     } catch (DocumentException e) {
+                        throw new TaxonException(e);
+                    } catch (IOException e) {
                         throw new TaxonException(e);
                     }
                     Element root = doc.getRootElement();
