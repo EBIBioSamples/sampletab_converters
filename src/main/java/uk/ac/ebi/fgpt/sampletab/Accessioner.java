@@ -367,7 +367,7 @@ public class Accessioner {
         
         synchronized(this) {
             if (ds == null) {
-                BoneCPDataSource ds = new BoneCPDataSource();
+                ds = new BoneCPDataSource();
                 ds.setJdbcUrl(connectURI);
                 ds.setUsername(username);
                 ds.setPassword(password);
