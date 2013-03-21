@@ -214,7 +214,7 @@ public class Cosmic extends AbstractDriver {
                         }
                     }
                     
-                    sample.addAttribute(new DatabaseAttribute("COSMIC", sample.getNodeName(), "http://cancer.sanger.ac.uk/cosmic/sample/overview?name="+sample.getNodeName()));
+                    sample.addAttribute(new DatabaseAttribute("COSMIC", sample.getNodeName(), "http://cancer.sanger.ac.uk/cosmic/sample/overview?id="+sample.getNodeName()));
                 }
             }
             
