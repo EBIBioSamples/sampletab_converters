@@ -386,6 +386,7 @@ public class Accessioner {
             connect = ds.getConnection();
             
             //first do one query to retrieve all that have already got accessions
+            ////actually, this slows things down because the index is on name+submission not submission
             //log.info("Starting bulkSamples");
             //bulkSamples(sampleIn, submission, prefix, table, 0, connect, ds);   
             //log.info("Starting bulkGroups");      

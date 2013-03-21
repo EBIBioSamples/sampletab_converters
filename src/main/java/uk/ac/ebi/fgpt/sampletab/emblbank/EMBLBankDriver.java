@@ -86,7 +86,7 @@ public class EMBLBankDriver {
     
     
     
-    private List<String[]> getLines(File inputFile){
+    private List<String[]> getLines(File inputFile) {
 
         CSVReader reader = null;
         
@@ -168,7 +168,7 @@ public class EMBLBankDriver {
         log.info("Starting tasks");
         
         ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        for (String groupID : groupMap.keySet()){
+        for (String groupID : groupMap.keySet()) {
             Runnable t = new EMBLBankRunnable(lines, groupMap, groupID, outputFile, prefix, wgs, tsa, bar, cds);
             pool.execute(t);
         }
@@ -182,7 +182,7 @@ public class EMBLBankDriver {
                 long starttime = System.currentTimeMillis();
                 int startcount = groupMap.keySet().size();
                 DateFormat dateformat = new SimpleDateFormat();
-                while (!pool.awaitTermination(1, TimeUnit.MINUTES)){
+                while (!pool.awaitTermination(1, TimeUnit.MINUTES)) {
                     int pendingcount = groupMap.keySet().size();
                     float percentagedone = new Float(startcount-pendingcount) / new Float(startcount);
                     long totaltime = (long) (new Float(System.currentTimeMillis()-starttime) / percentagedone);
@@ -221,14 +221,14 @@ public class EMBLBankDriver {
         }
 
         inputFile = new File(inputFilename);
-        if (!inputFile.exists()){
+        if (!inputFile.exists()) {
             log.error("Unable to load "+inputFilename);
             System.exit(2);
             return;
         }
         
         outputFile = new File(outputFilename);
-        if (inputFile.exists() && !outputFile.isDirectory()){
+        if (inputFile.exists() && !outputFile.isDirectory()) {
             log.error("Unable to output to "+outputFilename);
             System.exit(3);
             return;

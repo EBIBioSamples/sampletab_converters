@@ -37,6 +37,8 @@ public class Validator extends AbstractInfileDriver {
             
         }
         
+        //TODO
+        //ensure every sample has a "Sample Accession" attribute
         
         @Override
         public void startElement(String uri, String localName, String name, Attributes atts) throws SAXException {

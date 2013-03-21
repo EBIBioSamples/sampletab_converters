@@ -36,8 +36,6 @@ import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
 
 public class EMBLBankRunnable implements Runnable {
 
-
-
     private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     Pattern latLongPattern = Pattern.compile("([0-9]+\\.?[0-9]*) ([NS]) ([0-9]+\\.?[0-9]*) ([EW])");
     

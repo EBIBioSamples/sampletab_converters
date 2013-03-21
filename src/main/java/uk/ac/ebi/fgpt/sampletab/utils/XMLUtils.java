@@ -23,7 +23,7 @@ public class XMLUtils {
 
 	private static ConcurrentLinkedQueue<SAXReader> readerQueue = new ConcurrentLinkedQueue<SAXReader>();
 
-	public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException{
+	public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException {
         return getDocument(new BufferedReader(new FileReader(xmlFile)));
 	}
 
@@ -35,9 +35,9 @@ public class XMLUtils {
         return getDocument(new StringReader(xmlString));
     }
     
-    public static Document getDocument(Reader r) throws DocumentException{
+    public static Document getDocument(Reader r) throws DocumentException {
         SAXReader reader = readerQueue.poll();
-        if (reader == null){
+        if (reader == null) {
             reader = new SAXReader();
         }
         
@@ -46,10 +46,10 @@ public class XMLUtils {
         try {
             xml = reader.read(r);
         } finally {
-            if (r != null){
+            if (r != null) {
                 try {
                     r.close();
-                } catch (IOException e){
+                } catch (IOException e) {
                     //do nothing
                 }
             }
