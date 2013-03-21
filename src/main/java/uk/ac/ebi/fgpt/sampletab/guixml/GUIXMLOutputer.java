@@ -356,15 +356,15 @@ public class GUIXMLOutputer {
 
                 //this should not be null and not be zero-length
                 writeAttributeValue(xmlWriter, "Sample Name", "false", "STRING", sample.getNodeName());
-                if (!attributeHeaders.contains("Sample Name")) attributeHeaders.add("Name");
+                if (!attributeHeaders.contains("Sample Name")) attributeHeaders.add("Sample Name");
                 
                 //this should not be null and not be zero-length
                 writeAttributeValue(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
-                if (!attributeHeaders.contains("Sample Accession")) attributeHeaders.add("Accession");
+                if (!attributeHeaders.contains("Sample Accession")) attributeHeaders.add("Sample Accession");
                 
                 if (sample.getSampleDescription() != null && sample.getSampleDescription().trim().length() > 0){
                     writeAttributeValue(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
-                    if (!attributeHeaders.contains("Sample Description")) attributeHeaders.add("Description");
+                    if (!attributeHeaders.contains("Sample Description")) attributeHeaders.add("Sample Description");
                 }
                 
                 Map<String, List<SCDNodeAttribute>> orderedAttributes = new HashMap<String, List<SCDNodeAttribute>>();
