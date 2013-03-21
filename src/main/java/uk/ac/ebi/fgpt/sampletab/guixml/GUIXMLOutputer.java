@@ -355,16 +355,16 @@ public class GUIXMLOutputer {
                 xmlWriter.writeAttribute("id", sample.getSampleAccession());
 
                 //this should not be null and not be zero-length
-                writeAttributeValue(xmlWriter, "Name", "false", "STRING", sample.getNodeName());
-                if (!attributeHeaders.contains("Name")) attributeHeaders.add("Name");
+                writeAttributeValue(xmlWriter, "Sample Name", "false", "STRING", sample.getNodeName());
+                if (!attributeHeaders.contains("Sample Name")) attributeHeaders.add("Name");
                 
                 //this should not be null and not be zero-length
-                writeAttributeValue(xmlWriter, "Accession", "false", "STRING", sample.getSampleAccession());
-                if (!attributeHeaders.contains("Accession")) attributeHeaders.add("Accession");
+                writeAttributeValue(xmlWriter, "Sample Accession", "false", "STRING", sample.getSampleAccession());
+                if (!attributeHeaders.contains("Sample Accession")) attributeHeaders.add("Accession");
                 
                 if (sample.getSampleDescription() != null && sample.getSampleDescription().trim().length() > 0){
-                    writeAttributeValue(xmlWriter, "Description", "false", "STRING", sample.getSampleDescription());
-                    if (!attributeHeaders.contains("Description")) attributeHeaders.add("Description");
+                    writeAttributeValue(xmlWriter, "Sample Description", "false", "STRING", sample.getSampleDescription());
+                    if (!attributeHeaders.contains("Sample Description")) attributeHeaders.add("Description");
                 }
                 
                 Map<String, List<SCDNodeAttribute>> orderedAttributes = new HashMap<String, List<SCDNodeAttribute>>();
