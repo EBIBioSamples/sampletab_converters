@@ -77,7 +77,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
         }
     }
     
-    public SampleTabBulk(String hostname, Integer port, String database, String username, String password){
+    public SampleTabBulk(String hostname, Integer port, String database, String username, String password, boolean force){
         this();
         if (hostname != null)
             this.hostname = hostname;
@@ -89,6 +89,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
             this.username = username;
         if (password != null)
             this.password = password;
+        this.force = force;
     }
     
     public void process(File subdir, File scriptdir){
@@ -247,7 +248,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
 
     
     @Override
-    public void preProcess(){
+    public void preProcess() {
 
         
         File scriptdir = new File(scriptDirname);
