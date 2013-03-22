@@ -16,37 +16,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
 import uk.ac.ebi.fgpt.sampletab.SampleTabBulk;
 import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 
-public class ENASRABulk {
+public class ENASRABulk extends AbstractInfileDriver {
 
-    @Option(name = "-h", aliases={"--help"}, usage = "display help")
-    private boolean help;
+    @Option(name = "--scripts", aliases={"-c"}, usage = "script directory")
+    private File scriptDir;
 
-    @Argument(required=true, index=0, metaVar="SCRIPTDIR", usage = "script directory")
-    private String scriptDirname;
+    @Option(name = "--hostname", aliases={"-n"}, usage = "server hostname")
+    private String hostname;
 
-    @Argument(required=true, index=1, metaVar="INPUT", usage = "input filenames or globs")
-    private List<String> inputFilenames;
-    
-    @Option(name = "--threaded", usage = "use multiple threads?")
-    private boolean threaded = false;
-
-    @Option(name = "-n", aliases={"--hostname"}, usage = "Accession server hostname")
-    private String hostname = null;
-
-    @Option(name = "-t", aliases={"--port"}, usage = "Accession server port")
+    @Option(name = "--port", usage = "server port")
     private Integer port = null;
 
-    @Option(name = "-d", aliases={"--database"}, usage = "Accession server database")
+    @Option(name = "--database", aliases={"-d"}, usage = "server database")
     private String database = null;
 
-    @Option(name = "-u", aliases={"--username"}, usage = "Accession server username")
+    @Option(name = "--username", aliases={"-u"}, usage = "server username")
     private String username = null;
 
-    @Option(name = "-p", aliases={"--password"}, usage = "Accession server password")
-    private String password = null;
+    @Option(name = "--password", aliases={"-p"}, usage = "server password")
+    private String password  = null;
+    
+    @Option(name = "--force", aliases={"-f"}, usage = "overwrite targets")
+    private boolean force = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -55,11 +50,9 @@ public class ENASRABulk {
     
     private class DoProcessFile implements Runnable {
         private final File subdir;
-        private final File scriptdir;
         
-        public DoProcessFile(File subdir, File scriptdir){
+        public DoProcessFile(File subdir){
             this.subdir = subdir;
-            this.scriptdir = scriptdir;
         }
 
         public void run() {
@@ -100,9 +93,9 @@ public class ENASRABulk {
             }
             
             if (stcb == null){
-                stcb = new SampleTabBulk(hostname, port, database, username, password);
+                stcb = new SampleTabBulk(hostname, port, database, username, password, force);
             }
-            stcb.process(subdir, scriptdir);
+            stcb.process(subdir, scriptDir);
         }
         
     }
@@ -111,56 +104,19 @@ public class ENASRABulk {
         new ENASRABulk().doMain(args);
     }
 
-    public void doMain(String[] args) {
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments.
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printSingleLineUsage(System.err);
-            System.err.println();
-            parser.printUsage(System.err);
-            System.err.println();
+    @Override
+    public void preProcess() {
+        
+        if (!scriptDir.exists() && !scriptDir.isDirectory()) {
+            log.error("Script directory missing or is not a directory");
             System.exit(1);
             return;
         }
-        
+    }
 
-        File scriptdir = new File(scriptDirname);
-        scriptdir = scriptdir.getAbsoluteFile();
-
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
-
-        for (String inputFilename : inputFilenames){
-            for(File subdir : new FileGlobIterable(inputFilename)){
-                if (subdir.isDirectory()) {
-                    Runnable t = new DoProcessFile(subdir, scriptdir);
-                    if (threaded) {
-                        pool.execute(t);
-                    } else {
-                        t.run();
-                    }
-                }
-            }
-        }
-                
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination", e);
-            }
-        }
+    @Override
+    protected Runnable getNewTask(File inputFile) {
+        File subdir = inputFile.getAbsoluteFile().getParentFile();
+        return new DoProcessFile(subdir);
     }
 }

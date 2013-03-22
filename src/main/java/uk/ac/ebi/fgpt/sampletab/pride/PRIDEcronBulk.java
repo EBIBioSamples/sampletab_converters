@@ -17,43 +17,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
+import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
 import uk.ac.ebi.fgpt.sampletab.SampleTabBulk;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 
-public class PRIDEcronBulk {
+public class PRIDEcronBulk extends AbstractInfileDriver {
 
-    @Option(name = "-h", aliases={"--help"}, usage = "display help")
-    private boolean help;
-
-    //TODO make required
-    @Option(name = "-i", aliases={"--input"}, usage = "input directory")
-    private String inputFilename;
-
-    //TODO make required
-    @Option(name = "-s", aliases={"--scripts"}, usage = "script directory")
-    private String scriptDirname;
 
     //TODO make required
     @Option(name = "-j", aliases={"--projects"}, usage = "projects filename")
-    private String projectsFilename;
+    private File projectsFile;
     
-    @Option(name = "--threaded", usage = "use multiple threads?")
-    private boolean threaded = false;
 
-    @Option(name = "-n", aliases={"--hostname"}, usage = "MySQL server hostname")
-    private String hostname = null;
+    @Option(name = "--scripts", aliases={"-c"}, usage = "script directory")
+    private File scriptDir;
 
-    @Option(name = "-t", aliases={"--port"}, usage = "MySQL server port")
+    @Option(name = "--hostname", aliases={"-n"}, usage = "server hostname")
+    private String hostname;
+
+    @Option(name = "--port", usage = "server port")
     private Integer port = null;
 
-    @Option(name = "-d", aliases={"--database"}, usage = "MySQL server database")
+    @Option(name = "--database", aliases={"-d"}, usage = "server database")
     private String database = null;
 
-    @Option(name = "-u", aliases={"--username"}, usage = "MySQL server username")
+    @Option(name = "--username", aliases={"-u"}, usage = "server username")
     private String username = null;
 
-    @Option(name = "-p", aliases={"--password"}, usage = "MySQL server password")
-    private String password = null;
+    @Option(name = "--password", aliases={"-p"}, usage = "server password")
+    private String password  = null;
+    
+    @Option(name = "--force", aliases={"-f"}, usage = "overwrite targets")
+    private boolean force = false;
+    
     
     
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -64,13 +60,9 @@ public class PRIDEcronBulk {
     
     private class DoProcessFile implements Runnable {
         private final File subdir;
-        private final File scriptdir;
-        private final File projectsFile;
         
-        public DoProcessFile(File subdir, File scriptdir, File projectsFile){
+        public DoProcessFile(File subdir){
             this.subdir = subdir;
-            this.scriptdir = scriptdir;
-            this.projectsFile = projectsFile; 
         }
 
         public void run() {
@@ -109,9 +101,9 @@ public class PRIDEcronBulk {
             }
             
             if (stcb == null){
-                stcb = new SampleTabBulk(hostname, port, database, username, password);
+                stcb = new SampleTabBulk(hostname, port, database, username, password, force);
             }
-            stcb.process(subdir, scriptdir);
+            stcb.process(subdir, scriptDir);
         }
         
     }
@@ -120,84 +112,31 @@ public class PRIDEcronBulk {
         new PRIDEcronBulk().doMain(args);
     }
 
-    public void doMain(String[] args) {
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments.
-            parser.parseArgument(args);
-            // TODO check for extra arguments?
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printSingleLineUsage(System.err);
-            System.err.println();
-            parser.printUsage(System.err);
-            System.err.println();
-            System.exit(1);
-            return;
-        }
+    @Override
+    public void preProcess() {
         
-        File outdir = new File(inputFilename);
-        
-        if (outdir.exists() && !outdir.isDirectory()) {
-            log.error("Target is not a directory");
-            System.exit(1);
-            return;
-        }
-
-        if (!outdir.exists())
-            outdir.mkdirs();
-
-        File scriptdir = new File(scriptDirname);
-        
-        if (!outdir.exists() && !outdir.isDirectory()) {
+        if (!scriptDir.exists() && !scriptDir.isDirectory()) {
             log.error("Script directory missing or is not a directory");
             System.exit(1);
             return;
         }
-        
-        log.info("Parsing projects file "+projectsFilename);
-        
-        File projectsFile = new File(projectsFilename);
+        log.info("Parsing projects file "+projectsFile);
 
         //read all the projects
         Map<String, Set<String>> projects;
         try {
             projects = PRIDEutils.loadProjects(projectsFile);
         } catch (IOException e) {
-            log.error("Unable to read projects file "+projectsFilename, e);
+            log.error("Unable to read projects file "+projectsFile, e);
             System.exit(1);
             return;
         }
         
-        
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+    }
 
-        for (String name: projects.keySet()){
-            File subdir = new File(outdir, Collections.min(projects.get(name)));
-            Runnable t = new DoProcessFile(subdir, scriptdir, projectsFile);
-            if (threaded) {
-                pool.execute(t);
-            } else {
-                t.run();
-            }
-        }
-        
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination", e);
-            }
-        }
+    @Override
+    protected Runnable getNewTask(File inputFile) {
+        File subdir = inputFile.getAbsoluteFile().getParentFile();
+        return new DoProcessFile(subdir);
     }
 }
