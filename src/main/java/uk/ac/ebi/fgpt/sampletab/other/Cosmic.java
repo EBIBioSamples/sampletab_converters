@@ -65,7 +65,7 @@ public class Cosmic extends AbstractDriver {
             while ((nextLine = reader.readNext()) != null) {
                 linecount += 1;
                 if (linecount % 10000 == 0){
-                    log.info("processing line "+linecount);
+                    log.info("Processing line "+linecount);
                 }
                                 
                 if (headers == null || linecount == 0) {
@@ -83,7 +83,7 @@ public class Cosmic extends AbstractDriver {
                             groupID = "other";
                         }
                     } else if (!groupID.matches("[0-9]+")){
-                        log.error("Strange pubmedid "+groupID);
+                        log.error("Strange PubMed ID "+groupID);
                     }
                     
                     if (!grouping.containsKey(groupID)){
@@ -164,8 +164,11 @@ public class Cosmic extends AbstractDriver {
                             e.printStackTrace();
                         }
                     }
-
-                    sample.addAttribute(new CommentAttribute("synonym", sampleName));
+                    
+                    //check that synonyms are actually needed
+                    if (!sampleName.equals(sampleID)) {
+                        sample.addAttribute(new CommentAttribute("synonym", sampleName));
+                    }
                     sample.addAttribute(new CommentAttribute("ID tumor", line.get("ID_tumor")));
                     sample.addAttribute(new OrganismAttribute("Homo sapiens", st.msi.getOrAddTermSource(ncbitaxonomy), 9606));
                     
@@ -193,6 +196,10 @@ public class Cosmic extends AbstractDriver {
                     if (!line.get("Tumour origin").equals("NS")) {
                         sample.addAttribute(new CharacteristicAttribute("tumour origin", line.get("Tumour origin")));
                     }
+                    
+                    //add genes
+                    sample.addAttribute(new CharacteristicAttribute("mutated gene", line.get("Gene name")));
+                    
                     
                     for (String part : line.get("Comments").split(",")){
                         part = part.trim();
