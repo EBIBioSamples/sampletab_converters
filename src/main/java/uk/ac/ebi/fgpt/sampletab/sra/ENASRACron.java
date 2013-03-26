@@ -22,13 +22,13 @@ import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class ENASRACron {
 
-    @Option(name = "-h", aliases = { "--help" }, usage = "display help")
+    @Option(name = "--help", aliases = { "-h" }, usage = "display help")
     private boolean help;
 
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output directory")
     private String outputDirName;
 
-    @Option(name = "--threaded", usage = "use multiple threads?")
+    @Option(name = "--threaded", aliases = { "-t" }, usage = "use multiple threads?")
     private boolean threaded = false;
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
@@ -78,7 +78,10 @@ public class ENASRACron {
         }
 
         int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+        ExecutorService pool = null;
+        if (threaded) {
+            pool = Executors.newFixedThreadPool(nothreads);
+        }
         
         //first get a map of all possible submissions
         //this might take a while
@@ -97,7 +100,7 @@ public class ENASRACron {
                 toDelete.add(subId);
             }
         }
-         */
+        */
         log.info("Processing updates");
         
         //restart the pool for part II        

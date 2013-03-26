@@ -27,20 +27,22 @@ public class ENASRAGrouper {
     private Logger log = LoggerFactory.getLogger(getClass());
     
     public ENASRAGrouper(ExecutorService pool) {
-        populate("SRS", 0, 500000, pool);
-        populate("ERS", 0, 250000, pool);
         populate("DRS", 0, 5000, pool);
-        //populate("SRS", 0, 500000, pool);
-        //populate("ERS", 0, 250000, pool);
-        //populate("DRS", 0, 5000, pool);
+        populate("ERS", 0, 250000, pool);
+        populate("SRS", 0, 500000, pool);
+        //populate("DRS", 0, 50, pool);
+        //populate("ERS", 0, 2500, pool);
+        //populate("SRS", 0, 5000, pool);
         
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination", e);
+        if (pool != null) {
+            synchronized (pool) {
+                pool.shutdown();
+                try {
+                    // allow 24h to execute. Rather too much, but meh
+                    pool.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    log.error("Interuppted awaiting thread pool termination", e);
+                }
             }
         }
         

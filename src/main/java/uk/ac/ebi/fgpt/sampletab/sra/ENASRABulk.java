@@ -56,8 +56,8 @@ public class ENASRABulk extends AbstractInfileDriver {
         }
 
         public void run() {
-            String studyFilename = "study.xml";
-            File xmlFile = new File(subdir, studyFilename);
+            String groupFilename = subdir.getName().substring(4)+".xml";
+            File xmlFile = new File(subdir, groupFilename);
             File sampletabpre = new File(subdir, "sampletab.pre.txt");
             
             
