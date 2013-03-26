@@ -11,6 +11,8 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttributeOntology;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.fgpt.sampletab.utils.TermSourceUtils;
 
@@ -44,6 +46,7 @@ public class CorrectorTermSource {
         Set<String> usedTsNames = new HashSet<String>();
         for (SCDNode scdnode : sampledata.scd.getAllNodes()){
             for (SCDNodeAttribute attr : scdnode.getAttributes()){
+                //have to cast attributes to classes which contain ontology references
                 if (AbstractNodeAttributeOntology.class.isInstance(attr)){
                     AbstractNodeAttributeOntology attrOnt = (AbstractNodeAttributeOntology) attr;
                     //if this attribute has a term source at all
@@ -51,6 +54,34 @@ public class CorrectorTermSource {
                         //add it to the pool
                         usedTsNames.add(attrOnt.getTermSourceREF().trim());
                     }
+                }
+                //check for ontologies used by units
+                if (CommentAttribute.class.isInstance(attr)) {
+                    CommentAttribute comm = (CommentAttribute) attr;
+                    if (comm.unit != null) {
+
+                        //if this attribute has a term source at all
+                        if (comm.unit.getTermSourceREF() != null 
+                                && comm.unit.getTermSourceREF().trim().length() > 0) {
+                            //add it to the pool
+                            usedTsNames.add(comm.unit.getTermSourceREF().trim());
+                            log.info("Found unit Term Source REF "+comm.unit.getTermSourceREF());
+                        }
+                    }
+                    
+                } else if (CharacteristicAttribute.class.isInstance(attr)) {
+                    CharacteristicAttribute charatt = (CharacteristicAttribute) attr;
+                    if (charatt.unit != null) {
+
+                        //if this attribute has a term source at all
+                        if (charatt.unit.getTermSourceREF() != null 
+                                && charatt.unit.getTermSourceREF().trim().length() > 0) {
+                            //add it to the pool
+                            usedTsNames.add(charatt.unit.getTermSourceREF().trim());
+                            log.info("Found unit Term Source REF "+charatt.unit.getTermSourceREF());
+                        }
+                    }
+                    
                 }
             }
         }
