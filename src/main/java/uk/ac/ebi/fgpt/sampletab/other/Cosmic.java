@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.kohsuke.args4j.Argument;
 import org.slf4j.Logger;
@@ -44,7 +46,8 @@ public class Cosmic extends AbstractDriver {
 
     TermSource efo = new TermSource("EFO", "http://www.ebi.ac.uk/efo/", "2.23");
     TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy", null);
-    
+
+    Pattern commentRegex = Pattern.compile("([^:]+):([^:]+)");
     
     public static void main(String[] args) {
         new Cosmic().doMain(args);
@@ -157,11 +160,42 @@ public class Cosmic extends AbstractDriver {
                     SampleNode sample = st.scd.getNode(sampleID, SampleNode.class);
                     if (sample == null) {
                         sample = new SampleNode(sampleID);
+                        sample.addAttribute(new CommentAttribute("ID tumor", line.get("ID_tumor")));
+                        sample.addAttribute(new OrganismAttribute("Homo sapiens", st.msi.getOrAddTermSource(ncbitaxonomy), 9606));
+                        
+                        
+                        if (!line.get("Primary site").equals("NS")) {
+                            String organismPart = line.get("Primary site");
+                            if (!line.get("Site subtype").equals("NS")) {
+                                organismPart = organismPart+" : "+line.get("Site subtype");
+                            }
+                            sample.addAttribute(new CharacteristicAttribute("organism part", organismPart));
+                        }
+                        
+                        if (!line.get("Primary histology").equals("NS")) {
+                            String diseaseState = line.get("Primary histology");
+                            if (!line.get("Histology subtype").equals("NS")) {
+                                diseaseState = diseaseState+" : "+line.get("Histology subtype");
+                            }
+                            sample.addAttribute(new CharacteristicAttribute("disease state", diseaseState));
+                        }
+                        
+                        if (!line.get("Sample source").equals("NS")) {
+                            sample.addAttribute(new MaterialAttribute(line.get("Sample source")));
+                        }
+                        
+                        if (!line.get("Tumour origin").equals("NS")) {
+                            sample.addAttribute(new CharacteristicAttribute("tumour origin", line.get("Tumour origin")));
+                        }
+                        
+                        sample.addAttribute(new DatabaseAttribute("COSMIC", sample.getNodeName(), "http://cancer.sanger.ac.uk/cosmic/sample/overview?id="+sample.getNodeName()));
+                        
                         try {
                             st.scd.addNode(sample);
                         } catch (ParseException e) {
                             // TODO Auto-generated catch block
-                            e.printStackTrace();
+                            log.error("Unable to add "+sampleID, e);
+                            continue;
                         }
                     }
                     
@@ -169,59 +203,30 @@ public class Cosmic extends AbstractDriver {
                     if (!sampleName.equals(sampleID)) {
                         sample.addAttribute(new CommentAttribute("synonym", sampleName));
                     }
-                    sample.addAttribute(new CommentAttribute("ID tumor", line.get("ID_tumor")));
-                    sample.addAttribute(new OrganismAttribute("Homo sapiens", st.msi.getOrAddTermSource(ncbitaxonomy), 9606));
-                    
-                    
-                    if (!line.get("Primary site").equals("NS")) {
-                        String organismPart = line.get("Primary site");
-                        if (!line.get("Site subtype").equals("NS")) {
-                            organismPart = organismPart+" : "+line.get("Site subtype");
-                        }
-                        sample.addAttribute(new CharacteristicAttribute("organism part", organismPart));
-                    }
-                    
-                    if (!line.get("Primary histology").equals("NS")) {
-                        String diseaseState = line.get("Primary histology");
-                        if (!line.get("Histology subtype").equals("NS")) {
-                            diseaseState = diseaseState+" : "+line.get("Primary histology");
-                        }
-                        sample.addAttribute(new CharacteristicAttribute("disease state", diseaseState));
-                    }
-                    
-                    if (!line.get("Sample source").equals("NS")) {
-                        sample.addAttribute(new MaterialAttribute(line.get("Sample source")));
-                    }
-                    
-                    if (!line.get("Tumour origin").equals("NS")) {
-                        sample.addAttribute(new CharacteristicAttribute("tumour origin", line.get("Tumour origin")));
-                    }
                     
                     //add genes
-                    sample.addAttribute(new CharacteristicAttribute("mutated gene", line.get("Gene name")));
-                    
-                    
-                    for (String part : line.get("Comments").split(",")){
-                        part = part.trim();
-                        String[] splitDash = part.split(" - ");
-                        String[] splitColon = part.split(":");
-                        if (part.length() == 0){
-                            //do nothing
-                        } else if (part.contains(":") && splitColon.length == 2){
-                            String key = splitColon[0].trim();
-                            String value = splitColon[1].trim();
-                            sample.addAttribute(new CommentAttribute(key, value));
-                        } else if (part.contains(" - ") && splitDash.length == 2){
-                            String key = splitDash[0].trim();
-                            String value = splitDash[1].trim();
-                            sample.addAttribute(new CommentAttribute(key, value));
-                        } else {
-                            log.warn("Unrecognized comment part "+part);
-                            sample.addAttribute(new CommentAttribute("other", part));
-                        }
+                    if (line.get("Mutation ID").length() == 0) {
+                        sample.addAttribute(new CharacteristicAttribute("non-mutated gene", line.get("Gene name")));
+                    } else {
+                        sample.addAttribute(new CharacteristicAttribute("mutated gene", line.get("Gene name")));
                     }
                     
-                    sample.addAttribute(new DatabaseAttribute("COSMIC", sample.getNodeName(), "http://cancer.sanger.ac.uk/cosmic/sample/overview?id="+sample.getNodeName()));
+                    Matcher m = commentRegex.matcher(line.get("Comments"));
+                    int start = 0;
+                    while (m.find(start)) {
+                        String key = m.group(1);
+                        String value = m.group(2);
+                        if (value.contains(",")) {
+                            String[] parts = value.split(",");
+                            value = "";
+                            for (int i = 0; i < parts.length-1; i++) {
+                                value = value + parts[i];
+                            }
+                        }
+                        start += key.length()+1+value.length();
+                        sample.addAttribute(new CommentAttribute(key, value));
+                    }
+                                        
                 }
             }
             
