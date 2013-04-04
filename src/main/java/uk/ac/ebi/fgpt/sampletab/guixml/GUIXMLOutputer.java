@@ -93,6 +93,7 @@ public class GUIXMLOutputer {
             writeAttributeValue(xmlWriter, "Submission Version", "true", "STRING", sd.msi.submissionVersion);
             writeAttributeValue(xmlWriter, "Submission Reference Layer", "true", "BOOLEAN", sd.msi.submissionReferenceLayer.toString());
             writeAttributeValue(xmlWriter, "Submission Release Date", "true", "STRING", sd.msi.getSubmissionReleaseDateAsString());
+            writeAttributeValue(xmlWriter, "Submission Update Date", "true", "STRING", sd.msi.getSubmissionUpdateDateAsString());
             writeAttributeValue(xmlWriter, "Submission Modification Date", "true", "STRING", sd.msi.getSubmissionUpdateDateAsString());
             writeAttributeValue(xmlWriter, "Name", "true", "BOOLEAN", g.getNodeName());
             writeAttributeValue(xmlWriter, "Group Accession", "true", "BOOLEAN", g.getGroupAccession());
