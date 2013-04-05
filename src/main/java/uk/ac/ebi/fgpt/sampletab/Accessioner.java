@@ -185,46 +185,44 @@ public class Accessioner {
 
         if (sample.getSampleAccession() == null) {
             try {
-                    String name = sample.getNodeName().trim();
-                    String accession = null;
+                String name = sample.getNodeName().trim();
+                String accession = null;
+                
+                statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
+                        + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
+                statement.setString(1, name);
+                statement.setString(2, submissionID);
+                log.trace(statement.toString());
+                results = statement.executeQuery();
+                if (results.next()){
+                    accession = prefix + results.getInt(1);
+                } else {
+                    log.info("Assigning new accession for "+submissionID+" : "+name);
+
+                    //insert it if not exists
+                    statement.close();
+                    statement = connect
+                            .prepareStatement("INSERT INTO "
+                                    + table
+                                    + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
+                    statement.setString(1, name);
+                    statement.setString(2, submissionID);
+                    log.trace(statement.toString());
+                    statement.executeUpdate();
                     
+                    statement.close();
                     statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
                             + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
                     statement.setString(1, name);
                     statement.setString(2, submissionID);
                     log.trace(statement.toString());
+                    results.close();
                     results = statement.executeQuery();
-                    if (results.next()){
-                        accession = prefix + results.getInt(1);
-                        statement.close();
-                        results.close();
-                    } else {
-                        log.info("Assigning new accession for "+submissionID+" : "+name);
-                        
-                        //insert it if not exists
-                        statement = connect
-                                .prepareStatement("INSERT INTO "
-                                        + table
-                                        + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
-                        statement.setString(1, name);
-                        statement.setString(2, submissionID);
-                        log.trace(statement.toString());
-                        statement.executeUpdate();
-                        statement.close();
-        
-                        statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
-                                + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
-                        statement.setString(1, name);
-                        statement.setString(2, submissionID);
-                        log.trace(statement.toString());
-                        results = statement.executeQuery();
-                        results.next();
-                        accession = prefix + results.getInt(1);
-                        statement.close();
-                        results.close();
-                    }
-                    log.debug("Assigning " + accession + " to " + name);
-                    sample.setSampleAccession(accession);
+                    results.next();
+                    accession = prefix + results.getInt(1);
+                }
+                log.debug("Assigning " + accession + " to " + name);
+                sample.setSampleAccession(accession);
             } catch (SQLRecoverableException e) {
                 log.warn("Trying to recover from exception", e);
                 if (retries > 0){
@@ -271,12 +269,9 @@ public class Accessioner {
                 
                 if (results.next()){
                     accession = "SAMEG" + results.getInt(1);
-                    statement.close();
-                    results.close();
                 } else {
-                
                     log.info("Assigning new accession for "+submissionID+" : "+name);
-                    
+                    statement.close();
                     statement = connect
                             .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
                     statement.setString(1, name);
@@ -284,19 +279,18 @@ public class Accessioner {
                     log.info(name);
                     log.info(submissionID);
                     statement.executeUpdate();
+                    
                     statement.close();
-    
                     statement = connect
                             .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
                     statement.setString(1, name);
                     statement.setString(2, submissionID);
                     log.trace(statement.toString());
+                    results.close();
                     results = statement.executeQuery();
                     results.next();
                     int accessionID = results.getInt(1);
                     accession = "SAMEG" + accessionID;
-                    statement.close();
-                    results.close();
     
                     log.debug("Assigning " + accession + " to " + name);
                 }
