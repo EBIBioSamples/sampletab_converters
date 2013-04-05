@@ -29,6 +29,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAtt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
@@ -229,6 +230,43 @@ public class Cosmic extends AbstractDriver {
                                         
                 }
             }
+            
+            //go through each sample
+            //count how many characteristic[mutated gene] there are
+            //if more than a certain number
+            //delete them all
+            //replace with characteristic[mutated gene count]
+            for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+                String[] attributenames = new String[2];
+                attributenames[0] = "non-mutated gene";
+                attributenames[1] = "mutated gene";
+                
+                for(String attributename : attributenames) {
+                    Integer existingcount = 0;
+                    for (SCDNodeAttribute a : sample.getAttributes()) {
+                        if (CharacteristicAttribute.class.isInstance(a)) {
+                            CharacteristicAttribute ca = (CharacteristicAttribute) a;
+                            if (ca.type.equals(attributename)) {
+                                existingcount += 1;
+                            }
+                        }
+                    }
+                    if (existingcount >= 10) {
+                        for (SCDNodeAttribute a : sample.getAttributes()) {
+                            if (CharacteristicAttribute.class.isInstance(a)) {
+                                CharacteristicAttribute ca = (CharacteristicAttribute) a;
+                                if (ca.type.equals(attributename)) {
+                                    sample.removeAttribute(ca);
+                                }
+                            }
+                        }
+                        sample.addAttribute(new CharacteristicAttribute(attributename+" count", existingcount.toString()));
+                    }
+                }
+                
+                
+            }
+            
             
             //write output
             SampleTabWriter writer = null ; 
