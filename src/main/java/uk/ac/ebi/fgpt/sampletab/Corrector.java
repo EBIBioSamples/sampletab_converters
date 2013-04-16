@@ -82,7 +82,8 @@ public class Corrector {
                 || lcval.equals("test/control")
                 || lcval.equals("yes/no")
                 || lcval.equals("y/n")
-                || lcval.equals("na")) {
+                || lcval.equals("na")
+                || lcval.equals("missing")) {
             return null;
         } else if (lcval.equals("meter")
                 || lcval.equals("meters")) {
@@ -253,6 +254,7 @@ public class Corrector {
                 || attr.type.toLowerCase().equals("organi") //from ArrayExpress
                 || attr.type.toLowerCase().equals("arrayexpress-species") //from ENA SRA
                 || attr.type.toLowerCase().equals("cell organism") //from ENA SRA
+                || attr.type.toLowerCase().equals("taxon_id")
                 ) {
             return correctOrganism(new OrganismAttribute(attr.getAttributeValue()), sampledata);
         }
@@ -262,6 +264,10 @@ public class Corrector {
                 || attr.type.toLowerCase().equals("gender")
                 || attr.type.toLowerCase().equals("arrayexpress-sex") //from ENA SRA
                 || attr.type.toLowerCase().equals("cell sex") //from ENA SRA
+                || attr.type.toLowerCase().equals("donor_sex") //from ENA SRA
+                || attr.type.toLowerCase().equals("sample gender") //from ENA SRA
+                || attr.type.toLowerCase().equals("sex stage") //from ENA SRA
+                || attr.type.toLowerCase().equals("sexs") //from ENA SRA
                 ) {
             //this will handle the real corrections
             return correctSex(new SexAttribute(attr.getAttributeValue()), sampledata);
@@ -274,8 +280,25 @@ public class Corrector {
         if (attr.type.toLowerCase().equals("age")) {
             attr.type = "age";
             //TODO some simple regex expansions, e.g. 5W to 5 weeks
+        } else if (attr.type.toLowerCase().equals("age in years")
+                || attr.type.toLowerCase().equals("age_in_years")) {
+            attr.type = "age";
+            attr.unit = new UnitAttribute();
+            attr.unit.type = null;
+            attr.unit.setAttributeValue("year");
         } else if (attr.type.toLowerCase().equals("developmental stage")
-                || attr.type.toLowerCase().equals("developmentalstage")) {
+                || attr.type.toLowerCase().equals("developmentalstage")
+                || attr.type.toLowerCase().equals("dev-stage")
+                || attr.type.toLowerCase().equals("dev_stage")
+                || attr.type.toLowerCase().equals("develomental stage") //typo
+                || attr.type.toLowerCase().equals("developmental point")
+                || attr.type.toLowerCase().equals("developmental satge") //typo
+                || attr.type.toLowerCase().equals("developmental stages")
+                || attr.type.toLowerCase().equals("developmental_stage")
+                || attr.type.toLowerCase().equals("developmetal stage") //typo
+                || attr.type.toLowerCase().equals("develpmental stage") //typo
+                || attr.type.toLowerCase().equals("tissue/dev_stage")
+                || attr.type.toLowerCase().equals("dissue/developmental stage")) {
             attr.type = "developmental stage";
         } else if (attr.type.toLowerCase().equals("disease state")
                 || attr.type.toLowerCase().equals("diseasestate")) {
@@ -294,8 +317,8 @@ public class Corrector {
             attr.type = "ethnicity";
             //ethnicity, population, race are a mess, leave alone
         } else if (attr.type.toLowerCase().equals("genotype")
-                ||attr.type.toLowerCase().equals("individualgeneticcharacteristics")
-                ||attr.type.toLowerCase().equals("genotype/variation") ) {
+                || attr.type.toLowerCase().equals("individualgeneticcharacteristics")
+                || attr.type.toLowerCase().equals("genotype/variation") ) {
             attr.type = "genotype";
             if (attr.getAttributeValue().toLowerCase().equals("wildtype")
                     || attr.getAttributeValue().toLowerCase().equals("wild type")
@@ -305,13 +328,19 @@ public class Corrector {
                 attr.setAttributeValue("wild type");
             }
         } else if (attr.type.toLowerCase().equals("histology")) {
-            attr.type = getInitialCapitals(attr.type);
+            attr.type = "histology";
         } else if (attr.type.toLowerCase().equals("individual")) {
             //TODO investigate
-            attr.type = getInitialCapitals(attr.type);
+            attr.type = "individual";
         } else if (attr.type.toLowerCase().equals("organism part") 
-                ||attr.type.toLowerCase().equals("organismpart")
-                ||attr.type.toLowerCase().equals("tissue")) {
+                || attr.type.toLowerCase().equals("organismpart")
+                || attr.type.toLowerCase().equals("tissue")
+                || attr.type.toLowerCase().equals("tissue type")
+                || attr.type.toLowerCase().equals("source tissue")
+                || attr.type.toLowerCase().equals("tissue -type")
+                || attr.type.toLowerCase().equals("tissue-type")
+                || attr.type.toLowerCase().equals("tissue_type")
+                || attr.type.toLowerCase().equals("tissue origin")) {
             attr.type = "organism part";
             if (attr.getAttributeValue().toLowerCase().equals("blood")) {
                 attr.setAttributeValue("blood");
@@ -336,13 +365,29 @@ public class Corrector {
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
             } 
         } else if (attr.type.toLowerCase().equals("phenotype")) {
-            attr.type = getInitialCapitals(attr.type);
+            attr.type = "phenotype";
         } else if (attr.type.toLowerCase().equals("stage")) {
-            attr.type = getInitialCapitals(attr.type);
+            attr.type = "stage";
+        } else if (attr.type.toLowerCase().equals("cultivar")
+                || attr.type.toLowerCase().equals("cultivar_acc")
+                || attr.type.toLowerCase().equals("cultivar/accession")) {
+            attr.type = "cultivar";
         } else if (attr.type.toLowerCase().equals("strain")
                 || attr.type.toLowerCase().equals("strainorline")
+                || attr.type.toLowerCase().equals("strain id")
+                || attr.type.toLowerCase().equals("type_strain")
                 || attr.type.toLowerCase().equals("cell line")
+                || attr.type.toLowerCase().equals("cell line/clone")
+                || attr.type.toLowerCase().equals("cell line specifics")
+                || attr.type.toLowerCase().equals("cell lines")
+                || attr.type.toLowerCase().equals("cell l ine") //typo
+                || attr.type.toLowerCase().equals("cell loine") //typo
+                || attr.type.toLowerCase().equals("cell lineage")
+                || attr.type.toLowerCase().equals("cell-line")
+                || attr.type.toLowerCase().equals("cell_line")
                 || attr.type.toLowerCase().equals("cellline")
+                //|| attr.type.toLowerCase().equals("cells") //from ENA SRA
+                || attr.type.toLowerCase().equals("tissue/cell lines")
                 || attr.type.toLowerCase().equals("arrayexpress-strainorline")
                 || attr.type.toLowerCase().equals("coriell id")
                 || attr.type.toLowerCase().equals("coriell catalog id")
@@ -363,7 +408,10 @@ public class Corrector {
             //TODO fix "Time Unit" being a separate characteristic
             //TODO fix embedding of units in the string (e.g. 24h) 
         } else if (attr.type.toLowerCase().equals("cell type")
-                || attr.type.toLowerCase().equals("celltype")) {
+                || attr.type.toLowerCase().equals("celltype")
+                || attr.type.toLowerCase().equals("developmental stage/cell type")
+                || attr.type.toLowerCase().equals("disease/cell type")
+                || attr.type.toLowerCase().equals("tissue/cell type")) {
             attr.type = "cell type";
             //TODO clarify some of these as tissue or cell type
             if (attr.getAttributeValue().toLowerCase().equals("liver")) {
@@ -380,13 +428,62 @@ public class Corrector {
                 attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
             } 
-        }
+        } else if (attr.type.toLowerCase().equals("latitude")
+                || attr.type.toLowerCase().equals("geographic location (latitude)")
+                || attr.type.toLowerCase().equals("lat")) {
+            if (attr.getAttributeValue().matches("^[0-9.-]+$")) {
+                attr.type = "latitude";
+            } else {
+                attr.type = "latitude (raw)";
+            }
+        } else if (attr.type.toLowerCase().equals("longitude")
+                || attr.type.toLowerCase().equals("geographic location (longitude)")
+                || attr.type.toLowerCase().equals("lng")) {
+            if (attr.getAttributeValue().matches("^[0-9.-]+$")) {
+                attr.type = "longitude";
+            } else {
+                attr.type = "longitude (raw)";
+            }
+        } else if (attr.type.toLowerCase().equals("substrain")
+                || attr.type.toLowerCase().equals("sub-strain")
+                || attr.type.toLowerCase().equals("sub_strain")) {
+            attr.type = "substrain"; 
+        } else if (attr.type.toLowerCase().equals("sub_species")
+                || attr.type.toLowerCase().equals("subsp")
+                || attr.type.toLowerCase().equals("subsp.")
+                || attr.type.toLowerCase().equals("subspecies")) {
+            attr.type = "subspecies"; 
+        } else if (attr.type.toLowerCase().equals("mating type")
+                || attr.type.toLowerCase().equals("mating-type")
+                || attr.type.toLowerCase().equals("mating_type")) {
+            attr.type = "mating type"; 
+        //demote some to comments
+        } else if (attr.type.toLowerCase().equals("collected by")
+                || attr.type.toLowerCase().equals("collected-by")
+                || attr.type.toLowerCase().equals("collected_by")) {
+            return new CommentAttribute("collected by", attr.getAttributeValue());
+        } else if (attr.type.toLowerCase().equals("collection_date")
+                || attr.type.toLowerCase().equals("collection date")
+                || attr.type.toLowerCase().equals("collection date (yyyymmdd)")
+                || attr.type.toLowerCase().equals("collection year")
+                || attr.type.toLowerCase().equals("collection-date")
+                || attr.type.toLowerCase().equals("collection_year")
+                || attr.type.toLowerCase().equals("date of collection")
+                || attr.type.toLowerCase().equals("date sample colllected")
+                || attr.type.toLowerCase().equals("isolation_year")
+                || attr.type.toLowerCase().equals("sample collection date")
+                || attr.type.toLowerCase().equals("sample date")
+                || attr.type.toLowerCase().equals("sampling date")
+                || attr.type.toLowerCase().equals("sampling-date")
+                || attr.type.toLowerCase().equals("time of sample collection")
+                || attr.type.toLowerCase().equals("year isolated")) {
+            return new CommentAttribute("colection date", attr.getAttributeValue());
+        } 
         
-        //TODO HTML URL encoding e.g. %3E %apos; %quot;
         
         //TODO demote some characteristics to comments
         
-        
+
         if (attr.unit != null){
             attr.unit = correctUnit(attr.unit);
         }
