@@ -108,7 +108,7 @@ public class FileRecursiveIterable implements Iterable<File> {
             
             private final Logger log = LoggerFactory.getLogger(getClass());
     
-            public FileRecursiveRunnable(String name, File startfile, BlockingQueue<File> filequeue){
+            public FileRecursiveRunnable(String name, File startfile, BlockingQueue<File> filequeue) {
                 this.name = name;
                 this.startfile = startfile;
                 this.filequeue = filequeue;
@@ -122,7 +122,7 @@ public class FileRecursiveIterable implements Iterable<File> {
                 } 
             }
             
-            private void getRecursiveFiles(File startfile) throws InterruptedException{
+            private void getRecursiveFiles(File startfile) throws InterruptedException {
                 File[] subfiles = startfile.listFiles();
                 Arrays.sort(subfiles);
                 for (File testfile : subfiles){
