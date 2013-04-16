@@ -44,8 +44,8 @@ public class PRIDEcron {
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output filename")
     private String outputDirName;
     private File outputDir;
-    
-    @Option(name = "--threaded", usage = "use multiple threads?")
+
+    @Option(name = "-t", aliases={"--threaded"}, usage = "use multiple threads?")
     private boolean threaded = false;
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
