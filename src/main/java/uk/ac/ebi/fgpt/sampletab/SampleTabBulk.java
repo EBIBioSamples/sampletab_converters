@@ -44,7 +44,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
 
 
     private Corrector corrector = new Corrector();
-    private DerivedFrom derivedFrom = new DerivedFrom();
+    private DerivedFrom derivedFrom = null;
     private Accessioner accessioner = null;
     private SameAs sameAs = new SameAs();
     
@@ -93,7 +93,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
     }
     
     public void process(File subdir, File scriptdir){
-        Runnable t = new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, derivedFrom, force);
+        Runnable t = new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, getDerivedFrom(), force);
         t.run();
     }
     
@@ -248,11 +248,8 @@ public class SampleTabBulk extends AbstractInfileDriver {
 
     
     @Override
-    public void preProcess() {
-
-        
+    public void preProcess() {        
         File scriptdir = new File(scriptDirname);
-        
         if (!scriptdir.exists() && !scriptdir.isDirectory()) {
             log.error("Script directory missing or is not a directory");
             System.exit(1);
@@ -264,7 +261,14 @@ public class SampleTabBulk extends AbstractInfileDriver {
     protected Runnable getNewTask(File inputFile) {
         File scriptdir = new File(scriptDirname);
         File subdir = inputFile.getAbsoluteFile().getParentFile();
-        return new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, derivedFrom, force);
+        return new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, getDerivedFrom(), force);
+    }
+
+    private synchronized DerivedFrom getDerivedFrom() {
+        if (derivedFrom == null) {
+            derivedFrom = new DerivedFrom();
+        }
+        return derivedFrom;
     }
     
 }

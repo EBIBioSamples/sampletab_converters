@@ -46,7 +46,7 @@ public class IMSRTabBulk extends AbstractInfileDriver {
     private Logger log = LoggerFactory.getLogger(getClass());
 
 
-    private SampleTabBulk stcb = null;
+    private SampleTabBulk sampletabbulk = null;
     
     
     private class DoProcessFile implements Runnable {
@@ -97,10 +97,7 @@ public class IMSRTabBulk extends AbstractInfileDriver {
                 
             }
             
-            if (stcb == null){
-                stcb = new SampleTabBulk(hostname, port, database, username, password, force);
-            }
-            stcb.process(subdir, scriptDir);
+            getSampleTabBulk().process(subdir, scriptDir);
         }
         
     }
@@ -124,5 +121,12 @@ public class IMSRTabBulk extends AbstractInfileDriver {
     protected Runnable getNewTask(File inputFile) {
         File subdir = inputFile.getAbsoluteFile().getParentFile();
         return new DoProcessFile(subdir);
+    }
+
+    private synchronized SampleTabBulk getSampleTabBulk() {
+        if (sampletabbulk == null){
+            sampletabbulk = new SampleTabBulk(hostname, port, database, username, password, force);
+        }
+        return sampletabbulk;
     }
 }
