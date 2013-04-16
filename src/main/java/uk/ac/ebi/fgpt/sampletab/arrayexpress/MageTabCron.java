@@ -36,7 +36,7 @@ public class MageTabCron {
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output directory")
     private String outputDirName;
     
-    @Option(name = "--threaded", usage = "use multiple threads?")
+    @Option(name = "-t", aliases={"--threaded"}, usage = "use multiple threads?")
     private boolean threaded = false;
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
