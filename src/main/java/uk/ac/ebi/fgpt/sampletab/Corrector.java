@@ -303,7 +303,8 @@ public class Corrector {
         } else if (attr.type.toLowerCase().equals("disease state")
                 || attr.type.toLowerCase().equals("diseasestate")) {
             attr.type = "disease state";
-        } else if (attr.type.toLowerCase().equals("ecotype")) {
+        } else if (attr.type.toLowerCase().equals("ecotype")
+                || attr.type.toLowerCase().equals("strain/ecotype")) {
             attr.type = "ecotype";
             if (attr.getAttributeValue().toLowerCase().equals("col-0")
                     || attr.getAttributeValue().toLowerCase().equals("columbia-0")
@@ -374,7 +375,27 @@ public class Corrector {
             attr.type = "cultivar";
         } else if (attr.type.toLowerCase().equals("strain")
                 || attr.type.toLowerCase().equals("strainorline")
+                || attr.type.toLowerCase().equals("strain or line")
+                || attr.type.toLowerCase().equals("strain (or line)")
+                || attr.type.toLowerCase().equals("strain name")
+                || attr.type.toLowerCase().equals("strain background")
+                || attr.type.toLowerCase().equals("strain/background")
+                || attr.type.toLowerCase().equals("strain/genotype")
+                || attr.type.toLowerCase().equals("strain description")
+                || attr.type.toLowerCase().equals("strains")
                 || attr.type.toLowerCase().equals("strain id")
+                || attr.type.toLowerCase().equals("strain source")
+                || attr.type.toLowerCase().equals("strain details")
+                || attr.type.toLowerCase().equals("strain type")
+                || attr.type.toLowerCase().equals("strain fgsc number")
+                || attr.type.toLowerCase().equals("strain(s)")
+                || attr.type.toLowerCase().equals("strain (cy3)")
+                || attr.type.toLowerCase().equals("strain (cy5)")
+                || attr.type.toLowerCase().equals("strain (mouse)")
+                || attr.type.toLowerCase().equals("strain (rat)")
+                || attr.type.toLowerCase().equals("strain/accession")
+                || attr.type.toLowerCase().equals("strain value")
+                || attr.type.toLowerCase().equals("plant strain")
                 || attr.type.toLowerCase().equals("type_strain")
                 || attr.type.toLowerCase().equals("cell line")
                 || attr.type.toLowerCase().equals("cell line/clone")
