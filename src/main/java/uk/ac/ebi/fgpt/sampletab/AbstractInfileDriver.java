@@ -34,25 +34,25 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
         
     protected abstract T getNewTask(File inputFile);
     
-    protected void preProcess(){
+    protected void preProcess() {
         //do nothing
         //override in subclass
     }
     
-    protected void postProcess(){
+    protected void postProcess() {
         //do nothing
         //override in subclass
     }
     
     
-    protected void doMain(String[] args){
+    protected void doMain(String[] args) {
         super.doMain(args);
         
 
         Iterable<File> inputFiles = null;
-        for (String inputFilename : inputFilenames){
+        for (String inputFilename : inputFilenames) {
             if (recursive){
-                if (startpaths == null){
+                if (startpaths == null) {
                     log.info("Looking recursively for input files named "+inputFilename);
                     if (inputFiles == null) {
                         inputFiles = new FileRecursiveIterable(inputFilename, null);
