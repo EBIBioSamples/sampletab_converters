@@ -21,6 +21,7 @@ import au.com.bytecode.opencsv.CSVReader;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
@@ -38,16 +39,18 @@ public class Cosmic extends AbstractDriver {
 
 
     @Argument(required=true, index=0, metaVar="INPUT", usage = "input filename")
-    protected String inputFilename;
+    protected File inputFile;
 
     @Argument(required=true, index=1, metaVar="OUTPUT", usage = "output dir")
-    private String outputDirName;
+    private File outputDir;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
     TermSource efo = new TermSource("EFO", "http://www.ebi.ac.uk/efo/", "2.23");
     TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy", null);
 
+    Organization sanger = new Organization("Sanger", "Wellcome Trust Sanger Institute, Hinxton, Saffron Walden, Cambridgeshire, CB10 1RQ, UK", "http://www.sanger.ac.uk", null, "Submitter");
+    
     Pattern commentRegex = Pattern.compile("([^:]+):([^:]+)");
     
     public static void main(String[] args) {
@@ -119,7 +122,6 @@ public class Cosmic extends AbstractDriver {
     protected void doMain(String[] args) {
         super.doMain(args);
         
-        File inputFile = new File(inputFilename);
         if (!inputFile.exists()) {
             log.error("File "+inputFile+" does not exist!");
             return;
@@ -132,10 +134,12 @@ public class Cosmic extends AbstractDriver {
             
             SampleData st = new SampleData();
             st.msi.submissionTitle = "COSMIC - Catalogue Of Somatic Mutations In Cancer";
+            //TODO add paper title
             st.msi.submissionDescription = "All cancers arise as a result of the acquisition of a series of fixed DNA sequence abnormalities, mutations, many of which ultimately confer a growth advantage upon the cells in which they have occurred. There is a vast amount of information available in the published scientific literature about these changes. COSMIC is designed to store and display somatic mutation information and related details and contains information relating to human cancers.";
-            //TODO add sanger organization
             
-            //TODO decide if to put cosmic on its own, or roll it into GSB
+            //add sanger organization
+            st.msi.organizations.add(sanger);
+            
             st.msi.submissionIdentifier = "GCM-"+groupid;
             
             //mark as reference layer
@@ -270,7 +274,7 @@ public class Cosmic extends AbstractDriver {
             
             //write output
             SampleTabWriter writer = null ; 
-            File outputFile = new File(outputDirName, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
+            File outputFile = new File(outputDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
             outputFile.mkdirs();
             outputFile = new File(outputFile, "sampletab.pre.txt");
             log.info("writing "+outputFile);
