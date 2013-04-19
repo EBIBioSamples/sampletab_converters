@@ -33,7 +33,9 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
+import uk.ac.ebi.fgpt.sampletab.utils.EuroPMCUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.QueryException_Exception;
 
 public class Cosmic extends AbstractDriver {
 
@@ -134,6 +136,7 @@ public class Cosmic extends AbstractDriver {
             
             SampleData st = new SampleData();
             st.msi.submissionTitle = "COSMIC - Catalogue Of Somatic Mutations In Cancer";
+                
             //TODO add paper title
             st.msi.submissionDescription = "All cancers arise as a result of the acquisition of a series of fixed DNA sequence abnormalities, mutations, many of which ultimately confer a growth advantage upon the cells in which they have occurred. There is a vast amount of information available in the published scientific literature about these changes. COSMIC is designed to store and display somatic mutation information and related details and contains information relating to human cancers.";
             
@@ -148,6 +151,13 @@ public class Cosmic extends AbstractDriver {
             //add publication if groupid is pubmed id
             if (groupid.matches("[0-9]+")) {
                 st.msi.publications.add(new Publication(groupid, null));
+                try {
+                    st.msi.submissionTitle = st.msi.submissionTitle+" - "+EuroPMCUtils.getTitleByPUBMEDid(new Integer(groupid));
+                } catch (NumberFormatException e) {
+                    log.warn("Unable to convert "+groupid+" to number", e);
+                } catch (QueryException_Exception e) {
+                    log.warn("Unable to get publication title "+groupid, e);
+                }
             }
             
             for (String[] nextLine : grouping.get(groupid)) {
