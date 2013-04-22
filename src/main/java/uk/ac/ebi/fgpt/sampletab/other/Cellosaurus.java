@@ -21,8 +21,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.coode.owlapi.obo.parser.OBOParser;
-import org.coode.owlapi.obo.parser.Token;
 import org.kohsuke.args4j.Argument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -211,6 +209,7 @@ public class Cellosaurus extends AbstractDriver {
                     s.addChildNode(derivedNode);
                     derivedNode.addParentNode(s);
                 }
+                //TODO abstract more characteristics to indivudal from cell line, e.g. species
             }
         }
         
