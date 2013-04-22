@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -147,6 +148,7 @@ public class Cellosaurus extends AbstractDriver {
             indSet.add(name);
             individuals.add(indSet);
         }
+        log.info("No. of individual sets = "+individuals.size());
         for (SampleNode s : sd.scd.getNodes(SampleNode.class)) {
             for (SCDNodeAttribute a:s.getAttributes()) {
                 if (CommentAttribute.class.isInstance(a)) {
@@ -154,22 +156,60 @@ public class Cellosaurus extends AbstractDriver {
                     if (ca.type.equals("same individual")) {
                         //find the set we are in
                         //find the set they are in
-                        // merge them
                         Set<String> usSet = null;
                         Set<String> themSet = null;
+                        String themName = ca.getAttributeValue();
+                        //will be something like "CVCL_J698 ! GM16852"
+                        themName = themName.split("!")[1];
+                        themName = themName.trim();
+                                                       
                         for (Set<String> testSet : individuals) {
                             if (testSet.contains(s.getNodeName())) {
                                 usSet = testSet;
                             }
-                            if (testSet.contains(ca.getAttributeValue())) {
+                            if (testSet.contains(themName)) {
                                 themSet = testSet;
                             }
                         }
-                        //comparison by id not equality
-                        if (usSet != themSet) {
-                            
+                        if (themSet == null) {
+                            log.warn("Unable to find themSet containing "+ca.getAttributeValue());
+                        }
+                        if (usSet == null) {
+                            log.warn("Unable to find usSet containing "+s.getNodeName());
+                        }
+                        
+                        if (usSet != null && themSet != null) {
+                            //merge the sets
+                            //  comparison by id not equality
+                            if (usSet != themSet) {
+                                individuals.remove(usSet);
+                                individuals.remove(themSet);
+                                usSet.addAll(themSet);
+                                individuals.add(usSet);
+                            }
                         }
                     }
+                }
+            }
+        }
+        log.info("No. of individual sets = "+individuals.size());
+        for (Set<String> individual : individuals) {
+            if (individual.size() > 1) {
+                //these are from the same individual
+                //create an extra sample, and put them as derived froms
+                
+                String name = "individual from "+Collections.min(individual);
+                SampleNode s = new SampleNode(name);
+                try {
+                    sd.scd.addNode(s);
+                } catch (ParseException e) {
+                    log.error("Problem adding "+name, e);
+                    return;
+                }
+                for (String individualName : individual) {
+                    SampleNode derivedNode = sd.scd.getNode(individualName, SampleNode.class);
+                    s.addChildNode(derivedNode);
+                    derivedNode.addParentNode(s);
                 }
             }
         }
@@ -228,8 +268,7 @@ public class Cellosaurus extends AbstractDriver {
             //TODO map this CALOHA ID to text string
             String tissueName = calohaMap.get(record.getSamplingTissue());
             s.addAttribute(new CharacteristicAttribute("sampling tissue", tissueName));
-        }
-        
+        }        
 
         for (String xref : record.getXRefs()) {
             //TODO something smarter
