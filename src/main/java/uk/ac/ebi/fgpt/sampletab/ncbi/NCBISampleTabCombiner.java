@@ -73,8 +73,17 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
                     log.debug("Getting studies of SRA sample " + sampleid);
                     Collection<String> studyids = ENAUtils.getStudiesForSample(sampleid);
                     if (studyids == null || studyids.size() == 0) {
-                        //no study found, fall back to submission
-                        studyids = ENAUtils.getSubmissionsForSample(sampleid);
+                        //did not find any studies directly
+                        //try indirect via submission
+                        Collection<String> submissionIds = ENAUtils.getSubmissionsForSample(sampleid);
+                        for (String submissionId : submissionIds) {
+                            studyids.addAll(ENAUtils.getStudiesForSubmission(submissionId));
+                        }
+                        
+                        if (studyids.size() == 0) {
+                            //if there are still no study ids, use submission ids
+                            studyids.addAll(submissionIds);
+                        }
                     }
                     if (studyids != null && studyids.size() > 0 ) {
                         groupids.addAll(studyids);
@@ -112,7 +121,7 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
         
         public void run() {
 
-            Document xml =null;
+            Document xml = null;
             try {
                 xml = XMLUtils.getDocument(inFile);
             } catch (FileNotFoundException e) {
