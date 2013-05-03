@@ -18,6 +18,10 @@ public class NCBIBiosampleDriver extends AbstractInfileDriver<NCBIBiosampleRunna
 	    
 	}
 
+    public static void main(String[] args) {
+        new NCBIBiosampleDriver().doMain(args);
+    }
+
     @Override
     protected NCBIBiosampleRunnable getNewTask(File inputFile) {
         inputFile = inputFile.getAbsoluteFile();
