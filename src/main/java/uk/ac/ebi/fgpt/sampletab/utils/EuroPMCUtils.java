@@ -13,7 +13,7 @@ public class EuroPMCUtils {
     private static WSCitationImpl wSCitationImpl = wSCitationImplService.getWSCitationImplPort();
     
     
-    public static String getTitleByPUBMEDid(Integer pubmed) throws QueryException_Exception{
+    public static String getTitleByPUBMEDid(Integer pubmed) throws QueryException_Exception {
         String query = pubmed.toString();
 
         String dataSet = "metadata";
