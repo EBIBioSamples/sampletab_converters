@@ -306,7 +306,7 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
                 writer = new SampleTabWriter(new BufferedWriter(new FileWriter(outFile)));
                 writer.write(sampleout);
                 writer.close();
-                log.error("Wrote to " + outFile);
+                log.info("Wrote to " + outFile);
             } catch (IOException e) {
                 log.error("Unable to write " + outFile, e);
                 return;
