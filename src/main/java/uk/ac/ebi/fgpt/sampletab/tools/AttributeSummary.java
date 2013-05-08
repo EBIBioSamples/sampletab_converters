@@ -51,7 +51,8 @@ public class AttributeSummary extends AbstractInfileDriver<Runnable> {
 	public class ProcessTask implements Runnable {
 		private File inFile;
 		private String organism;
-		ProcessTask(File inFile, String organism){
+		
+		public ProcessTask(File inFile, String organism) {
 			this.inFile = inFile;
 			this.organism = organism;
 		}
@@ -61,7 +62,7 @@ public class AttributeSummary extends AbstractInfileDriver<Runnable> {
 			SampleData sampledata;
 			try {
 				sampledata = parser.parse(this.inFile);
-			} catch (ParseException e) {
+			} catch (Exception e) {
 				log.error("Unable to parse "+inFile, e);
 				return;
 			}

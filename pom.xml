@@ -26,14 +26,7 @@
 		</snapshotRepository>
 	</distributionManagement>
 	
-	<repositories>
-		<repository>
-			<id>biojava-maven-repo</id>
-			<name>BioJava repository</name>
-			<url>http://biojava.org/download/maven/</url>
-		</repository>
-
-		
+	<repositories>		
 		<repository>
             <id>oerc-repo</id>
             <name>OeRC Maven repository</name>
@@ -65,6 +58,7 @@
 	</repositories>
 
 	<dependencies>
+		<!-- command line parsing -->
 		<dependency>
 			<groupId>args4j</groupId>
 			<artifactId>args4j</artifactId>
@@ -249,12 +243,20 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
 		<!-- connection pooling library -->
 		<dependency>
 			<groupId>com.jolbox</groupId>
 			<artifactId>bonecp</artifactId>
 			<version>0.7.1.RELEASE</version>
 		</dependency>
+		
+		<!--  ontology parsing library -->
+<!--         <dependency> -->
+<!--             <groupId>net.sourceforge.owlapi</groupId> -->
+<!--             <artifactId>owlapi-distribution</artifactId> -->
+<!--             <version>3.4.3</version> -->
+<!--         </dependency> -->
             
 		            
 	</dependencies>
