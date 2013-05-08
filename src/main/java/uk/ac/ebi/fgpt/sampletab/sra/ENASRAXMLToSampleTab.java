@@ -262,8 +262,37 @@ public class ENASRAXMLToSampleTab {
                 //maybe these should be database ids rather than synonyms?
                 Element identifiers = XMLUtils.getChildByName(sampleElement, "IDENTIFIERS");
                 for (Element id : XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID")) {
-                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
-                    samplenode.addAttribute(synonymattrib, 0);
+                    //handle BioSamples identifiers
+                    if ("BioSample".equals(id.attribute("namespace"))) {
+                        if (id.getTextTrim().matches("SAM[END][AG]?[0-9]+")) {
+                            samplenode.setSampleAccession(id.getTextTrim());
+                        } else {
+                            log.warn("Unfamiliar BioSample accession "+id.getTextTrim()+" in "+sampleAccession);
+                        }
+                    } else {
+                        CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
+                        samplenode.addAttribute(synonymattrib, 0);
+                    }
+                }
+                for (Element id : XMLUtils.getChildrenByName(identifiers, "SUBMITTER_ID")) {
+                    //handle BioSamples identifiers
+                    if ("BioSample".equals(id.attribute("namespace"))) {
+                        log.info("Found SUBMITTER_ID "+id.getTextTrim());
+                        if (id.getTextTrim().matches("SAM[END][AG]?[0-9]+")) {
+                            if (samplenode.getSampleAccession() == null) {
+                                samplenode.setSampleAccession(id.getTextTrim());
+                            } else {
+                                log.warn("Strange biosample identifiers in "+sampleAccession);
+                                CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
+                                samplenode.addAttribute(synonymattrib, 0);
+                            }
+                        } else {
+                            log.warn("Unfamiliar BioSample accession "+id.getTextTrim());
+                        }
+                    } else {
+                        CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
+                        samplenode.addAttribute(synonymattrib, 0);
+                    }
                 }
                 
                 
@@ -273,7 +302,7 @@ public class ENASRAXMLToSampleTab {
                     Integer taxid = new Integer(taxon.getTextTrim());
                     // could get taxon name by lookup, but this will be done by correction later on.
                     String taxName = null;
-                    if (scientificname != null ){
+                    if (scientificname != null ) {
                         taxName = scientificname.getTextTrim();
                     } else {
                         taxName = taxid.toString();
@@ -313,7 +342,7 @@ public class ENASRAXMLToSampleTab {
                         
                         String tagtext = tag.getTextTrim();
                         
-                        if (characteristicsIgnore.contains(tagtext)){
+                        if (characteristicsIgnore.contains(tagtext)) {
                             //skip this characteristic
                             log.debug("Skipping characteristic attribute "+tagtext);
                             continue;
