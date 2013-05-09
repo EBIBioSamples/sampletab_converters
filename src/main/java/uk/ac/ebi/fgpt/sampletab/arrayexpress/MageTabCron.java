@@ -36,8 +36,8 @@ public class MageTabCron {
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output directory")
     private String outputDirName;
     
-    @Option(name = "-t", aliases={"--threaded"}, usage = "use multiple threads?")
-    private boolean threaded = false;
+    @Option(name = "-t", aliases={"--threads"}, usage = "number of additional threads")
+    private int threads = 0;
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
@@ -122,8 +122,7 @@ public class MageTabCron {
 		}
 
 
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
         
         
         Set<String> conanProcess = new HashSet<String>();
@@ -219,7 +218,7 @@ public class MageTabCron {
                         //for reliability.
 						if (!outidf.exists() || ftpidftime.after(outidftime)){
 	                        Runnable t = new CurlDownload("ftp://ftp.ebi.ac.uk"+idfpath, outidf.getAbsolutePath());
-	                        if (threaded){
+	                        if (threads > 0){
 	                            pool.execute(t);
 	                        } else {
 	                            t.run();
@@ -229,7 +228,7 @@ public class MageTabCron {
                         if (!outsdrf.exists() || ftpsdrftime.after(outsdrftime)){
                             //TODO fix where SDRF does not match this file pattern
                             Runnable t = new CurlDownload("ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath());
-                            if (threaded){
+                            if (threads > 0){
                                 pool.execute(t);
                             } else {
                                 t.run();

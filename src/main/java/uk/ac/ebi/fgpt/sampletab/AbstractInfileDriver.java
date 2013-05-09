@@ -21,8 +21,8 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
     @Argument(required=true, index=0, metaVar="INPUT", usage = "input filenames or globs")
     protected List<String> inputFilenames;
 
-    @Option(name = "--threaded", aliases = { "-t" }, usage = "use multiple threads?")
-    protected boolean threaded = false;
+    @Option(name = "--threads", aliases = { "-t" }, usage = "number of additional threads")
+    protected int threads = 0;
        
     @Option(name = "--recursive", aliases = { "-r" }, usage="recusively match filename?")
     protected boolean recursive = false;
@@ -80,13 +80,13 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
             }
         }
 
-        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
 
         preProcess();
         
         for (File inputFile : inputFiles) {
             Runnable t = getNewTask(inputFile);
-            if (threaded) {
+            if (threads > 0) {
                 pool.execute(t);
             } else {
                 t.run();

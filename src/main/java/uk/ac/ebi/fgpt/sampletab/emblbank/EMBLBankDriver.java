@@ -67,6 +67,10 @@ public class EMBLBankDriver {
     private int groupOffset = 0;
     
 
+    @Option(name = "--threads", aliases = { "-t" }, usage = "number of additional threads")
+    private int threads = 0;
+    
+
     private Logger log = LoggerFactory.getLogger(getClass());
 
     Pattern latLongPattern = Pattern.compile("([0-9]+\\.?[0-9]*) ([NS]) ([0-9]+\\.?[0-9]*) ([EW])");
@@ -167,10 +171,17 @@ public class EMBLBankDriver {
         List<String[]> lines = getLines(inputFile);
         log.info("Starting tasks");
         
-        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        ExecutorService pool = null;
+        if (threads > 0) {
+            pool = Executors.newFixedThreadPool(threads);
+        }
         for (String groupID : groupMap.keySet()) {
             Runnable t = new EMBLBankRunnable(lines, groupMap, groupID, outputFile, prefix, wgs, tsa, bar, cds);
-            pool.execute(t);
+            if (threads > 0) {
+                pool.execute(t);
+            } else {
+                t.run();
+            }
         }
 
         log.info("All tasks pending");

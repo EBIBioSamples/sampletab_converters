@@ -45,8 +45,8 @@ public class PRIDEcron {
     private String outputDirName;
     private File outputDir;
 
-    @Option(name = "-t", aliases={"--threaded"}, usage = "use multiple threads?")
-    private boolean threaded = false;
+    @Option(name = "--threads", aliases={"-t"}, usage = "number of additional threads")
+    private int threads = 0;
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
@@ -150,8 +150,10 @@ public class PRIDEcron {
         Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
         //Pattern regex = Pattern.compile("PRIDE_Exp_mzData_Ac_([0-9]+)\\.xml\\.gz");
 
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+        ExecutorService pool = null;
+        if (threads > 0 ){
+            pool = Executors.newFixedThreadPool(threads);
+        }
 
         for (FTPFile file : files) {
             String filename = file.getName();
@@ -169,7 +171,7 @@ public class PRIDEcron {
                     
                     Runnable t = new PRIDEXMLFTPDownload(accession, outfile, false);
                     
-                    if (threaded){
+                    if (threads > 0){
                         pool.execute(t);
                     } else {
                         t.run();
@@ -224,27 +226,31 @@ public class PRIDEcron {
 
         // now that all the files have been updated, parse them to extract the relevant data
         
-        int nothreads = Runtime.getRuntime().availableProcessors();
-        ExecutorService pool = Executors.newFixedThreadPool(nothreads);
+        ExecutorService pool = null;
+        if (threads > 0) {
+            pool = Executors.newFixedThreadPool(threads);
+        }
         
         for (File subdir : outdir.listFiles()) {
             Runnable t = new XMLProjectRunnable(subdir, subs);
-            if (threaded) {
+            if (threads > 0) {
                 pool.execute(t);
             } else {
                 t.run();
             }
         }
 
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination", e);
+        if (pool != null) {
+            // run the pool and then close it afterwards
+            // must synchronize on the pool object
+            synchronized (pool) {
+                pool.shutdown();
+                try {
+                    // allow 24h to execute. Rather too much, but meh
+                    pool.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    log.error("Interuppted awaiting thread pool termination", e);
+                }
             }
         }
     }

@@ -28,8 +28,8 @@ public class ENASRACron {
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output directory")
     private String outputDirName;
 
-    @Option(name = "--threaded", aliases = { "-t" }, usage = "use multiple threads?")
-    private boolean threaded = false;
+    @Option(name = "--threads", aliases = { "-t" }, usage = "number of additional threads")
+    private int threads = 0;
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
@@ -77,10 +77,9 @@ public class ENASRACron {
             outdir.mkdirs();
         }
 
-        int nothreads = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = null;
-        if (threaded) {
-            pool = Executors.newFixedThreadPool(nothreads);
+        if (threads > 0) {
+            pool = Executors.newFixedThreadPool(threads);
         }
         
         //first get a map of all possible submissions
@@ -92,19 +91,21 @@ public class ENASRACron {
         log.info("Checking deletions");
         //also get a set of existing submissions to delete
         Set<String> toDelete = new HashSet<String>();
-        /*
-        for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", outdir)) {
+        for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", new File(outdir, "sra"))) { //TODO do this properly somehow
             File subdir = sampletabpre.getParentFile();
             String subId = subdir.getName();
             if (!grouper.groups.containsKey(subId) && !grouper.ungrouped.contains(subId)) {
                 toDelete.add(subId);
             }
         }
-        */
+        
         log.info("Processing updates");
         
         //restart the pool for part II        
-        pool = Executors.newFixedThreadPool(nothreads);
+        pool = null;
+        if (threads > 0) {
+            pool = Executors.newFixedThreadPool(threads);
+        }
         //process updates
         ENASRAWebDownload downloader = new ENASRAWebDownload();
         for(String key : grouper.groups.keySet()) {
@@ -140,7 +141,7 @@ public class ENASRACron {
                 //process the subdir
                 log.info("updated "+submissionID);
                 Runnable t = new ENASRAUpdateRunnable(outsubdir, key, grouper.groups.get(key), !noconan);
-                if (threaded) {
+                if (threads > 0) {
                     pool.execute(t);
                 } else {
                     t.run();
@@ -160,18 +161,19 @@ public class ENASRACron {
             }
         }
         
-        // run the pool and then close it afterwards
-        // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination", e);
+        if (pool != null) {
+            // run the pool and then close it afterwards
+            // must synchronize on the pool object
+            synchronized (pool) {
+                pool.shutdown();
+                try {
+                    // allow 24h to execute. Rather too much, but meh
+                    pool.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    log.error("Interuppted awaiting thread pool termination", e);
+                }
             }
         }
         log.info("Finished processing updates");
-        
     }
 }
