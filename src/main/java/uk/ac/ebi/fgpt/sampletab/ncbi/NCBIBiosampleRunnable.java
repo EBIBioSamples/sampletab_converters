@@ -92,6 +92,7 @@ public class NCBIBiosampleRunnable implements Runnable {
 		Element ids = XMLUtils.getChildByName(root, "Ids");
 		Element attributes = XMLUtils.getChildByName(root, "Attributes");
 		Element organism = XMLUtils.getChildByName(description, "Organism");
+		Element models = XMLUtils.getChildByName(root, "Models");
 
 		// TODO unencode http conversion, e.g. &amp, if this is an issue
 		st.msi.submissionTitle = title.getTextTrim();
@@ -181,7 +182,7 @@ public class NCBIBiosampleRunnable implements Runnable {
 			}
 		}
 		if (links != null) {
-			for (Element link : XMLUtils.getChildrenByName(links, "Links")) {
+			for (Element link : XMLUtils.getChildrenByName(links, "Link")) {
 				// pubmedids
 				// could be url, db_xref or entrez
 				// entrez never seen to date, deprecated?
@@ -280,6 +281,11 @@ public class NCBIBiosampleRunnable implements Runnable {
 				scdnode.addAttribute(databaseAttrib);
 			}
 		}
+        if (models != null) {
+            for (Element model : XMLUtils.getChildrenByName(links, "Model")) {
+                scdnode.addAttribute(new CommentAttribute("NCBI Model", model.getTextTrim()));
+            }
+        }
 
 		st.scd.addNode(scdnode);
 

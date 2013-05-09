@@ -314,6 +314,15 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
 
         }
     }
+
+    public static void main(String[] args) throws IOException {
+        new NCBISampleTabCombiner().doMain(args);
+    }
+
+    @Override
+    protected Runnable getNewTask(File inputFile) {
+        return new GroupIDsTask(inputFile);
+    }
     
     @Override 
     public void postProcess(){
@@ -358,13 +367,13 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
         }
         
         //TODO trigger all the output processes
-        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
         
         List<String> projects = new ArrayList<String>(groupings.keySet());
         for (String project : projects) {
             List<File> files = new ArrayList<File>(groupings.get(project));
             Runnable t = new OutputTask(files);
-            if (threaded) {
+            if (threads > 0) {
                 pool.execute(t);
             } else {
                 t.run();
@@ -383,15 +392,6 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
             }
         }
         
-    }
-
-    public static void main(String[] args) throws IOException {
-        new NCBISampleTabCombiner().doMain(args);
-    }
-
-    @Override
-    protected Runnable getNewTask(File inputFile) {
-        return new GroupIDsTask(inputFile);
     }
 
 }
