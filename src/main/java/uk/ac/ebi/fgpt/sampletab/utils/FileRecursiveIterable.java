@@ -124,13 +124,15 @@ public class FileRecursiveIterable implements Iterable<File> {
             
             private void getRecursiveFiles(File startfile) throws InterruptedException {
                 File[] subfiles = startfile.listFiles();
-                Arrays.sort(subfiles);
-                for (File testfile : subfiles){
-                    if (testfile.isDirectory()) {
-                        getRecursiveFiles(testfile);
-                    } else if (testfile.isFile()) {
-                        if (name.equals(testfile.getName())){
-                           filequeue.put(testfile.getAbsoluteFile()); 
+                if (subfiles != null && subfiles.length > 0) {
+                    Arrays.sort(subfiles);
+                    for (File testfile : subfiles){
+                        if (testfile.isDirectory()) {
+                            getRecursiveFiles(testfile);
+                        } else if (testfile.isFile()) {
+                            if (name.equals(testfile.getName())){
+                               filequeue.put(testfile.getAbsoluteFile()); 
+                            }
                         }
                     }
                 }
