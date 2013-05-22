@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -272,13 +274,17 @@ public class Cosmic extends AbstractDriver {
                         }
                     }
                     if (existingcount >= 10) {
+                        Collection<SCDNodeAttribute> toRemove = new ArrayList<SCDNodeAttribute>();
                         for (SCDNodeAttribute a : sample.getAttributes()) {
                             if (CharacteristicAttribute.class.isInstance(a)) {
                                 CharacteristicAttribute ca = (CharacteristicAttribute) a;
                                 if (ca.type.equals(attributename)) {
-                                    sample.removeAttribute(ca);
+                                    toRemove.add(ca);
                                 }
                             }
+                        }
+                        for (SCDNodeAttribute ca : toRemove) {
+                            sample.removeAttribute(ca);
                         }
                         sample.addAttribute(new CharacteristicAttribute(attributename+" count", existingcount.toString()));
                     }
