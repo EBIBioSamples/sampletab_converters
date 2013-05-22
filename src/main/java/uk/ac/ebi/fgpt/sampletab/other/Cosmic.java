@@ -135,7 +135,7 @@ public class Cosmic extends AbstractDriver {
             String[] headers = null;
             
             SampleData st = new SampleData();
-            st.msi.submissionTitle = "COSMIC - Catalogue Of Somatic Mutations In Cancer";
+            st.msi.submissionTitle = "COSMIC";
                 
             //TODO add paper title
             st.msi.submissionDescription = "All cancers arise as a result of the acquisition of a series of fixed DNA sequence abnormalities, mutations, many of which ultimately confer a growth advantage upon the cells in which they have occurred. There is a vast amount of information available in the published scientific literature about these changes. COSMIC is designed to store and display somatic mutation information and related details and contains information relating to human cancers.";
@@ -152,7 +152,13 @@ public class Cosmic extends AbstractDriver {
             if (groupid.matches("[0-9]+")) {
                 st.msi.publications.add(new Publication(groupid, null));
                 try {
-                    st.msi.submissionTitle = st.msi.submissionTitle+" - "+EuroPMCUtils.getTitleByPUBMEDid(new Integer(groupid));
+                    String title = EuroPMCUtils.getTitleByPUBMEDid(new Integer(groupid));
+                    if (title == null) {
+                        st.msi.submissionTitle = st.msi.submissionTitle+" - Catalogue of Somatic Mutations in Cancer";
+                    } else {
+                        st.msi.submissionTitle = st.msi.submissionTitle+" - "+title;
+                        st.msi.submissionDescription = st.msi.submissionDescription+ " These samples are from the publication titled \""+title+"\".";
+                    }
                 } catch (NumberFormatException e) {
                     log.warn("Unable to convert "+groupid+" to number", e);
                 } catch (QueryException_Exception e) {

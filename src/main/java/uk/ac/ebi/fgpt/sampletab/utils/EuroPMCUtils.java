@@ -1,5 +1,7 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
+import java.util.List;
+
 import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.QueryException_Exception;
 import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.ResponseWrapper;
 import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.Result;
@@ -23,8 +25,12 @@ public class EuroPMCUtils {
         String email = null;
         ResponseWrapper results = wSCitationImpl.searchPublications(query,
                 dataSet, resultType, offSet, synonym, email);
-        Result tophit = results.getResultList().getResult().get(0);
-        return tophit.getTitle();
+        List<Result> resultList = results.getResultList().getResult();
+        if (resultList.size() > 0) {
+            return results.getResultList().getResult().get(0).getTitle();
+        } else {
+            return null;
+        }
     }
     
 }
