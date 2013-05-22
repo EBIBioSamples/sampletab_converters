@@ -159,7 +159,7 @@ public class Cosmic extends AbstractDriver {
                         st.msi.submissionTitle = st.msi.submissionTitle+" - Catalogue of Somatic Mutations in Cancer";
                     } else {
                         st.msi.submissionTitle = st.msi.submissionTitle+" - "+title;
-                        st.msi.submissionDescription = st.msi.submissionDescription+ " These samples are from the publication titled \""+title+"\".";
+                        st.msi.submissionDescription = st.msi.submissionDescription+ " These samples are from the publication titled : "+title;
                     }
                 } catch (NumberFormatException e) {
                     log.warn("Unable to convert "+groupid+" to number", e);
