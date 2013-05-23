@@ -304,6 +304,48 @@ public class MageTabBulk extends AbstractInfileDriver {
             } else if (idffilename.equals("E-GEOD-5516.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
+            } else if (idffilename.equals("E-GEOD-25626.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-30641.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-32483.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-34585.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-35582.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-36696.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-37519.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-37864.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-38411.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-38561.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-38563.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-42355.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-41304.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-GEOD-42563.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;                
             } else if (idffilename.equals("E-CBIL-28.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
@@ -368,6 +410,9 @@ public class MageTabBulk extends AbstractInfileDriver {
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
             } else if (idffilename.equals("E-TOXM-40.idf.txt")){
+                log.warn("Skipping "+idffilename+" as it does not parse correctly");
+                return;
+            } else if (idffilename.equals("E-SMDB-109.idf.txt")){
                 log.warn("Skipping "+idffilename+" as it does not parse correctly");
                 return;
             } 
