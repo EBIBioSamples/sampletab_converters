@@ -80,13 +80,16 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
             }
         }
 
-        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        ExecutorService pool = null;
+        if (threads > 0) {
+            pool = Executors.newFixedThreadPool(threads);
+        }
 
         preProcess();
         
         for (File inputFile : inputFiles) {
             Runnable t = getNewTask(inputFile);
-            if (threads > 0) {
+            if (pool != null) {
                 pool.execute(t);
             } else {
                 t.run();
@@ -95,13 +98,15 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
         
         // run the pool and then close it afterwards
         // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interupted awaiting thread pool termination", e);
+        if (pool != null) {
+            synchronized (pool) {
+                pool.shutdown();
+                try {
+                    // allow 24h to execute. Rather too much, but meh
+                    pool.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    log.error("Interupted awaiting thread pool termination", e);
+                }
             }
         }
         
