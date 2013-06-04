@@ -613,6 +613,31 @@ public class Corrector {
                     }
                 }
             }
+            //convert some attributes into values on the sample itself i.e. Sample Description
+            for (SCDNodeAttribute a : new ArrayList<SCDNodeAttribute>(s.getAttributes())) {
+                boolean isCommentAttribute = false;
+                synchronized(CommentAttribute.class){
+                    isCommentAttribute = CommentAttribute.class.isInstance(a);
+                }
+                boolean isCharacteristicAttribute = false;
+                synchronized(CharacteristicAttribute.class){
+                    isCharacteristicAttribute = CharacteristicAttribute.class.isInstance(a);
+                }
+                
+                if (s.getSampleDescription() == null && isCommentAttribute) {
+                    CommentAttribute ca = (CommentAttribute) a;
+                    if (ca.type != null && ca.type.toLowerCase().contains("description")) {
+                        s.setSampleDescription(ca.getAttributeValue());
+                        s.removeAttribute(a);
+                    }
+                } else if (s.getSampleDescription() == null && isCharacteristicAttribute) {
+                    CharacteristicAttribute ca = (CharacteristicAttribute) a;
+                    if (ca.type != null && ca.type.toLowerCase().contains("description")) {
+                        s.setSampleDescription(ca.getAttributeValue());
+                        s.removeAttribute(a);
+                    }
+                }
+            }
         }
         
         //correct term sources
