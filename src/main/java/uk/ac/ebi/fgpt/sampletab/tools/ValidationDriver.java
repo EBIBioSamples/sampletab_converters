@@ -14,6 +14,9 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
@@ -72,6 +75,30 @@ public class ValidationDriver extends AbstractInfileDriver {
                 fireErrorItemEvent(new ErrorItemImpl("Submission Description is null", -1, getClass().getName()));
             } else if (sampledata.msi.submissionDescription.length() < 10){
                 fireErrorItemEvent(new ErrorItemImpl("Submission Description is under 10 characters long", -1, getClass().getName()));
+            }
+            
+            
+            for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
+                //if the node has no descriptions, check none of the attribtues contain the string "description"
+                if (s.getSampleDescription() == null || s.getSampleDescription().length() == 0) {
+                    for (SCDNodeAttribute a : s.getAttributes()) {
+                        if (a.getAttributeType().toLowerCase().contains("description")) {
+                            fireErrorItemEvent(new ErrorItemImpl("Sample "+s.getNodeName()+" has only secondary description", -1, getClass().getName()));
+                        }
+                        boolean isOrganism = false;
+                        synchronized(OrganismAttribute.class) {
+                            if (OrganismAttribute.class.isInstance(a)) {
+                                isOrganism = true;
+                            }
+                        }
+                        if (isOrganism) {
+                            OrganismAttribute oa = (OrganismAttribute) a;
+                            if (oa.getTermSourceID() == null || oa.getTermSourceID().length() == 0) {
+                                fireErrorItemEvent(new ErrorItemImpl("Sample "+s.getNodeName()+" has no Organism Term Source REF", -1, getClass().getName()));
+                            }
+                        }
+                    }
+                }
             }
         }
     }
