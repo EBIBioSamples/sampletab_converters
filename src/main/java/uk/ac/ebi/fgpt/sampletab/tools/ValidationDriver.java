@@ -15,6 +15,8 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
@@ -79,18 +81,43 @@ public class ValidationDriver extends AbstractInfileDriver {
             
             
             for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
+                
                 //if the node has no descriptions, check none of the attribtues contain the string "description"
                 if (s.getSampleDescription() == null || s.getSampleDescription().length() == 0) {
                     for (SCDNodeAttribute a : s.getAttributes()) {
-                        if (a.getAttributeType().toLowerCase().contains("description")) {
-                            fireErrorItemEvent(new ErrorItemImpl("Sample "+s.getNodeName()+" has only secondary description", -1, getClass().getName()));
+                        
+                        boolean isCommentAttribute = false;
+                        synchronized(CommentAttribute.class){
+                            isCommentAttribute = CommentAttribute.class.isInstance(a);
+                        }
+                        boolean isCharacteristicAttribute = false;
+                        synchronized(CharacteristicAttribute.class){
+                            isCharacteristicAttribute = CharacteristicAttribute.class.isInstance(a);
                         }
                         boolean isOrganism = false;
                         synchronized(OrganismAttribute.class) {
-                            if (OrganismAttribute.class.isInstance(a)) {
-                                isOrganism = true;
+                            isOrganism = OrganismAttribute.class.isInstance(a);
+                        }
+                        
+                        if (isCommentAttribute) {
+                            CommentAttribute ca = (CommentAttribute) a;
+                            if (ca.type.toLowerCase().equals("sample description") || 
+                                    ca.type.toLowerCase().equals("sample_description") || 
+                                    ca.type.toLowerCase().equals("description") ) {
+                                fireErrorItemEvent(new ErrorItemImpl("Sample "+s.getNodeName()+" has only secondary description", -1, getClass().getName()));
                             }
                         }
+                        
+                        if (isCharacteristicAttribute) {
+                            CharacteristicAttribute ca = (CharacteristicAttribute) a;
+                            if (ca.type.toLowerCase().equals("sample description") || 
+                                    ca.type.toLowerCase().equals("sample_description") || 
+                                    ca.type.toLowerCase().equals("description") ) {
+                                fireErrorItemEvent(new ErrorItemImpl("Sample "+s.getNodeName()+" has only secondary description", -1, getClass().getName()));
+                            }
+                        }
+
+                        //check that organisms have a tax id
                         if (isOrganism) {
                             OrganismAttribute oa = (OrganismAttribute) a;
                             if (oa.getTermSourceID() == null || oa.getTermSourceID().length() == 0) {

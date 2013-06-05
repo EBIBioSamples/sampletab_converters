@@ -1,11 +1,13 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttribute;
@@ -16,9 +18,11 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
+import uk.ac.ebi.fgpt.sampletab.utils.EuroPMCUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.QueryException_Exception;
 
 public class Corrector {
     // logging
@@ -514,13 +518,34 @@ public class Corrector {
     
     
     public void correct(SampleData sampledata) {
-        //TODO handle nulls here with dummy text
-        if (sampledata.msi.submissionTitle == null) {
+        if (sampledata.msi.submissionTitle == null || sampledata.msi.submissionTitle.length() == 0 ) {
             sampledata.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(sampledata);
         } else {
             sampledata.msi.submissionTitle = stripHTML(sampledata.msi.submissionTitle);
         }
-        sampledata.msi.submissionDescription = stripHTML(sampledata.msi.submissionDescription);
+        
+        if (sampledata.msi.submissionDescription == null || sampledata.msi.submissionDescription.length() == 0) {
+            //no submission description
+            //check if there is a publication
+            Collection<Integer> pubmedids = sampledata.msi.getPubmedIDs();
+            if (pubmedids.size() > 0) {
+                sampledata.msi.submissionDescription = "Samples from  publications. ";
+                for (Integer i : pubmedids) {
+                    String title = null;
+                    try {
+                        title = EuroPMCUtils.getTitleByPUBMEDid(i);
+                    } catch (QueryException_Exception e) {
+                        log.error("Problem getting PubMedID "+i, e);
+                    }
+                    if (title != null) {
+                        sampledata.msi.submissionDescription = sampledata.msi.submissionDescription + title+" ";
+                    }
+                }
+            }
+        } else {
+            sampledata.msi.submissionDescription = stripHTML(sampledata.msi.submissionDescription);
+        }
+        
         
         
         for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
