@@ -1,6 +1,7 @@
 package uk.ac.ebi.fgpt.sampletab.guixml;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -33,17 +34,20 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.scd.SCDNodeFactory;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.scd.SCDTableBuilder;
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class GUIXMLOutputer {
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
     private final File outputFile;
+    private final File outputFileTemp;
     private XMLStreamWriter xmlWriter;
     private boolean started = false;
     
     public GUIXMLOutputer(File outputFile){
         this.outputFile = outputFile;
+        this.outputFileTemp = new File(outputFile.getAbsolutePath()+".tmp");
     }
     
     public synchronized void start() throws SaxonApiException, XMLStreamException {
@@ -53,7 +57,7 @@ public class GUIXMLOutputer {
         started = true;
         
         Processor processor = new Processor(false);
-        Serializer serializer = processor.newSerializer(outputFile);
+        Serializer serializer = processor.newSerializer(outputFileTemp);
         serializer.setOutputProperty(Property.INDENT, "yes"); 
         xmlWriter = serializer.getXMLStreamWriter();
         xmlWriter.writeStartDocument();
@@ -112,12 +116,14 @@ public class GUIXMLOutputer {
         }
     }
     
-    public void end() throws XMLStreamException {
+    public void end() throws XMLStreamException, IOException {
         if (! started){
             throw new RuntimeException("Cannot end a GUIXMLOutputer instance that has not started");
         }
         xmlWriter.writeEndDocument();
         xmlWriter.close();
+        //move temp file over target
+        FileUtils.move(outputFileTemp, outputFile);
     }
     
     public static String stripNonValidXMLCharacters(String in) {
@@ -368,6 +374,7 @@ public class GUIXMLOutputer {
                     if (!attributeHeaders.contains("Sample Description")) attributeHeaders.add("Sample Description");
                 }
                 
+                //in order to make sure that attributes with multiple values are collected together, we need to pre-scan them.
                 Map<String, List<SCDNodeAttribute>> orderedAttributes = new HashMap<String, List<SCDNodeAttribute>>();
 
                 //TODO note that this does not maintain consistent ordering with that in the SampleTab
