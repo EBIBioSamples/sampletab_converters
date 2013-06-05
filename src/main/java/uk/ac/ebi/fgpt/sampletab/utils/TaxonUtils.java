@@ -26,13 +26,22 @@ public class TaxonUtils {
             .build(new CacheLoader<Integer, String>() {
                 public String load(Integer taxID) throws TaxonException {
                  // TODO add meta information identifying this tool
-                    String URL = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=taxonomy&id=" + taxID;
-                    Document doc = null;
+                    URL url;
                     try {
-                        doc = XMLUtils.getDocument(URL);
-                    } catch (DocumentException e) {
+                        url = new URL("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=taxonomy&id=" + taxID);
+                    } catch (MalformedURLException e) {
                         throw new TaxonException(e);
                     }
+                    
+                    Document doc = null;
+                    try {
+                        doc = XMLUtils.getDocument(url);
+                    } catch (DocumentException e) {
+                        throw new TaxonException(e);
+                    } catch (IOException e) {
+                        throw new TaxonException(e);
+                    }
+                    
                     Element root = doc.getRootElement();
                     if (root == null)
                         throw new TaxonException("Unable to find document root of taxid "+taxID);
@@ -138,6 +147,9 @@ public class TaxonUtils {
 
     public static Integer findTaxon(String species) throws TaxonException {
         species = species.trim();
+        //strip out brackets because these are interpreted as special search characters
+        species = species.replace("(", " ");
+        species = species.replace(")", " ");
         if (species == null || species.length() == 0) {
             throw new IllegalArgumentException();
         }
