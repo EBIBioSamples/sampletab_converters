@@ -30,6 +30,8 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.AbstractNodeAttributeOntology;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.scd.SCDNodeFactory;
@@ -378,9 +380,28 @@ public class GUIXMLOutputer {
                 Map<String, List<SCDNodeAttribute>> orderedAttributes = new HashMap<String, List<SCDNodeAttribute>>();
 
                 //TODO note that this does not maintain consistent ordering with that in the SampleTab
+                //TODO note this combines comments and characteristics of the same type on the same sample
                 for (SCDNodeAttribute a : sample.getAttributes()) {
+                    boolean isCommentAttribute = false;
+                    synchronized(CommentAttribute.class){
+                        isCommentAttribute = CommentAttribute.class.isInstance(a);
+                    }
+                    boolean isCharacteristicAttribute = false;
+                    synchronized(CharacteristicAttribute.class){
+                        isCharacteristicAttribute = CharacteristicAttribute.class.isInstance(a);
+                    }
+
                     if (a.getAttributeValue() != null && a.getAttributeValue().length() > 0) {
-                        String header = a.headers()[0];
+                        String header = null;
+                        if (isCommentAttribute) {
+                            CommentAttribute ca = (CommentAttribute) a;
+                            header = ca.type;
+                        } else if (isCharacteristicAttribute) {
+                            CharacteristicAttribute ca = (CharacteristicAttribute) a;
+                            header = ca.type;
+                        } else {
+                            header = a.getAttributeType();
+                        }
                         if (!orderedAttributes.containsKey(header)){
                             orderedAttributes.put(header, new ArrayList<SCDNodeAttribute>());
                         }
