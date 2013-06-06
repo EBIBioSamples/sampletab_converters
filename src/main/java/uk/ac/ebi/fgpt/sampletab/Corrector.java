@@ -205,6 +205,12 @@ public class Corrector {
     
     private SCDNodeAttribute correctOrganism(OrganismAttribute attr, SampleData sampledata) {
 
+        if (attr.getAttributeValue().equals("Clostridium difficle")) {
+            attr.setAttributeValue("Clostridium difficile");
+        } else if (attr.getAttributeValue().equals("Staphylococcus aureu")) {
+            attr.setAttributeValue("Staphylococcus aureus");
+        }
+        
         if (attr.getTermSourceREF() == null){
             if (attr.getAttributeValue().matches("[0-9]+")){
                 Integer taxid = new Integer(attr.getAttributeValue());
@@ -651,13 +657,17 @@ public class Corrector {
                 
                 if (s.getSampleDescription() == null && isCommentAttribute) {
                     CommentAttribute ca = (CommentAttribute) a;
-                    if (ca.type != null && ca.type.toLowerCase().contains("description")) {
+                    if (ca.type.toLowerCase().equals("sample description") || 
+                            ca.type.toLowerCase().equals("sample_description") || 
+                            ca.type.toLowerCase().equals("description")) {
                         s.setSampleDescription(ca.getAttributeValue());
                         s.removeAttribute(a);
                     }
                 } else if (s.getSampleDescription() == null && isCharacteristicAttribute) {
                     CharacteristicAttribute ca = (CharacteristicAttribute) a;
-                    if (ca.type != null && ca.type.toLowerCase().contains("description")) {
+                    if (ca.type.toLowerCase().equals("sample description") || 
+                            ca.type.toLowerCase().equals("sample_description") || 
+                            ca.type.toLowerCase().equals("description")) {
                         s.setSampleDescription(ca.getAttributeValue());
                         s.removeAttribute(a);
                     }
