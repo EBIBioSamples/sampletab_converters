@@ -263,7 +263,7 @@ public class TCGA extends AbstractDriver {
         
         if (abbreviation != null) {
             //no per-sample links, only per project
-            st.msi.databases.add(new Database("The Cancer Genome Atlas", abbreviation, "https://tcga-data.nci.nih.gov/tcga/tcgaCancerDetails.jsp?diseaseType="+abbreviation));
+            st.msi.databases.add(new Database("The Cancer Genome Atlas", "https://tcga-data.nci.nih.gov/tcga/tcgaCancerDetails.jsp?diseaseType="+abbreviation, abbreviation));
         }
         
         //mark as reference layer
