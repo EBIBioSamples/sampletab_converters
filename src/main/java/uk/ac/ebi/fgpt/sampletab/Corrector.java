@@ -533,8 +533,9 @@ public class Corrector {
         if (sampledata.msi.submissionDescription == null || sampledata.msi.submissionDescription.length() == 0) {
             //no submission description
             //check if there is a publication
-            //Collection<Integer> pubmedids = sampledata.msi.getPubmedIDs();
+            Collection<Integer> pubmedids = sampledata.msi.getPubmedIDs();
 
+            /*
             Collection<Integer> pubmedids = new ArrayList<Integer>();
             for (Publication p : sampledata.msi.publications) {
                 Integer pubmedid = null;
@@ -547,6 +548,7 @@ public class Corrector {
                     pubmedids.add(pubmedid);
                 }
             }
+            */
             
             if (pubmedids.size() > 0) {
                 sampledata.msi.submissionDescription = "Samples from  publications. ";
