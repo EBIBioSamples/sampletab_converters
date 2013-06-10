@@ -380,6 +380,8 @@ public class MageTabToSampleTab {
         st.msi.databases.add(dblink);
         
         //add link to SRA if present
+        /*
+         * GUI Can't handle this at the moment
         if (mt.IDF.getComments().containsKey("SecondaryAccession")) {
             for (String secondary : mt.IDF.getComments().get("SecondaryAccession")) {
                 if (secondary.matches("[DES]RP[0-9]+")) {
@@ -393,6 +395,7 @@ public class MageTabToSampleTab {
                 }
             }
         }
+        */
         
 
         log.debug("Creating node names");
