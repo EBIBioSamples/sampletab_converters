@@ -122,7 +122,10 @@ public class MageTabCron {
 		}
 
 
-        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        ExecutorService pool = null;
+        if (threads > 0) {
+            pool = Executors.newFixedThreadPool(threads);
+        }
         
         
         Set<String> conanProcess = new HashSet<String>();
@@ -243,15 +246,17 @@ public class MageTabCron {
 		
         // run the pool and then close it afterwards
         // must synchronize on the pool object
-        synchronized (pool) {
-            pool.shutdown();
-            try {
-                // allow 24h to execute. Rather too much, but meh
-                pool.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                log.error("Interuppted awaiting thread pool termination", e);
+		if (pool != null) {
+            synchronized (pool) {
+                pool.shutdown();
+                try {
+                    // allow 24h to execute. Rather too much, but meh
+                    pool.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    log.error("Interuppted awaiting thread pool termination", e);
+                }
             }
-        }
+		}
 
         
         //tell conan to process those files that have changed
