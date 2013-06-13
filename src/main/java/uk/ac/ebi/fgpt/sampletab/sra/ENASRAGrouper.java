@@ -97,9 +97,13 @@ public class ENASRAGrouper {
             if (studyIDs.size() == 0) {
                 //did not find any studies directly
                 //try indirect via submission
+                //only add one study this way
                 Collection<String> submissionIds = ENAUtils.getSubmissionsForSample(sampleId);
                 for (String submissionId : submissionIds) {
-                    studyIDs.addAll(ENAUtils.getStudiesForSubmission(submissionId));
+                    Collection<String> studiesInSubmission = ENAUtils.getStudiesForSubmission(submissionId);
+                    if (studiesInSubmission.size() == 1) {
+                        studyIDs.addAll(studiesInSubmission);
+                    }
                 }
                 
                 if (studyIDs.size() == 0) {
