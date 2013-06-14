@@ -204,11 +204,22 @@ public class Corrector {
     }
     
     private SCDNodeAttribute correctOrganism(OrganismAttribute attr, SampleData sampledata) {
-
+        if (attr.getAttributeValue().startsWith("Organism:")) {
+            attr.setAttributeValue(attr.getAttributeValue().substring(9));
+        }
+        
         if (attr.getAttributeValue().equals("Clostridium difficle")) {
             attr.setAttributeValue("Clostridium difficile");
         } else if (attr.getAttributeValue().equals("Staphylococcus aureu")) {
             attr.setAttributeValue("Staphylococcus aureus");
+        } else if (attr.getAttributeValue().equals("Homo sapien")) {
+            attr.setAttributeValue("Homo sapiens");
+        } else if (attr.getAttributeValue().equals("Lepeophteirus salmonis")) {
+            attr.setAttributeValue("Lepeophtheirus salmonis");
+        } else if (attr.getAttributeValue().equals("Salmon salar")) {
+            attr.setAttributeValue("Salmo salar");
+        } else if (attr.getAttributeValue().equals("Gadus morrhua")) {
+            attr.setAttributeValue("Gadus morhua");
         }
         
         if (attr.getTermSourceREF() == null){
@@ -535,7 +546,7 @@ public class Corrector {
             //check if there is a publication
             //Collection<Integer> pubmedids = sampledata.msi.getPubmedIDs();
 
-            //Do it this way so it is compatible with limpopo-sampletab rathe than SNAPSHOT
+            //Do it this way so it is compatible with limpopo-sampletab rather than SNAPSHOT
             Collection<Integer> pubmedids = new ArrayList<Integer>();
             for (Publication p : sampledata.msi.publications) {
                 Integer pubmedid = null;
