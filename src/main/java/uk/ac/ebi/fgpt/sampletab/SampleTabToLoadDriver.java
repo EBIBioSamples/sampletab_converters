@@ -17,7 +17,6 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-import uk.ac.ebi.arrayexpress2.sampletab.validator.LoadValidator;
 
 public class SampleTabToLoadDriver extends AbstractInfileDriver {
 
