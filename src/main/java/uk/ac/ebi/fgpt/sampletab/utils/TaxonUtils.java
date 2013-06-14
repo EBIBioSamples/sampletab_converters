@@ -86,7 +86,7 @@ public class TaxonUtils {
                     Element idlist = XMLUtils.getChildByName(root, "IdList");
                     if (idlist != null) {
                         Element id = XMLUtils.getChildByName(idlist, "Id");
-                        if (id == null) {
+                        if (id != null) {
                             return new Integer(id.getTextTrim());
                         }
                     }
