@@ -220,6 +220,12 @@ public class Corrector {
             attr.setAttributeValue("Salmo salar");
         } else if (attr.getAttributeValue().equals("Gadus morrhua")) {
             attr.setAttributeValue("Gadus morhua");
+        } else if (attr.getAttributeValue().equals("Mus muscules")) {
+            attr.setAttributeValue("Mus musculus");
+        } else if (attr.getAttributeValue().equals("Mus muculus")) {
+            attr.setAttributeValue("Mus musculus");
+        } else if (attr.getAttributeValue().equals("Candida albicancs")) {
+            attr.setAttributeValue("Candida albicans");
         }
         
         if (attr.getTermSourceREF() == null){
