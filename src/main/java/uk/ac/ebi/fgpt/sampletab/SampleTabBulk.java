@@ -21,9 +21,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 
 public class SampleTabBulk extends AbstractInfileDriver {
 
-    @Option(name = "--scripts", aliases={"-c"}, usage = "script directory")
-    private String scriptDirname;
-
     @Option(name = "--hostname", aliases={"-n"}, usage = "server hostname")
     private String hostname;
 
@@ -93,7 +90,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
     }
     
     public void process(File subdir, File scriptdir){
-        Runnable t = new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, getDerivedFrom(), force);
+        Runnable t = new DoProcessFile(subdir, corrector, accessioner, sameAs, getDerivedFrom(), force);
         t.run();
     }
     
@@ -110,7 +107,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
         
         private Logger log = LoggerFactory.getLogger(getClass());
         
-        public DoProcessFile(File subdir, File scriptdir, Corrector corrector, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom, boolean force){
+        public DoProcessFile(File subdir, Corrector corrector, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom, boolean force){
             
             sampletabpre = new File(subdir, "sampletab.pre.txt");
             sampletab = new File(subdir, "sampletab.txt");
@@ -246,22 +243,10 @@ public class SampleTabBulk extends AbstractInfileDriver {
         new SampleTabBulk().doMain(args);
     }
 
-    
-    @Override
-    public void preProcess() {        
-        File scriptdir = new File(scriptDirname);
-        if (!scriptdir.exists() && !scriptdir.isDirectory()) {
-            log.error("Script directory missing or is not a directory");
-            System.exit(1);
-            return;
-        }
-    }
-
     @Override
     protected Runnable getNewTask(File inputFile) {
-        File scriptdir = new File(scriptDirname);
         File subdir = inputFile.getAbsoluteFile().getParentFile();
-        return new DoProcessFile(subdir, scriptdir, corrector, accessioner, sameAs, getDerivedFrom(), force);
+        return new DoProcessFile(subdir, corrector, accessioner, sameAs, getDerivedFrom(), force);
     }
 
     private synchronized DerivedFrom getDerivedFrom() {
