@@ -300,6 +300,18 @@ public class Corrector {
             return correctSex(new SexAttribute(attr.getAttributeValue()), sampledata);
         }
         
+        //change samplename into synonyms
+        if (attr.type.toLowerCase().equals("sample name") 
+                || attr.type.toLowerCase().equals("sample_name")
+                ) {
+            return new CommentAttribute("synonym", attr.getAttributeValue());
+        }
+        //change sample description into secondary description
+        if (attr.type.toLowerCase().equals("sample description") 
+                || attr.type.toLowerCase().equals("sample_description")
+                ) {
+            return new CommentAttribute("secondary description", attr.getAttributeValue());
+        }
         
         //TODO make material a separate attribute
         
@@ -538,7 +550,34 @@ public class Corrector {
         
         return attr;
     }
+
     
+    private SCDNodeAttribute correctComment(CommentAttribute attr, SampleData sampledata) {        
+        //bulk replace underscore with space in types
+        attr.type = attr.type.replace("_", " ");
+
+        //change samplename into synonyms
+        if (attr.type.toLowerCase().equals("sample name") 
+                || attr.type.toLowerCase().equals("sample_name")
+                ) {
+            return new CommentAttribute("synonym", attr.getAttributeValue());
+        }
+        //change sample description into secondary description
+        if (attr.type.toLowerCase().equals("sample description") 
+                || attr.type.toLowerCase().equals("sample_description")
+                ) {
+            return new CommentAttribute("secondary description", attr.getAttributeValue());
+        }
+                
+        //TODO promote some comments to characteristics
+        
+
+        if (attr.unit != null){
+            attr.unit = correctUnit(attr.unit);
+        }
+        
+        return attr;
+    }
     
     public void correct(SampleData sampledata) {
         if (sampledata.msi.submissionTitle == null || sampledata.msi.submissionTitle.length() == 0 ) {
@@ -641,7 +680,7 @@ public class Corrector {
                 } else if (isOrganism) {
                     updated = correctOrganism((OrganismAttribute) a, sampledata);
                 } else if (isComment) {
-                    //TODO comments
+                    updated = correctComment((CommentAttribute) a, sampledata);
                 }
                 
                 //TODO promote some comments to characteristics
