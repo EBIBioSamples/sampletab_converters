@@ -30,6 +30,8 @@ public class Validator extends AbstractInfileDriver {
         private String groupID = null;
         private final Collection<String> sampleattributesknown = new ArrayList<String>();
         private boolean inSample = false;
+        private boolean inGroup = false;
+        private String attributeClass = null;
         private final Collection<String> sampleattributesseen = new HashSet<String>();
         private final Collection<String> sampleattributesseensample = new ArrayList<String>();
 
@@ -39,6 +41,7 @@ public class Validator extends AbstractInfileDriver {
         
         //TODO
         //ensure every sample has a "Sample Accession" attribute
+        //endsure very group has update and release dates in the correct format YYYY/MM/DD
         
         @Override
         public void startElement(String uri, String localName, String name, Attributes atts) throws SAXException {
@@ -50,11 +53,13 @@ public class Validator extends AbstractInfileDriver {
                 } else if (!groupID.matches("SAM[END][AG]?[1-9][0-9]{4,}")) {
                     throw new SAXException(groupID+" is not a valid group ID");
                 }
+                inSample = false;
+                inGroup = true;
             } else if (name.equals("SampleAttributes")) {
                 if (sampleattributesknown.size() != 0) {
                     throw new SAXException("Multiple SampleAttributes in "+groupID);
                 }
-            } else if (name.equals("SampleAttribute")) {
+            } else if (name.equals("SampleAttribute")) { //TODO fix - no such thing as SampleAttribute
                 String className = atts.getValue("class");
                 if (className == null ) {
                     throw new SAXException("Missing SampleAttribute class in "+groupID);
@@ -66,6 +71,7 @@ public class Validator extends AbstractInfileDriver {
                 }
             } else if (name.equals("Sample")) {
                 inSample = true;
+                inGroup = false;
                 //check group id
                 String sampleGroupID = atts.getValue("groupId");
                 if (!groupID.equals(sampleGroupID)) {
@@ -100,8 +106,10 @@ public class Validator extends AbstractInfileDriver {
             if (name.equals("SampleGroup")) {
                 groupID = null;
                 sampleattributesknown.clear();
+                inGroup = false;
             } else if (name.equals("Sample")) {
                 inSample = false;
+                inGroup = true;
                 sampleattributesseen.addAll(sampleattributesseensample);
                 sampleattributesseensample.clear();
             } else if (name.equals("SampleAttribute")) {
