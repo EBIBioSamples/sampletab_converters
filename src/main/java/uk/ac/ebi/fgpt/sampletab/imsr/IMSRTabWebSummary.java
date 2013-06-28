@@ -34,7 +34,7 @@ public class IMSRTabWebSummary {
 		// private constructor
 	}
 	
-	public void get() throws ParseException, NumberFormatException, IOException{
+	private void get() throws ParseException, NumberFormatException, IOException {
         BufferedReader input = null;
         String line;
         int lineid = 0;
@@ -75,9 +75,12 @@ public class IMSRTabWebSummary {
 	    
 	}
 	 
-    public static synchronized IMSRTabWebSummary getInstance() {
+    public static synchronized IMSRTabWebSummary getInstance() throws NumberFormatException, ParseException, IOException {
     	if (instance == null){
-    		instance = new IMSRTabWebSummary();
+    	    //put into a temporary variable so any errors are thrown before caching
+    	    IMSRTabWebSummary tmpInstance = new IMSRTabWebSummary();
+    	    tmpInstance.get();
+    		instance = tmpInstance;
     	}
         return instance;
     }

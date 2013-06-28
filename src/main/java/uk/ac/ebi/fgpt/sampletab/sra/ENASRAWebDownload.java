@@ -29,14 +29,11 @@ import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class ENASRAWebDownload {
-
-    // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public ENASRAWebDownload() {
-        
+        //Nothing to do in constructor
     }
-
 
     public boolean download(String accession, String outdir) throws DocumentException, IOException {
         return this.download(accession, new File(outdir));
@@ -183,30 +180,5 @@ public class ENASRAWebDownload {
             }
         }
         return true;
-    }
-
-    public static void main(String[] args) {
-        ENASRAWebDownload downloader = new ENASRAWebDownload();
-        downloader.doMain(args);
-    }
-        
-    public void doMain(String[] args){
-        if (args.length < 2) {
-            System.out.println("Must provide an ENA SRA study accession and an output directory.");
-            return;
-        }
-        String accession = args[0];
-        String outdir = args[1];
-
-        try {
-            download(accession, outdir);
-        } catch (DocumentException e) {
-            log.error("Unable to download "+accession+" to "+outdir, e);
-            System.exit(2);
-        } catch (IOException e) {
-            log.error("Unable to download "+accession+" to "+outdir, e);
-            System.exit(3);
-        }
-
     }
 }

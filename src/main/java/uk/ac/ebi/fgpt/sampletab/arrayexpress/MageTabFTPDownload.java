@@ -13,9 +13,7 @@ public class MageTabFTPDownload {
 	//singlton instance
 	private static MageTabFTPDownload instance = null;
 	
-    // logging
     private Logger log = LoggerFactory.getLogger(getClass());
-
     
 	private MageTabFTPDownload(){
 		//private constructor to prevent accidental multiple initialisations
@@ -94,25 +92,4 @@ public class MageTabFTPDownload {
 			}
 		}
 	}
-
-	public static void main(String[] args) {
-        MageTabFTPDownload magetabftpdownload = MageTabFTPDownload.getInstance();
-        magetabftpdownload.doMain(args);
-	}
-    public void doMain(String[] args){
-		if (args.length < 2){
-			System.out.println("Must provide an ArrayExpress submission identifier and an output directory.");
-			return;
-		}
-		String accession = args[0];
-		String outdir = args[1];
-		
-		try {
-            download(accession, outdir);
-        } catch (IOException e) {
-            log.error("Unable to download "+accession, e);
-        }
-
-	}
-
 }

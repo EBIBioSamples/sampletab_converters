@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FileRecursiveIterable;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
@@ -156,8 +157,18 @@ public class ENASRACron {
                 SampleTabUtils.releaseInACentury(sampletabpre);
             } catch (IOException e) {
                 log.error("problem making "+sampletabpre+" private", e);
+                continue;
             } catch (ParseException e) {
                 log.error("problem making "+sampletabpre+" private", e);
+                continue;
+            }
+            //trigger conan, if appropriate
+            if (!noconan) {
+                try {
+                    ConanUtils.submit(submissionID, "BioSamples (other)");
+                } catch (IOException e) {
+                    log.error("problem making "+sampletabpre+" private through Conan", e);
+                }
             }
         }
         

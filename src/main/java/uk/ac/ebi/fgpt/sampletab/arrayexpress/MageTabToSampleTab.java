@@ -380,23 +380,18 @@ public class MageTabToSampleTab {
         st.msi.databases.add(dblink);
         
         //add link to SRA if present
-        /*
-         * GUI Can't handle this at the moment
-        if (mt.IDF.getComments().containsKey("SecondaryAccession")) {
-            for (String secondary : mt.IDF.getComments().get("SecondaryAccession")) {
-                if (secondary.matches("[DES]RP[0-9]+")) {
-                    log.info("This has an ENA SRA reference");
-                    
-                    dblink = new Database("ENA SRA", 
-                            "http://www.ebi.ac.uk/ena/data/view/" + secondary,
-                            secondary);
-                    st.msi.databases.add(dblink);
-                    
-                }
-            }
-        }
-        */
-        
+        //  GUI Can't handle this at the moment
+//        if (mt.IDF.getComments().containsKey("SecondaryAccession")) {
+//            for (String secondary : mt.IDF.getComments().get("SecondaryAccession")) {
+//                if (secondary.matches("[DES]RP[0-9]+")) {
+//                    log.info("This has an ENA SRA reference");
+//                    dblink = new Database("ENA SRA", 
+//                            "http://www.ebi.ac.uk/ena/data/view/" + secondary,
+//                            secondary);
+//                    st.msi.databases.add(dblink);
+//                }
+//            }
+//        }
 
         log.debug("Creating node names");
         for (SDRFNode sdrfnode : mt.SDRF.getRootNodes()) {
@@ -406,7 +401,6 @@ public class MageTabToSampleTab {
         //correct any term source issues here first
         CorrectorTermSource cts = new CorrectorTermSource();
         cts.correct(st);
-        
         
         //simple sanity check to avoid generating stupid files
         if (st.scd.getAllNodes().size() == 0){

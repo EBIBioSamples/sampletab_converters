@@ -36,7 +36,7 @@ public class IMSRTabcron {
 	
 	private void submitConan(String submissionIdentifier){
         try {
-            ConanUtils.submit(submissionIdentifier, "BioSamples (IMSR)");
+            ConanUtils.submit(submissionIdentifier, "BioSamples (other)");
         } catch (IOException e) {
             log.error("Problem submitting "+submissionIdentifier, e);
         }
@@ -74,9 +74,9 @@ public class IMSRTabcron {
 		if (!outdir.exists())
 			outdir.mkdirs();
 
-		IMSRTabWebSummary summary = IMSRTabWebSummary.getInstance();
+		IMSRTabWebSummary summary = null;
 		try {
-            summary.get();
+		    summary = IMSRTabWebSummary.getInstance();
         } catch (NumberFormatException e) {
             log.error("Unable to download summary", e);
             System.exit(1);
@@ -96,18 +96,39 @@ public class IMSRTabcron {
             String site = summary.sites.get(i);
             String subID = "GMS-"+site;
             File raw = new File(new File(outdir, subID), "raw.tab.txt");
-            if (!raw.exists()){
+            File sampletabpre = new File(new File(outdir, subID), "sampletab.pre.txt");
+            Date fileDate = null;
+            
+            if (raw.exists()) {
+                fileDate = new Date(raw.lastModified());
+            }
+            
+            if (fileDate == null || summary.updates.get(i).after(fileDate)) {
+                //get the raw.tab.txt file
                 downloader.download(subID, raw);
-                if (!noconan){
-                    submitConan(subID);
+                // convert raw.tab.txt to sampletab.pre.txt
+                IMSRTabToSampleTab c = new IMSRTabToSampleTab();
+                try {
+                    c.convert(raw, sampletabpre);
+                } catch (NumberFormatException e) {
+                    log.error("Problem processing "+raw, e);
+                    return;
+                } catch (IOException e) {
+                    log.error("Problem processing "+raw, e);
+                    return;
+                } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
+                    log.error("Problem processing "+raw, e);
+                    return;
+                } catch (java.text.ParseException e) {
+                    log.error("Problem processing "+raw, e);
+                    return;
+                } catch (RuntimeException e) {
+                    log.error("Problem processing "+raw, e);
+                    return;
                 }
-            } else {
-                Date fileDate = new Date(raw.lastModified());
-                if (summary.updates.get(i).after(fileDate)){
-                    downloader.download(subID, raw);
-                    if (!noconan){
-                        submitConan(subID);
-                    }
+                //submit to conan for further processing, if needed
+                if (!noconan) {
+                    submitConan(subID);
                 }
             }
         }

@@ -35,32 +35,12 @@ import uk.ac.ebi.fgpt.sampletab.Normalizer;
 
 public class IMSRTabToSampleTab {
 
-    private static IMSRTabWebSummary summary = null;
-
     private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     
-    // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    IMSRTabToSampleTab() {
-    }
-
-    private IMSRTabWebSummary getSummary() throws NumberFormatException, java.text.ParseException, IOException {
-        if (summary == null) {
-            summary = IMSRTabWebSummary.getInstance();
-            synchronized (summary) {
-                try {
-                    summary.get();
-                } catch (IOException e) {
-                    if (e.toString().contains("Server returned HTTP response code: 502 for URL")) {
-                        // try again
-                        log.info("Retrying getting summary");
-                        summary.get();
-                    }
-                }
-            }
-        }
-        return summary;
+    public IMSRTabToSampleTab() {
+        //Nothing to do in constructor
     }
 
     public Logger getLog() {
@@ -337,19 +317,22 @@ public class IMSRTabToSampleTab {
     private void addSite(SampleData st, String site) throws NumberFormatException, java.text.ParseException,
             IOException {
         log.info("Adding site " + site);
-        assert getSummary().sites.contains(site);
-        int index = getSummary().sites.indexOf(site);
+        
+        IMSRTabWebSummary summary = IMSRTabWebSummary.getInstance();
+        
+        assert summary.sites.contains(site);
+        int index = summary.sites.indexOf(site);
         assert index >= 0;
-        st.msi.submissionTitle = "International Mouse Strain Resource - " + getSummary().facilities.get(index);
+        st.msi.submissionTitle = "International Mouse Strain Resource - " + summary.facilities.get(index);
         st.msi.submissionDescription = "The IMSR is a searchable online database of mouse strains and stocks available worldwide, including inbred, mutant, and genetically engineered mice. The goal of the IMSR is to assist the international scientific community in locating and obtaining mouse resources for research. These samples are held by "
-                + getSummary().facilities.get(index);
+                + summary.facilities.get(index);
         st.msi.submissionReleaseDate = new GregorianCalendar(2011, 10, 10).getTime();
-        st.msi.submissionUpdateDate = getSummary().updates.get(index);
+        st.msi.submissionUpdateDate = summary.updates.get(index);
         st.msi.submissionIdentifier = "GMS-" + site;
         st.msi.submissionReferenceLayer = true;
 
         st.msi.organizations.add(new Organization("International Mouse Strain Resource", null, "http://www.findmice.org/", null, null));
-        st.msi.organizations.add(new Organization(getSummary().facilities.get(index), null, "http://www.findmice.org/", null, "Biomaterial Provider"));
+        st.msi.organizations.add(new Organization(summary.facilities.get(index), null, "http://www.findmice.org/", null, "Biomaterial Provider"));
         
         st.msi.databases.add(new Database("IMSR "+site, "http://www.findmice.org/summary?query=&repositories="+site, site));
     }

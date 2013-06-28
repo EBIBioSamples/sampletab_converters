@@ -56,7 +56,7 @@ public class PRIDEXMLToSampleTab {
     @Option(name = "-p", aliases={"--projects"}, usage = "projects filename")
     private String projectsFilename;
 
-    private Map<String, Set<String>> projects;
+    private Map<String, Set<String>> projects = null;
 
     private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     
@@ -69,6 +69,10 @@ public class PRIDEXMLToSampleTab {
     
     public PRIDEXMLToSampleTab(String projectsFilename) {
         this.projectsFilename = projectsFilename;
+    }
+    
+    public PRIDEXMLToSampleTab(Map<String, Set<String>> projects) {
+        this.projects = projects;
     }
     
     public String getOrAddTermSource(SampleData st, String key) {
@@ -483,10 +487,10 @@ public class PRIDEXMLToSampleTab {
 
         //find the project
         String projectname = null;
-        for (String name: getProjects().keySet()){
+        for (String name: getProjects().keySet()) {
             //TODO handle where one accession is in multiple projects...
-            if (getProjects().get(name).contains(accession)){
-                if (projectname == null){
+            if (getProjects().get(name).contains(accession)) {
+                if (projectname == null) {
                     projectname = name;
                 } else {
                     log.warn("Multiple project names for "+accession+" : "+name);
@@ -502,16 +506,16 @@ public class PRIDEXMLToSampleTab {
 
         HashSet<File> prideFiles = new HashSet<File>();
         
-        if (projectsFilename != null){
+        if (projectsFilename != null) {
             //if a project filename was given, then we find the project that the provided input filename is part of
-            if (getProjects() == null){
+            if (getProjects() == null) {
                 log.warn("No files of project "+projectname+" to process");
                 return;
             }
             
             //now add all the files that are similar to the input filename but with the other accessions
             Set<String> accessions = getProjects().get(projectname);
-            for (String subaccession : accessions){
+            for (String subaccession : accessions) {
                 prideFiles.add(new File(inputFilename.replace(accession, subaccession)));
             }
             
@@ -519,7 +523,7 @@ public class PRIDEXMLToSampleTab {
             prideFiles.add(new File(inputFilename));
         }
         
-        if (!accession.equals(Collections.min(getProjects().get(projectname)))){
+        if (!accession.equals(Collections.min(getProjects().get(projectname)))) {
             log.error("Accession is not minimum in project, aborting");
             return;
         }

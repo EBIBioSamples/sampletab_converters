@@ -31,10 +31,12 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class PRIDEcron {
 
@@ -281,30 +283,6 @@ public class PRIDEcron {
             }
         }
     }
-    
-    private void submitToConan() {
-        if (noconan){
-            return;
-        }
-        Set<String> updatedProjects = new HashSet<String>();
-        for (String updatedAccession : updated){
-            for (String project : subs.keySet()){
-                if (subs.get(project).contains(updatedAccession)){
-                    updatedProjects.add(project);
-                }
-            }
-        }
-        
-        for (String project : updatedProjects){
-            try {
-                if (!noconan){
-                    ConanUtils.submit("GPR-"+project, "BioSamples (PRIDE)");
-                }
-            } catch (IOException e) {
-                log.error("Unable to submit to conan GPR-"+project, e);
-            }
-        }
-    }
 
     public static void main(String[] args) {
         new PRIDEcron().doMain(args);
@@ -383,9 +361,54 @@ public class PRIDEcron {
         } catch (IOException e) {
             log.error("Unable to move "+projout+" to "+projoutFinal, e);
         }
+
+        PRIDEXMLToSampleTab c = new PRIDEXMLToSampleTab(subs);
         
         //trigger conan for any project that have been extended or updated
-        submitToConan();
+        Set<String> updatedProjects = new HashSet<String>();
+        for (String updatedAccession : updated){
+            for (String project : subs.keySet()){
+                if (subs.get(project).contains(updatedAccession)){
+                    updatedProjects.add(project);
+                }
+            }
+        }
+        
+        for (String project : updatedProjects){
+            String projectSubmissionID = "GPR-"+project;
+            
+            Set<File> xmlFiles = new HashSet<File>();
+            for (String submissionID : subs.get(project)) {
+                File dirFile = SampleTabUtils.getSubmissionDirFile(submissionID);
+                File xmlFile = new File(dirFile.toString(), "trimmed.xml");
+                xmlFiles.add(xmlFile);
+            }
+            
+            File dirFile = SampleTabUtils.getSubmissionDirFile(projectSubmissionID);
+            File sampletabpre = new File(dirFile.toString(), "sampletab.pre.txt");
+            
+            try {
+                c.convert(xmlFiles, sampletabpre);
+            } catch (ValidateException e) {
+                log.error("Problem processing "+projectSubmissionID, e);
+                continue;
+            } catch (IOException e) {
+                log.error("Problem processing "+projectSubmissionID, e);
+                continue;
+            } catch (DocumentException e) {
+                log.error("Problem processing "+projectSubmissionID, e);
+                continue;
+            }
+            
+            //submit to conan for further processing if needed
+            if (!noconan){
+                try {
+                        ConanUtils.submit(projectSubmissionID, "BioSamples (other)");
+                } catch (IOException e) {
+                    log.error("Unable to submit to conan "+projectSubmissionID, e);
+                }
+            }
+        }
         
         
         //TODO handle removed projects

@@ -13,12 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class IMSRTabWebDownload {
-
-	// logging
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	public IMSRTabWebDownload() {
-
+        //Nothing to do in constructor
 	}
 	
 	public void download(String accession, String outdir) {
@@ -84,19 +82,4 @@ public class IMSRTabWebDownload {
             }
 		}
 	}
-
-	public static void main(String[] args) {
-		if (args.length < 2) {
-			System.out
-					.println("Must provide a IMSR accession and an output filename.");
-			return;
-		}
-		String accession = args[0];
-		String outdir = args[1];
-
-		IMSRTabWebDownload downloader = new IMSRTabWebDownload();
-		downloader.download(accession, outdir);
-
-	}
-
 }

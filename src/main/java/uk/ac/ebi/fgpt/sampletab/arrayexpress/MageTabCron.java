@@ -103,6 +103,39 @@ public class MageTabCron {
 	        return false;
 	    }
 	}
+	
+	private class MageTabCronRunnable implements Runnable {
+
+        private final String idfFTPPath;
+        private final File idfOut;
+	    private final String sdrfFTPPath;
+	    private final File sdrfOut;
+	    private final File outSampleTabPre;
+	    
+	    public MageTabCronRunnable(String idfFTPPath, File idfOut, String sdrfFTPPath, File sdrfOut, File outSampleTabPre) {
+            this.idfFTPPath = idfFTPPath;
+            this.idfOut = idfOut;
+	        this.sdrfFTPPath = sdrfFTPPath;
+	        this.sdrfOut = sdrfOut;
+	        this.outSampleTabPre = outSampleTabPre;
+	    }
+	    
+        @Override
+        public void run() {
+            Runnable r = new CurlDownload(sdrfFTPPath, sdrfOut.getAbsolutePath());
+            r.run();
+            r = new CurlDownload(idfFTPPath, idfOut.getAbsolutePath());
+            r.run();
+            MageTabToSampleTab mttst = new MageTabToSampleTab();
+            try {
+                mttst.convert(idfOut, outSampleTabPre);
+            } catch (IOException e) {
+                log.error("Unable to write "+outSampleTabPre, e);
+            } catch (ParseException e) {
+                log.error("Unable to parse "+idfOut, e);
+            }   
+        }
+	}
 
 	public void run(File outdir) {
 		FTPFile[] subdirs = null;
@@ -201,13 +234,13 @@ public class MageTabCron {
                         }
                         
                         
-						File outsubdir = new File(outdir, submissionIdentifier);
-						if (!outsubdir.exists())
-							outsubdir.mkdirs();
+						File outsubdir = SampleTabUtils.getSubmissionDirFile(submissionIdentifier);
+						if (!outsubdir.exists()) outsubdir.mkdirs();
 						File outidf = new File(outsubdir, subsubdir.getName()
 								+ ".idf.txt");
 						File outsdrf = new File(outsubdir, subsubdir.getName()
 								+ ".sdrf.txt");
+						File outSampleTabPre = new File(outsubdir, "sampletab.pre.txt"); 
 
                         Calendar ftpidftime = idfFTPFile.getTimestamp();
                         Calendar outidftime = new GregorianCalendar();
@@ -217,27 +250,20 @@ public class MageTabCron {
                         outsdrftime.setTimeInMillis(outsdrf.lastModified());
 
                         //rather than using the java FTP libraries - which seem to
-                        //break quite often - use curl. Sacrifices multiplatformness
-                        //for reliability.
-						if (!outidf.exists() || ftpidftime.after(outidftime)){
-	                        Runnable t = new CurlDownload("ftp://ftp.ebi.ac.uk"+idfpath, outidf.getAbsolutePath());
-	                        if (threads > 0){
-	                            pool.execute(t);
-	                        } else {
-	                            t.run();
-	                        }
-	                        conanProcess.add(submissionIdentifier);
-						}
-                        if (!outsdrf.exists() || ftpsdrftime.after(outsdrftime)){
-                            //TODO fix where SDRF does not match this file pattern
-                            Runnable t = new CurlDownload("ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf.getAbsolutePath());
+                        //break quite often - use curl via command line. 
+                        //Sacrifices multiplatformness for reliability.
+						if (!outidf.exists() || ftpidftime.after(outidftime) 
+						        || !outsdrf.exists() || ftpsdrftime.after(outsdrftime)){
+                            //TODO fix where SDRF does not match this file pattern                            
+                            Runnable t = new MageTabCronRunnable("ftp://ftp.ebi.ac.uk"+idfpath, outidf, "ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf, outSampleTabPre);
                             if (threads > 0){
                                 pool.execute(t);
                             } else {
                                 t.run();
                             }
-                            if (!noconan)
+                            if (!noconan) {
                                 conanProcess.add(submissionIdentifier);
+                            }
                         }
 					}
 				}
@@ -260,11 +286,12 @@ public class MageTabCron {
 
         
         //tell conan to process those files that have changed
+		//do this after the pool has closed so we know those files have actually changed on disk by now
         
-        for (String submissionIdentifier : conanProcess){
+        for (String submissionIdentifier : conanProcess) {
             if (!noconan) {
                 try {
-                    ConanUtils.submit(submissionIdentifier, "BioSamples (AE)");
+                    ConanUtils.submit(submissionIdentifier, "BioSamples (other)");
                 } catch (IOException e) {
                     log.warn("Problem submitting to Conan "+submissionIdentifier, e);
                 }
@@ -279,7 +306,7 @@ public class MageTabCron {
         log.info("Starting deleted processing");
         File[] stsubdirs = outdir.listFiles();
         Arrays.sort(stsubdirs);
-        for(File subdir : stsubdirs){
+        for(File subdir : stsubdirs) {
             
             if (!connectFTP()){
                 System.exit(1);
