@@ -95,35 +95,42 @@ public class IMSRTabcron {
         for(int i = 0; i < summary.sites.size(); i++){
             String site = summary.sites.get(i);
             String subID = "GMS-"+site;
-            File raw = new File(new File(outdir, subID), "raw.tab.txt");
-            File sampletabpre = new File(new File(outdir, subID), "sampletab.pre.txt");
-            Date fileDate = null;
+            File rawFile = new File(new File(outdir, subID), "raw.tab.txt");
+            File preFile = new File(new File(outdir, subID), "sampletab.pre.txt");
+            Date rawDate = null;
+            Date preDate = null;
             
-            if (raw.exists()) {
-                fileDate = new Date(raw.lastModified());
+            if (rawFile.exists()) {
+                rawDate = new Date(rawFile.lastModified());
+            }
+            if (preFile.exists()) {
+                preDate = new Date(preFile.lastModified());
             }
             
-            if (fileDate == null || summary.updates.get(i).after(fileDate)) {
+            if (rawDate == null || summary.updates.get(i).after(rawDate)) {
                 //get the raw.tab.txt file
-                downloader.download(subID, raw);
+                downloader.download(subID, rawFile);
+            }
+            
+            if (preDate == null || summary.updates.get(i).after(preDate)) {
                 // convert raw.tab.txt to sampletab.pre.txt
                 IMSRTabToSampleTab c = new IMSRTabToSampleTab();
                 try {
-                    c.convert(raw, sampletabpre);
+                    c.convert(rawFile, preFile);
                 } catch (NumberFormatException e) {
-                    log.error("Problem processing "+raw, e);
+                    log.error("Problem processing "+rawFile, e);
                     return;
                 } catch (IOException e) {
-                    log.error("Problem processing "+raw, e);
+                    log.error("Problem processing "+rawFile, e);
                     return;
                 } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
-                    log.error("Problem processing "+raw, e);
+                    log.error("Problem processing "+rawFile, e);
                     return;
                 } catch (java.text.ParseException e) {
-                    log.error("Problem processing "+raw, e);
+                    log.error("Problem processing "+rawFile, e);
                     return;
                 } catch (RuntimeException e) {
-                    log.error("Problem processing "+raw, e);
+                    log.error("Problem processing "+rawFile, e);
                     return;
                 }
                 //submit to conan for further processing, if needed
