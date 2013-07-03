@@ -119,7 +119,7 @@ public class MageTabToSampleTab {
             i < mt.IDF.personMidInitials.size() || 
             i < mt.IDF.personFirstName.size() || 
             i < mt.IDF.personEmail.size() || 
-            i < mt.IDF.personRoles.size(); i++){
+            i < mt.IDF.personRoles.size(); i++) {
             String lastname = null;
             if (i < mt.IDF.personLastName.size()){
                 lastname = mt.IDF.personLastName.get(i);
@@ -142,9 +142,43 @@ public class MageTabToSampleTab {
             if (i < mt.IDF.personRoles.size()){
                 role = mt.IDF.personRoles.get(i);
             }
-            Person org = new Person(lastname, initials, firstname, email, role);
-            if (!st.msi.persons.contains(org)){
-                st.msi.persons.add(org);
+            
+            //split by semi-colons if any anywhere
+            
+            int j = 0;
+            while (j < lastname.split(";").length ||
+                    j < initials.split(";").length ||
+                    j < firstname.split(";").length ||
+                    j < email.split(";").length ||
+                    j < role.split(";").length) {
+                
+                String thislastname = null;
+                if (j < lastname.split(";").length) {
+                    thislastname = lastname.split(";")[j].trim();
+                }
+                String thisinitials = null;
+                if (j < initials.split(";").length) {
+                    thisinitials = initials.split(";")[j].trim();
+                }
+                String thisfirstname = null;
+                if (j < firstname.split(";").length) {
+                    thisfirstname = firstname.split(";")[j].trim();
+                }
+                String thisemail = null;
+                if (j < email.split(";").length) {
+                    thisemail = email.split(";")[j].trim();
+                }
+                String thisrole = null;
+                if (j < role.split(";").length) {
+                    thisrole = role.split(";")[j].trim();
+                }
+
+                Person per = new Person(thislastname, thisinitials, thisfirstname, thisemail, thisrole);
+                if (!st.msi.persons.contains(per)){
+                    st.msi.persons.add(per);
+                }
+                
+                j ++;
             }
         }   
     }
@@ -158,19 +192,30 @@ public class MageTabToSampleTab {
                             i < mt.IDF.personRoles.size(); i++){
             String name = null;
             if (i < mt.IDF.personAffiliation.size()){
-                name = mt.IDF.personAffiliation.get(i);
+                name = mt.IDF.personAffiliation.get(i).trim();
             }
-            String uri = null;
-//            if (i < mt.IDF.personAddress.size()){
-//                uri = mt.IDF.personAddress.get(i);
-//            }
             String role = null;
             if (i < mt.IDF.personRoles.size()){
-                role = mt.IDF.personRoles.get(i);
+                role = mt.IDF.personRoles.get(i).trim();
             }
-            Organization org = new Organization(name, null, uri, null, role);
-            if (!st.msi.organizations.contains(org)){
-                st.msi.organizations.add(org);
+            
+            if (name.contains(";")) {
+                //split the name by semicolons
+                String[] names = name.split(";");
+                for (String subname : names) {
+                    subname = subname.trim();
+                    if (subname.length() > 0) {
+                        Organization org = new Organization(subname, null, null, null, role);
+                        if (!st.msi.organizations.contains(org)){
+                            st.msi.organizations.add(org);
+                        }
+                    }
+                }
+            } else if (name != null && name.length() > 0){
+                Organization org = new Organization(name, null, null, null, role);
+                if (!st.msi.organizations.contains(org)){
+                    st.msi.organizations.add(org);
+                }
             }
         }
     }
