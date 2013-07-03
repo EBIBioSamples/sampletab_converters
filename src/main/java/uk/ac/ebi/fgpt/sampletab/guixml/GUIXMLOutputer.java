@@ -158,12 +158,14 @@ public class GUIXMLOutputer {
     }
     
     private void writeAttributeValue(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, String value) throws XMLStreamException{
+        if (value == null) return;
         List<String> values = new ArrayList<String>();
         values.add(value);
         writeAttributeValue(xmlWriter, cls, classDefined, dataType, values);
     }
     
     private void writeAttributeValue(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, List<String> values) throws XMLStreamException{
+        if (values.size() == 0) return;
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", cls);
         xmlWriter.writeAttribute("classDefined", classDefined);
@@ -178,6 +180,7 @@ public class GUIXMLOutputer {
     }
     
     private void writeAttribute(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, List<AbstractNodeAttributeOntology> attrs, SampleData st) throws XMLStreamException{
+        if (attrs.size() == 0) return;
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", cls);
         xmlWriter.writeAttribute("classDefined", classDefined);
@@ -220,6 +223,7 @@ public class GUIXMLOutputer {
     }
     
     private void writeOrganizations(XMLStreamWriter xmlWriter, SampleData sd) throws XMLStreamException {
+        if (sd.msi.organizations.size() == 0) return;
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", "Organizations");
         xmlWriter.writeAttribute("classDefined", "true");
@@ -247,6 +251,7 @@ public class GUIXMLOutputer {
     }
     
     private void writePersons(XMLStreamWriter xmlWriter, SampleData sd) throws XMLStreamException {
+        if (sd.msi.persons.size() == 0) return;
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", "Persons");
         xmlWriter.writeAttribute("classDefined", "true");
@@ -274,6 +279,7 @@ public class GUIXMLOutputer {
     }
     
     private void writePublications(XMLStreamWriter xmlWriter, SampleData sd) throws XMLStreamException {
+        if (sd.msi.publications.size() == 0) return;
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", "Publications");
         xmlWriter.writeAttribute("classDefined", "true");
@@ -299,6 +305,7 @@ public class GUIXMLOutputer {
     }
     
     private void writeTermSources(XMLStreamWriter xmlWriter, SampleData sd) throws XMLStreamException {
+        if (sd.msi.termSources.size() == 0) return;
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", "Term Sources");
         xmlWriter.writeAttribute("classDefined", "true");
@@ -324,6 +331,7 @@ public class GUIXMLOutputer {
     }
     
     private void writeDatabases(XMLStreamWriter xmlWriter, SampleData sd) throws XMLStreamException {
+        if (sd.msi.databases.size() == 0) return;
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", "Databases");
         xmlWriter.writeAttribute("classDefined", "true");
