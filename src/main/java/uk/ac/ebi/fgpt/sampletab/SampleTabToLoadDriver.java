@@ -20,22 +20,22 @@ import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class SampleTabToLoadDriver extends AbstractInfileDriver {
 
-    @Option(name = "-o", aliases={"--output"}, usage = "output filename relative to input")
+    @Option(name = "--output", aliases={"-o"}, usage = "output filename relative to input")
     private String outputFilename;
 
-    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
+    @Option(name = "--hostname", aliases={"-n"}, usage = "server hostname")
     private String hostname;
 
     @Option(name = "--port", usage = "server port")
     private Integer port;
 
-    @Option(name = "-d", aliases={"--database"}, usage = "server database")
+    @Option(name = "--database", aliases={"-d"}, usage = "server database")
     private String database;
 
-    @Option(name = "-u", aliases={"--username"}, usage = "server username")
+    @Option(name = "--username", aliases={"-u"}, usage = "server username")
     private String username;
 
-    @Option(name = "-p", aliases={"--password"}, usage = "server password")
+    @Option(name = "--password", aliases={"-p"}, usage = "server password")
     private String password;
 
     private Logger log = LoggerFactory.getLogger(getClass());

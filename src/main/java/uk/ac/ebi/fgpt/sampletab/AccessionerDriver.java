@@ -11,22 +11,23 @@ import org.slf4j.LoggerFactory;
 
 public class AccessionerDriver extends AbstractInfileDriver<AccessionerTask> {
     
-    @Option(name = "-o", aliases={"--output"}, usage = "output filename")
+    @Option(name = "--output", aliases={"-o"}, usage = "output filename")
     private String outputFilename;
 
-    @Option(name = "-n", aliases={"--hostname"}, usage = "server hostname")
+    @Option(name = "--hostname", aliases={"-n"}, usage = "server hostname")
     private String hostname;
 
-    @Option(name = "-t", aliases={"--port"}, usage = "server port")
+    @Option(name = "--port", usage = "server port") 
     private Integer port;
+    // -p -o -r -t are all used eleewhere!
 
-    @Option(name = "-d", aliases={"--database"}, usage = "server database")
+    @Option(name = "--database", aliases={"-d"}, usage = "server database")
     private String database;
 
-    @Option(name = "-u", aliases={"--username"}, usage = "server username")
+    @Option(name = "--username", aliases={"-u"}, usage = "server username")
     private String username;
 
-    @Option(name = "-p", aliases={"--password"}, usage = "server password")
+    @Option(name = "--password", aliases={"-p"}, usage = "server password")
     private String password;
 
     private Accessioner accessioner = null;
@@ -39,8 +40,6 @@ public class AccessionerDriver extends AbstractInfileDriver<AccessionerTask> {
 
     @Override
     protected void preProcess() {
-        
-        
         //load defaults
         Properties properties = new Properties();
         try {
