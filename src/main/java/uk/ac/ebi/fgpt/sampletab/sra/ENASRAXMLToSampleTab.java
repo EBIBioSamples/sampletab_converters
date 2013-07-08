@@ -261,24 +261,14 @@ public class ENASRAXMLToSampleTab {
                 
                 //maybe these should be database ids rather than synonyms?
                 Element identifiers = XMLUtils.getChildByName(sampleElement, "IDENTIFIERS");
-                for (Element id : XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID")) {
-                    //handle BioSamples identifiers
-                    if ("BioSample".equals(id.attribute("namespace"))) {
-                        if (id.getTextTrim().matches("SAM[END][AG]?[0-9]+")) {
-                            samplenode.setSampleAccession(id.getTextTrim());
-                        } else {
-                            log.warn("Unfamiliar BioSample accession "+id.getTextTrim()+" in "+sampleAccession);
-                        }
-                    } else {
-                        CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
-                        samplenode.addAttribute(synonymattrib, 0);
-                    }
-                }
-                for (Element id : XMLUtils.getChildrenByName(identifiers, "SUBMITTER_ID")) {
-                    //handle BioSamples identifiers
+                
+                Collection<Element> otherIDs = XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID");
+                otherIDs.addAll(XMLUtils.getChildrenByName(identifiers, "SUBMITTER_ID"));
+                otherIDs.addAll(XMLUtils.getChildrenByName(identifiers, "SECONDARY_ID"));
+                for (Element id : otherIDs) {
                     if ("BioSample".equals(id.attribute("namespace"))) {
                         log.info("Found SUBMITTER_ID "+id.getTextTrim());
-                        if (id.getTextTrim().matches("SAM[END][AG]?[0-9]+")) {
+                        if (id.getTextTrim().matches("SAM[END][A]?[0-9]+")) {
                             if (samplenode.getSampleAccession() == null) {
                                 samplenode.setSampleAccession(id.getTextTrim());
                             } else {
