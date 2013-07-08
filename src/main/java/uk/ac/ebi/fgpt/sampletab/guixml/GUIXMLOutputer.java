@@ -159,6 +159,7 @@ public class GUIXMLOutputer {
     
     private void writeAttributeValue(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, String value) throws XMLStreamException{
         if (value == null) return;
+        if (value.length() == 0) return;
         List<String> values = new ArrayList<String>();
         values.add(value);
         writeAttributeValue(xmlWriter, cls, classDefined, dataType, values);
