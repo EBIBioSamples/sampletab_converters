@@ -19,7 +19,9 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DerivedFromAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
@@ -95,26 +97,6 @@ public class SampleTabToLoad {
             // also need to accession the new node
         }
         
-        //copy MSI database attribute to each sample that does not have a link to that database
-        // no need to do this, GUI will handle it
-//        for (Database databasemsi : sampledata.msi.databases){
-//            for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
-//                boolean hasdb = false;
-//                for (SCDNodeAttribute attr : sample.getAttributes()){
-//                    if (DatabaseAttribute.class.isInstance(attr)){
-//                        DatabaseAttribute dbattr = (DatabaseAttribute) attr;
-//                        if (dbattr.getAttributeValue().equals(databasemsi.getName())){
-//                            hasdb = true;
-//                        }
-//                    }
-//                }
-//                if (!hasdb){
-//                    DatabaseAttribute dbattr = new DatabaseAttribute(databasemsi.getName(), databasemsi.getID(), databasemsi.getURI());
-//                    sample.addAttribute(dbattr);
-//                }
-//            }
-//        }
-        
         //replace implicit derived from with explicit derived from relationships
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
             if (sample.getParentNodes().size() > 0){
@@ -129,91 +111,26 @@ public class SampleTabToLoad {
                 }
             }
         }
-
-//        // Copy msi information on to each group node
-//        for (SCDNode group : sampledata.scd.getNodes(GroupNode.class)) {
-//            group.addAttribute(new NamedAttribute("Submission Title", sampledata.msi.submissionTitle));
-//            group.addAttribute(new NamedAttribute("Submission Description", sampledata.msi.submissionDescription));
-//            group.addAttribute(new NamedAttribute("Submission Identifier", sampledata.msi.submissionIdentifier));
-//            group.addAttribute(new NamedAttribute("Submission Release Date", sampledata.msi.getSubmissionReleaseDateAsString()));
-//            group.addAttribute(new NamedAttribute("Submission Update Date", sampledata.msi.getSubmissionUpdateDateAsString()));
-//            group.addAttribute(new NamedAttribute("Submission Version", sampledata.msi.submissionVersion));
-//            group.addAttribute(new NamedAttribute("Submission Reference Layer", sampledata.msi.submissionReferenceLayer.toString()));
-//            
-//            log.info("Added attributes to group "+group.getNodeName());
-//            
-//            // Have to do this for each group of tags (Person *, Database *, etc)
-//            // and complete each individual in each group before starting the next one
-//            // E.g. Person Last Name, Person First Name, Person Last Name, Person First Name
-//            // not E.g. Person Last Name, Person Last Name, Person First Name, Person First Name
-//            for(Person per : sampledata.msi.persons){
-//                group.addAttribute(new NamedAttribute("Person Last Name", per.getLastName()));
-//                if (per.getInitials() != null && per.getInitials().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Person Initials", per.getInitials()));
-//                }
-//                if (per.getFirstName() != null && per.getFirstName().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Person First Name", per.getFirstName()));
-//                }
-//                if (per.getEmail() != null && per.getEmail().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Person Email", per.getEmail()));
-//                }
-//                if (per.getRole() != null && per.getRole().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Person Role", per.getRole()));
-//                }
-//            }
-//            
-//            log.debug("Added persons");
-//            
-//            for(Organization org : sampledata.msi.organizations){
-//                group.addAttribute(new NamedAttribute("Organization Name", org.getName()));
-//                if (org.getAddress() != null && org.getAddress().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Organization Address", org.getAddress()));
-//                }
-//                if (org.getURI() != null && org.getURI().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Organization URI", org.getURI()));
-//                }
-//                if (org.getEmail() != null && org.getEmail().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Organization Email", org.getEmail()));
-//                }
-//                if (org.getRole() != null && org.getRole().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Organization Role", org.getRole()));
-//                }
-//            }
-//            log.debug("Added organizations");
-//            
-//            for(Publication pub: sampledata.msi.publications){
-//                if (pub.getDOI() != null && pub.getDOI().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Publication DOI", pub.getDOI()));
-//                }
-//                if (pub.getPubMedID() != null && pub.getPubMedID().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Publication PubMed ID", pub.getPubMedID()));
-//                }
-//            }
-//            log.debug("Added publications");
-//            
-//            for (TermSource ts : sampledata.msi.termSources) {
-//                if (ts.getName() != null && ts.getName().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Term Source Name", ts.getName()));
-//                    if (ts.getURI() != null && ts.getURI().trim().length() > 0){
-//                        group.addAttribute(new NamedAttribute("Term Source URI", ts.getURI()));
-//                    }
-//                    if (ts.getVersion() != null && ts.getVersion().trim().length() > 0){
-//                        group.addAttribute(new NamedAttribute("Term Source Version", ts.getVersion()));
-//                    }
-//                }
-//            }
-//            log.debug("Added termsources");
-//            
-//            for (Database db : sampledata.msi.databases){
-//                if (db.getName() != null && db.getName().trim().length() > 0){
-//                    group.addAttribute(new NamedAttribute("Database Name", db.getName()));
-//                    group.addAttribute(new NamedAttribute("Database URI", db.getURI()));
-//                    group.addAttribute(new NamedAttribute("Database ID", db.getID()));
-//                }
-//            }
-//            log.debug("Added databases");
-//        }
-
+        
+        //If there was an NCBI BioSamples accession as a synonym
+        for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
+            for (SCDNodeAttribute a : sample.getAttributes()) {
+                boolean isComment;
+                synchronized (CommentAttribute.class) {
+                    isComment = CommentAttribute.class.isInstance(a);
+                }
+                if (isComment) {
+                    CommentAttribute ca = (CommentAttribute) a;
+                    if (ca.type.toLowerCase().equals("synonym") && ca.getAttributeValue().matches("SAMN[0-9]*")) {
+                        String oldAccession = sample.getSampleAccession();
+                        sample.setSampleAccession(ca.getAttributeValue());
+                        ca.setAttributeValue(oldAccession);
+                    }
+                }
+            }
+        }
+        
+        
         log.info("completed initial conversion, re-accessioning...");
         
         // assign accession to any created groups
