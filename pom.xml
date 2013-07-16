@@ -24,21 +24,21 @@
 			<name>coconut.ebi.ac.uk.ebi.ac.uk-snapshots</name>
 			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
 		</snapshotRepository>
-	</distributionManagement>	
+	</distributionManagement>
 
 	<!-- SVN connection -->
 	<scm>
 		<connection>scm:git:git@github.com:EBIBioSamples/sampletab_converters.git</connection>
 	</scm>
-	
-	<repositories>		
-		<repository>
-            <id>oerc-repo</id>
-            <name>OeRC Maven repository</name>
-            <url>http://frog.oerc.ox.ac.uk:8080/nexus-2.1.2/content/repositories/releases/</url>
-        </repository>
 
-		<!--  internal repository -->
+	<repositories>
+		<repository>
+			<id>oerc-repo</id>
+			<name>OeRC Maven repository</name>
+			<url>http://frog.oerc.ox.ac.uk:8080/nexus-2.1.2/content/repositories/releases/</url>
+		</repository>
+
+		<!-- internal repository -->
 		<repository>
 			<id>coconut.ebi.ac.uk-snapshots</id>
 			<name>Coconut Snapshot Repository</name>
@@ -47,22 +47,65 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
-		
+
 		<repository>
 			<id>ebi-repo</id>
 			<name>EBI Repository</name>
 			<url>http://www.ebi.ac.uk/~maven/m2repo/</url>
 		</repository>
-		
+
 		<repository>
 			<id>ebi-repo-snapshot</id>
 			<name>EBI Repository</name>
 			<url>http://www.ebi.ac.uk/~maven/m2repo_snapshots/</url>
 		</repository>
-		
+
 	</repositories>
 
 	<dependencies>
+
+		<!-- this is not in public repos due to Oracle license -->
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6</artifactId>
+			<version>11.2.0.2.0</version>
+		</dependency>
+
+
+		<!-- testing -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- logging -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.6.6</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.14</version>
+		</dependency>
+
+		<!-- general utils -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>11.0.2</version>
+		</dependency>
+
+		<!-- used to connect to FTP -->
+		<dependency>
+			<groupId>commons-net</groupId>
+			<artifactId>commons-net</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+
 		<!-- command line parsing -->
 		<dependency>
 			<groupId>args4j</groupId>
@@ -76,90 +119,6 @@
 			<artifactId>commons-dbcp</artifactId>
 			<version>1.4</version>
 		</dependency>
-		
-		 <!-- this is not in public repos due to Oracle license -->
-		<dependency>
-		    <groupId>com.oracle</groupId>
-		    <artifactId>ojdbc6</artifactId>
-		    <version>11.2.0.2.0</version>
-		</dependency>
-		
-
-		<!-- testing -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.10</version>
-			<scope>test</scope>
-		</dependency>
-
-		<!--  logging -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.6.6</version>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.14</version>
-		</dependency>
-						
-		<dependency>
-			<groupId>commons-net</groupId>
-			<artifactId>commons-net</artifactId>
-			<version>3.0.1</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>dom4j</groupId>
-			<artifactId>dom4j</artifactId>
-			<version>1.6.1</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>net.sf.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>2.1</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>11.0.2</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
-			<version>1.9.6</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.1.1</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>commons-codec</artifactId>
-					<groupId>commons-codec</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>		
-		
-		<dependency>
-			<groupId>net.sf.saxon</groupId>
-			<artifactId>Saxon-HE</artifactId>
-			<version>9.4</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>xmlunit</groupId>
-			<artifactId>xmlunit</artifactId>
-			<version>1.3</version>
-		</dependency>
-		
-		
 		<!-- connection pooling library -->
 		<dependency>
 			<groupId>com.jolbox</groupId>
@@ -167,32 +126,44 @@
 			<version>0.7.1.RELEASE</version>
 		</dependency>
 		
-		<!--  ontology parsing library -->
-<!--         <dependency> -->
-<!--             <groupId>net.sourceforge.owlapi</groupId> -->
-<!--             <artifactId>owlapi-distribution</artifactId> -->
-<!--             <version>3.4.3</version> -->
-<!--         </dependency> -->
-            
-			<dependency>
-				<groupId>commons-codec</groupId>
-				<artifactId>commons-codec</artifactId>
-				<version>1.6</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-api</artifactId>
-				<version>1.6.6</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>xml-apis</groupId>
-				<artifactId>xml-apis</artifactId>
-				<version>1.3.03</version>
-			</dependency>
-			
-		            
+		<!-- XML handling -->
+		<dependency>
+			<groupId>dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>Saxon-HE</artifactId>
+			<version>9.4</version>
+		</dependency>
+		<dependency>
+			<groupId>xmlunit</groupId>
+			<artifactId>xmlunit</artifactId>
+			<version>1.3</version>
+		</dependency>
+
+		<!-- JSON handling -->
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>1.9.6</version>
+		</dependency>
+		
+		<!-- HTTP POST handling -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.1.1</version>
+		</dependency>
+
+		<!-- ontology parsing library -->
+		<!-- <dependency> -->
+		<!-- <groupId>net.sourceforge.owlapi</groupId> -->
+		<!-- <artifactId>owlapi-distribution</artifactId> -->
+		<!-- <version>3.4.3</version> -->
+		<!-- </dependency> -->
+
 	</dependencies>
 
 
@@ -216,46 +187,46 @@
 					<artifactId>limpopo-sampletab</artifactId>
 					<version>1.1.3</version>
 				</dependency>
-				<!--  MyEquivalents dependencies -->
-				<!--  to write directly to database -->
+				<!-- MyEquivalents dependencies -->
+				<!-- to write directly to database -->
 				<dependency>
-		  			<groupId>uk.ac.ebi.fg</groupId>
-		  			<artifactId>myequivalents-db</artifactId>
-		  			<version>1.0</version>
-		  			<exclusions>
-		  				<exclusion>
-		  					<artifactId>commons-io</artifactId>
-		  					<groupId>commons-io</groupId>
-		  				</exclusion>
-		  				<exclusion>
-		  					<artifactId>commons-lang</artifactId>
-		  					<groupId>commons-lang</groupId>
-		  				</exclusion>
-		  				<exclusion>
-		  					<artifactId>jaxb-api</artifactId>
-		  					<groupId>javax.xml.bind</groupId>
-		  				</exclusion>
-		  				<exclusion>
-		  					<artifactId>jutils</artifactId>
-		  					<groupId>uk.ac.ebi</groupId>
-		  				</exclusion>
-		  			</exclusions>
+					<groupId>uk.ac.ebi.fg</groupId>
+					<artifactId>myequivalents-db</artifactId>
+					<version>1.0</version>
+					<exclusions>
+						<exclusion>
+							<artifactId>commons-io</artifactId>
+							<groupId>commons-io</groupId>
+						</exclusion>
+						<exclusion>
+							<artifactId>commons-lang</artifactId>
+							<groupId>commons-lang</groupId>
+						</exclusion>
+						<exclusion>
+							<artifactId>jaxb-api</artifactId>
+							<groupId>javax.xml.bind</groupId>
+						</exclusion>
+						<exclusion>
+							<artifactId>jutils</artifactId>
+							<groupId>uk.ac.ebi</groupId>
+						</exclusion>
+					</exclusions>
 				</dependency>
-				<!--  to access via the web interface -->
+				<!-- to access via the web interface -->
 				<dependency>
-		  			<groupId>uk.ac.ebi.fg</groupId>
-		  			<artifactId>myequivalents-wscli</artifactId>
-		  			<version>1.0</version>
-		  			<exclusions>
-		  				<exclusion>
-		  					<artifactId>logback-classic</artifactId>
-		  					<groupId>ch.qos.logback</groupId>
-		  				</exclusion>
-		  				<exclusion>
-		  					<artifactId>commons-lang</artifactId>
-		  					<groupId>commons-lang</groupId>
-		  				</exclusion>
-		  			</exclusions>
+					<groupId>uk.ac.ebi.fg</groupId>
+					<artifactId>myequivalents-wscli</artifactId>
+					<version>1.0</version>
+					<exclusions>
+						<exclusion>
+							<artifactId>logback-classic</artifactId>
+							<groupId>ch.qos.logback</groupId>
+						</exclusion>
+						<exclusion>
+							<artifactId>commons-lang</artifactId>
+							<groupId>commons-lang</groupId>
+						</exclusion>
+					</exclusions>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -279,46 +250,46 @@
 					<artifactId>limpopo-sampletab</artifactId>
 					<version>1.1.4-SNAPSHOT</version>
 				</dependency>
-				<!--  MyEquivalents dependencies -->
-				<!--  to write directly to database -->
+				<!-- MyEquivalents dependencies -->
+				<!-- to write directly to database -->
 				<dependency>
-		  			<groupId>uk.ac.ebi.fg</groupId>
-		  			<artifactId>myequivalents-db</artifactId>
-		  			<version>0.2-SNAPSHOT</version>
-		  			<exclusions>
-		  				<exclusion>
-		  					<artifactId>commons-io</artifactId>
-		  					<groupId>commons-io</groupId>
-		  				</exclusion>
-		  				<exclusion>
-		  					<artifactId>commons-lang</artifactId>
-		  					<groupId>commons-lang</groupId>
-		  				</exclusion>
-		  				<exclusion>
-		  					<artifactId>jaxb-api</artifactId>
-		  					<groupId>javax.xml.bind</groupId>
-		  				</exclusion>
-		  				<exclusion>
-		  					<artifactId>jutils</artifactId>
-		  					<groupId>uk.ac.ebi</groupId>
-		  				</exclusion>
-		  			</exclusions>
+					<groupId>uk.ac.ebi.fg</groupId>
+					<artifactId>myequivalents-db</artifactId>
+					<version>0.2-SNAPSHOT</version>
+					<exclusions>
+						<exclusion>
+							<artifactId>commons-io</artifactId>
+							<groupId>commons-io</groupId>
+						</exclusion>
+						<exclusion>
+							<artifactId>commons-lang</artifactId>
+							<groupId>commons-lang</groupId>
+						</exclusion>
+						<exclusion>
+							<artifactId>jaxb-api</artifactId>
+							<groupId>javax.xml.bind</groupId>
+						</exclusion>
+						<exclusion>
+							<artifactId>jutils</artifactId>
+							<groupId>uk.ac.ebi</groupId>
+						</exclusion>
+					</exclusions>
 				</dependency>
-				<!--  to access via the web interface -->
+				<!-- to access via the web interface -->
 				<dependency>
-		  			<groupId>uk.ac.ebi.fg</groupId>
-		  			<artifactId>myequivalents-wscli</artifactId>
-		  			<version>0.2-SNAPSHOT</version>
-		  			<exclusions>
-		  				<exclusion>
-		  					<artifactId>logback-classic</artifactId>
-		  					<groupId>ch.qos.logback</groupId>
-		  				</exclusion>
-		  				<exclusion>
-		  					<artifactId>commons-lang</artifactId>
-		  					<groupId>commons-lang</groupId>
-		  				</exclusion>
-		  			</exclusions>
+					<groupId>uk.ac.ebi.fg</groupId>
+					<artifactId>myequivalents-wscli</artifactId>
+					<version>0.2-SNAPSHOT</version>
+					<exclusions>
+						<exclusion>
+							<artifactId>logback-classic</artifactId>
+							<groupId>ch.qos.logback</groupId>
+						</exclusion>
+						<exclusion>
+							<artifactId>commons-lang</artifactId>
+							<groupId>commons-lang</groupId>
+						</exclusion>
+					</exclusions>
 				</dependency>
 			</dependencies>
 		</profile>
