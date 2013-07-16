@@ -1,36 +1,36 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
-import java.util.List;
+import java.io.IOException;
+import java.net.URL;
 
-import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.QueryException_Exception;
-import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.ResponseWrapper;
-import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.Result;
-import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.WSCitationImpl;
-import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.WSCitationImplService;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
 
 
 public class EuroPMCUtils {
     
-    private static WSCitationImplService wSCitationImplService = new WSCitationImplService();
-    private static WSCitationImpl wSCitationImpl = wSCitationImplService.getWSCitationImplPort();
     
-    
-    public static String getTitleByPUBMEDid(Integer pubmed) throws QueryException_Exception {
-        String query = pubmed.toString();
-
-        String dataSet = "metadata";
-        String resultType = "lite";
-        Integer offSet = 0;
-        Boolean synonym = false;
-        String email = null;
-        ResponseWrapper results = wSCitationImpl.searchPublications(query,
-                dataSet, resultType, offSet, synonym, email);
-        List<Result> resultList = results.getResultList().getResult();
-        if (resultList.size() > 0) {
-            return results.getResultList().getResult().get(0).getTitle();
-        } else {
-            return null;
-        }
+    public static String getTitleByPUBMEDid(Integer pubmed) throws DocumentException, IOException {
+        URL url = new URL("http://www.ebi.ac.uk/europepmc/webservices/rest/search/query=ext_id:"+pubmed);
+        Document doc =  XMLUtils.getDocument(url);
+        
+        System.out.println(doc.asXML());
+        
+        Element root = doc.getRootElement();
+        if (root == null) throw new NullPointerException("root is null");
+        
+        Element resultList = XMLUtils.getChildByName(root, "resultList");
+        if (resultList == null) throw new NullPointerException("resultList is null");
+        
+        Element result = XMLUtils.getChildByName(resultList, "result");
+        if (result == null) throw new NullPointerException("result is null");
+        
+        Element title = XMLUtils.getChildByName(result, "title");
+        if (title == null) throw new NullPointerException("title is null");
+        
+        return title.getTextTrim();
+        
     }
     
 }

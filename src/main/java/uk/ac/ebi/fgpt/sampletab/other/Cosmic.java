@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.dom4j.DocumentException;
 import org.kohsuke.args4j.Argument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +35,10 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
 import uk.ac.ebi.fgpt.sampletab.utils.EuroPMCUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.QueryException_Exception;
 
 public class Cosmic extends AbstractDriver {
 
@@ -163,9 +164,11 @@ public class Cosmic extends AbstractDriver {
                     }
                 } catch (NumberFormatException e) {
                     log.warn("Unable to convert "+groupid+" to number", e);
-                } catch (QueryException_Exception e) {
-                    log.warn("Unable to get publication title "+groupid, e);
-                }
+                } catch (DocumentException e) {
+                    log.error("problem processing PMID "+groupid);
+                } catch (IOException e) {
+                    log.error("problem processing PMID "+groupid);
+                } 
             }
             
             for (String[] nextLine : grouping.get(groupid)) {

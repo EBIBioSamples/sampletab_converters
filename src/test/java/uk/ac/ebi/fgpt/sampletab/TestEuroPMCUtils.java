@@ -1,10 +1,12 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.io.IOException;
+
+import org.dom4j.DocumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.fgpt.sampletab.utils.EuroPMCUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.QueryException_Exception;
 import junit.framework.TestCase;
 
 
@@ -13,15 +15,17 @@ public class TestEuroPMCUtils extends TestCase {
 
     public void testBioSD() {
         String title = null;
-        /*
+        
         try {
             title = EuroPMCUtils.getTitleByPUBMEDid(22096232);
-        } catch (QueryException_Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (DocumentException e) {
+            log.error("problem getting pubmedid", e);
+            fail();
+        } catch (IOException e) {
+            log.error("problem getting pubmedid", e);
             fail();
         }
         assertEquals("The BioSample Database (BioSD) at the European Bioinformatics Institute.", title);
-*/
+
     }
 }
