@@ -1,8 +1,10 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.dom4j.DocumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +24,6 @@ import uk.ac.ebi.fgpt.sampletab.utils.EuroPMCUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.europmc.ws.QueryException_Exception;
 
 public class Corrector {
     // logging
@@ -81,12 +82,13 @@ public class Corrector {
         String lcval = unit.getAttributeValue().toLowerCase();
         if (lcval.equals("alphanumeric")
                 || lcval.equals("na")
+                || lcval.equals("n/a")
+                || lcval.equals("n.a")
                 || lcval.equals("censored/uncensored")
                 || lcval.equals("m/f")
                 || lcval.equals("test/control")
                 || lcval.equals("yes/no")
                 || lcval.equals("y/n")
-                || lcval.equals("na")
                 || lcval.equals("missing")) {
             return null;
         } else if (lcval.equals("meter")
@@ -612,7 +614,9 @@ public class Corrector {
                     String title = null;
                     try {
                         title = EuroPMCUtils.getTitleByPUBMEDid(i);
-                    } catch (QueryException_Exception e) {
+                    } catch (DocumentException e) {
+                        log.error("Problem getting PubMedID "+i, e);
+                    }catch (IOException e) {
                         log.error("Problem getting PubMedID "+i, e);
                     }
                     if (title != null) {
@@ -640,6 +644,7 @@ public class Corrector {
                     // remove not applicables
                     if (cha.getAttributeValue().toLowerCase().equals("n/a")
                             || cha.getAttributeValue().toLowerCase().equals("na")
+                            || cha.getAttributeValue().toLowerCase().equals("n.a")
                             || cha.getAttributeValue().toLowerCase().equals("none")
                             || cha.getAttributeValue().toLowerCase().equals("unknown")
                             || cha.getAttributeValue().toLowerCase().equals("--")
