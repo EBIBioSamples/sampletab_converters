@@ -13,6 +13,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 
 public class LoadValidator extends SampleTabValidator {
@@ -81,5 +82,12 @@ public class LoadValidator extends SampleTabValidator {
                 fireErrorItemEvent(new ErrorItemImpl("Too long organization name "+o.getEmail(), -1, getClass().getName()));
             }
         }
+        for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
+            for (SCDNodeAttribute a : s.getAttributes()) {
+                if (a.getAttributeType().length() > 200) {
+                    fireErrorItemEvent(new ErrorItemImpl("Too long attribute name "+a.getAttributeType()+" on sample "+s.getNodeName(), -1, getClass().getName()));
+                }
+            }
+         }
     }
 }
