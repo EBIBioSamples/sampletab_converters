@@ -65,6 +65,9 @@ public class ENASRAXMLToSampleTab {
     private boolean isStudy(String accession) {
         if (accession.matches("[SED]RP[0-9]+")){
             return true;
+        //new project identifiers are going to replace study identifiers
+        } else if (accession.matches("PRJ(EB|NA|DA)[0-9]+")){
+            return true;
         } else {
             return false;
         }
