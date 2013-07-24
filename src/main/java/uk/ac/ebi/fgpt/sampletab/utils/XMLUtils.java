@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -32,7 +34,25 @@ public class XMLUtils {
 	}
 
 	public static Document getDocument(URL url) throws DocumentException, IOException {
-	    URLConnection conn = url.openConnection();
+        log.info(System.getProperty("http.proxySet"));
+	    log.info(System.getProperty("http.proxyHost"));
+        log.info(System.getProperty("http.proxyPort"));
+        log.info(System.getProperty("http.nonProxyHosts"));
+        log.info(System.getProperty("proxySet"));
+        log.info(System.getProperty("proxyHost"));
+        log.info(System.getProperty("proxyPort"));
+        log.info(System.getProperty("nonProxyHosts"));
+        
+        URLConnection conn = null;
+        if (System.getProperty("proxySet") != null) {
+            String hostname = System.getProperty("proxyPort");
+            int port = Integer.parseInt(System.getProperty("proxyPort"));
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(hostname, port));
+    	    conn = url.openConnection(proxy);
+        } else {
+            conn = url.openConnection();
+        }
+	    
 	    return getDocument(new BufferedReader(new InputStreamReader(conn.getInputStream())));
 	}
 
