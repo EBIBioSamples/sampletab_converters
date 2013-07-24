@@ -45,7 +45,7 @@ public class XMLUtils {
         
         URLConnection conn = null;
         if (System.getProperty("proxySet") != null) {
-            String hostname = System.getProperty("proxyPort");
+            String hostname = System.getProperty("proxyHost");
             int port = Integer.parseInt(System.getProperty("proxyPort"));
             Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(hostname, port));
     	    conn = url.openConnection(proxy);
