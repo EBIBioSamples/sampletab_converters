@@ -9,20 +9,21 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class XMLUtils {
+    private static Logger log = LoggerFactory.getLogger("XMLUtils");
 
 	private static ConcurrentLinkedQueue<SAXReader> readerQueue = new ConcurrentLinkedQueue<SAXReader>();
 
@@ -31,15 +32,8 @@ public class XMLUtils {
 	}
 
 	public static Document getDocument(URL url) throws DocumentException, IOException {
-	    //use the client to work with proxies rather than doing more naive option
-	    DefaultHttpClient httpclient = new DefaultHttpClient();
-	    HttpGet httpGet = new HttpGet(url.toString());
-	    HttpResponse response = httpclient.execute(httpGet);
-        if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
-        }
- 
-        return getDocument(new BufferedReader( new InputStreamReader((response.getEntity().getContent()))));
+	    URLConnection conn = url.openConnection();
+	    return getDocument(new BufferedReader(new InputStreamReader(conn.getInputStream())));
 	}
 
     public static Document getDocument(String xmlString) throws DocumentException {
