@@ -9,7 +9,9 @@ public class MyEqProperties {
     private static String ENASAMPLESSERVICE = "ebi.ena.samples";
     private static String ENAGROUPSSERVICE = "ebi.ena.groups";
     private static String ARRAYEXPRESSGROUPSERVICE = "ebi.arrayexpress.groups";
+    private static String ARRAYEXPRESSSAMPLESERVICE = "ebi.arrayexpress.samples";
     private static String PRIDESAMPLESERVICE = "ebi.pride.samples";
+    private static String COSMICSAMPLESERVICE = "sanger.cosmic.samples";
 
     private static boolean isSetup = false;
     
@@ -33,6 +35,11 @@ public class MyEqProperties {
         return ENAGROUPSSERVICE;
     }
     
+    public static String getArrayExpressSamplesService() {
+        setup();
+        return ARRAYEXPRESSSAMPLESERVICE;
+    }
+    
     public static String getArrayExpressGroupsService() {
         setup();
         return ARRAYEXPRESSGROUPSERVICE;
@@ -41,6 +48,11 @@ public class MyEqProperties {
     public static String getPrideSamplesService() {
         setup();
         return PRIDESAMPLESERVICE;
+    }
+    
+    public static String getCosmicSamplesService() {
+        setup();
+        return COSMICSAMPLESERVICE;
     }
     
     private static void setup() {

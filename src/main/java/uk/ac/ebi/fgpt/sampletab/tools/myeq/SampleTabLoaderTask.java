@@ -87,6 +87,8 @@ public class SampleTabLoaderTask implements Runnable {
                         bundle.add(MyEqProperties.getENASamplesService()+":"+dbattr.databaseID);
                     } else if (dbattr.getAttributeValue().equals("PRIDE")) {
                         bundle.add(MyEqProperties.getPrideSamplesService()+":"+dbattr.databaseID);
+                    } else if (dbattr.getAttributeValue().equals("COSMIC")) {
+                        bundle.add(MyEqProperties.getCosmicSamplesService()+":"+dbattr.databaseID);
                     } else {
                         log.warn("Unrecognized database "+dbattr.getAttributeValue());
                     }
