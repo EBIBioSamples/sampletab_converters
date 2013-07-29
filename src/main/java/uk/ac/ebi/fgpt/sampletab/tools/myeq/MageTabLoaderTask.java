@@ -111,7 +111,7 @@ public class MageTabLoaderTask implements Runnable {
             }
             
         } else if (isSourceNode) {
-            String sra = getSRASample((SampleNode) node);
+            String sra = getSRASample((SourceNode) node);
             if (sra != null) {
                 matches.add(sra);
             }
@@ -179,7 +179,7 @@ public class MageTabLoaderTask implements Runnable {
                         matches.addAll(handleNode(node));
                     }
                 } else if (isSourceNode) {
-                    String sra = getSRASample((SampleNode) node);
+                    String sra = getSRASample((SourceNode) node);
                     if (sra != null) {
                         matches.add(sra);
                     } else {
