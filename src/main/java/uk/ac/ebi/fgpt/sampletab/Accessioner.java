@@ -276,8 +276,8 @@ public class Accessioner {
                             .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
                     statement.setString(1, name);
                     statement.setString(2, submissionID);
-                    log.info(name);
-                    log.info(submissionID);
+                    //log.info(name);
+                    //log.info(submissionID);
                     statement.executeUpdate();
                     
                     statement.close();
@@ -347,7 +347,7 @@ public class Accessioner {
         }
         submission = submission.trim();
         
-        log.info("Starting accessioning");
+        //log.info("Starting accessioning");
         
         
         String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
@@ -388,13 +388,13 @@ public class Accessioner {
             
             
             //now assign and retrieve accessions for samples that do not have them
-            log.info("Starting singleSample");      
+            //log.info("Starting singleSample");      
             Collection<SampleNode> samples = sampleIn.scd.getNodes(SampleNode.class);
             for (SampleNode sample : samples) {
                 singleSample(sampleIn, sample, submission, prefix, table, 0, connect, ds);
             }
 
-            log.info("Starting singleGroup");      
+            //log.info("Starting singleGroup");      
             Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
             log.debug("got " + groups.size() + " groups.");
             for (GroupNode group : groups) {
@@ -413,20 +413,20 @@ public class Accessioner {
     }
 
     public void convert(SampleData sampleIn, Writer writer) throws IOException, ParseException, SQLException {
-        log.info("recieved magetab, preparing to convert");
+        log.trace("recieved magetab, preparing to convert");
         SampleData sampleOut = convert(sampleIn);
-        log.info("sampletab converted, preparing to output");
+        log.trace("sampletab converted, preparing to output");
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
-        log.info("created SampleTabWriter");
+        log.trace("created SampleTabWriter");
         sampletabwriter.write(sampleOut);
         sampletabwriter.close();
 
     }
 
     public void convert(File sampletabFile, Writer writer) throws IOException, ParseException, SQLException {
-        log.info("preparing to load SampleData");
+        log.trace("preparing to load SampleData");
         SampleTabSaferParser stparser = new SampleTabSaferParser();
-        log.info("created SampleTabParser<SampleData>, beginning parse");
+        log.trace("created SampleTabParser<SampleData>, beginning parse");
         SampleData st = stparser.parse(sampletabFile);
         convert(st, writer);
     }
