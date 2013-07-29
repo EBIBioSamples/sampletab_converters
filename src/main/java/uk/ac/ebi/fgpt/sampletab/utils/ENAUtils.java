@@ -271,6 +271,88 @@ public class ENAUtils {
         return sampleIDs;
     }
     
+    public static Set<String> getSamplesForExperiment(String srxId) throws DocumentException, IOException {
+        Element elem = null;
+        try {
+            elem = lookupElement.get(srxId);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (DocumentException e2) {
+                throw e2;
+            } catch (MalformedURLException e2) {
+                throw e2;
+            } catch (IOException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                throw new RuntimeException("Unrecognised ExecutionException", e2);
+            }
+        }
+        return getSamplesForExperiment(elem);
+    }
+
+    public static Set<String> getSamplesForExperiment(Element root) {
+        Set<String> sampleIDs = new HashSet<String>();
+        for (Element study : XMLUtils.getChildrenByName(root, "EXPERIMENT")) {
+            for (Element studyLinks : XMLUtils.getChildrenByName(study, "EXPERIMENT_LINKS")) {
+                for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "EXPERIMENT_LINK")) {
+                    for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
+                        Element db = XMLUtils.getChildByName(xrefLink, "DB");
+                        Element id = XMLUtils.getChildByName(xrefLink, "ID");
+                        if (db.getText().equals("ENA-SAMPLE")) {
+                            if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
+                                log.debug("Processing samples "+id.getText() );
+                                sampleIDs.addAll(getIdentifiers(id.getText()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return sampleIDs;
+    }
+    
+    public static Set<String> getSamplesForRun(String srrId) throws DocumentException, IOException {
+        Element elem = null;
+        try {
+            elem = lookupElement.get(srrId);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (DocumentException e2) {
+                throw e2;
+            } catch (MalformedURLException e2) {
+                throw e2;
+            } catch (IOException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                throw new RuntimeException("Unrecognised ExecutionException", e2);
+            }
+        }
+        return getSamplesForRun(elem);
+    }
+
+    public static Set<String> getSamplesForRun(Element root) {
+        Set<String> sampleIDs = new HashSet<String>();
+        for (Element study : XMLUtils.getChildrenByName(root, "RUN")) {
+            for (Element studyLinks : XMLUtils.getChildrenByName(study, "RUN_LINKS")) {
+                for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "RUN_LINK")) {
+                    for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
+                        Element db = XMLUtils.getChildByName(xrefLink, "DB");
+                        Element id = XMLUtils.getChildByName(xrefLink, "ID");
+                        if (db.getText().equals("ENA-SAMPLE")) {
+                            if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
+                                log.debug("Processing samples "+id.getText() );
+                                sampleIDs.addAll(getIdentifiers(id.getText()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return sampleIDs;
+    }
+    
     public static Set<String> getSecondaryAccessions(String enaId)  throws DocumentException, IOException {
         Element elem = null;
         try {
