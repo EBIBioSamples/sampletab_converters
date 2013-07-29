@@ -157,6 +157,7 @@ public class MageTabLoaderTask implements Runnable {
             log.error("Problem parsing "+inFile, e);
             return;
         }
+        
         try {
             for (SDRFNode node : mt.SDRF.getAllNodes()) {
     
@@ -187,9 +188,20 @@ public class MageTabLoaderTask implements Runnable {
                     }
                 }
                 
-                for (String match : matches) {
-                    log.info("Match "+match+" "+mt.getAccession()+":"+node.getNodeName());
-                    //TODO STORE
+                if (matches.size() > 0) {
+
+                    String[] bundle = new String[matches.size()+1];
+                    matches.toArray(bundle);
+                    
+                    for (int i=0; i < matches.size(); i++) {
+                        bundle[i] = MyEqProperties.getENASamplesService()+":"+bundle[i];
+                    }
+                    
+                    bundle[bundle.length-1] = MyEqProperties.getArrayExpressSamplesService()+":"+mt.getAccession()+" "+node.getNodeName();
+
+                    synchronized(emMgr) {
+                        emMgr.storeMappingBundle( bundle );
+                    }
                 }
             }
         } catch (IOException e) {
