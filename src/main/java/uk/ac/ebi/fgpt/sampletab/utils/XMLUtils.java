@@ -33,16 +33,7 @@ public class XMLUtils {
         return getDocument(new BufferedReader(new FileReader(xmlFile)));
 	}
 
-	public static Document getDocument(URL url) throws DocumentException, IOException {
-        log.info(System.getProperty("http.proxySet"));
-	    log.info(System.getProperty("http.proxyHost"));
-        log.info(System.getProperty("http.proxyPort"));
-        log.info(System.getProperty("http.nonProxyHosts"));
-        log.info(System.getProperty("proxySet"));
-        log.info(System.getProperty("proxyHost"));
-        log.info(System.getProperty("proxyPort"));
-        log.info(System.getProperty("nonProxyHosts"));
-        
+	public static Document getDocument(URL url) throws DocumentException, IOException {        
         URLConnection conn = null;
         if (System.getProperty("proxySet") != null) {
             String hostname = System.getProperty("proxyHost");
