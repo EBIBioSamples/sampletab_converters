@@ -29,6 +29,8 @@ import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class MageTabCron {
+    
+    private final static String CONAN_PIPELINE = "BioSamples (other)";
 
     @Option(name = "-h", aliases={"--help"}, usage = "display help")
     private boolean help;
@@ -291,7 +293,7 @@ public class MageTabCron {
         for (String submissionIdentifier : conanProcess) {
             if (!noconan) {
                 try {
-                    ConanUtils.submit(submissionIdentifier, "BioSamples (other)");
+                    ConanUtils.submit(submissionIdentifier, CONAN_PIPELINE);
                 } catch (IOException e) {
                     log.warn("Problem submitting to Conan "+submissionIdentifier, e);
                 }
@@ -355,7 +357,7 @@ public class MageTabCron {
                     //trigger conan to complete processing
                     if (!noconan && doConan) {
                         try {
-                            ConanUtils.submit(submission, "BioSamples (AE)", 1);
+                            ConanUtils.submit(submission, CONAN_PIPELINE, 1);
                         } catch (IOException e) {
                             log.warn("Problem submitting to Conan "+submission, e);
                         }
