@@ -120,25 +120,25 @@ public class MageTabToSampleTab {
             i < mt.IDF.personFirstName.size() || 
             i < mt.IDF.personEmail.size() || 
             i < mt.IDF.personRoles.size(); i++) {
-            String lastname = null;
+            String lastname = "";
             if (i < mt.IDF.personLastName.size()){
                 lastname = mt.IDF.personLastName.get(i);
             }
-            String initials = null;
+            String initials = "";
             if (i < mt.IDF.personMidInitials.size()){
                 initials = mt.IDF.personMidInitials.get(i);
             }
-            String firstname = null;
+            String firstname = "";
             if (i < mt.IDF.personFirstName.size()){
                 firstname = mt.IDF.personFirstName.get(i);
             }
-            String email = null;
+            String email = "";
             if (i < mt.IDF.personEmail.size()){
                 email = mt.IDF.personEmail.get(i);
             }
             // TODO fix minor spec mismatch when there are multiple roles for the
             // same person
-            String role = null;
+            String role = "";
             if (i < mt.IDF.personRoles.size()){
                 role = mt.IDF.personRoles.get(i);
             }
@@ -153,23 +153,23 @@ public class MageTabToSampleTab {
                     j < role.split(";").length) {
                 
                 String thislastname = null;
-                if (j < lastname.split(";").length) {
+                if (lastname != null && j < lastname.split(";").length) {
                     thislastname = lastname.split(";")[j].trim();
                 }
                 String thisinitials = null;
-                if (j < initials.split(";").length) {
+                if (initials != null &&j < initials.split(";").length) {
                     thisinitials = initials.split(";")[j].trim();
                 }
                 String thisfirstname = null;
-                if (j < firstname.split(";").length) {
+                if (firstname != null && j < firstname.split(";").length) {
                     thisfirstname = firstname.split(";")[j].trim();
                 }
                 String thisemail = null;
-                if (j < email.split(";").length) {
+                if (email != null && j < email.split(";").length) {
                     thisemail = email.split(";")[j].trim();
                 }
                 String thisrole = null;
-                if (j < role.split(";").length) {
+                if (role != null && j < role.split(";").length) {
                     thisrole = role.split(";")[j].trim();
                 }
 
@@ -265,7 +265,7 @@ public class MageTabToSampleTab {
                     if (sdrfcharacteristic.unit.termSourceREF != null 
                             && sdrfcharacteristic.unit.termSourceREF.length() > 0 
                             && sdrfcharacteristic.unit.termAccessionNumber != null
-                            && sdrfcharacteristic.unit.termAccessionNumber.length() > 0){
+                            && sdrfcharacteristic.unit.termAccessionNumber.length() > 0) {
                             scdcharacteristic.unit.setTermSourceREF(convertTermSource(sdrfcharacteristic.unit.termSourceREF, mt, st));
                         scdcharacteristic.unit.setTermSourceID(sdrfcharacteristic.unit.termAccessionNumber);
                     }
@@ -273,7 +273,7 @@ public class MageTabToSampleTab {
                     if (sdrfcharacteristic.termSourceREF != null 
                             && sdrfcharacteristic.termSourceREF.length() > 0 
                             && sdrfcharacteristic.termAccessionNumber != null
-                            && sdrfcharacteristic.termAccessionNumber.length() > 0){
+                            && sdrfcharacteristic.termAccessionNumber.length() > 0) {
                         scdcharacteristic.setTermSourceREF(convertTermSource(sdrfcharacteristic.termSourceREF, mt, st));
                         scdcharacteristic.setTermSourceID(sdrfcharacteristic.termAccessionNumber);
                     }
