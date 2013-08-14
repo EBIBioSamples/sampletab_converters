@@ -616,7 +616,7 @@ public class Corrector {
                         title = EuroPMCUtils.getTitleByPUBMEDid(i);
                     } catch (DocumentException e) {
                         log.error("Problem getting PubMedID "+i, e);
-                    }catch (IOException e) {
+                    } catch (IOException e) {
                         log.error("Problem getting PubMedID "+i, e);
                     }
                     if (title != null) {

@@ -154,14 +154,9 @@ public class Cosmic extends AbstractDriver {
             //add publication if groupid is pubmed id
             if (groupid.matches("[0-9]+")) {
                 st.msi.publications.add(new Publication(groupid, null));
+                String title = null;
                 try {
-                    String title = EuroPMCUtils.getTitleByPUBMEDid(new Integer(groupid));
-                    if (title == null) {
-                        st.msi.submissionTitle = st.msi.submissionTitle+" - Catalogue of Somatic Mutations in Cancer";
-                    } else {
-                        st.msi.submissionTitle = st.msi.submissionTitle+" - "+title;
-                        st.msi.submissionDescription = st.msi.submissionDescription+ " These samples are from the publication titled : "+title;
-                    }
+                    title = EuroPMCUtils.getTitleByPUBMEDid(new Integer(groupid));
                 } catch (NumberFormatException e) {
                     log.warn("Unable to convert "+groupid+" to number", e);
                 } catch (DocumentException e) {
@@ -169,6 +164,12 @@ public class Cosmic extends AbstractDriver {
                 } catch (IOException e) {
                     log.error("problem processing PMID "+groupid);
                 } 
+                if (title == null) {
+                    st.msi.submissionTitle = st.msi.submissionTitle+" - Catalogue of Somatic Mutations in Cancer";
+                } else {
+                    st.msi.submissionTitle = st.msi.submissionTitle+" - "+title;
+                    st.msi.submissionDescription = st.msi.submissionDescription+ " These samples are from the publication titled : "+title;
+                }
             }
             
             for (String[] nextLine : grouping.get(groupid)) {

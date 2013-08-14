@@ -18,16 +18,16 @@ public class EuroPMCUtils {
         System.out.println(doc.asXML());
         
         Element root = doc.getRootElement();
-        if (root == null) throw new NullPointerException("root is null");
+        if (root == null) throw new DocumentException("root is null");
         
         Element resultList = XMLUtils.getChildByName(root, "resultList");
-        if (resultList == null) throw new NullPointerException("resultList is null");
+        if (resultList == null) throw new DocumentException("resultList is null");
         
         Element result = XMLUtils.getChildByName(resultList, "result");
-        if (result == null) throw new NullPointerException("result is null");
+        if (result == null) throw new DocumentException("result is null");
         
         Element title = XMLUtils.getChildByName(result, "title");
-        if (title == null) throw new NullPointerException("title is null");
+        if (title == null) throw new DocumentException("title is null");
         
         return title.getTextTrim();
         
