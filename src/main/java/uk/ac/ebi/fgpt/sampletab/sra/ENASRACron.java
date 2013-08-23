@@ -92,7 +92,8 @@ public class ENASRACron {
         log.info("Checking deletions");
         //also get a set of existing submissions to delete
         Set<String> toDelete = new HashSet<String>();
-        for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", new File(outdir, "sra"))) { //TODO do this properly somehow
+        for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", new File(outdir, "sra"))) { 
+            //TODO do this properly somehow
             File subdir = sampletabpre.getParentFile();
             String subId = subdir.getName();
             if (!grouper.groups.containsKey(subId) && !grouper.ungrouped.contains(subId)) {
