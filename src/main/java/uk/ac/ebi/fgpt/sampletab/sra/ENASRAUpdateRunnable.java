@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 
 import org.dom4j.DocumentException;
 import org.slf4j.Logger;
@@ -14,8 +15,11 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.SubsTracking;
 
 public class ENASRAUpdateRunnable implements Runnable {
+    
+    private static final String SUBSEVENT = "Source Update";
 
     private final File outsubdir;
     private final String keyId;
@@ -34,6 +38,12 @@ public class ENASRAUpdateRunnable implements Runnable {
 
     @Override
     public void run() {
+        Date startDate = new Date();
+        String accession = outsubdir.getName();
+
+        //try to register this with subs tracking
+        SubsTracking.getInstance().registerEventStart(accession, SUBSEVENT, startDate, null);
+        
         ENASRAXMLToSampleTab converter = new ENASRAXMLToSampleTab();
         SampleData sd = null;
         try {
@@ -66,13 +76,18 @@ public class ENASRAUpdateRunnable implements Runnable {
         }
         
         //trigger conan if appropriate
-        if (conan){
+        if (conan) {
             try {
                 ConanUtils.submit(sd.msi.submissionIdentifier, "BioSamples (other)");
             } catch (IOException e) {
                 log.error("Problem submitting to conan "+sd.msi.submissionIdentifier, e);
             }
         }
+        
+        Date endDate = new Date();
+        
+        //try to register this with subs tracking
+        SubsTracking.getInstance().registerEventEnd(accession, SUBSEVENT, startDate, endDate, true);
 
     }
 

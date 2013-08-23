@@ -260,24 +260,24 @@ public class MageTabToSampleTab {
                 scdcharacteristic.setAttributeValue(sdrfcharacteristic
                         .getAttributeValue());
                 try {
-                if (sdrfcharacteristic.unit != null) {
-                    scdcharacteristic.unit = new UnitAttribute();
-                    if (sdrfcharacteristic.unit.termSourceREF != null 
-                            && sdrfcharacteristic.unit.termSourceREF.length() > 0 
-                            && sdrfcharacteristic.unit.termAccessionNumber != null
-                            && sdrfcharacteristic.unit.termAccessionNumber.length() > 0) {
-                            scdcharacteristic.unit.setTermSourceREF(convertTermSource(sdrfcharacteristic.unit.termSourceREF, mt, st));
-                        scdcharacteristic.unit.setTermSourceID(sdrfcharacteristic.unit.termAccessionNumber);
+                    if (sdrfcharacteristic.unit != null) {
+                        scdcharacteristic.unit = new UnitAttribute();
+                        if (sdrfcharacteristic.unit.termSourceREF != null 
+                                && sdrfcharacteristic.unit.termSourceREF.length() > 0 
+                                && sdrfcharacteristic.unit.termAccessionNumber != null
+                                && sdrfcharacteristic.unit.termAccessionNumber.length() > 0) {
+                                scdcharacteristic.unit.setTermSourceREF(convertTermSource(sdrfcharacteristic.unit.termSourceREF, mt, st));
+                            scdcharacteristic.unit.setTermSourceID(sdrfcharacteristic.unit.termAccessionNumber);
+                        }
+                    } else {
+                        if (sdrfcharacteristic.termSourceREF != null 
+                                && sdrfcharacteristic.termSourceREF.length() > 0 
+                                && sdrfcharacteristic.termAccessionNumber != null
+                                && sdrfcharacteristic.termAccessionNumber.length() > 0) {
+                            scdcharacteristic.setTermSourceREF(convertTermSource(sdrfcharacteristic.termSourceREF, mt, st));
+                            scdcharacteristic.setTermSourceID(sdrfcharacteristic.termAccessionNumber);
+                        }
                     }
-                } else {
-                    if (sdrfcharacteristic.termSourceREF != null 
-                            && sdrfcharacteristic.termSourceREF.length() > 0 
-                            && sdrfcharacteristic.termAccessionNumber != null
-                            && sdrfcharacteristic.termAccessionNumber.length() > 0) {
-                        scdcharacteristic.setTermSourceREF(convertTermSource(sdrfcharacteristic.termSourceREF, mt, st));
-                        scdcharacteristic.setTermSourceID(sdrfcharacteristic.termAccessionNumber);
-                    }
-                }
                 } catch (ParseException e) {
                     log.warn("Unable to handle term source", e);
                 }
