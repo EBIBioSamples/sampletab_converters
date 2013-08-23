@@ -44,97 +44,6 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
         
     }
     
-    class ToLoadTask implements Runnable {
-        private final File inputFile;
-        private final File outputFile;
-
-        private Logger log = LoggerFactory.getLogger(getClass());
-
-        public ToLoadTask(File inputFile, File outputFile) {
-            this.inputFile = inputFile;
-            this.outputFile = outputFile;
-        }
-
-        public void run() {
-            log.info("Processing " + inputFile);
-
-            
-            SampleTabSaferParser stParser = new SampleTabSaferParser();
-            SampleData sd = null;
-            try {
-                sd = stParser.parse(inputFile);
-            } catch (ParseException e) {
-                log.error("Error parsing "+inputFile, e);
-                return;
-            }
-            if (sd == null){
-                log.error("Error parsing "+inputFile);
-                return;
-            }
-
-            log.info("sampletab read, preparing to convert " + inputFile);
-            
-            // do conversion
-            SampleTabToLoad toloader;
-            try {
-                toloader = new SampleTabToLoad(hostname, port, database, username, password);
-            } catch (ClassNotFoundException e) {
-                log.error("Problem converting " + inputFile, e);
-                return;
-            } catch (SQLException e) {
-                log.error("Problem converting " + inputFile, e);
-                return;
-            }
-            try {
-                sd = toloader.convert(sd);
-            } catch (ParseException e) {
-                log.error("Problem converting " + inputFile, e);
-                return;
-            } catch (ClassNotFoundException e) {
-                log.error("Problem converting " + inputFile, e);
-                return;
-            } catch (SQLException e) {
-                log.error("Problem converting " + inputFile, e);
-                return;
-            }
-            
-            log.info("sampletab converted, preparing to validate " + inputFile);
-            
-            //validate it
-            LoadValidator validator = new LoadValidator();
-            try {
-                validator.validate(sd);
-            } catch (ValidateException e) {
-                log.error("Error validating "+inputFile, e);
-                for (ErrorItem err : e.getErrorItems()){
-                    log.error(err.reportString());
-                }
-                return;
-            }
-
-            log.info("sampletab validated, preparing to output to " + outputFile);
-            
-            // write back out
-            FileWriter out = null;
-            try {
-                out = new FileWriter(outputFile);
-            } catch (IOException e) {
-                log.error("Error opening " + outputFile, e);
-                return;
-            }
-
-            SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-            try {
-                sampletabwriter.write(sd);
-                sampletabwriter.close();
-            } catch (IOException e) {
-                log.error("Error writing " + outputFile, e);
-                return;
-            }
-            log.debug("Processed " + inputFile);
-
-        }
-    }
 
     public static void main(String[] args) {
         new SampleTabToLoadDriver().doMain(args);
@@ -172,6 +81,6 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     protected Runnable getNewTask(File inputFile) {
         inputFile = inputFile.getAbsoluteFile();
         File outputFile = new File(inputFile.getParentFile(), outputFilename);
-        return new ToLoadTask(inputFile, outputFile);
+        return new SampleTabToLoadRunnable(inputFile, outputFile, hostname, port, database, username, password);
     }
 }
