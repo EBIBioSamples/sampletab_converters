@@ -19,7 +19,7 @@ public class AccessionerDriver extends AbstractInfileDriver<AccessionerTask> {
 
     @Option(name = "--port", usage = "server port") 
     private Integer port;
-    // -p -o -r -t are all used eleewhere!
+    // -p -o -r -t are all used elsewhere!
 
     @Option(name = "--database", aliases={"-d"}, usage = "server database")
     private String database;
