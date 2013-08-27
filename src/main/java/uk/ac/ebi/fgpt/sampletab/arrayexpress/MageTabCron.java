@@ -237,7 +237,9 @@ public class MageTabCron {
                         
                         
 						File outsubdir = SampleTabUtils.getSubmissionDirFile(submissionIdentifier);
+						outsubdir = new File(outputDirName, outsubdir.getName());
 						if (!outsubdir.exists()) outsubdir.mkdirs();
+						
 						File outidf = new File(outsubdir, subsubdir.getName()
 								+ ".idf.txt");
 						File outsdrf = new File(outsubdir, subsubdir.getName()
