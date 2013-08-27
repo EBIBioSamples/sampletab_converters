@@ -153,7 +153,8 @@ public class ENASRACron {
         
         //process deletes
         for (String submissionID : toDelete) {
-            File sampletabpre = new File(SampleTabUtils.getSubmissionDirFile(submissionID), "sampletab.pre.txt");
+            File sampletabpre = new File(outdir.toString(), SampleTabUtils.getSubmissionDirFile(submissionID).toString());
+            sampletabpre = new File(sampletabpre, "sampletab.pre.txt");
             try {
                 SampleTabUtils.releaseInACentury(sampletabpre);
             } catch (IOException e) {
