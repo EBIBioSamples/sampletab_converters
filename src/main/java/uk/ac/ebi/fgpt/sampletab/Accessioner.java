@@ -31,13 +31,9 @@ import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 public class Accessioner {
 
     private String hostname;
-
     private int port;
-
     private String database;
-
     private String username;
-
     private String password;
 
     private final SampleTabValidator validator = new SampleTabValidator();
@@ -179,74 +175,77 @@ public class Accessioner {
     }
 
     protected void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries, Connection connect, DataSource ds) throws SQLException{
+        if (sample.getSampleAccession() == null) {
+            String accession = singleSample(sample.getNodeName().trim(), submissionID, prefix, table, retries, connect, ds);
+            sample.setSampleAccession(accession);
+        }
+    }
+    
+    protected String singleSample(String name, String submissionID, String prefix, String table, int retries, Connection connect, DataSource ds) throws SQLException{
 
         PreparedStatement statement = null;
         ResultSet results = null;
+        String accession = null;
+        try {
+            
+            statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
+                    + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
+            statement.setString(1, name);
+            statement.setString(2, submissionID);
+            log.trace(statement.toString());
+            results = statement.executeQuery();
+            if (results.next()){
+                accession = prefix + results.getInt(1);
+            } else {
+                log.info("Assigning new accession for "+submissionID+" : "+name);
 
-        if (sample.getSampleAccession() == null) {
-            try {
-                String name = sample.getNodeName().trim();
-                String accession = null;
+                //insert it if not exists
+                statement.close();
+                statement = connect
+                        .prepareStatement("INSERT INTO "
+                                + table
+                                + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
+                statement.setString(1, name);
+                statement.setString(2, submissionID);
+                log.trace(statement.toString());
+                statement.executeUpdate();
                 
+                statement.close();
                 statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
                         + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
                 statement.setString(1, name);
                 statement.setString(2, submissionID);
                 log.trace(statement.toString());
+                results.close();
                 results = statement.executeQuery();
-                if (results.next()){
-                    accession = prefix + results.getInt(1);
-                } else {
-                    log.info("Assigning new accession for "+submissionID+" : "+name);
-
-                    //insert it if not exists
+                results.next();
+                accession = prefix + results.getInt(1);
+            }
+            log.debug("Assigning " + accession + " to " + name);
+        } catch (SQLRecoverableException e) {
+            log.warn("Trying to recover from exception", e);
+            if (retries > 0){
+                singleSample(name, submissionID, prefix, table, retries-1, connect, ds);
+            } else {
+                throw e;
+            }
+        } finally {
+            if (statement != null){
+                try {
                     statement.close();
-                    statement = connect
-                            .prepareStatement("INSERT INTO "
-                                    + table
-                                    + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
-                    statement.setString(1, name);
-                    statement.setString(2, submissionID);
-                    log.trace(statement.toString());
-                    statement.executeUpdate();
-                    
-                    statement.close();
-                    statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
-                            + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
-                    statement.setString(1, name);
-                    statement.setString(2, submissionID);
-                    log.trace(statement.toString());
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
+            if (results != null){
+                try {
                     results.close();
-                    results = statement.executeQuery();
-                    results.next();
-                    accession = prefix + results.getInt(1);
-                }
-                log.debug("Assigning " + accession + " to " + name);
-                sample.setSampleAccession(accession);
-            } catch (SQLRecoverableException e) {
-                log.warn("Trying to recover from exception", e);
-                if (retries > 0){
-                    singleSample(sd, sample, submissionID, prefix, table, retries-1, connect, ds);
-                } else {
-                    throw e;
-                }
-            } finally {
-                if (statement != null){
-                    try {
-                        statement.close();
-                    } catch (SQLException e) {
-                        //do nothing
-                    }
-                }
-                if (results != null){
-                    try {
-                        results.close();
-                    } catch (SQLException e) {
-                        //do nothing
-                    }
+                } catch (SQLException e) {
+                    //do nothing
                 }
             }
         }
+        return accession;
     }
 
     protected void singleGroup(SampleData sd, GroupNode group, String submissionID, int retries, Connection connect, DataSource ds) throws SQLException{
@@ -350,17 +349,19 @@ public class Accessioner {
         //log.info("Starting accessioning");
         
         
-        String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
-
-        try {
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-        } catch (ClassNotFoundException e) {
-            log.error("Unable to find oracle.jdbc.driver.OracleDriver", e);
-            return null;
-        }
         
         synchronized(this) {
             if (ds == null) {
+
+                try {
+                    Class.forName("oracle.jdbc.driver.OracleDriver");
+                } catch (ClassNotFoundException e) {
+                    log.error("Unable to find oracle.jdbc.driver.OracleDriver", e);
+                    return null;
+                }
+
+                String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
+                
                 ds = new BoneCPDataSource();
                 ds.setJdbcUrl(connectURI);
                 ds.setUsername(username);

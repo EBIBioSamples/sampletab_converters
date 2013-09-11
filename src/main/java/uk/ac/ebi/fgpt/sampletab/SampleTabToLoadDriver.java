@@ -55,7 +55,7 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
         //load defaults
         Properties oracleProperties = new Properties();
         try {
-            InputStream is = AccessionerDriver.class.getResourceAsStream("/oracle.properties");
+            InputStream is = getClass().getResourceAsStream("/oracle.properties");
             oracleProperties.load(is);
         } catch (IOException e) {
             log.error("Unable to read resource oracle.properties", e);

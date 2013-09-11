@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
@@ -15,8 +16,6 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import uk.ac.ebi.fgpt.sampletab.AccessionerDriver;
 
 import com.jolbox.bonecp.BoneCPDataSource;
 
@@ -48,7 +47,7 @@ public class SubsTracking {
             //load defaults
             Properties properties = new Properties();
             try {
-                InputStream is = AccessionerDriver.class.getResourceAsStream("/substracking.properties");
+                InputStream is = getClass().getResourceAsStream("/substracking.properties");
                 properties.load(is);
             } catch (IOException e) {
                 log.error("Unable to read resource oracle.properties", e);
@@ -58,17 +57,27 @@ public class SubsTracking {
             database = properties.getProperty("database");
             username = properties.getProperty("username");
             password = properties.getProperty("password");
-                        
+
             try {
                 Class.forName("com.mysql.jdbc.Driver");
             } catch (ClassNotFoundException e) {
                 log.error("Unable to find com.mysql.jdbc.Driver", e);
                 throw e;
             }
+                        
+            String jdbc = "jdbc:mysql://"+hostname+":"+port+"/"+database;
+            log.info("JDBC URL = "+jdbc);
+            log.info("USER = "+username);
+            log.info("PW = "+password);
+            
             ds = new BoneCPDataSource();
-            ds.setJdbcUrl("jdbc:mysql://"+hostname+":"+port+"/"+database);
+            ds.setJdbcUrl(jdbc);
             ds.setUsername(username);
             ds.setPassword(password);
+            
+            ds.setPartitionCount(1); 
+            ds.setMaxConnectionsPerPartition(10); 
+            ds.setAcquireIncrement(2); 
         }
         return ds.getConnection();
     }
@@ -87,6 +96,7 @@ public class SubsTracking {
     }
     
     public void registerEventStart(String experimentID, String eventType, Date start, File logFile) {
+        log.info(eventType+" "+experimentID);
         Connection c = null;
         try {
             c = getConnection();
