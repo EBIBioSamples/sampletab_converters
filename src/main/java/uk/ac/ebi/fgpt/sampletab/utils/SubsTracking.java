@@ -70,6 +70,9 @@ public class SubsTracking {
             log.info("USER = "+username);
             log.info("PW = "+password);
             
+            return DriverManager.getConnection(jdbc, username, password);
+            /*
+            
             ds = new BoneCPDataSource();
             ds.setJdbcUrl(jdbc);
             ds.setUsername(username);
@@ -77,7 +80,7 @@ public class SubsTracking {
             
             ds.setPartitionCount(1); 
             ds.setMaxConnectionsPerPartition(10); 
-            ds.setAcquireIncrement(2); 
+            ds.setAcquireIncrement(2); */
         }
         return ds.getConnection();
     }
@@ -96,89 +99,97 @@ public class SubsTracking {
     }
     
     public void registerEventStart(String experimentID, String eventType, Date start, File logFile) {
-        log.info(eventType+" "+experimentID);
-        Connection c = null;
         try {
-            c = getConnection();
-        } catch (SQLException e) {
-            log.error("Unable to register event", e);
-            return;
-        } catch (ClassNotFoundException e) {
-            log.error("Unable to register event", e);
-            return;
-        }
-        
-        Statement st;
-        try {
-            st = c.createStatement();
-        } catch (SQLException e) {
-            log.error("Unable to register event", e);
-            return;
-        }
-        
-        //NB not cross-platform!
-        String machineName = null;
-        try {
-            machineName = getHostname();
-        } catch (IOException e) {
-            log.error("Unable to register event", e);
-            return;
-        }
-        
-        String startString = df.format(start);
-        String user = System.getProperty("user.name");
-        
-        try {
-            String sql = "INSERT INTO events (" 
-            		+"experiment_id, event_type, " 
-            		+"start_time, machine, operator, " 
-            		+"log_file, is_deleted)" 
-            		+" VALUES " 
-            		+"('"+experimentID+"', '"+eventType+"', "
-            		+"'"+startString+"', '"+machineName+"', '"+user+"',"
-            		+"'"+logFile+"', 0)";
-            log.trace(sql);
-            st.executeUpdate(sql);
-        } catch (SQLException e) {
-            log.error("Unable to register event", e);
-            return;
+            log.info(eventType+" "+experimentID);
+            Connection c = null;
+            try {
+                c = getConnection();
+            } catch (SQLException e) {
+                log.error("Unable to register event", e);
+                return;
+            } catch (ClassNotFoundException e) {
+                log.error("Unable to register event", e);
+                return;
+            }
+            
+            Statement st;
+            try {
+                st = c.createStatement();
+            } catch (SQLException e) {
+                log.error("Unable to register event", e);
+                return;
+            }
+            
+            //NB not cross-platform!
+            String machineName = null;
+            try {
+                machineName = getHostname();
+            } catch (IOException e) {
+                log.error("Unable to register event", e);
+                return;
+            }
+            
+            String startString = df.format(start);
+            String user = System.getProperty("user.name");
+            
+            try {
+                String sql = "INSERT INTO events (" 
+                		+"experiment_id, event_type, " 
+                		+"start_time, machine, operator, " 
+                		+"log_file, is_deleted)" 
+                		+" VALUES " 
+                		+"('"+experimentID+"', '"+eventType+"', "
+                		+"'"+startString+"', '"+machineName+"', '"+user+"',"
+                		+"'"+logFile+"', 0)";
+                log.trace(sql);
+                st.executeUpdate(sql);
+            } catch (SQLException e) {
+                log.error("Unable to register event", e);
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("Caught exception", e);
         }
     }
     
     public void registerEventEnd(String experimentID, String eventType, Date start, Date end, boolean successful) {
-        Connection c = null;
         try {
-            c = getConnection();
-        } catch (SQLException e) {
-            log.error("Unable to register event", e);
-            return;
-        } catch (ClassNotFoundException e) {
-            log.error("Unable to register event", e);
-            return;
-        }
-        
-        Statement st;
-        try {
-            st = c.createStatement();
-        } catch (SQLException e) {
-            log.error("Unable to register event", e);
-            return;
-        }
-
-        String startString = df.format(start);
-        String endString = df.format(end);
-        int successValue = 0;
-        if (successful) successValue = 1;
-        
-        try {
-            String sql = "UPDATE events SET "
-                    +"end_time='"+endString+"', was_successful="+successValue+" "
-                    +"WHERE experiment_id='"+experimentID+"' AND event_type='"+eventType+"' AND start_time='"+startString+"' ";
-            log.trace(sql);
-            st.executeUpdate(sql);
-        } catch (SQLException e) {
-            log.error("Unable to register event", e);
-            return;
+            Connection c = null;
+            try {
+                c = getConnection();
+            } catch (SQLException e) {
+                log.error("Unable to register event", e);
+                return;
+            } catch (ClassNotFoundException e) {
+                log.error("Unable to register event", e);
+                return;
+            }
+            
+            Statement st;
+            try {
+                st = c.createStatement();
+            } catch (SQLException e) {
+                log.error("Unable to register event", e);
+                return;
+            }
+    
+            String startString = df.format(start);
+            String endString = df.format(end);
+            int successValue = 0;
+            if (successful) successValue = 1;
+            
+            try {
+                String sql = "UPDATE events SET "
+                        +"end_time='"+endString+"', was_successful="+successValue+" "
+                        +"WHERE experiment_id='"+experimentID+"' AND event_type='"+eventType+"' AND start_time='"+startString+"' ";
+                log.trace(sql);
+                st.executeUpdate(sql);
+            } catch (SQLException e) {
+                log.error("Unable to register event", e);
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("Caught exception", e);
         }
     }
 }
