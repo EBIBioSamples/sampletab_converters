@@ -64,14 +64,6 @@
 
 	<dependencies>
 
-		<!-- this is not in public repos due to Oracle license -->
-		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>ojdbc6</artifactId>
-			<version>11.2.0.2.0</version>
-		</dependency>
-
-
 		<!-- testing -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -127,7 +119,21 @@
 			<version>5.1.26</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!--  also need oracle driver for accessioning, but license restriction -->
+		<!-- oracle driver for accessioning -->
+		<!-- this is not in public repos due to Oracle license -->
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6</artifactId>
+			<version>11.2.0.2.0</version>
+		</dependency>
+		<!-- Spring for database access object tools -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring</artifactId>
+			<version>2.5.6</version>
+		</dependency>
+            
+		
 		
 		<!-- XML handling -->
 		<dependency>

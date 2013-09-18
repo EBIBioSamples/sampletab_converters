@@ -15,7 +15,8 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-import uk.ac.ebi.fgpt.sampletab.utils.SubsTracking;
+import uk.ac.ebi.fgpt.sampletab.subs.Event;
+import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 
 public class SampleTabToLoadRunnable implements Runnable {
     
@@ -43,11 +44,10 @@ public class SampleTabToLoadRunnable implements Runnable {
     
 
     public void run() {
-        Date startDate = new Date();
         String accession = inputFile.getParentFile().getName();
 
         //try to register this with subs tracking
-        SubsTracking.getInstance().registerEventStart(accession, SUBSEVENT, startDate, null);
+        Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
         
         log.info("Processing " + inputFile);
 
@@ -125,11 +125,9 @@ public class SampleTabToLoadRunnable implements Runnable {
             return;
         }
         log.debug("Processed " + inputFile);
-
-        Date endDate = new Date();
         
         //try to register this with subs tracking
-        SubsTracking.getInstance().registerEventEnd(accession, SUBSEVENT, startDate, endDate, true);
+        TrackingManager.getInstance().registerEventEnd(event);
     }
 
 }
