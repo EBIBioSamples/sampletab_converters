@@ -6,10 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.Properties;
 
 import org.kohsuke.args4j.Option;
+
 import org.mged.magetab.error.ErrorItem;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +21,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
+import uk.ac.ebi.fgpt.sampletab.utils.SubsTracking;
 
 public class SampleTabBulk extends AbstractInfileDriver {
 
@@ -39,6 +43,8 @@ public class SampleTabBulk extends AbstractInfileDriver {
     @Option(name = "--force", aliases={"-f"}, usage = "overwrite targets")
     private boolean force = false;
 
+    
+    private static final String SUBSEVENT = "SampleTabBulk";
 
     private Corrector corrector = new Corrector();
     private DerivedFrom derivedFrom = null;
@@ -121,6 +127,11 @@ public class SampleTabBulk extends AbstractInfileDriver {
         }
 
         public void run() {
+            Date startDate = new Date();
+            String accession = sampletabpre.getParentFile().getName();
+
+            //try to register this with subs tracking
+            SubsTracking.getInstance().registerEventStart(accession, SUBSEVENT, startDate, null);
             
             // accession sampletab.pre.txt to sampletab.txt
             if (force
@@ -234,6 +245,11 @@ public class SampleTabBulk extends AbstractInfileDriver {
                 }
                 log.info("Finished " + sampletabtoload);
             }
+            
+            Date endDate = new Date();
+            
+            //try to register this with subs tracking
+            SubsTracking.getInstance().registerEventEnd(accession, SUBSEVENT, startDate, endDate, true);
 
         }
         
