@@ -1,6 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab;
 import junit.framework.TestCase;
-import uk.ac.ebi.fgpt.sampletab.utils.SubsTracking;
+import uk.ac.ebi.fgpt.sampletab.subs.*;
 import java.sql.*;
 
 public class TestSubsTracking extends TestCase {
