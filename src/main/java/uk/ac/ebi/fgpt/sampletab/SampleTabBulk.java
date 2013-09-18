@@ -21,7 +21,8 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
-import uk.ac.ebi.fgpt.sampletab.utils.SubsTracking;
+import uk.ac.ebi.fgpt.sampletab.subs.Event;
+import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 
 public class SampleTabBulk extends AbstractInfileDriver {
 
@@ -127,11 +128,10 @@ public class SampleTabBulk extends AbstractInfileDriver {
         }
 
         public void run() {
-            Date startDate = new Date();
             String accession = sampletabpre.getParentFile().getName();
 
             //try to register this with subs tracking
-            SubsTracking.getInstance().registerEventStart(accession, SUBSEVENT, startDate, null);
+            Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
             
             // accession sampletab.pre.txt to sampletab.txt
             if (force
@@ -245,11 +245,9 @@ public class SampleTabBulk extends AbstractInfileDriver {
                 }
                 log.info("Finished " + sampletabtoload);
             }
-            
-            Date endDate = new Date();
-            
+                        
             //try to register this with subs tracking
-            SubsTracking.getInstance().registerEventEnd(accession, SUBSEVENT, startDate, endDate, true);
+            TrackingManager.getInstance().registerEventEnd(event);
 
         }
         

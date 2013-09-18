@@ -14,8 +14,9 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.subs.Event;
+import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.SubsTracking;
 
 public class ENASRAUpdateRunnable implements Runnable {
     
@@ -38,11 +39,10 @@ public class ENASRAUpdateRunnable implements Runnable {
 
     @Override
     public void run() {
-        Date startDate = new Date();
         String accession = outsubdir.getName();
 
         //try to register this with subs tracking
-        SubsTracking.getInstance().registerEventStart(accession, SUBSEVENT, startDate, null);
+        Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
         
         ENASRAXMLToSampleTab converter = new ENASRAXMLToSampleTab();
         SampleData sd = null;
@@ -83,11 +83,9 @@ public class ENASRAUpdateRunnable implements Runnable {
                 log.error("Problem submitting to conan "+sd.msi.submissionIdentifier, e);
             }
         }
-        
-        Date endDate = new Date();
-        
+                
         //try to register this with subs tracking
-        SubsTracking.getInstance().registerEventEnd(accession, SUBSEVENT, startDate, endDate, true);
+        TrackingManager.getInstance().registerEventEnd(event);
 
     }
 
