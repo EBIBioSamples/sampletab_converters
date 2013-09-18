@@ -43,6 +43,9 @@ public class SampleTabBulk extends AbstractInfileDriver {
     
     @Option(name = "--force", aliases={"-f"}, usage = "overwrite targets")
     private boolean force = false;
+    
+    @Option(name = "--no-load", aliases={"-l"}, usage = "skip creating sampletab.toload.txt")
+    private boolean noload = false;
 
     
     private static final String SUBSEVENT = "SampleTabBulk";
@@ -65,6 +68,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
         } catch (IOException e) {
             log.error("Unable to read resource oracle.properties", e);
         }
+        
         this.hostname = properties.getProperty("hostname");
         this.port = new Integer(properties.getProperty("port"));
         this.database = properties.getProperty("database");
@@ -97,7 +101,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
     }
     
     public void process(File subdir, File scriptdir){
-        Runnable t = new DoProcessFile(subdir, corrector, accessioner, sameAs, getDerivedFrom(), force);
+        Runnable t = new DoProcessFile(subdir, corrector, accessioner, sameAs, getDerivedFrom(), force, noload);
         t.run();
     }
     
@@ -111,10 +115,11 @@ public class SampleTabBulk extends AbstractInfileDriver {
         private final DerivedFrom derivedFrom;
         private final Accessioner accessioner;
         private final boolean force;
+        private final boolean noload;
         
         private Logger log = LoggerFactory.getLogger(getClass());
         
-        public DoProcessFile(File subdir, Corrector corrector, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom, boolean force){
+        public DoProcessFile(File subdir, Corrector corrector, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom, boolean force, boolean noload) {
             
             sampletabpre = new File(subdir, "sampletab.pre.txt");
             sampletab = new File(subdir, "sampletab.txt");
@@ -125,6 +130,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
             this.derivedFrom = derivedFrom;
             this.accessioner = accessioner;
             this.force = force;
+            this.noload = noload;
         }
 
         public void run() {
@@ -217,33 +223,35 @@ public class SampleTabBulk extends AbstractInfileDriver {
             }
 
             // preprocess to load
-            if (force 
-                    || !sampletabtoload.exists()
-                    || sampletabtoload.length() == 0
-                    || sampletabtoload.lastModified() < sampletab.lastModified()) {
-                log.info("Processing " + sampletabtoload);
-
-                SampleTabToLoad c;
-                try {
-                    c = new SampleTabToLoad(accessioner);
-                    c.convert(sampletab, sampletabtoload);
-                } catch (ClassNotFoundException e) {
-                    log.error("Problem processing "+sampletab, e);
-                    return;
-                } catch (IOException e) {
-                    log.error("Problem processing "+sampletab, e);
-                    return;
-                } catch (ParseException e) {
-                    log.error("Problem processing "+sampletab, e);
-                    return;
-                } catch (RuntimeException e){
-                    log.error("Problem processing "+sampletab, e);
-                    return;
-                } catch (SQLException e) {
-                    log.error("Problem processing "+sampletab, e);
-                    return;
+            if (!noload) {
+                if (force 
+                        || !sampletabtoload.exists()
+                        || sampletabtoload.length() == 0
+                        || sampletabtoload.lastModified() < sampletab.lastModified()) {
+                    log.info("Processing " + sampletabtoload);
+    
+                    SampleTabToLoad c;
+                    try {
+                        c = new SampleTabToLoad(accessioner);
+                        c.convert(sampletab, sampletabtoload);
+                    } catch (ClassNotFoundException e) {
+                        log.error("Problem processing "+sampletab, e);
+                        return;
+                    } catch (IOException e) {
+                        log.error("Problem processing "+sampletab, e);
+                        return;
+                    } catch (ParseException e) {
+                        log.error("Problem processing "+sampletab, e);
+                        return;
+                    } catch (RuntimeException e){
+                        log.error("Problem processing "+sampletab, e);
+                        return;
+                    } catch (SQLException e) {
+                        log.error("Problem processing "+sampletab, e);
+                        return;
+                    }
+                    log.info("Finished " + sampletabtoload);
                 }
-                log.info("Finished " + sampletabtoload);
             }
                         
             //try to register this with subs tracking
@@ -260,7 +268,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
     @Override
     protected Runnable getNewTask(File inputFile) {
         File subdir = inputFile.getAbsoluteFile().getParentFile();
-        return new DoProcessFile(subdir, corrector, accessioner, sameAs, getDerivedFrom(), force);
+        return new DoProcessFile(subdir, corrector, accessioner, sameAs, getDerivedFrom(), force, noload);
     }
 
     private synchronized DerivedFrom getDerivedFrom() {
