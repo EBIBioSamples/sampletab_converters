@@ -41,16 +41,24 @@ public class SampleTabToLoadRunnable implements Runnable {
         this.username = username;
         this.password = password;
     }
-    
 
+    @Override
     public void run() {
+        log.info("Processing " + inputFile);
         String accession = inputFile.getParentFile().getName();
 
         //try to register this with subs tracking
         Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
         
-        log.info("Processing " + inputFile);
-
+        try {
+            doWork();
+        } finally {
+            //try to register this with subs tracking
+            TrackingManager.getInstance().registerEventEnd(event);
+        }
+    }
+    
+    private void doWork() {
         
         SampleTabSaferParser stParser = new SampleTabSaferParser();
         SampleData sd = null;
@@ -125,9 +133,6 @@ public class SampleTabToLoadRunnable implements Runnable {
             return;
         }
         log.debug("Processed " + inputFile);
-        
-        //try to register this with subs tracking
-        TrackingManager.getInstance().registerEventEnd(event);
     }
 
 }

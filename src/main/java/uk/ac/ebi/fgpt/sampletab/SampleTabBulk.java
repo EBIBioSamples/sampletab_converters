@@ -139,6 +139,18 @@ public class SampleTabBulk extends AbstractInfileDriver {
             //try to register this with subs tracking
             Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
             
+            try {
+                doWork();
+            } finally {       
+                //try to register this with subs tracking
+                TrackingManager.getInstance().registerEventEnd(event);
+            }
+
+        }
+        
+
+        private void doWork() {
+
             // accession sampletab.pre.txt to sampletab.txt
             if (force
                     || !sampletab.exists()
@@ -189,7 +201,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
                         log.error("Unable to find derived from relationships due to error", e);
                         return;
                     }
-    
+
                     log.info("Detecting same as...");
                     try {
                         sameAs.convert(st);
@@ -229,7 +241,7 @@ public class SampleTabBulk extends AbstractInfileDriver {
                         || sampletabtoload.length() == 0
                         || sampletabtoload.lastModified() < sampletab.lastModified()) {
                     log.info("Processing " + sampletabtoload);
-    
+
                     SampleTabToLoad c;
                     try {
                         c = new SampleTabToLoad(accessioner);
@@ -253,10 +265,6 @@ public class SampleTabBulk extends AbstractInfileDriver {
                     log.info("Finished " + sampletabtoload);
                 }
             }
-                        
-            //try to register this with subs tracking
-            TrackingManager.getInstance().registerEventEnd(event);
-
         }
         
     }

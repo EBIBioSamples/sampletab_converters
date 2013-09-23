@@ -40,53 +40,54 @@ public class ENASRAUpdateRunnable implements Runnable {
     @Override
     public void run() {
         String accession = outsubdir.getName();
-
         //try to register this with subs tracking
         Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
         
-        ENASRAXMLToSampleTab converter = new ENASRAXMLToSampleTab();
-        SampleData sd = null;
         try {
-            sd = converter.convert(new File(outsubdir, ""+keyId+".xml"), sampleIds);
-        } catch (ParseException e) {
-            log.error("Problem processing "+keyId, e);
-        } catch (IOException e) {
-            log.error("Problem processing "+keyId, e);
-        } catch (DocumentException e) {
-            log.error("Problem processing "+keyId, e);
-        }
-        
-        if (sd != null) {
-            File sampletabPre = new File(outsubdir, "sampletab.pre.txt");
-            SampleTabWriter sampletabwriter = null;
+            ENASRAXMLToSampleTab converter = new ENASRAXMLToSampleTab();
+            SampleData sd = null;
             try {
-                sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(sampletabPre)));
-                sampletabwriter.write(sd);
+                sd = converter.convert(new File(outsubdir, ""+keyId+".xml"), sampleIds);
+            } catch (ParseException e) {
+                log.error("Problem processing "+keyId, e);
             } catch (IOException e) {
-                log.error("Unable to write to "+sampletabPre, e);
-            } finally {
-                if (sampletabwriter != null){
-                    try {
-                        sampletabwriter.close();
-                    } catch (IOException e) {
-                        //do nothing
+                log.error("Problem processing "+keyId, e);
+            } catch (DocumentException e) {
+                log.error("Problem processing "+keyId, e);
+            }
+            
+            if (sd != null) {
+                File sampletabPre = new File(outsubdir, "sampletab.pre.txt");
+                SampleTabWriter sampletabwriter = null;
+                try {
+                    sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(sampletabPre)));
+                    sampletabwriter.write(sd);
+                } catch (IOException e) {
+                    log.error("Unable to write to "+sampletabPre, e);
+                } finally {
+                    if (sampletabwriter != null){
+                        try {
+                            sampletabwriter.close();
+                        } catch (IOException e) {
+                            //do nothing
+                        }
                     }
                 }
             }
-        }
-        
-        //trigger conan if appropriate
-        if (conan) {
-            try {
-                ConanUtils.submit(sd.msi.submissionIdentifier, "BioSamples (other)");
-            } catch (IOException e) {
-                log.error("Problem submitting to conan "+sd.msi.submissionIdentifier, e);
+            
+            //trigger conan if appropriate
+            if (conan) {
+                try {
+                    ConanUtils.submit(sd.msi.submissionIdentifier, "BioSamples (other)");
+                } catch (IOException e) {
+                    log.error("Problem submitting to conan "+sd.msi.submissionIdentifier, e);
+                }
             }
+        } finally {
+            //try to register this with subs tracking
+            TrackingManager.getInstance().registerEventEnd(event);
         }
-                
-        //try to register this with subs tracking
-        TrackingManager.getInstance().registerEventEnd(event);
 
     }
-
+    
 }
