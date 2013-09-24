@@ -265,25 +265,47 @@ public class ENASRAXMLToSampleTab {
                 //maybe these should be database ids rather than synonyms?
                 Element identifiers = XMLUtils.getChildByName(sampleElement, "IDENTIFIERS");
                 
+                //colect various IDs together
                 Collection<Element> otherIDs = XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID");
                 otherIDs.addAll(XMLUtils.getChildrenByName(identifiers, "SUBMITTER_ID"));
                 otherIDs.addAll(XMLUtils.getChildrenByName(identifiers, "SECONDARY_ID"));
+                
                 for (Element id : otherIDs) {
-                    if ("BioSample".equals(id.attribute("namespace"))) {
-                        log.info("Found SUBMITTER_ID "+id.getTextTrim());
-                        if (id.getTextTrim().matches("SAM[END][A]?[0-9]+")) {
-                            if (samplenode.getSampleAccession() == null) {
-                                samplenode.setSampleAccession(id.getTextTrim());
-                            } else {
-                                log.warn("Strange biosample identifiers in "+sampleAccession);
-                                CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
-                                samplenode.addAttribute(synonymattrib, 0);
-                            }
-                        } else {
-                            log.warn("Unfamiliar BioSample accession "+id.getTextTrim());
-                        }
-                    } else {
+
+                    if (samplenode.getSampleAccession() == null && 
+                            id.getTextTrim().matches("SAM[END][A]?[0-9]+")) {
+                        //this is a biosamples accession, and we dont have one yet, so use it
+                        samplenode.setSampleAccession(id.getTextTrim());
+                    } else if (samplenode.getSampleAccession() != null && 
+                            id.getTextTrim().matches("SAM[END][A]?[0-9]+")){
+                        //this is a biosamples accession, but we already have one, report an error and store as synonym
+                        log.error("Strange biosample identifiers in "+sampleAccession);
                         CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
+                        samplenode.addAttribute(synonymattrib, 0);                        
+                    } else {
+                        //store it as a synonym
+                        CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
+                        samplenode.addAttribute(synonymattrib, 0);
+                    }
+                }
+                
+                //process any alias present
+                String alias = sampleElement.attributeValue("alias");
+                if (alias != null) {
+                    alias = alias.trim();
+                    if (samplenode.getSampleAccession() == null && 
+                            alias.matches("SAM[END][A]?[0-9]+")) {
+                        //this is a biosamples accession, and we dont have one yet, so use it
+                        samplenode.setSampleAccession(alias);
+                    } else if (samplenode.getSampleAccession() != null && 
+                            alias.matches("SAM[END][A]?[0-9]+")){
+                        //this is a biosamples accession, but we already have one, report an error and store as synonym
+                        log.error("Strange biosample identifiers in "+sampleAccession);
+                        CommentAttribute synonymattrib = new CommentAttribute("Synonym", alias);
+                        samplenode.addAttribute(synonymattrib, 0);                        
+                    } else {
+                        //store it as a synonym
+                        CommentAttribute synonymattrib = new CommentAttribute("Synonym", alias);
                         samplenode.addAttribute(synonymattrib, 0);
                     }
                 }
