@@ -19,7 +19,11 @@ public class GUIXMLDriver extends AbstractInfileDriver<GUIXMLRunnable> {
     @Option(name = "--output", aliases = { "-o" }, usage = "output filename")
     private String outputFilename = "gui.xml";
     
+    @Option(name = "--tempdir", aliases = { "-d" }, usage = "temporary directory")
+    private File tempdir = null;
+    
     private GUIXMLOutputer outputer;
+    private File temporaryFile = null;
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -35,23 +39,28 @@ public class GUIXMLDriver extends AbstractInfileDriver<GUIXMLRunnable> {
     
     @Override
     protected void preProcess() {
-        
-        File outputFile = new File(outputFilename+".tmp");
-        outputFile = outputFile.getAbsoluteFile();
-        if (!outputFile.getParentFile().exists() && !outputFile.getParentFile().mkdirs()){
-            log.error("Unable to make directories for "+outputFile);
-            return;
+        try {
+            temporaryFile = File.createTempFile("gui", "xml", tempdir);
+        } catch (IOException e) {
+            log.error("Problem creating temporary directory");
+            throw new RuntimeException(e);
         }
         
-        outputer = new GUIXMLOutputer(outputFile);
+        temporaryFile = temporaryFile.getAbsoluteFile();
+        if (!temporaryFile.getParentFile().exists() && !temporaryFile.getParentFile().mkdirs()){
+            log.error("Unable to make directories for "+temporaryFile);
+            throw new RuntimeException();
+        }
+        
+        outputer = new GUIXMLOutputer(temporaryFile);
         try {
             outputer.start();
         } catch (SaxonApiException e) {
-            log.error("Error setting up output to "+outputFile, e);
-            return;
+            log.error("Error setting up output to "+temporaryFile, e);
+            throw new RuntimeException(e);
         } catch (XMLStreamException e) {
-            log.error("Error setting up output to "+outputFile, e);
-            return;
+            log.error("Error setting up output to "+temporaryFile, e);
+            throw new RuntimeException(e);
         }
     }
     
@@ -68,10 +77,9 @@ public class GUIXMLDriver extends AbstractInfileDriver<GUIXMLRunnable> {
             return;
         }
 
-        File outputFileTmp = new File(outputFilename+".tmp");
         File outputFile = new File(outputFilename);
         try {
-            FileUtils.move(outputFileTmp, outputFile);
+            FileUtils.move(temporaryFile, outputFile);
         } catch (IOException e) {
             log.error("Error moving output to final destination", e);
             return;
