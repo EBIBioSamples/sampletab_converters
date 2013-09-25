@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.concurrent.Callable;
 
 import org.dom4j.DocumentException;
 import org.slf4j.Logger;
@@ -17,7 +18,7 @@ import uk.ac.ebi.fgpt.sampletab.subs.Event;
 import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 
-public class ENASRAUpdateRunnable implements Runnable {
+public class ENASRAUpdateRunnable implements Callable<Void> {
     
     private static final String SUBSEVENT = "Source Update";
 
@@ -37,7 +38,7 @@ public class ENASRAUpdateRunnable implements Runnable {
     }
 
     @Override
-    public void run() {
+    public Void call() throws Exception {
         String accession = outsubdir.getName();
         //try to register this with subs tracking
         Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
@@ -49,10 +50,13 @@ public class ENASRAUpdateRunnable implements Runnable {
                 sd = converter.convert(new File(outsubdir, ""+keyId+".xml"), sampleIds);
             } catch (ParseException e) {
                 log.error("Problem processing "+keyId, e);
+                throw e;
             } catch (IOException e) {
                 log.error("Problem processing "+keyId, e);
+                throw e;
             } catch (DocumentException e) {
                 log.error("Problem processing "+keyId, e);
+                throw e;
             }
             
             if (sd != null) {
@@ -63,6 +67,7 @@ public class ENASRAUpdateRunnable implements Runnable {
                     sampletabwriter.write(sd);
                 } catch (IOException e) {
                     log.error("Unable to write to "+sampletabPre, e);
+                    throw e;
                 } finally {
                     if (sampletabwriter != null){
                         try {
@@ -80,12 +85,15 @@ public class ENASRAUpdateRunnable implements Runnable {
                     ConanUtils.submit(sd.msi.submissionIdentifier, "BioSamples (other)");
                 } catch (IOException e) {
                     log.error("Problem submitting to conan "+sd.msi.submissionIdentifier, e);
+                    throw e;
                 }
             }
         } finally {
             //try to register this with subs tracking
             TrackingManager.getInstance().registerEventEnd(event);
         }
+        
+        return null;
 
     }
     

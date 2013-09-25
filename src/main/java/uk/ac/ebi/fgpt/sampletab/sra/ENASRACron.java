@@ -3,9 +3,13 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.dom4j.DocumentException;
@@ -108,6 +112,8 @@ public class ENASRACron {
         if (threads > 0) {
             pool = Executors.newFixedThreadPool(threads);
         }
+        List<Future<Void>> futures = new LinkedList<Future<Void>>();
+        
         //process updates
         ENASRAWebDownload downloader = new ENASRAWebDownload();
         for(String key : grouper.groups.keySet()) {
@@ -142,14 +148,37 @@ public class ENASRACron {
             if (changed) {
                 //process the subdir
                 log.info("updated "+submissionID);
-                Runnable t = new ENASRAUpdateRunnable(outsubdir, key, grouper.groups.get(key), !noconan);
-                if (threads > 0) {
-                    pool.execute(t);
+                
+                Callable<Void> task = new ENASRAUpdateRunnable(outsubdir, key, grouper.groups.get(key), !noconan);
+                if (pool == null) {
+                    //no threading
+                    try {
+                        task.call();
+                    } catch (Exception e) {
+                        //something went wrong
+                        log.error("problem processing update of "+key, e);
+                    }
                 } else {
-                    t.run();
+                    //with threading
+                    Future<Void> f = pool.submit(task);
+                    futures.add(f);
                 }
             }
         }
+        
+        if (pool != null) {
+            //wait for threading to finish
+            for (Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    //something went wrong
+                    log.error("problem processing update", e);
+                }
+            }
+        }
+        
+        
         
         //process deletes
         for (String submissionID : toDelete) {
