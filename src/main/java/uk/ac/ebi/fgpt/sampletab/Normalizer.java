@@ -1,7 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;

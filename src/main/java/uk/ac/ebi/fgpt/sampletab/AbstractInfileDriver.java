@@ -14,10 +14,10 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterables;
-
-import uk.ac.ebi.fgpt.sampletab.utils.FileRecursiveIterable;
 import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
+import uk.ac.ebi.fgpt.sampletab.utils.FileRecursiveIterable;
+
+import com.google.common.collect.Iterables;
 
 public abstract class AbstractInfileDriver<T extends Callable<?>> extends AbstractDriver {
 

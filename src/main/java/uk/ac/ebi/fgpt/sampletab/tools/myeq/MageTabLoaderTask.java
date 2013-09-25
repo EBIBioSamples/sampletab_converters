@@ -3,7 +3,6 @@ package uk.ac.ebi.fgpt.sampletab.tools.myeq;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;

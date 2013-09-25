@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 
 import org.mged.magetab.error.ErrorItem;
 import org.mged.magetab.error.ErrorItemImpl;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

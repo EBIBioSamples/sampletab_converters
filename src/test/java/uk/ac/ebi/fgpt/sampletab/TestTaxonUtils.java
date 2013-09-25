@@ -1,12 +1,13 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 
+import junit.framework.TestCase;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
-import junit.framework.TestCase;
 
 
 public class TestTaxonUtils extends TestCase {

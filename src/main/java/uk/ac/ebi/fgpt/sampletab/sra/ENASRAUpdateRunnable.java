@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Date;
 
 import org.dom4j.DocumentException;
 import org.slf4j.Logger;

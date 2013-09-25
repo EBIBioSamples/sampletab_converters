@@ -1,14 +1,9 @@
 package uk.ac.ebi.fgpt.sampletab;
 
-import java.util.HashSet;
-import java.util.Set;
+import junit.framework.TestCase;
 
-import org.dom4j.DocumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import uk.ac.ebi.fgpt.sampletab.utils.BioSDUtils;
-import junit.framework.TestCase;
 
 
 public class TestBioSDUtils extends TestCase {

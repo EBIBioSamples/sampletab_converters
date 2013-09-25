@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.kohsuke.args4j.Option;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
