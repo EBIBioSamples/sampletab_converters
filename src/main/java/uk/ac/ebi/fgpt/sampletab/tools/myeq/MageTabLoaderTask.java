@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.dom4j.DocumentException;
 import org.mged.magetab.error.ErrorItem;
@@ -25,7 +26,7 @@ import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.fg.myequivalents.managers.interfaces.EntityMappingManager;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 
-public class MageTabLoaderTask implements Runnable {
+public class MageTabLoaderTask implements Callable<Void> {
     
     private final File inFile;
     private final EntityMappingManager emMgr;
@@ -146,16 +147,16 @@ public class MageTabLoaderTask implements Runnable {
         
         return matches;
     }
-    
+
     @Override
-    public void run() {
+    public Void call() throws Exception {
 
         MAGETABInvestigation mt = null;
         try {
             mt = parser.parse(inFile);
         } catch (ParseException e) {
             log.error("Problem parsing "+inFile, e);
-            return;
+            throw e;
         }
         
         try {
@@ -206,11 +207,12 @@ public class MageTabLoaderTask implements Runnable {
             }
         } catch (IOException e) {
             log.error("Problem handling "+inFile, e);
-            return;
+            throw e;
         } catch (DocumentException e) {
             log.error("Problem handling "+inFile, e);
-            return;
+            throw e;
         }
         
+        return null;
     }
 }

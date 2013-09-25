@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 
 import org.kohsuke.args4j.Option;
 import org.mged.magetab.error.ErrorItem;
@@ -78,7 +79,7 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     }
 
     @Override
-    protected Runnable getNewTask(File inputFile) {
+    protected Callable<Void> getNewTask(File inputFile) {
         inputFile = inputFile.getAbsoluteFile();
         File outputFile = new File(inputFile.getParentFile(), outputFilename);
         return new SampleTabToLoadRunnable(inputFile, outputFile, hostname, port, database, username, password);

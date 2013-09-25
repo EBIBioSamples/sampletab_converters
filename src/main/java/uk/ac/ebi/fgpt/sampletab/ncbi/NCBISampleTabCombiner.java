@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -49,7 +50,7 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
 
     private final ConcurrentMap<String, Set<File>> groupings = new ConcurrentHashMap<String, Set<File>>();
 
-    class GroupIDsTask implements Runnable {
+    class GroupIDsTask implements Callable<Void> {
         private final File inFile;
         private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -118,18 +119,19 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
             }
             return groupids;
         }
-        
-        public void run() {
+
+        @Override
+        public Void call() throws Exception {
 
             Document xml = null;
             try {
                 xml = XMLUtils.getDocument(inFile);
             } catch (FileNotFoundException e) {
                 log.error("Unable to find "+inFile, e);
-                return;
+                throw e;
             } catch (DocumentException e) {
                 log.error("Unable to read "+inFile, e);
-                return;
+                throw e;
             }
             
             Collection<String> groupids = null;
@@ -137,13 +139,13 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
                 groupids = getGroupIds(xml);
             } catch (DocumentException e) {
                 log.error("unable to get groupIds of "+inFile, e);
-                return;
+                throw e;
             } catch (FileNotFoundException e) {
                 log.error("unable to get groupIds of "+inFile, e);
-                return;
+                throw e;
             } catch (IOException e) {
                 log.error("unable to get groupIds of "+inFile, e);
-                return;
+                throw e;
             }
 
 //            if (groupids.size() > 1) {
@@ -167,6 +169,8 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
                 
                 group.add(inFile);
             }
+            
+            return null;
         }
     }
 
@@ -320,7 +324,7 @@ public class NCBISampleTabCombiner extends AbstractInfileDriver {
     }
 
     @Override
-    protected Runnable getNewTask(File inputFile) {
+    protected Callable<Void> getNewTask(File inputFile) {
         return new GroupIDsTask(inputFile);
     }
     

@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.concurrent.Callable;
 
 import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.subs.Event;
 import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 
-public class SampleTabToLoadRunnable implements Runnable {
+public class SampleTabToLoadRunnable implements Callable<Void> {
     
     private static final String SUBSEVENT = "ToLoad";
     
@@ -43,7 +44,7 @@ public class SampleTabToLoadRunnable implements Runnable {
     }
 
     @Override
-    public void run() {
+    public Void call() throws Exception {
         log.info("Processing " + inputFile);
         String accession = inputFile.getParentFile().getName();
 
@@ -56,6 +57,7 @@ public class SampleTabToLoadRunnable implements Runnable {
             //try to register this with subs tracking
             TrackingManager.getInstance().registerEventEnd(event);
         }
+        return null;
     }
     
     private void doWork() {

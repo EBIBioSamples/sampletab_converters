@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SameAsAttr
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fg.myequivalents.managers.interfaces.EntityMappingManager;
 
-public class SampleTabLoaderTask implements Runnable {
+public class SampleTabLoaderTask implements Callable<Void> {
     
     private final File inFile;
     private final EntityMappingManager emMgr;
@@ -30,16 +31,16 @@ public class SampleTabLoaderTask implements Runnable {
         this.inFile = inFile;
         this.emMgr = emMgr;
     }
-    
+
     @Override
-    public void run() {
+    public Void call() throws Exception {
         SampleTabSaferParser parser = new SampleTabSaferParser();
         SampleData sampledata;
         try {
             sampledata = parser.parse(this.inFile);
         } catch (ParseException e) {
             log.error("Unable to parse "+inFile+". message = e.getMessage()", e);
-            return;
+            throw e;
         }
 
         //store group mappings
@@ -109,6 +110,7 @@ public class SampleTabLoaderTask implements Runnable {
             
             storeBundle(bundle);
         }
+        return null;
     }
     
     private void storeBundle(Collection<String> bundle){

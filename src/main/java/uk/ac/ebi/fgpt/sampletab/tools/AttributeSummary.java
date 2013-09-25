@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAtt
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
 
-public class AttributeSummary extends AbstractInfileDriver<Runnable> {
+public class AttributeSummary extends AbstractInfileDriver<Callable<Void>> {
     
     @Option(name = "-o", aliases={"--output"}, usage = "output filename")
     private String outputFilename;
@@ -48,7 +49,7 @@ public class AttributeSummary extends AbstractInfileDriver<Runnable> {
 			.synchronizedMap(new HashMap<String, Map<String, Integer>>());
 	
 	
-	public class ProcessTask implements Runnable {
+	public class ProcessTask implements Callable<Void> {
 		private File inFile;
 		private String organism;
 		
@@ -57,14 +58,15 @@ public class AttributeSummary extends AbstractInfileDriver<Runnable> {
 			this.organism = organism;
 		}
 		
-		public void run() {
+		@Override
+		public Void call() throws Exception {
 		    SampleTabSaferParser parser = new SampleTabSaferParser();
 			SampleData sampledata;
 			try {
 				sampledata = parser.parse(this.inFile);
 			} catch (Exception e) {
 				log.error("Unable to parse "+inFile, e);
-				return;
+				throw e;
 			}
 			
 			for (SCDNode node : sampledata.scd.getAllNodes()) {
@@ -74,6 +76,7 @@ public class AttributeSummary extends AbstractInfileDriver<Runnable> {
     				}
 			    }
 			}
+			return null;
 		}
         
         protected boolean includeNode(SCDNode node){

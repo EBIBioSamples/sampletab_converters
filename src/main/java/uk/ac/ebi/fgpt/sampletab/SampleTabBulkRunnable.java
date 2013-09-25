@@ -8,6 +8,7 @@ import java.io.Writer;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 
 import org.kohsuke.args4j.Option;
 
@@ -24,7 +25,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.subs.Event;
 import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 
-public class SampleTabBulkRunnable implements Runnable {
+public class SampleTabBulkRunnable implements Callable<Void> {
     private final File sampletabpre;
     private final File sampletab;
     private final File sampletabtoload;
@@ -54,7 +55,8 @@ public class SampleTabBulkRunnable implements Runnable {
         this.noload = noload;
     }
 
-    public void run() {
+    @Override
+    public Void call() throws Exception {
         String accession = sampletabpre.getParentFile().getName();
 
         //try to register this with subs tracking
@@ -62,15 +64,15 @@ public class SampleTabBulkRunnable implements Runnable {
         
         try {
             doWork();
-        } finally {       
+        } finally {
             //try to register this with subs tracking
             TrackingManager.getInstance().registerEventEnd(event);
         }
-
+        return null;
     }
     
 
-    private void doWork() {
+    private void doWork() throws Exception {
 
         // accession sampletab.pre.txt to sampletab.txt
         if (force
@@ -89,7 +91,7 @@ public class SampleTabBulkRunnable implements Runnable {
                 for (ErrorItem err : e.getErrorItems()){
                     log.error(err.toString());
                 }
-                return;
+                throw e;
             }
             
             
@@ -100,13 +102,13 @@ public class SampleTabBulkRunnable implements Runnable {
                 for (ErrorItem err : e.getErrorItems()){
                     log.error(err.toString());
                 }
-                return;
+                throw e;
             } catch (SQLException e) {
                 log.error("Problem processing "+sampletabpre, e);
-                return;
+                throw e;
             } catch (RuntimeException e){
                 log.error("Problem processing "+sampletabpre, e);
-                return;
+                throw e;
             }
 
             log.info("Applying corrections...");
@@ -120,7 +122,7 @@ public class SampleTabBulkRunnable implements Runnable {
                     derivedFrom.convert(st);
                 } catch (IOException e) {
                     log.error("Unable to find derived from relationships due to error", e);
-                    return;
+                    throw e;
                 }
 
                 log.info("Detecting same as...");
@@ -128,7 +130,7 @@ public class SampleTabBulkRunnable implements Runnable {
                     sameAs.convert(st);
                 } catch (IOException e) {
                     log.error("Unable to find derived from relationships due to error", e);
-                    return;
+                    throw e;
                 }
             }
             
@@ -169,19 +171,19 @@ public class SampleTabBulkRunnable implements Runnable {
                     c.convert(sampletab, sampletabtoload);
                 } catch (ClassNotFoundException e) {
                     log.error("Problem processing "+sampletab, e);
-                    return;
+                    throw e;
                 } catch (IOException e) {
                     log.error("Problem processing "+sampletab, e);
-                    return;
+                    throw e;
                 } catch (ParseException e) {
                     log.error("Problem processing "+sampletab, e);
-                    return;
+                    throw e;
                 } catch (RuntimeException e){
                     log.error("Problem processing "+sampletab, e);
-                    return;
+                    throw e;
                 } catch (SQLException e) {
                     log.error("Problem processing "+sampletab, e);
-                    return;
+                    throw e;
                 }
                 log.info("Finished " + sampletabtoload);
             }

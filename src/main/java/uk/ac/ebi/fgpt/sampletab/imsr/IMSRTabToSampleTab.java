@@ -79,6 +79,7 @@ public class IMSRTabToSampleTab {
         try {
             input = new BufferedReader(new FileReader(infile));
             while ((line = input.readLine()) != null) {
+                System.out.println(line);
                 // line too short? skip
                 if (line.length() == 0) {
                     continue;
@@ -319,10 +320,17 @@ public class IMSRTabToSampleTab {
         log.info("Adding site " + site);
         
         IMSRTabWebSummary summary = IMSRTabWebSummary.getInstance();
+
+        if (!summary.sites.contains(site)) throw new IllegalArgumentException(""+site+" not found in sites summary");
         
-        assert summary.sites.contains(site);
         int index = summary.sites.indexOf(site);
-        assert index >= 0;
+        
+        if (summary.facilities.size() <= index) throw new IllegalArgumentException(""+site+" not found in facilities summary");
+        if (summary.strainss.size() <= index) throw new IllegalArgumentException(""+site+" not found in strainss summary");
+        if (summary.esliness.size() <= index) throw new IllegalArgumentException(""+site+" not found in esliness summary");
+        if (summary.totals.size() <= index) throw new IllegalArgumentException(""+site+" not found in sites summary");
+        if (summary.updates.size() <= index) throw new IllegalArgumentException(""+site+" not found in sites summary");
+        
         st.msi.submissionTitle = "International Mouse Strain Resource - " + summary.facilities.get(index);
         st.msi.submissionDescription = "The IMSR is a searchable online database of mouse strains and stocks available worldwide, including inbred, mutant, and genetically engineered mice. The goal of the IMSR is to assist the international scientific community in locating and obtaining mouse resources for research. These samples are held by "
                 + summary.facilities.get(index);

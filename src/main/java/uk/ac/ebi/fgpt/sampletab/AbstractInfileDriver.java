@@ -1,9 +1,12 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.kohsuke.args4j.Argument;
@@ -16,7 +19,7 @@ import com.google.common.collect.Iterables;
 import uk.ac.ebi.fgpt.sampletab.utils.FileRecursiveIterable;
 import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 
-public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractDriver {
+public abstract class AbstractInfileDriver<T extends Callable<?>> extends AbstractDriver {
 
     @Argument(required=true, index=0, metaVar="INPUT", usage = "input filenames or globs")
     protected List<String> inputFilenames;
@@ -33,6 +36,8 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
     private Logger log = LoggerFactory.getLogger(getClass());
         
     protected abstract T getNewTask(File inputFile);
+    
+    protected int exitCode = 0;
     
     protected void preProcess() {
         //do nothing
@@ -86,13 +91,37 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
         }
 
         preProcess();
-        
-        for (File inputFile : inputFiles) {
-            Runnable t = getNewTask(inputFile);
-            if (pool != null) {
-                pool.execute(t);
-            } else {
-                t.run();
+
+        if (pool != null) {
+            //we are using a pool of threads to do stuff in parallel
+            //create some futures and then wait for them to finish
+            
+            List<Future<?>> futures = new LinkedList<Future<?>>();
+            for (File inputFile : inputFiles) {
+                Callable<?> t = getNewTask(inputFile);
+                Future<?> f = pool.submit(t);
+                futures.add(f);
+            }
+            
+            for (Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    //something went wrong
+                    exitCode = 1;
+                }
+            }
+            
+        } else {
+            //we are not using a pool, its all in one
+            for (File inputFile : inputFiles) {
+                Callable<?> t = getNewTask(inputFile);
+                try {
+                    t.call();
+                } catch (Exception e) {
+                    //something went wrong
+                    exitCode = 1;
+                }
             }
         }
         
@@ -113,6 +142,8 @@ public abstract class AbstractInfileDriver<T extends Runnable> extends AbstractD
         postProcess();
         
         log.info("Finished reading");
+        
+        System.exit(exitCode);
     }
     
 }
