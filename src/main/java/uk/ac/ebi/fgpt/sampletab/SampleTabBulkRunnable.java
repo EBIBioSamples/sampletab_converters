@@ -138,7 +138,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
                 sampletabwriter.close();
             } catch (IOException e) {
                 log.error("Problem processing "+sampletabpre, e);
-                return;
+                throw e;
             } finally {
                 if (writer != null){
                     try {
