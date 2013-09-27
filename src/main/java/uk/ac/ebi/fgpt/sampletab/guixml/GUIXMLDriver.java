@@ -40,7 +40,7 @@ public class GUIXMLDriver extends AbstractInfileDriver<GUIXMLRunnable> {
     @Override
     protected void preProcess() {
         try {
-            temporaryFile = File.createTempFile("gui", "xml", tempdir);
+            temporaryFile = File.createTempFile("gui.", ".xml", tempdir);
             temporaryFile.deleteOnExit();
         } catch (IOException e) {
             log.error("Problem creating temporary directory");
