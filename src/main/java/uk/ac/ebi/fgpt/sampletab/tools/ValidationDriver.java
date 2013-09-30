@@ -1,10 +1,10 @@
 package uk.ac.ebi.fgpt.sampletab.tools;
 
 import java.io.File;
+import java.util.concurrent.Callable;
 
 import org.mged.magetab.error.ErrorItem;
 import org.mged.magetab.error.ErrorItemImpl;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +30,11 @@ public class ValidationDriver extends AbstractInfileDriver {
     private Logger log = LoggerFactory.getLogger(getClass());
     
     @Override
-    protected Runnable getNewTask(File inputFile) {
+    protected Callable<Void> getNewTask(File inputFile) {
         return new ValidationRunnable(inputFile);
     }
     
-    private class ValidationRunnable implements Runnable {
+    private class ValidationRunnable implements Callable<Void> {
 
         private final File inputFile;
         private final SampleTabParser<SampleData> parser = new SampleTabParser<SampleData>(new ImprovedSampleTabValidator());
@@ -48,16 +48,17 @@ public class ValidationDriver extends AbstractInfileDriver {
                 }
             });
         }
-        
+
         @Override
-        public void run() {
+        public Void call() throws Exception {
             SampleData sampledata = null;
             try {
                 sampledata = parser.parse(inputFile);
             } catch (ParseException e) {
                 log.error("Error when parsing "+inputFile, e);
-                throw new RuntimeException(e);
+                throw e;
             }
+            return null;
         }
         
     }

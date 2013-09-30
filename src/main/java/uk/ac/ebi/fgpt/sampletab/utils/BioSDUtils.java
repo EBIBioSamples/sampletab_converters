@@ -1,7 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;

@@ -1,6 +1,7 @@
 package uk.ac.ebi.fgpt.sampletab.guixml;
 
 import java.io.File;
+import java.util.concurrent.Callable;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -11,7 +12,7 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 
-public class GUIXMLRunnable implements Runnable {
+public class GUIXMLRunnable implements Callable<Void> {
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -23,7 +24,9 @@ public class GUIXMLRunnable implements Runnable {
         this.inputFile = inputFile;
     }
 
-    public void run() {
+
+    @Override
+    public Void call() throws Exception {
         log.info("Processing "+inputFile.getParentFile().getName());
         SampleTabSaferParser stParser = new SampleTabSaferParser();
         SampleData sd = null;
@@ -31,6 +34,7 @@ public class GUIXMLRunnable implements Runnable {
             sd = stParser.parse(inputFile);
         } catch (ParseException e) {
             log.error("Error parsing "+inputFile, e);
+            throw e;
         }
         log.info("Read "+inputFile.getParentFile().getName());
         if (sd != null) {
@@ -43,5 +47,6 @@ public class GUIXMLRunnable implements Runnable {
             }
         }
         log.info("Processed "+inputFile.getParentFile().getName());
+        return null;
     }
 }

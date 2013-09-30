@@ -1,26 +1,5 @@
 package uk.ac.ebi.fgpt.sampletab;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.net.URL;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import org.mged.magetab.error.ErrorItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
-import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
-import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
-import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
-import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-
 import junit.framework.TestCase;
 
 

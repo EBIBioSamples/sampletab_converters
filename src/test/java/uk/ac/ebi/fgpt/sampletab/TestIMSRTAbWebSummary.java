@@ -1,15 +1,9 @@
 package uk.ac.ebi.fgpt.sampletab;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import junit.framework.TestCase;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import junit.framework.TestCase;
 
 
 public class TestIMSRTAbWebSummary extends TestCase {

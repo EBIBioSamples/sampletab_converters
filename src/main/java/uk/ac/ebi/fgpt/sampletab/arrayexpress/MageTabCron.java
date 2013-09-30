@@ -23,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.fgpt.sampletab.subs.Event;
+import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
@@ -47,6 +49,8 @@ public class MageTabCron {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private FTPClient ftp = null;
+	
+    private static final String SUBSEVENT = "Source Update";
 
 	private MageTabCron() {
 	}
@@ -66,24 +70,6 @@ public class MageTabCron {
 			ftp = null;
 		}
 
-	}
-	
-	private class CurlDownload implements Runnable {
-		private final String url;
-		private final String filename;
-		
-        public CurlDownload(String url, String filename){
-            this.url = url;
-            this.filename = filename;
-        }
-        
-        public void run(){
-            log.info("Curl downloading "+this.filename);
-	        
-	        String bashcom = "curl -z "+filename+" -o "+filename+" "+url;
-	        
-	        ProcessUtils.doCommand(bashcom, null);        	
-        }
 	}
 	
 	private boolean connectFTP(){
@@ -124,18 +110,35 @@ public class MageTabCron {
 	    
         @Override
         public void run() {
-            Runnable r = new CurlDownload(sdrfFTPPath, sdrfOut.getAbsolutePath());
-            r.run();
-            r = new CurlDownload(idfFTPPath, idfOut.getAbsolutePath());
-            r.run();
-            MageTabToSampleTab mttst = new MageTabToSampleTab();
+            String accession = sdrfOut.getAbsoluteFile().getParentFile().getName();
+            //try to register this with subs tracking
+            Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
+
             try {
-                mttst.convert(idfOut, outSampleTabPre);
-            } catch (IOException e) {
-                log.error("Unable to write "+outSampleTabPre, e);
-            } catch (ParseException e) {
-                log.error("Unable to parse "+idfOut, e);
-            }   
+                
+                String filename = sdrfOut.getAbsolutePath();
+                log.info("Curl downloading "+filename);
+                String bashcom = "curl -z "+filename+" -o "+filename+" "+sdrfFTPPath;
+                ProcessUtils.doCommand(bashcom, null);  
+    
+                filename = idfOut.getAbsolutePath();
+                log.info("Curl downloading "+filename);
+                bashcom = "curl -z "+filename+" -o "+filename+" "+idfFTPPath;            
+                ProcessUtils.doCommand(bashcom, null);  
+                
+                MageTabToSampleTab mttst = new MageTabToSampleTab();
+                try {
+                    mttst.convert(idfOut, outSampleTabPre);
+                } catch (IOException e) {
+                    log.error("Unable to write "+outSampleTabPre, e);
+                } catch (ParseException e) {
+                    log.error("Unable to parse "+idfOut, e);
+                }  
+                
+            } finally {
+                //try to register this with subs tracking
+                TrackingManager.getInstance().registerEventEnd(event);
+            }
         }
 	}
 

@@ -6,6 +6,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.mged.magetab.error.ErrorItem;
 
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
@@ -15,8 +17,6 @@ import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.arrayexpress.MageTabToSampleTab;
-
-import junit.framework.TestCase;
 
 
 public class TestMageTabToSampleTab extends TestCase {

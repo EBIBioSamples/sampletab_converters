@@ -1,22 +1,14 @@
 package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 
 import org.kohsuke.args4j.Option;
-import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
-import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
-import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 
 public class SampleTabToLoadDriver extends AbstractInfileDriver {
 
@@ -78,7 +70,7 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     }
 
     @Override
-    protected Runnable getNewTask(File inputFile) {
+    protected Callable<Void> getNewTask(File inputFile) {
         inputFile = inputFile.getAbsoluteFile();
         File outputFile = new File(inputFile.getParentFile(), outputFilename);
         return new SampleTabToLoadRunnable(inputFile, outputFile, hostname, port, database, username, password);

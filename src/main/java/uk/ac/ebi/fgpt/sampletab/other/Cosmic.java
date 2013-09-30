@@ -20,8 +20,6 @@ import org.kohsuke.args4j.Argument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import au.com.bytecode.opencsv.CSVReader;
-
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
@@ -35,10 +33,10 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
 import uk.ac.ebi.fgpt.sampletab.utils.EuroPMCUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
+import au.com.bytecode.opencsv.CSVReader;
 
 public class Cosmic extends AbstractDriver {
 

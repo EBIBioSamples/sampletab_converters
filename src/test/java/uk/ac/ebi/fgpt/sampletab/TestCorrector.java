@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URL;
 
+import junit.framework.TestCase;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,8 +16,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-
-import junit.framework.TestCase;
 
 public class TestCorrector  extends TestCase {
 

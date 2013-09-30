@@ -2,12 +2,10 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Set;
 

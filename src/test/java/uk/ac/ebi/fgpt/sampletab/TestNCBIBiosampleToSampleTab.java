@@ -7,12 +7,13 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.text.ParseException;
 
+import junit.framework.TestCase;
+
 import org.dom4j.DocumentException;
+
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.ncbi.NCBIBiosampleRunnable;
-
-import junit.framework.TestCase;
 
 
 public class TestNCBIBiosampleToSampleTab extends TestCase {

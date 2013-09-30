@@ -2,12 +2,13 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.IOException;
 
+import junit.framework.TestCase;
+
 import org.dom4j.DocumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.fgpt.sampletab.utils.EuroPMCUtils;
-import junit.framework.TestCase;
 
 
 public class TestEuroPMCUtils extends TestCase {

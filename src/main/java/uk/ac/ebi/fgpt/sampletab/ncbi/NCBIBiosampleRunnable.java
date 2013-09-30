@@ -8,6 +8,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.Callable;
+
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -27,7 +29,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.Normalizer;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
-public class NCBIBiosampleRunnable implements Runnable {
+public class NCBIBiosampleRunnable implements Callable<Void> {
     
     private final File inputfile;
     private final File outputfile;
@@ -292,22 +294,23 @@ public class NCBIBiosampleRunnable implements Runnable {
 		return st;
 	}
 
-    public void run() {
+    @Override
+    public Void call() throws Exception {
         SampleData st = null;
         try {
             st = convert(inputfile);
         } catch (FileNotFoundException e) {
             log.error("Problem with "+inputfile, e);
-            return;
+            throw e;
         } catch (DocumentException e) {
             log.error("Problem with "+inputfile, e);
-            return;
+            throw e;
         } catch (ParseException e) {
             log.error("Problem with "+inputfile, e);
-            return;
+            throw e;
         } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
             log.error("Problem with "+inputfile, e);
-            return;
+            throw e;
         }
         
         // write back out
@@ -316,7 +319,7 @@ public class NCBIBiosampleRunnable implements Runnable {
             out = new FileWriter(outputfile);
         } catch (IOException e) {
             log.error("Error opening " + outputfile, e);
-            return;
+            throw e;
         }
 
         Normalizer norm = new Normalizer();
@@ -328,9 +331,10 @@ public class NCBIBiosampleRunnable implements Runnable {
             sampletabwriter.close();
         } catch (IOException e) {
             log.error("Error writing " + outputfile, e);
-            return;
+            throw e;
         }
         
+        return null;
     }
 
     

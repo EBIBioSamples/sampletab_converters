@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonUtils;
-
 import au.com.bytecode.opencsv.CSVReader;
 
 public class EMBLBankGrouper {

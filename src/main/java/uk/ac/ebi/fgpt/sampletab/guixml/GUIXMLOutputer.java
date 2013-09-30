@@ -34,8 +34,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.Characteri
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
-import uk.ac.ebi.arrayexpress2.sampletab.renderer.scd.SCDNodeFactory;
-import uk.ac.ebi.arrayexpress2.sampletab.renderer.scd.SCDTableBuilder;
 import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class GUIXMLOutputer {

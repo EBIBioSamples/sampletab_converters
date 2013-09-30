@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -132,15 +132,15 @@ public class Validator extends AbstractInfileDriver {
     }
 
     
-    private class ValidatorRunnable implements Runnable {
+    private class ValidatorRunnable implements Callable<Void> {
         private final File inputFile;
         
         public ValidatorRunnable(File inputFile) {
             this.inputFile = inputFile;
         }
-        
+
         @Override
-        public void run() {
+        public Void call() throws Exception {
             //TODO finish
             XMLReader xr;
             BiosamplesHandler handler = new BiosamplesHandler();
@@ -150,16 +150,20 @@ public class Validator extends AbstractInfileDriver {
                 xr.parse(new InputSource(new BufferedReader(new FileReader(inputFile))));
             } catch (SAXException e) {
                 log.error("Unable to process "+inputFile, e);
+                throw e;
             } catch (FileNotFoundException e) {
                 log.error("Unable to process "+inputFile, e);
+                throw e;
             } catch (IOException e) {
                 log.error("Unable to process "+inputFile, e);
+                throw e;
             }
+            return null;
         }
     }
     
     @Override
-    protected Runnable getNewTask(File inputFile) {
+    protected Callable<Void> getNewTask(File inputFile) {
         return new ValidatorRunnable(inputFile);
     }
     
