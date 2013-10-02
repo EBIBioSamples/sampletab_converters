@@ -151,7 +151,7 @@ public class IMSRTabToSampleTab {
                 
                 
                 //Storing Nomenclature
-                if(!nomenclature.matches("?") && !nomencl.containsKey(stock)){
+                if(!nomenclature.equalsIgnoreCase("?") && !nomencl.containsKey(stock)){
                 	nomencl.put(stock, new HashSet<String>());
                 }
                 
