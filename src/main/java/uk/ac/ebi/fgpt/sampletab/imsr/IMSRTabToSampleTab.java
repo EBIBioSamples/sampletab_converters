@@ -57,19 +57,26 @@ public class IMSRTabToSampleTab {
 
         SampleData st = new SampleData();
 
+        String nomenclature = null;
+        String strainId = null;
         String stock = null;
         String site = null;
         String state = null;
         String synonym = null;
         String type = null;
+        String alleleId = null;
         String alleleSymbol = null;
         String alleleName = null;
+        String geneId = null;
+        String geneSymbol = null;
         String geneName = null;
         BufferedReader input;
         String line;
         boolean headers = false;
 
-        // these store the data that we need to track
+        // these store the data that we need to track , the key in all the maps is the stock
+        Map<String, Set<String>> nomencl = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> strainid = new HashMap<String, Set<String>>();
         Map<String, Set<String>> synonyms = new HashMap<String, Set<String>>();
         Map<String, Set<String>> types = new HashMap<String, Set<String>>();
         Map<String, Set<String>> states = new HashMap<String, Set<String>>();
@@ -90,39 +97,76 @@ public class IMSRTabToSampleTab {
                 }
                 String[] entries = line.split("\t");
                 
-                // Strain/Stock Site State Synonyms Type Allele Symbol Allele Name Gene Name
-                stock = entries[0];
+                // Nomenclature Strain/Stock Site(Repository) State Synonyms Type AlleleId AlleleSymbol AlleleName GeneId GeneSymbol GeneName
+               nomenclature = entries[0];
+                
+               strainId = entries[1];
+               
+                stock = entries[2];
                 if (site == null) {
-                    site = entries[1];
+                    site = entries[3];
                     addSite(st, site);
                 }
-                state = entries[2];
-                if (entries.length > 3){
-                    synonym = entries[3];
+                state = entries[4];
+                if (entries.length > 5){
+                    synonym = entries[5];
                 } else {
                     synonym = "";
                 }
-                if (entries.length > 4){
-                    type = entries[4];
+                if (entries.length > 6){
+                    type = entries[6];
                 } else {
                     type = "";
                 }
-                if (entries.length > 5){
-                    alleleSymbol = entries[5];
+                if (entries.length > 7){
+                    alleleId = entries[7];
+                } else {
+                    alleleId = "";
+                }
+                if (entries.length > 8){
+                    alleleSymbol = entries[8];
                 } else {
                     alleleSymbol = "";
                 }
-                if (entries.length > 6){
-                    alleleName = entries[6];
+                if (entries.length > 9){
+                    alleleName = entries[9];
                 } else {
                     alleleName = "";
                 }
-                if (entries.length > 7){
-                    geneName = entries[7];
+                if (entries.length > 10){
+                    geneId = entries[10];
+                } else {
+                    geneId = "";
+                }
+                if (entries.length > 11){
+                    geneSymbol = entries[11];
+                } else {
+                    geneSymbol = "";
+                }
+                if (entries.length > 12){
+                    geneName = entries[12];
                 } else {
                     geneName = "";
                 }
-
+                
+                
+                //Storing Nomenclature
+                if(!nomenclature.matches("?") && !nomencl.containsKey(stock)){
+                	nomencl.put(stock, new HashSet<String>());
+                }
+                
+                if (nomenclature.length() > 0 && !nomencl.get(stock).contains(nomenclature)){
+                	nomencl.get(stock).add(nomenclature);
+                }
+                
+                //Storing StrainId
+                if (!strainid.containsKey(stock)) {
+                    strainid.put(stock, new HashSet<String>());
+                }
+                if (strainId.length() > 0 && !strainid.get(stock).contains(strainId)) {
+                    strainid.get(stock).add(strainId);
+                }
+                
                 // always store stock in synonyms to pull them back out later
                 if (!synonyms.containsKey(stock)) {
                     synonyms.put(stock, new HashSet<String>());
@@ -130,14 +174,16 @@ public class IMSRTabToSampleTab {
                 if (synonym.length() > 0 && !synonyms.get(stock).contains(synonym)) {
                     synonyms.get(stock).add(synonym);
                 }
-
+                
+                //Storing types
                 if (!types.containsKey(stock)) {
                     types.put(stock, new HashSet<String>());
                 }
                 if (type.length() > 0 && !types.get(stock).contains(type)) {
                     types.get(stock).add(type);
                 }
-
+                
+                //Storing states
                 if (!states.containsKey(stock)) {
                     states.put(stock, new HashSet<String>());
                 }
@@ -145,10 +191,14 @@ public class IMSRTabToSampleTab {
                     states.get(stock).add(state);
                 }
 
+                //Storing the mutants
                 if (geneName.length() > 0) {
                     List<String> mutantlist = new ArrayList<String>();
+                    mutantlist.add(alleleId);
                     mutantlist.add(alleleSymbol);
                     mutantlist.add(alleleName);
+                    mutantlist.add(geneId);
+                    mutantlist.add(geneSymbol);
                     mutantlist.add(geneName);
 
                     // check the stock name is in the mutations map
@@ -181,7 +231,23 @@ public class IMSRTabToSampleTab {
                     newnode.addAttribute(synonymattrib, 0);
                 }
             }
+            
+            //Nomenclature as comment
+            if(nomencl.containsKey(name)){
+            	for (String thisnomenclature :nomencl.get(name)){
+            		CommentAttribute nomenclattrib = new CommentAttribute("Nomenclature", thisnomenclature);
+            		newnode.addAttribute(nomenclattrib);
+            	}
+            }
 
+            //Strain Id as comment
+            if(strainid.containsKey(name)){
+            	for(String thisstrainId :strainid.get(name)){
+            		CommentAttribute strainIdattrib = new CommentAttribute("Strain ID", thisstrainId);
+            		newnode.addAttribute(strainIdattrib);
+            	}
+            }
+            
             if (states.containsKey(name) && (states.get(name).size() > 1)) {
                 // if there are multiple materials
                 // create a strain sample and derive individual materials
@@ -237,14 +303,26 @@ public class IMSRTabToSampleTab {
             //add the mutations as characteristics
             if (mutations.containsKey(name)) {
                 for (List<String> thismutation : mutations.get(name)) {
-                    alleleSymbol = thismutation.get(0);
-                    alleleName = thismutation.get(1);
-                    geneName = thismutation.get(2);
+                	alleleId = thismutation.get(0);
+                    alleleSymbol = thismutation.get(1);
+                    alleleName = thismutation.get(2);
+                    geneId = thismutation.get(3);
+                    geneSymbol = thismutation.get(4);
+                    geneName = thismutation.get(5);
+                    if (alleleId.length() > 0) {
+                        newnode.addAttribute(new CharacteristicAttribute("Allele ID", alleleId));
+                    }
                     if (alleleSymbol.length() > 0) {
                         newnode.addAttribute(new CharacteristicAttribute("Allele Symbol", alleleSymbol));
                     }
                     if (alleleName.length() > 0) {
                         newnode.addAttribute(new CharacteristicAttribute("Allele Name", alleleName));
+                    }
+                    if (geneId.length() > 0) {
+                        newnode.addAttribute(new CharacteristicAttribute("Gene ID", geneId));
+                    }
+                    if (geneSymbol.length() > 0) {
+                        newnode.addAttribute(new CharacteristicAttribute("Gene Symbol", geneSymbol));
                     }
                     if (geneName.length() > 0) {
                         newnode.addAttribute(new CharacteristicAttribute("Gene Name", geneName));
