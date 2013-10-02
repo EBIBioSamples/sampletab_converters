@@ -99,6 +99,10 @@ public class IMSRTabToSampleTab {
                 
                 // Nomenclature Strain/Stock Site(Repository) State Synonyms Type AlleleId AlleleSymbol AlleleName GeneId GeneSymbol GeneName
                nomenclature = entries[0];
+               if(nomenclature.isEmpty()){
+            	   nomenclature = "";
+            	   System.out.println("nomenclature is Empty");
+               }
                 
                strainId = entries[1];
                
@@ -155,7 +159,7 @@ public class IMSRTabToSampleTab {
                 	nomencl.put(stock, new HashSet<String>());
                 }
                 
-                if (nomenclature.length() > 0 && !nomencl.get(stock).contains(nomenclature)){
+                if (!nomenclature.equalsIgnoreCase("?") && nomenclature.length() > 0 && !nomencl.get(stock).contains(nomenclature)){
                 	nomencl.get(stock).add(nomenclature);
                 }
                 
