@@ -30,9 +30,6 @@ public class ENASRAGrouper {
         populate("DRS", 0, 5000, pool);
         populate("ERS", 0, 250000, pool);
         populate("SRS", 0, 500000, pool);
-        //populate("DRS", 0, 50, pool);
-        //populate("ERS", 0, 2500, pool);
-        //populate("SRS", 0, 5000, pool);
         
         if (pool != null) {
             synchronized (pool) {
@@ -85,35 +82,6 @@ public class ENASRAGrouper {
             this.sampleId = sampleId;
         }
         
-        private Collection<String> getGroupIdentifiers(String sampleId) throws DocumentException, IOException {
-            
-            Integer i = new Integer(sampleId.substring(3, sampleId.length()));
-            if (i % 1000 == 0){
-                log.info("processing "+sampleId);
-            }
-            
-            Set<String> studyIDs = ENAUtils.getStudiesForSample(sampleId);
-            
-            if (studyIDs.size() == 0) {
-                //did not find any studies directly
-                //try indirect via submission
-                //only add one study this way
-                Collection<String> submissionIds = ENAUtils.getSubmissionsForSample(sampleId);
-                for (String submissionId : submissionIds) {
-                    Collection<String> studiesInSubmission = ENAUtils.getStudiesForSubmission(submissionId);
-                    if (studiesInSubmission.size() == 1) {
-                        studyIDs.addAll(studiesInSubmission);
-                    }
-                }
-                
-                if (studyIDs.size() == 0) {
-                    //if there are still no study ids, use submission ids
-                    studyIDs.addAll(submissionIds);
-                }
-            }
-            return studyIDs;
-        }
-    
         @Override
         public void run() {
             Collection<String> studyIds = null;
@@ -150,5 +118,35 @@ public class ENASRAGrouper {
             }
             
         }
+        
+        private Collection<String> getGroupIdentifiers(String sampleId) throws DocumentException, IOException {
+            
+            Integer i = new Integer(sampleId.substring(3, sampleId.length()));
+            if (i % 1000 == 0){
+                log.info("processing "+sampleId);
+            }
+            
+            Set<String> studyIDs = ENAUtils.getStudiesForSample(sampleId);
+            
+            if (studyIDs.size() == 0) {
+                //did not find any studies directly
+                //try indirect via submission
+                //only add one study this way
+                Collection<String> submissionIds = ENAUtils.getSubmissionsForSample(sampleId);
+                for (String submissionId : submissionIds) {
+                    Collection<String> studiesInSubmission = ENAUtils.getStudiesForSubmission(submissionId);
+                    if (studiesInSubmission.size() == 1) {
+                        studyIDs.addAll(studiesInSubmission);
+                    }
+                }
+                
+                if (studyIDs.size() == 0) {
+                    //if there are still no study ids, use submission ids
+                    studyIDs.addAll(submissionIds);
+                }
+            }
+            return studyIDs;
+        }
+    
     }
 }

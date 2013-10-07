@@ -17,10 +17,18 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.io.DocumentSource;
 import org.dom4j.io.SAXReader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,4 +139,11 @@ public class XMLUtils {
         return out.toString();
     } 
 
+    public static org.w3c.dom.Document convertDocument(Document orig) throws TransformerException {
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer t = tf.newTransformer();
+        DOMResult result = new DOMResult();
+        t.transform(new DocumentSource(orig), result);
+        return (org.w3c.dom.Document) result.getNode();
+    }
 }
