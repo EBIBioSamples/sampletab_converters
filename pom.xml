@@ -60,6 +60,12 @@
 			<url>http://www.ebi.ac.uk/~maven/m2repo_snapshots/</url>
 		</repository>
 
+		<repository>
+			<id>limpopo-repo</id>
+			<name>Limpopo Mini-SF Repository</name>
+			<url>http://limpopo.sourceforge.net/maven/repo</url>
+		</repository>
+		
 	</repositories>
 
 	<dependencies>
