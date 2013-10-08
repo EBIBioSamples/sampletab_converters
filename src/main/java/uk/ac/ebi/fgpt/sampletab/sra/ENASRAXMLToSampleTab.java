@@ -276,7 +276,8 @@ public class ENASRAXMLToSampleTab {
                             id.getTextTrim().matches("SAM[END][A]?[0-9]+")) {
                         //this is a biosamples accession, and we dont have one yet, so use it
                         samplenode.setSampleAccession(id.getTextTrim());
-                    } else if (samplenode.getSampleAccession().equals(id.getTextTrim())) {
+                    } else if (samplenode.getSampleAccession() != null && 
+                            samplenode.getSampleAccession().equals(id.getTextTrim())) {
                         //same as the existing sample accession
                         //do nothing
                     } else if (samplenode.getSampleAccession() != null && 
