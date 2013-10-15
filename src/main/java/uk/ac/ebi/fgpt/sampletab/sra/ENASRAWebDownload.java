@@ -42,8 +42,9 @@ public class ENASRAWebDownload {
     
     public boolean downloadXML(String accession, File outdir) throws IOException, DocumentException {
         URL url = new URL("http://www.ebi.ac.uk/ena/data/view/" + accession + "&display=xml");
-        File sampleFile = new File(outdir.getAbsoluteFile(), accession + ".xml");
         Document sampledoc = XMLUtils.getDocument(url);
+        
+        File sampleFile = new File(outdir.getAbsoluteFile(), accession + ".xml");
         
         if (!sampleFile.exists()){
             //if it does not exist, it needs to be written
@@ -60,8 +61,7 @@ public class ENASRAWebDownload {
                 docOrig = XMLUtils.convertDocument(existingDoc);
                 docNew = XMLUtils.convertDocument(sampledoc);
             } catch (TransformerException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.error("Unable to convert from dom4j to w3c Document");
             }
             
             Diff diff = new Diff(docOrig, docNew);
