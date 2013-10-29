@@ -10,6 +10,13 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Driver class for sampletab.pre.txt -> sampletab.txt -> sampletab.toload.txt
+ * 
+ * 
+ * @author faulcon
+ *
+ */
 public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunnable> {
 
     @Option(name = "--hostname", aliases={"-n"}, usage = "server hostname")
@@ -32,6 +39,9 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     
     @Option(name = "--no-load", aliases={"-l"}, usage = "skip creating sampletab.toload.txt")
     private boolean noload = false;
+    
+    @Option(name = "--root", usage = "root directory for sampletab files")
+    private File rootDir = null;
 
     private Corrector corrector = new Corrector();
     private DerivedFrom derivedFrom = null;
@@ -43,7 +53,7 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     
     public SampleTabBulkDriver() {
         //load defaults from file
-        //will be overriden by command-line options later
+        //will be overridden by command-line options later
         Properties properties = new Properties();
         try {
             InputStream is = SampleTabBulkDriver.class.getResourceAsStream("/oracle.properties");
@@ -66,6 +76,16 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
         } catch (SQLException e) {
             log.error("Unable to create accessioner", e);
         }
+        
+        properties = new Properties();
+        try {
+            InputStream is = this.getClass().getResourceAsStream("/sampletabconverters.properties");
+            properties.load(is);
+        } catch (IOException e) {
+            log.error("Unable to read resource oracle.properties", e);
+            return;
+        }
+        rootDir = new File(properties.getProperty("biosamples.sampletab.path"));
     }
     
     public SampleTabBulkDriver(String hostname, Integer port, String database, String username, String password, boolean force) {
@@ -92,12 +112,11 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
         File subdir = inputFile.getAbsoluteFile().getParentFile();
         return new SampleTabBulkRunnable(subdir, corrector, accessioner, sameAs, getDerivedFrom(), force, noload);
     }
-
+    
     private synchronized DerivedFrom getDerivedFrom() {
         if (derivedFrom == null) {
-            derivedFrom = new DerivedFrom();
+            derivedFrom = new DerivedFrom(rootDir);
         }
         return derivedFrom;
     }
-    
 }
