@@ -66,7 +66,7 @@ public class DerivedFrom {
 
         for (String coriellID : coriellSubmissionIDs) { 
             File coriellFile = new File(SampleTabUtils.getSubmissionDirFile(coriellID), "sampletab.txt");
-            coriellFile = new File(rootDir, coriellFile.getAbsolutePath());
+            coriellFile = new File(rootDir, coriellFile.getPath());
             SampleData sd = null;
             try {
                 sd = CachedParser.get(coriellFile);
