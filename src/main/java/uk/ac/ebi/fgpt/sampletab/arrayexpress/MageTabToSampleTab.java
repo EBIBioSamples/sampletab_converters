@@ -183,23 +183,23 @@ public class MageTabToSampleTab {
         }   
     }
 
-    private void convertOrganizations(MAGETABInvestigation mt, SampleData st){
+    private void convertOrganizations(MAGETABInvestigation mt, SampleData st) {
 
         // AE doesn't really have organisations, but does have affiliations
         // st.msi.organizationURI/Email can't be mapped from ArrayExpress
         for (int i = 0; i < mt.IDF.personAffiliation.size() || 
                             i < mt.IDF.personAddress.size() || 
-                            i < mt.IDF.personRoles.size(); i++){
+                            i < mt.IDF.personRoles.size(); i++) {
             String name = null;
-            if (i < mt.IDF.personAffiliation.size()){
+            if (i < mt.IDF.personAffiliation.size()) {
                 name = mt.IDF.personAffiliation.get(i).trim();
             }
             String role = null;
-            if (i < mt.IDF.personRoles.size()){
+            if (i < mt.IDF.personRoles.size()) {
                 role = mt.IDF.personRoles.get(i).trim();
             }
             
-            if (name.contains(";")) {
+            if (name != null && name.contains(";")) {
                 //split the name by semicolons
                 String[] names = name.split(";");
                 for (String subname : names) {
