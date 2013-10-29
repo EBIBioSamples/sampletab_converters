@@ -3,6 +3,7 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,6 +12,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.kohsuke.args4j.Argument;
@@ -35,71 +37,51 @@ import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class DerivedFrom {
-    
-    @Option(name = "--sampletab-path", usage = "SampleTab path")
-    private String stPath = ".";
-    
-    @Option(name = "--output", usage = "output filename")
-    private String outputFilename;
-
-    @Argument
-    private List<String> arguments = new ArrayList<String>();
-
-    @Option(name = "-h", usage = "display help")
-    private boolean help;
-    
+        
     // logging
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public List<String> coriellSubmissionIDs = null;
+    public List<String> coriellSubmissionIDs = Collections.synchronizedList(new ArrayList<String>());
     public List<String> coriellSampleIDs = Collections.synchronizedList(new ArrayList<String>());
     public List<String> coriellSampleAccessions = Collections.synchronizedList(new ArrayList<String>());
     
     private Map<String, SampleNode> sampleAccessiontoNode = new HashMap<String, SampleNode>();
     
-    
-    public DerivedFrom(){
+    public DerivedFrom(File rootDir){
         log.info("Creating new DerivedFrom instance...");
-    }
-    
-    public void setup() {
-        if (coriellSubmissionIDs == null) {
-            log.info("Running setup()...");
-            coriellSubmissionIDs = Collections.synchronizedList(new ArrayList<String>());
-            synchronized(coriellSubmissionIDs) {
-                coriellSubmissionIDs.add("GCR-ada");
-                coriellSubmissionIDs.add("GCR-autism");
-                coriellSubmissionIDs.add("GCR-cohort");
-                coriellSubmissionIDs.add("GCR-leiomyosarcoma");
-                coriellSubmissionIDs.add("GCR-nhgri");
-                coriellSubmissionIDs.add("GCR-nia");
-                coriellSubmissionIDs.add("GCR-niaid");
-                coriellSubmissionIDs.add("GCR-ninds");
-                coriellSubmissionIDs.add("GCR-nigms");
-                coriellSubmissionIDs.add("GCR-primate");
-                coriellSubmissionIDs.add("GCR-winstar");
-                coriellSubmissionIDs.add("GCR-yerkes");
-                
-    
-                for (String coriellID : coriellSubmissionIDs) { 
-                    File coriellFile = new File(SampleTabUtils.getSubmissionDirFile(coriellID), "sampletab.txt");
-                    SampleData sd = null;
-                    try {
-                        sd = CachedParser.get(coriellFile);
-                    } catch (ParseException e) {
-                        log.error("Unable to read "+coriellFile, e);
-                        continue;
-                    }
-                    
-                    for (SampleNode s : sd.scd.getNodes(SampleNode.class)) {
-                        if (coriellSampleIDs.contains(s.getNodeName())) {
-                            log.warn("Duplicate coriell IDs "+s.getNodeName());
-                        } else {
-                            coriellSampleIDs.add(s.getNodeName());
-                            coriellSampleAccessions.add(s.getSampleAccession());
-                            sampleAccessiontoNode.put(s.getSampleAccession(), s);
-                        }
-                    }
+        
+        //hard-coded list of coriell submission identifiers
+        coriellSubmissionIDs.add("GCR-ada");
+        coriellSubmissionIDs.add("GCR-autism");
+        coriellSubmissionIDs.add("GCR-cohort");
+        coriellSubmissionIDs.add("GCR-leiomyosarcoma");
+        coriellSubmissionIDs.add("GCR-nhgri");
+        coriellSubmissionIDs.add("GCR-nia");
+        coriellSubmissionIDs.add("GCR-niaid");
+        coriellSubmissionIDs.add("GCR-ninds");
+        coriellSubmissionIDs.add("GCR-nigms");
+        coriellSubmissionIDs.add("GCR-primate");
+        coriellSubmissionIDs.add("GCR-winstar");
+        coriellSubmissionIDs.add("GCR-yerkes");
+
+        for (String coriellID : coriellSubmissionIDs) { 
+            File coriellFile = new File(SampleTabUtils.getSubmissionDirFile(coriellID), "sampletab.txt");
+            coriellFile = new File(rootDir, coriellFile.getPath());
+            SampleData sd = null;
+            try {
+                sd = CachedParser.get(coriellFile);
+            } catch (ParseException e) {
+                log.error("Unable to read "+coriellFile, e);
+                continue;
+            }
+            
+            for (SampleNode s : sd.scd.getNodes(SampleNode.class)) {
+                if (coriellSampleIDs.contains(s.getNodeName())) {
+                    log.warn("Duplicate coriell IDs "+s.getNodeName());
+                } else {
+                    coriellSampleIDs.add(s.getNodeName());
+                    coriellSampleAccessions.add(s.getSampleAccession());
+                    sampleAccessiontoNode.put(s.getSampleAccession(), s);
                 }
             }
         }
@@ -115,7 +97,7 @@ public class DerivedFrom {
     }
     
     public SampleData convert(SampleData st) throws IOException {
-        setup();
+        //process each sample
         for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
             Set<String> hits = new HashSet<String>();
             
@@ -241,55 +223,4 @@ public class DerivedFrom {
     public void convert(String inputFilename, String outputFilename) throws ParseException, IOException {
         convert(inputFilename, new File(outputFilename));
     }
-
-
-
-    
-    public static void main(String[] args) {
-        new DerivedFrom().doMain(args);
-
-    }
-    public void doMain(String[] args){
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printSingleLineUsage(System.err);
-            System.err.println();
-            parser.printUsage(System.err);
-            System.err.println();
-            System.exit(1);
-            return;
-        }
-
-        System.out.println("Starting...");
-
-        for (String inputFilename : arguments) {
-            log.trace("inputFilename: "+inputFilename);
-            for (File inputFile : new FileGlobIterable(inputFilename)) {
-                log.trace("inputFile: "+inputFile);
-
-                File outputFile = new File(inputFile.getParentFile(), outputFilename);
-                if (!outputFile.exists() 
-                        || outputFile.lastModified() < inputFile.lastModified()) {
-                
-                    try {
-                        convert(inputFile, outputFile);
-                    } catch (ParseException e) {
-                        log.error("Unable to convert "+inputFile, e);
-                    } catch (IOException e) {
-                        log.error("Unable to convert from "+inputFile+" to "+outputFile, e);
-                    }
-                }
-            }
-        }
-    }
-
 }
