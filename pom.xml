@@ -66,6 +66,8 @@
 			<url>http://limpopo.sourceforge.net/maven/repo</url>
 		</repository>
 		
+		
+		
 	</repositories>
 
 	<dependencies>
@@ -89,6 +91,15 @@
 			<artifactId>log4j</artifactId>
 			<version>1.2.14</version>
 		</dependency>
+
+
+<!--Biosd Model for Jobs-registry subs tracking -->
+
+	<dependency>
+            <groupId>uk.ac.ebi.fg</groupId>
+            <artifactId>biosd_model</artifactId>
+            <version>2.0-SNAPSHOT</version>
+        </dependency> 
 
 		<!-- general utils -->
 		<dependency>
