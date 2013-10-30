@@ -28,13 +28,15 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 public class APITestCallable implements Callable<Void> {
 
     private final File inputFile;
+    private final String hostname;
     private final Set<Exception> errors = new HashSet<Exception>();
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
     
-    public APITestCallable(File inputFile) {
+    public APITestCallable(File inputFile, String hostname) {
         this.inputFile = inputFile;
+        this.hostname = hostname;
     }
     
     private void compareGroup(SampleData st, GroupNode group, Document groupDoc) {
@@ -76,6 +78,7 @@ public class APITestCallable implements Callable<Void> {
                     pubmedExists = true;
                 }
             }
+            
             if (eDOI != null && !doiExists) {
                 errors.add(new RuntimeException("DOI "+eDOI.getTextTrim()+" does not exist in "+group.getGroupAccession()));
             }
@@ -205,7 +208,7 @@ public class APITestCallable implements Callable<Void> {
         for (GroupNode group : st.scd.getNodes(GroupNode.class)) {
             if (group.getGroupAccession() == null) continue;
             //get the XML corresponding to this group 
-            URL url = new URL("http://www.ebi.ac.uk/biosamples/xml/group/"+group.getGroupAccession());
+            URL url = new URL("http://"+hostname+"/biosamples/xml/group/"+group.getGroupAccession());
             Document groupDoc = XMLUtils.getDocument(url);
             
             //compare that XML to the group
@@ -215,7 +218,7 @@ public class APITestCallable implements Callable<Void> {
             for (Node node : group.getParentNodes()) {
                 SampleNode sample = (SampleNode) node;
                 //get the XML corresponding to this sample 
-                url = new URL("http://www.ebi.ac.uk/biosamples/xml/sample/"+sample.getSampleAccession());
+                url = new URL("http://"+hostname+"/biosamples/xml/sample/"+sample.getSampleAccession());
                 Document sampleDoc = XMLUtils.getDocument(url);
                 
                 //compare that XML to the sample
