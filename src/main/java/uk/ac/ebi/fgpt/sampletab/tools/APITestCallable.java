@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.graph.Node;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
@@ -45,22 +46,43 @@ public class APITestCallable implements Callable<Void> {
             String value = XMLUtils.getChildByName(e, "Value").getTextTrim();
             if (type.equals("Submission Title") && 
                     !st.msi.submissionTitle.equals(value)) {
-                errors.add(new RuntimeException("Submission Title does not match"));
+                errors.add(new RuntimeException("Submission Title does not match in "+group.getGroupAccession()));
             } else if (type.equals("Submission Description") && 
                     !st.msi.submissionDescription.equals(value)) {
-                errors.add(new RuntimeException("Submission Description does not match"));
+                errors.add(new RuntimeException("Submission Description does not match in "+group.getGroupAccession()));
             } else if (type.equals("Submission Identifier") && 
                     !st.msi.submissionIdentifier.equals(value)) {
-                errors.add(new RuntimeException("Submission Identifier does not match"));
+                errors.add(new RuntimeException("Submission Identifier does not match in "+group.getGroupAccession()));
             } else if (type.equals("Submission Reference Layer") && 
                     !st.msi.submissionReferenceLayer.equals(new Boolean(value))) {
-                errors.add(new RuntimeException("Submission Reference Layer does not match"));
+                errors.add(new RuntimeException("Submission Reference Layer does not match in "+group.getGroupAccession()));
             } else if (type.equals("Group Accession") && 
                     !group.getGroupAccession().equals(value)) {
-                errors.add(new RuntimeException("Group Accession does not match"));
+                errors.add(new RuntimeException("Group Accession does not match in "+group.getGroupAccession()));
             }
         }
-        //TODO publications
+        // publications
+        for (Element e: XMLUtils.getChildrenByName(root, "Publication")) {
+            Element eDOI = XMLUtils.getChildByName(e, "DOI");
+            Element ePubMedID = XMLUtils.getChildByName(e, "PubMedID");
+         
+            boolean doiExists = false;
+            boolean pubmedExists = false;
+            for (Publication p : st.msi.publications) {
+                if (p.getDOI() != null && p.getDOI().equals(eDOI.getTextTrim())) {
+                    doiExists = true;
+                }
+                if (p.getPubMedID() != null && p.getPubMedID().equals(ePubMedID.getTextTrim())) {
+                    pubmedExists = true;
+                }
+            }
+            if (eDOI != null && !doiExists) {
+                errors.add(new RuntimeException("DOI "+eDOI.getTextTrim()+" does not exist in "+group.getGroupAccession()));
+            }
+            if (ePubMedID != null && !pubmedExists) {
+                errors.add(new RuntimeException("PubMedID "+ePubMedID.getTextTrim()+" does not exist in "+group.getGroupAccession()));
+            }
+        }
         //TODO databases
         //TODO person
         //TODO organisation
