@@ -9,7 +9,7 @@ import uk.ac.ebi.fgpt.sampletab.SampleTabToLoadDriver;
 
 public class APITestDriver extends AbstractInfileDriver<APITestCallable> {
 
-    @Option(name = "--hostname", aliases={"-h"}, usage = "server hostname")
+    @Option(name = "--hostname", usage = "server hostname")
     private String hostname = "www.ebi.ac.uk";
     
     protected APITestCallable getNewTask(File inputFile) {
