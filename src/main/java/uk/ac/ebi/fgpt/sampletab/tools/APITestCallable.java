@@ -71,18 +71,18 @@ public class APITestCallable implements Callable<Void> {
             boolean doiExists = false;
             boolean pubmedExists = false;
             for (Publication p : st.msi.publications) {
-                if (p.getDOI() != null && p.getDOI().equals(eDOI.getTextTrim())) {
+                if (p.getDOI() != null && eDOI.getTextTrim().length() > 0 && p.getDOI().equals(eDOI.getTextTrim())) {
                     doiExists = true;
                 }
-                if (p.getPubMedID() != null && p.getPubMedID().equals(ePubMedID.getTextTrim())) {
+                if (p.getPubMedID() != null && ePubMedID.getTextTrim().length() > 0 && p.getPubMedID().equals(ePubMedID.getTextTrim())) {
                     pubmedExists = true;
                 }
             }
             
-            if (eDOI != null && !doiExists) {
+            if (eDOI != null && eDOI.getTextTrim().length() > 0 && !doiExists) {
                 errors.add(new RuntimeException("DOI "+eDOI.getTextTrim()+" does not exist in "+group.getGroupAccession()));
             }
-            if (ePubMedID != null && !pubmedExists) {
+            if (ePubMedID != null && ePubMedID.getTextTrim().length() > 0 && !pubmedExists) {
                 errors.add(new RuntimeException("PubMedID "+ePubMedID.getTextTrim()+" does not exist in "+group.getGroupAccession()));
             }
         }
