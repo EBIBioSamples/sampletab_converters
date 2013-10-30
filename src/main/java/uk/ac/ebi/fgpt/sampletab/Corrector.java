@@ -20,6 +20,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
+import uk.ac.ebi.fgpt.sampletab.guixml.GUIXMLOutputer;
 import uk.ac.ebi.fgpt.sampletab.utils.EuroPMCUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.TaxonException;
@@ -54,13 +55,28 @@ public class Corrector {
         return sb.toString();
     }
     
-    public String stripHTML(String in) {
+    public String cleanString(String in) {
         if (in == null){
             return in;
         }
         String out = in;
-        //extra whitespace
+        
+        //purge all strange characters not-quite-whitespace
+        //note, you can find these unicode codes by pasting u"the character" into python
+        out = out.replace("\"", "");
+        out = out.replace("\n", "");
+        out = out.replace("\t", "");
+        out = out.replace("\u2009", " "); //thin space
+        out = out.replace("\u00A0", " "); //non-breaking space
+        out = out.replace("\uff09", ") "); //full-width right parenthesis
+        out = out.replace("\uff08", " ("); //full-width left parenthesis
+        
+        //trim extra whitespace at start and end
         out = out.trim();
+        //XML automatically replaces consecutive spaces with single spaces
+        while (out.contains("  ")) {
+            out = out.replace("  ", " ");
+        }
         
         //<br>
         //<b>
@@ -72,7 +88,9 @@ public class Corrector {
         
         //some UTF-8 hacks
         out = out.replace("ÃƒÂ¼", "ü");
-        //spaces handled by SampleTabWriter
+                
+        //also strip UTF-8 control characters that invalidate XML
+        out = GUIXMLOutputer.stripNonValidXMLCharacters(out);
         
         return out;
     }
@@ -185,6 +203,9 @@ public class Corrector {
                 || lcval.equals("iternationaltemperaturescale1990")) {
             unit.setAttributeValue("Celcius");
         } 
+        
+        unit.setAttributeValue(cleanString(unit.getAttributeValue()));
+        
         return unit;
     }
     
@@ -202,6 +223,10 @@ public class Corrector {
             attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001265");
             attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
         }
+        
+        
+        attr.setAttributeValue(cleanString(attr.getAttributeValue()));
+        
         return attr;
     }
     
@@ -265,6 +290,8 @@ public class Corrector {
             String ncbiTaxonomyName = sampledata.msi.getOrAddTermSource(ncbiTaxonomy);
             attr.setTermSourceREF(ncbiTaxonomyName);
         }
+        
+        attr.setAttributeValue(cleanString(attr.getAttributeValue()));
         
         return attr;
     }
@@ -550,6 +577,9 @@ public class Corrector {
             attr.unit = correctUnit(attr.unit);
         }
         
+        attr.type = cleanString(attr.type);
+        attr.setAttributeValue(cleanString(attr.getAttributeValue()));
+        
         return attr;
     }
 
@@ -578,6 +608,9 @@ public class Corrector {
             attr.unit = correctUnit(attr.unit);
         }
         
+        attr.type = cleanString(attr.type);
+        attr.setAttributeValue(cleanString(attr.getAttributeValue()));
+        
         return attr;
     }
     
@@ -585,7 +618,7 @@ public class Corrector {
         if (sampledata.msi.submissionTitle == null || sampledata.msi.submissionTitle.length() == 0 ) {
             sampledata.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(sampledata);
         } else {
-            sampledata.msi.submissionTitle = stripHTML(sampledata.msi.submissionTitle);
+            sampledata.msi.submissionTitle = cleanString(sampledata.msi.submissionTitle);
         }
         
         if (sampledata.msi.submissionDescription == null || sampledata.msi.submissionDescription.length() == 0) {
@@ -625,7 +658,7 @@ public class Corrector {
                 }
             }
         } else {
-            sampledata.msi.submissionDescription = stripHTML(sampledata.msi.submissionDescription);
+            sampledata.msi.submissionDescription = cleanString(sampledata.msi.submissionDescription);
         }
         
         
