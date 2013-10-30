@@ -664,6 +664,10 @@ public class Corrector {
         
         
         for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
+            
+            s.setNodeName(cleanString(s.getNodeName()));
+            s.setSampleDescription(cleanString(s.getSampleDescription()));
+            
             //convert to array so we can delete and add attributes if needed
             for (SCDNodeAttribute a : new ArrayList<SCDNodeAttribute>(s.getAttributes())) {
                 boolean isAbstractSCDAttribute = false;
