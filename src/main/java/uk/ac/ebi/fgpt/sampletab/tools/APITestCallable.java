@@ -152,7 +152,7 @@ public class APITestCallable implements Callable<Void> {
         String attributeValue = a.getAttributeValue().trim();
         
         if (!elementValue.equals(attributeValue)) {
-            errors.add(new RuntimeException(elementType+" does not match on "+accession));
+            errors.add(new RuntimeException(elementType+" does not match on "+accession+" ( "+elementValue+" vs "+attributeValue+")"));
         } 
         //TODO unit
         //TODO term source
@@ -172,10 +172,7 @@ public class APITestCallable implements Callable<Void> {
         }
         
         if (!elementValue.equals(attributeValue)) {
-            errors.add(new RuntimeException(elementType+" does not match on "+accession));
-            log.info("Mismatch on "+elementType+" on "+accession);
-            log.info("!"+elementValue+"!");
-            log.info("!"+attributeValue+"!");
+            errors.add(new RuntimeException(elementType+" does not match on "+accession+" ( "+elementValue+" vs "+attributeValue+")"));
         } 
         //TODO unit
         //TODO term source
@@ -191,7 +188,7 @@ public class APITestCallable implements Callable<Void> {
         String attributeValue = a.getAttributeValue().trim();
         
         if (!elementValue.equals(attributeValue)) {
-            errors.add(new RuntimeException(elementType+" does not match on "+accession));
+            errors.add(new RuntimeException(elementType+" does not match on "+accession+" ( "+elementValue+" vs "+attributeValue+")"));
         } 
         //TODO term source
     }
