@@ -101,13 +101,13 @@ public class APITestCallable implements Callable<Void> {
             String value = XMLUtils.getChildByName(e, "Value").getTextTrim();
             if (type.equals("Sample Name") && 
                     !sample.getNodeName().equals(value)) {
-                errors.add(new RuntimeException("Sample Name does not match on "+sample.getSampleAccession()));
+                errors.add(new RuntimeException("Sample Name does not match on "+sample.getSampleAccession()+" ( "+sample.getNodeName()+" vs "+value+")"));
             } else if (type.equals("Sample Accession") && 
                     !sample.getSampleAccession().equals(value)) {
-                errors.add(new RuntimeException("Sample Accession does not match on "+sample.getSampleAccession()));
+                errors.add(new RuntimeException("Sample Accession does not match on "+sample.getSampleAccession()+" ( "+sample.getSampleAccession()+" vs "+value+")"));
             } else if (type.equals("Sample Description") && 
                     !sample.getSampleDescription().equals(value)) {
-                errors.add(new RuntimeException("Sample Description does not match on "+sample.getSampleAccession()));
+                errors.add(new RuntimeException("Sample Description does not match on "+sample.getSampleAccession()+" ( "+sample.getSampleDescription()+" vs "+value+")"));
             } else {
                 //this is a general attribute
                 //find the attribute on the sample object that matches the XML entry
@@ -123,11 +123,13 @@ public class APITestCallable implements Callable<Void> {
                     }
                     if (isComment) {
                         CommentAttribute ca = (CommentAttribute) a;
+                        //TODO check attribute "comment"
                         if (type.equals(ca.type)) {
                             compareComment(ca, e, sample.getSampleAccession());
                         }
                     } else if (isCharacteristic) {
                         CharacteristicAttribute ca = (CharacteristicAttribute) a;
+                        //TODO check attribute "characteristic"
                         if (type.equals(ca.type)) {
                             compareCharacteristic(ca, e, sample.getSampleAccession());
                         }
@@ -147,7 +149,7 @@ public class APITestCallable implements Callable<Void> {
         String elementValue = XMLUtils.getChildByName(e, "Value").getTextTrim();
         
         String attributeType = a.type;
-        String attributeValue = a.getAttributeValue();
+        String attributeValue = a.getAttributeValue().trim();
         
         if (!elementValue.equals(attributeValue)) {
             errors.add(new RuntimeException(elementType+" does not match on "+accession));
@@ -163,10 +165,17 @@ public class APITestCallable implements Callable<Void> {
         String elementValue = XMLUtils.getChildByName(e, "Value").getTextTrim();
         
         String attributeType = a.type;
-        String attributeValue = a.getAttributeValue();
+        String attributeValue = a.getAttributeValue().trim();
+        //XML automatically replaces consecutive spaces with single spaces
+        while (attributeValue.contains("  ")) {
+            attributeValue = attributeValue.replace("  ", " ");
+        }
         
         if (!elementValue.equals(attributeValue)) {
             errors.add(new RuntimeException(elementType+" does not match on "+accession));
+            log.info("Mismatch on "+elementType+" on "+accession);
+            log.info("!"+elementValue+"!");
+            log.info("!"+attributeValue+"!");
         } 
         //TODO unit
         //TODO term source
@@ -179,7 +188,7 @@ public class APITestCallable implements Callable<Void> {
         String elementValue = XMLUtils.getChildByName(e, "Value").getTextTrim();
         
         String attributeType = a.getAttributeType();
-        String attributeValue = a.getAttributeValue();
+        String attributeValue = a.getAttributeValue().trim();
         
         if (!elementValue.equals(attributeValue)) {
             errors.add(new RuntimeException(elementType+" does not match on "+accession));
