@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +21,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 import uk.ac.ebi.fgpt.sampletab.utils.CachedParser;
-import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class SameAs {
     
@@ -41,54 +39,15 @@ public class SameAs {
     
     // logging
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    public static void main(String[] args) {
-        new SameAs().doMain(args);
-
-    }
-    
-    public File getFile(String submissionID){
-        File stPathFile = new File(stPath);
-        
-        File subdir = null;
-        if (submissionID.startsWith("GCR-")){
-            subdir = new File(stPathFile, "coriell"); 
-        }
-        else if (submissionID.startsWith("GEN-")){
-            subdir = new File(stPathFile, "sra"); 
-        }
-        else if (submissionID.startsWith("GEN")){
-            subdir = new File(stPathFile, "encode"); 
-        }
-        else if (submissionID.startsWith("G1K")){
-            subdir = new File(stPathFile, "g1k"); 
-        }
-        else if (submissionID.startsWith("GMS-")){
-            subdir = new File(stPathFile, "imsr"); 
-        }
-        else if (submissionID.startsWith("GVA-")){
-            subdir = new File(stPathFile, "dgva"); 
-        }
-        else if (submissionID.startsWith("GAE-")){
-            subdir = new File(stPathFile, "ae"); 
-        }
-        else if (submissionID.startsWith("GPR-")){
-            subdir = new File(stPathFile, "pride"); 
-        }
-        
-        File subsubdir = new File(subdir, submissionID);
-        File sampletab = new File(subsubdir, "sampletab.txt");
-        
-        return sampletab;
-    }
-        
+            
     public SampleData convert(SampleData st) throws IOException {
         for (SampleNode s : st.scd.getNodes(SampleNode.class)) {
             //itterate over a copy so we can add attributes as we go
             for (SCDNodeAttribute a: new ArrayList<SCDNodeAttribute>(s.getAttributes())){
                 //Do AE=AE equivalence
                 if (a.getAttributeType().equals("comment[Source EXP]")){
-                    File sourceFile = getFile("GA"+a.getAttributeValue());
+                    
+                    File sourceFile = SampleTabUtils.getSubmissionDirFile("GA"+a.getAttributeValue());
                     
                     SampleData sd = null;
                     log.debug("reading "+sourceFile);
@@ -157,49 +116,5 @@ public class SameAs {
 
     public void convert(String inputFilename, String outputFilename) throws ParseException, IOException {
         convert(inputFilename, new File(outputFilename));
-    }
-
-    
-    public void doMain(String[] args){
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printSingleLineUsage(System.err);
-            System.err.println();
-            parser.printUsage(System.err);
-            System.err.println();
-            System.exit(1);
-            return;
-        }
-
-        System.out.println("Starting...");
-
-        for (String inputFilename : arguments) {
-            log.trace("inputFilename: "+inputFilename);
-            for (File inputFile : new FileGlobIterable(inputFilename)) {
-                log.trace("inputFile: "+inputFile);
-
-                File outputFile = new File(inputFile.getParentFile(), outputFilename);
-                if (!outputFile.exists() 
-                        || outputFile.lastModified() < inputFile.lastModified()) {
-                
-                    try {
-                        convert(inputFile, outputFile);
-                    } catch (ParseException e) {
-                        log.error("Unable to convert "+inputFile, e);
-                    } catch (IOException e) {
-                        log.error("Unable to convert from "+inputFile+" to "+outputFile, e);
-                    }
-                }
-            }
-        }
     }
 }
