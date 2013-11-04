@@ -281,7 +281,8 @@ public class ENASRAXMLToSampleTab {
                         //same as the existing sample accession
                         //do nothing
                     } else if (samplenode.getSampleAccession() != null && 
-                            id.getTextTrim().matches("SAM[END][A]?[0-9]+")){
+                            id.getTextTrim().matches("SAM[END][A]?[0-9]+") &&
+                            !samplenode.getSampleAccession().equals(id.getTextTrim())){
                         //this is a biosamples accession, but we already have one, report an error and store as synonym
                         log.error("Strange biosample identifiers in "+sampleAccession);
                         CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
