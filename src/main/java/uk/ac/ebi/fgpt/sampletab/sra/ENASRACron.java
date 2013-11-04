@@ -166,20 +166,6 @@ public class ENASRACron {
             }
         }
         
-        if (pool != null) {
-            //wait for threading to finish
-            for (Future<?> f : futures) {
-                try {
-                    f.get();
-                } catch (Exception e) {
-                    //something went wrong
-                    log.error("problem processing update", e);
-                }
-            }
-        }
-        
-        
-        
         //process deletes
         for (String submissionID : toDelete) {
             File sampletabpre = new File(outdir.toString(), SampleTabUtils.getSubmissionDirFile(submissionID).toString());
@@ -195,15 +181,28 @@ public class ENASRACron {
             }
             //trigger conan, if appropriate
             if (!noconan) {
-                try {
-                    ConanUtils.submit(submissionID, "BioSamples (other)");
-                } catch (IOException e) {
-                    log.error("problem making "+sampletabpre+" private through Conan", e);
+                if (pool != null) {
+                    pool.execute(new PrivatizeRunnable(submissionID));
+                } else {
+                    try {
+                        ConanUtils.submit(submissionID, "BioSamples (other)");
+                    } catch (IOException e) {
+                        log.error("problem making "+submissionID+" private through Conan", e);
+                    }
                 }
             }
         }
         
         if (pool != null) {
+            //wait for threading to finish
+            for (Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    //something went wrong
+                    log.error("problem processing update", e);
+                }
+            }
             // run the pool and then close it afterwards
             // must synchronize on the pool object
             synchronized (pool) {
@@ -217,5 +216,24 @@ public class ENASRACron {
             }
         }
         log.info("Finished processing updates");
+    }
+    
+    private class PrivatizeRunnable implements Runnable {
+
+        private final String submissionID;
+        
+        public PrivatizeRunnable(String submissionID) {
+            this.submissionID = submissionID;
+        }
+        
+        @Override
+        public void run() {
+            try {
+                ConanUtils.submit(submissionID, "BioSamples (other)");
+            } catch (IOException e) {
+                log.error("problem making "+submissionID+" private through Conan", e);
+            }
+        }
+        
     }
 }
