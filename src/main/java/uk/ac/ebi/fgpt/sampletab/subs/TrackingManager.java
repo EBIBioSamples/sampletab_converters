@@ -19,7 +19,6 @@ import javax.persistence.EntityManagerFactory;
 
 import uk.ac.ebi.fg.biosd.model.organizational.MSI;
 import uk.ac.ebi.fg.core_model.resources.Resources;
-import static org.junit.Assert.assertEquals;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -235,7 +234,9 @@ public class TrackingManager {
 				}
 			}
 		}
+	
 	}
+
 
 	private String getExpermentId(String accession) {
 		String id = null;
@@ -253,12 +254,14 @@ public class TrackingManager {
 				id = rs.getString("id");
 				}
 			else{
-					log.info("The experiment "
+					log.error("The experiment "
 							+ accession
 							+ "is not present in the experiments table in the SubsTracking database");
 				}
+		}
+	
 
-		} catch (SQLException e) {
+		 catch (SQLException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
 			log.error("The BoneCPDatasouce class for connection to the database cannot be found :"
@@ -279,7 +282,7 @@ public class TrackingManager {
 		}
 
 		return id;
-
+		}
+		
 	}
-    
-}
+
