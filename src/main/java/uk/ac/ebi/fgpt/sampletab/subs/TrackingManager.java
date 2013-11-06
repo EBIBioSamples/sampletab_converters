@@ -4,14 +4,29 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
+import uk.ac.ebi.fg.biosd.model.organizational.MSI;
+import uk.ac.ebi.fg.core_model.resources.Resources;
+import static org.junit.Assert.assertEquals;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fg.biosd.model.application_mgmt.JobRegisterEntry;
+import uk.ac.ebi.fg.biosd.model.application_mgmt.JobRegisterEntry.Operation;
+import uk.ac.ebi.fg.biosd.model.persistence.hibernate.application_mgmt.JobRegisterDAO;
 import com.jolbox.bonecp.BoneCPDataSource;
 
 public class TrackingManager {
@@ -21,6 +36,8 @@ public class TrackingManager {
     private BoneCPDataSource ds = null;
     private ExperimentDAO experimentsDAO = null;
     private EventDAO eventDAO = null;
+    private String username = null;
+    private String password = null;
     
     //date format to write into database as a string
     private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -62,8 +79,8 @@ public class TrackingManager {
                 String hostname = properties.getProperty("hostname");
                 Integer port = new Integer(properties.getProperty("port"));
                 String database = properties.getProperty("database");
-                String username = properties.getProperty("username");
-                String password = properties.getProperty("password");
+                 username = properties.getProperty("username");
+                 password = properties.getProperty("password");
     
                 try {
                     Class.forName("com.mysql.jdbc.Driver");
@@ -162,4 +179,77 @@ public class TrackingManager {
             log.warn("Problem registering event end", e);
         }
     }
+    
+    
+    public void getJobRegistry() throws SQLException{
+    	EntityManagerFactory emf = Resources.getInstance ().getEntityManagerFactory ();
+    	EntityManager em = emf.createEntityManager ();
+
+    	JobRegisterDAO jrDao = new JobRegisterDAO ( em );
+    	
+    	List<JobRegisterEntry> log = jrDao.find(1, MSI.class);
+    	assertEquals ( "find with entityType didn't work!", 1, log.size () );
+    	for (JobRegisterEntry l : log){
+    		String accession = l.getAcc();
+    		Operation operation = l.getOperation();
+    		Date timestamp =l.getTimestamp();
+    		String id = getExpermentId(accession);
+    		writeToDatabase(id,operation.toString(),timestamp);
+      	}
+    	
+    	
+    	
+    		
+    	
+    }
+
+	private void writeToDatabase(String id, String operation, Date timestamp) throws SQLException {
+		
+	String query = "INSERT INTO events (experiment_id, event_type,start_time, end_time) VALUES ( '" + id +"',' RelationalDatabase_" +operation+ "','" + timestamp +
+			"','" + timestamp + "')";
+	Statement stmt = null;
+	try{
+		stmt = ds.getConnection().createStatement();
+		Connection con = ds.getConnection(username, password);
+		stmt = con.createStatement();
+		int change = stmt.executeUpdate(query);
+		log.info("Number of rows updated = " + change);
+	} catch(SQLException e){
+		e.printStackTrace();
+	}finally{
+		if(stmt != null){
+			stmt.close();
+		}
+		}
+	}
+
+	
+	
+	private String getExpermentId(String accession) throws SQLException {
+	String id = null;	
+	Statement stmt = null;
+	String query = "SELECT id from experiments WHERE accession='"+ accession +"'";
+	try{
+		Connection con = ds.getConnection(username, password);
+		stmt = con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		while(rs.next()){
+			id = rs.getString("id");
+			if (id.isEmpty()){
+				log.info("The experiment " +  accession + "is not present in the experiments table in the SubsTracking database");
+			}
+		}
+		
+	} catch(SQLException e){
+		e.printStackTrace();
+	}finally{
+		if(stmt != null){
+			stmt.close();
+		}
+	}
+	
+	return id;	
+		
+	}
+    
 }
