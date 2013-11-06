@@ -181,75 +181,105 @@ public class TrackingManager {
     }
     
     
-    public void getJobRegistry() throws SQLException{
-    	EntityManagerFactory emf = Resources.getInstance ().getEntityManagerFactory ();
-    	EntityManager em = emf.createEntityManager ();
+	public void getJobRegistry() throws SQLException {
+		EntityManagerFactory emf = Resources.getInstance()
+				.getEntityManagerFactory();
+		EntityManager em = emf.createEntityManager();
 
-    	JobRegisterDAO jrDao = new JobRegisterDAO ( em );
-    	
-    	List<JobRegisterEntry> log = jrDao.find(1, MSI.class);
-    	assertEquals ( "find with entityType didn't work!", 1, log.size () );
-    	for (JobRegisterEntry l : log){
-    		String accession = l.getAcc();
-    		Operation operation = l.getOperation();
-    		Date timestamp =l.getTimestamp();
-    		String id = getExpermentId(accession);
-    		writeToDatabase(id,operation.toString(),timestamp);
-      	}
-    	
-    	
-    	
-    		
-    	
-    }
+		JobRegisterDAO jrDao = new JobRegisterDAO(em);
 
-	private void writeToDatabase(String id, String operation, Date timestamp) throws SQLException {
-		
-	String query = "INSERT INTO events (experiment_id, event_type,start_time, end_time) VALUES ( '" + id +"',' RelationalDatabase_" +operation+ "','" + timestamp +
-			"','" + timestamp + "')";
-	Statement stmt = null;
-	try{
-		stmt = ds.getConnection().createStatement();
-		Connection con = ds.getConnection(username, password);
-		stmt = con.createStatement();
-		int change = stmt.executeUpdate(query);
-		log.info("Number of rows updated = " + change);
-	} catch(SQLException e){
-		e.printStackTrace();
-	}finally{
-		if(stmt != null){
-			stmt.close();
+		List<JobRegisterEntry> logs = jrDao.find(1, MSI.class);
+		log.error("find with entityType didn't work!", 1, logs.size());
+		for (JobRegisterEntry l : logs) {
+			String accession = l.getAcc();
+			Operation operation = l.getOperation();
+			Date timestamp = l.getTimestamp();
+			String id = getExpermentId(accession);
+			writeToDatabase(id, operation.toString(), timestamp);
 		}
-		}
+
 	}
 
-	
-	
-	private String getExpermentId(String accession) throws SQLException {
-	String id = null;	
-	Statement stmt = null;
-	String query = "SELECT id from experiments WHERE accession='"+ accession +"'";
-	try{
-		Connection con = ds.getConnection(username, password);
-		stmt = con.createStatement();
-		ResultSet rs = stmt.executeQuery(query);
-		while(rs.next()){
-			id = rs.getString("id");
-			if (id.isEmpty()){
-				log.info("The experiment " +  accession + "is not present in the experiments table in the SubsTracking database");
+	private void writeToDatabase(String id, String operation, Date timestamp) {
+
+		String query = "INSERT INTO events (experiment_id, event_type,start_time, end_time) VALUES ( '"
+				+ id
+				+ "','RelationalDatabase_"
+				+ operation
+				+ "','"
+				+ timestamp
+				+ "','" + timestamp + "')";
+		Statement stmt = null;
+		Connection con = null;
+		try {
+			BoneCPDataSource ds1 = getDataSource();
+			con = ds1.getConnection();
+			stmt = con.createStatement();
+			int change = stmt.executeUpdate(query);
+			log.info("Number of rows updated = " + change);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			log.error("The BoneCPDatasouce class for connection to the database cannot be found :"
+					+ e.getMessage());
+
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.close();
+					con.close();
+				} catch (SQLException e) {
+					log.error("Problem in closing the connection: "
+							+ e.getMessage());
+
+				}
 			}
 		}
-		
-	} catch(SQLException e){
-		e.printStackTrace();
-	}finally{
-		if(stmt != null){
-			stmt.close();
-		}
 	}
-	
-	return id;	
-		
+
+	private String getExpermentId(String accession) {
+		String id = null;
+		Statement stmt = null;
+		Connection con = null;
+		ResultSet rs = null;
+		String query = "SELECT id from experiments WHERE accession='"
+				+ accession + "'";
+		try {
+			BoneCPDataSource ds1 = getDataSource();
+			con = ds1.getConnection();
+			stmt = con.createStatement();
+			rs = stmt.executeQuery(query);
+			if (rs.isFirst() && rs.isLast()){
+				id = rs.getString("id");
+				}
+			else{
+					log.info("The experiment "
+							+ accession
+							+ "is not present in the experiments table in the SubsTracking database");
+				}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			log.error("The BoneCPDatasouce class for connection to the database cannot be found :"
+					+ e.getMessage());
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.close();
+					rs.close();
+					con.close();
+				} catch (SQLException e) {
+					log.error("Problem in closing the statement: "
+							+ e.getMessage());
+
+				}
+
+			}
+		}
+
+		return id;
+
 	}
     
 }
