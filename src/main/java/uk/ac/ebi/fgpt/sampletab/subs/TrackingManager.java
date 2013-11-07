@@ -31,7 +31,6 @@ import com.jolbox.bonecp.BoneCPDataSource;
 public class TrackingManager {
 
     private Logger log = LoggerFactory.getLogger(getClass()); 
-
     private BoneCPDataSource ds = null;
     private ExperimentDAO experimentsDAO = null;
     private EventDAO eventDAO = null;
@@ -253,11 +252,14 @@ public class TrackingManager {
 			if (rs.isFirst() && rs.isLast()){
 				id = rs.getString("id");
 				}
-			else{
+			else if(rs.first() != rs.last()){
 					log.error("The experiment "
 							+ accession
-							+ "is not present in the experiments table in the SubsTracking database");
+							+ "has multiple ids in the SubsTracking database");
 				}
+			else {
+				log.error("The experiment " + accession + "does not have a corresponding id in the SubsTracking database");
+			}
 		}
 	
 
