@@ -320,7 +320,55 @@
 			</dependencies>
 		</profile>
 
-	</profiles>
+	
+	
+	 <profile>
+                        <id>oracle_test</id>
+                        <activation>
+                                <activeByDefault>false</activeByDefault>
+                        </activation>
+                        <properties>
+                                <jdbc.username>biosdtst</jdbc.username>
+                                <jdbc.password>biosdtst</jdbc.password>
+                                <jdbc.url>jdbc:oracle:thin:@bart.ebi.ac.uk:1521:biosdtst</jdbc.url>
+                                <jdbc.driverClassName>oracle.jdbc.driver.OracleDriver</jdbc.driverClassName>
+                                <hibernate.dialect>org.hibernate.dialect.Oracle10gDialect</hibernate.dialect>
+                                <hibernate.hbm2ddl.auto>update</hibernate.hbm2ddl.auto>
+                        </properties>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.oracle</groupId>
+                                        <artifactId>ojdbc6</artifactId>
+                                        <version>11.2.0.3</version>
+                                </dependency>
+                        </dependencies>
+                </profile>
+
+
+                <!-- WARNING! DO NOT EXPECT THE DEV DB TO BE STABLE, data and/or schema will be deleted often as part of the testing
+                                 process. PLEASE NOTIFY ALL WHO MAY BE CONCERNED BEFORE WIPING THE DEV DB OUT -->
+                <profile>
+                        <id>oracle_dev</id>
+                        <activation>
+                                <activeByDefault>false</activeByDefault>
+                        </activation>
+                        <properties>
+                                <jdbc.username>biosddev</jdbc.username>
+                                <jdbc.password>biosddev</jdbc.password>
+                                <jdbc.url>jdbc:oracle:thin:@bart.ebi.ac.uk:1521:biosdtst</jdbc.url>
+                                <jdbc.driverClassName>oracle.jdbc.driver.OracleDriver</jdbc.driverClassName>
+                                <hibernate.dialect>org.hibernate.dialect.Oracle10gDialect</hibernate.dialect>
+                                <hibernate.hbm2ddl.auto>update</hibernate.hbm2ddl.auto>
+                        </properties>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.oracle</groupId>
+                                        <artifactId>ojdbc6</artifactId>
+                                        <version>11.2.0.3</version>
+                                </dependency>
+                        </dependencies>
+                </profile>
+</profiles>
 
 	<build>
 		<plugins>

@@ -3,10 +3,13 @@
  */
 package uk.ac.ebi.fgpt.sampletab.subs;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.mysql.jdbc.log.Log;
 
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
 
@@ -15,18 +18,22 @@ import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
  *
  */
 public class JobRegistryDriver extends AbstractDriver {
+	private static Logger log =  LoggerFactory.getLogger(JobRegistryDriver.class); 
 
 	public JobRegistryDriver(){
 		
-		Logger log =  LoggerFactory.getLogger(getClass()); 
+		
 	}
 	
 	
-	public static void main(String[] args) {
+	public static void main(String[] args)  {
 		JobRegistry job = new JobRegistry();		
 		try {
 			job.getJobRegistry();
-		} catch (SQLException e) {
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
+			System.exit(1);
 		}
 
 	}

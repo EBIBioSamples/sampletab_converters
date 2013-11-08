@@ -3,6 +3,7 @@
  */
 package uk.ac.ebi.fgpt.sampletab.subs;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,9 +11,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +43,15 @@ public class JobRegistry {
 		log = LoggerFactory.getLogger(getClass());
 	}
 
-	public void getJobRegistry() throws SQLException {
-		EntityManagerFactory emf = Resources.getInstance()
-				.getEntityManagerFactory();
+	public void getJobRegistry() throws SQLException, IOException {
+		/**EntityManagerFactory emf = Resources.getInstance()
+				.getEntityManagerFactory();*/
+		
+		Properties hibernateProperties = new Properties ();
+		ClassLoader loader = Thread.currentThread().getContextClassLoader();
+		hibernateProperties.load ( loader.getResourceAsStream ( "hibernate_bioSD.properties"));
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory ( "defaultPersistenceUnit" , hibernateProperties);
+		//new DbSchemaEnhancerProcessor ( entityManagerFactory ).enhance ();
 		EntityManager em = emf.createEntityManager();
 
 		JobRegisterDAO jrDao = new JobRegisterDAO(em);
