@@ -94,11 +94,11 @@ public class GUIXMLOutputer {
             writeAttributeValue(xmlWriter, "Submission Title", "true", "STRING", sd.msi.submissionTitle);
             writeAttributeValue(xmlWriter, "Submission Identifier", "true", "STRING", sd.msi.submissionIdentifier);
             writeAttributeValue(xmlWriter, "Submission Description", "true", "STRING", sd.msi.submissionDescription);
-            writeAttributeValue(xmlWriter, "Submission Version", "true", "STRING", sd.msi.submissionVersion);
+            //writeAttributeValue(xmlWriter, "Submission Version", "true", "STRING", sd.msi.submissionVersion);
             writeAttributeValue(xmlWriter, "Submission Reference Layer", "true", "BOOLEAN", sd.msi.submissionReferenceLayer.toString());
             writeAttributeValue(xmlWriter, "Submission Release Date", "true", "STRING", sd.msi.getSubmissionReleaseDateAsString());
             writeAttributeValue(xmlWriter, "Submission Update Date", "true", "STRING", sd.msi.getSubmissionUpdateDateAsString());
-            writeAttributeValue(xmlWriter, "Submission Modification Date", "true", "STRING", sd.msi.getSubmissionUpdateDateAsString());
+            //writeAttributeValue(xmlWriter, "Submission Modification Date", "true", "STRING", sd.msi.getSubmissionUpdateDateAsString());
             writeAttributeValue(xmlWriter, "Name", "true", "BOOLEAN", g.getNodeName());
             writeAttributeValue(xmlWriter, "Group Accession", "true", "BOOLEAN", g.getGroupAccession());
             //group description?
@@ -164,7 +164,8 @@ public class GUIXMLOutputer {
     }
     
     private void writeAttributeValue(XMLStreamWriter xmlWriter, String cls, String classDefined, String dataType, List<String> values) throws XMLStreamException{
-        if (values.size() == 0) return;
+        //NB for sample attributes, this will never be zero size. For sampleattribute summary elements, this will always be zero size
+        //if (values.size() == 0) return;
         xmlWriter.writeStartElement("attribute");
         xmlWriter.writeAttribute("class", cls);
         xmlWriter.writeAttribute("classDefined", classDefined);
