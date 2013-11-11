@@ -20,8 +20,9 @@ public class JobRegistryDriver extends AbstractDriver {
 		
 	}
 	
-	
-	public static void main(String[] args)  {
+	@Override
+	public void doMain(String[] args){
+		
 		JobRegistry job = new JobRegistry();		
 		try {
 			job.getJobRegistry();
@@ -30,6 +31,11 @@ public class JobRegistryDriver extends AbstractDriver {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+	
+	
+	public static void main(String[] args)  {
+		new JobRegistryDriver().doMain(args);
 
 	}
 
