@@ -82,11 +82,11 @@ public class JobRegistry {
 		try {
 			BoneCPDataSource ds1 = tm.getDataSource();
 			con = ds1.getConnection();
-			con.setAutoCommit(false);
+			con.setAutoCommit(true);
 			stmt = con.prepareStatement(query);
 			// stmt = con.createStatement();
 			int change = stmt.executeUpdate(query);
-			con.commit();
+			//con.commit();
 			log.info("Number of rows updated = " + change);
 		} catch (SQLException e) {
 			log.error(e.getMessage());
