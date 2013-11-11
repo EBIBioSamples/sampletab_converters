@@ -54,7 +54,7 @@ public class JobRegistry {
 
 		JobRegisterDAO jrDao = new JobRegisterDAO(em);
 
-		List<JobRegisterEntry> logs = jrDao.find(1, MSI.class);
+		List<JobRegisterEntry> logs = jrDao.find(60, MSI.class);
 		if (logs.size() != 1){
 		log.error("find with entityType failed!");
 		}
