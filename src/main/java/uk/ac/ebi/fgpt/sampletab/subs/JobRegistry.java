@@ -55,7 +55,9 @@ public class JobRegistry {
 		JobRegisterDAO jrDao = new JobRegisterDAO(em);
 
 		List<JobRegisterEntry> logs = jrDao.find(1, MSI.class);
+		if (logs.size() != 1){
 		log.error("find with entityType didn't work!", 1, logs.size());
+		}
 		for (JobRegisterEntry l : logs) {
 			String accession = l.getAcc();
 			Operation operation = l.getOperation();
