@@ -70,13 +70,13 @@ public class JobRegistry {
 
 	private void writeToDatabase(String id, String operation, Date timestamp) {
 
-		String query = "INSERT INTO events (experiment_id, event_type,start_time, end_time) VALUES ( '"
+		String query = "INSERT INTO events (experiment_id, event_type,start_time, end_time, is_deleted) VALUES ( '"
 				+ id
 				+ "','RelationalDatabase_"
 				+ operation
 				+ "','"
 				+ timestamp
-				+ "','" + timestamp + "')";
+				+ "','" + timestamp + "','0')";
 		PreparedStatement stmt = null;
 		Connection con = null;
 		try {
