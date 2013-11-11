@@ -129,15 +129,20 @@ public class JobRegistry {
 			con = ds1.getConnection();			
 			stmt = con.createStatement();
 			rs = stmt.executeQuery(query);
-			if (rs.isFirst() && rs.isLast()) {
-				id = rs.getString("id");
-			} else if (rs.first() != rs.last()) {
+			// if the first entry is not present that means the result set is empty
+			if (!rs.first()) {
+				log.error("The experiment "
+						+ accession
+						+ " does not have a corresponding id in the SubsTracking database and is therefore been added");
+				
+			} 
+			// if the first and the last entry is not the same it has multiple entries
+			else if (rs.isFirst() && !rs.isLast()) {
 				log.error("The experiment " + accession
 						+ "has multiple ids in the SubsTracking database");
 			} else {
-				log.error("The experiment "
-						+ accession
-						+ "does not have a corresponding id in the SubsTracking database");
+				
+				id = rs.getString("id");
 			}
 		}
 
