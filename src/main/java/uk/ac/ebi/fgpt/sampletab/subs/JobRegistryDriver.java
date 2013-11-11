@@ -3,13 +3,8 @@
  */
 package uk.ac.ebi.fgpt.sampletab.subs;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.mysql.jdbc.log.Log;
 
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
 

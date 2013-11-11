@@ -24,8 +24,6 @@ import uk.ac.ebi.fg.biosd.model.application_mgmt.JobRegisterEntry;
 import uk.ac.ebi.fg.biosd.model.application_mgmt.JobRegisterEntry.Operation;
 import uk.ac.ebi.fg.biosd.model.organizational.MSI;
 import uk.ac.ebi.fg.biosd.model.persistence.hibernate.application_mgmt.JobRegisterDAO;
-import uk.ac.ebi.fg.core_model.resources.Resources;
-
 import com.jolbox.bonecp.BoneCPDataSource;
 
 /**
