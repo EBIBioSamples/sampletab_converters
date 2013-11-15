@@ -22,6 +22,7 @@ public class JobRegistryDriver extends AbstractDriver {
 	
 	@Override
 	public void doMain(String[] args){
+	    super.doMain(args);
 		
 		JobRegistry job = new JobRegistry();		
 		try {
