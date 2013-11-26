@@ -73,7 +73,7 @@ public class ENASRAGrouper {
         }        
     }
     
-    private class GroupRunnable implements Runnable {
+    protected class GroupRunnable implements Runnable {
         private final String sampleId;
         
         private Logger log = LoggerFactory.getLogger(getClass());
