@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -42,14 +44,6 @@ public class TestEnaProManager extends TestCase{
 
 		String jdbc = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
 		
-		//String url = "jdbc:oracle:thin:@ora-vm-009.ebi.ac.uk:1541:ERAPRO" ;
-	
-		//String username = "era_reader";
-		
-		//String password = "reader";
-		
-		//String driver = "oracle.jdbc.driver.OracleDriver";
-		
 		Connection conn = null;
 		 
 		
@@ -60,7 +54,22 @@ public class TestEnaProManager extends TestCase{
 		
 		fail();
 		
-		} finally {
+		} 
+		
+		try{
+			Statement stmt = conn.createStatement();
+			ResultSet rs;
+			try {
+				rs = stmt.executeQuery("SELECT SAMPLE_ID FROM SAMPLE WHERE SAMPLE_ID LIKE 'ERS%' AND EGA_ID IS NULL AND " +
+						"BIOSAMPLE_AUTHORITY= 'N' AND (LAST_UPDATED BETWEEN TO_DATE ('04-NOV-13','dd-MON-yy') AND TO_DATE ('12-NOV-13','dd-MON-yy'))");
+			} catch (SQLException e) {
+				fail();
+				e.printStackTrace();
+			}
+		} catch (SQLException e) {
+			log.error("failed to create statement");
+		}
+		finally {
 		
 		try {
 			conn.close();
@@ -70,6 +79,8 @@ public class TestEnaProManager extends TestCase{
 		}
 	
 		}
+		
+		
 		
 	}
 	
