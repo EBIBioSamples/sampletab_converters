@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,11 +39,18 @@ public class ENASRACron {
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
+    
+    @Option(name = "--no-ERAPRO", usage = "Do not get sample ids from ERA-PRO?")
+    private boolean noEraPro = false;
 
     private Logger log = LoggerFactory.getLogger(getClass());
+    private ResultSet rs = null;
 
-    private ENASRACron() {
-        
+    ENASRACron(){
+    	
+    }
+    ENASRACron(ResultSet rs) {
+        this.rs = rs;
     }
 
     public static void main(String[] args) {
@@ -90,7 +98,13 @@ public class ENASRACron {
         //first get a map of all possible submissions
         //this might take a while
         log.info("Getting groups...");
-        ENASRAGrouper grouper = new ENASRAGrouper(pool);
+        ENASRAGrouper grouper = new ENASRAGrouper(pool, noEraPro);
+        
+        if (noEraPro != false){
+        	log.info("Getting sample ids from ERAPRO");
+        	grouper.ERAPROGrouper(rs);
+        }
+        
         log.info("Got groups...");
         
         log.info("Checking deletions");
