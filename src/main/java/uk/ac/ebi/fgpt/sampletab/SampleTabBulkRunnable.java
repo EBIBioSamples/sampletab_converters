@@ -51,6 +51,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
 
     @Override
     public Void call() throws Exception {
+        
         String accession = sampletabpre.getParentFile().getName();
 
         //try to register this with subs tracking
@@ -63,6 +64,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
             TrackingManager.getInstance().registerEventEnd(event);
         }
         return null;
+        
     }
     
 
