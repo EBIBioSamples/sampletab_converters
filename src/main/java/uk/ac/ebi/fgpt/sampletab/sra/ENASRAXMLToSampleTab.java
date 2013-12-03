@@ -358,34 +358,37 @@ public class ENASRAXMLToSampleTab {
                     Element tag = XMLUtils.getChildByName(sampleAttribute, "TAG");
                     Element value = XMLUtils.getChildByName(sampleAttribute, "VALUE");
                     Element units = XMLUtils.getChildByName(sampleAttribute, "UNITS");
-                    if (tag != null) {
-                        
-                        String tagtext = tag.getTextTrim();
-                        
-                        if (characteristicsIgnore.contains(tagtext)) {
-                            //skip this characteristic
-                            log.debug("Skipping characteristic attribute "+tagtext);
-                            continue;
-                        }
-                        
-                        String valuetext;
-                        if (value == null) {
-                            // some ENA SRA attributes are boolean
-                            valuetext = tagtext;
-                        } else {
-                            valuetext = value.getTextTrim();
-                        }
-                        CharacteristicAttribute characteristicAttribute = new CharacteristicAttribute(tagtext,
-                                valuetext);
-                        
-                        if (units != null && units.getTextTrim().length() > 0) {
-                            log.info("Added unit "+units.getTextTrim());
-                            characteristicAttribute.unit = new UnitAttribute();
-                            characteristicAttribute.unit.setAttributeValue(units.getTextTrim());
-                        }
-
-                        samplenode.addAttribute(characteristicAttribute);
+                    String tagtext;
+                    
+                    if (tag == null || tag.getTextTrim().length() == 0) {
+                        tagtext = "unknown";
+                    } else {
+                        tagtext = tag.getTextTrim();
                     }
+                        
+                    if (characteristicsIgnore.contains(tagtext)) {
+                        //skip this characteristic
+                        log.debug("Skipping characteristic attribute "+tagtext);
+                        continue;
+                    }
+                    
+                    String valuetext;
+                    if (value == null) {
+                        // some ENA SRA attributes are boolean
+                        valuetext = tagtext;
+                    } else {
+                        valuetext = value.getTextTrim();
+                    }
+                    CharacteristicAttribute characteristicAttribute = new CharacteristicAttribute(tagtext,
+                            valuetext);
+                    
+                    if (units != null && units.getTextTrim().length() > 0) {
+                        log.info("Added unit "+units.getTextTrim());
+                        characteristicAttribute.unit = new UnitAttribute();
+                        characteristicAttribute.unit.setAttributeValue(units.getTextTrim());
+                    }
+
+                    samplenode.addAttribute(characteristicAttribute);
                 }
             }
 
