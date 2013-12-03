@@ -44,8 +44,7 @@ public class Accessioner {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public Accessioner(String host, int port, String database, String username, String password)
-            throws ClassNotFoundException, SQLException {
+    public Accessioner(String host, int port, String database, String username, String password) {
         // Setup the connection with the DB
         this.username = username;
         this.password = password;
