@@ -13,39 +13,8 @@ import org.slf4j.LoggerFactory;
 public class DBmigrate {
 
     private Logger log = LoggerFactory.getLogger(getClass());
-    
-    private Connection getProdMySQLConnection() throws ClassNotFoundException, SQLException{
         
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw e;
-        }
-        log.info("Found com.mysql.jdbc.Driver");
-        
-        //production environment
-        String hostname = "mysql-ae-autosubs.ebi.ac.uk";
-        String port = "4091";
-        String database = "ae_autosubs";
-        String username = "curator";
-        String password = "troajsp";
-        
-        String url = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
- 
-        Connection con = null;
-        try {
-            con = DriverManager.getConnection(url, username, password);
-        } catch (SQLException e) {
-            log.error("Unable to connect to "+url, e);
-            throw e;
-        }
- 
-        log.info("connected to "+url+" with username/password "+username+"/"+password);
-        return con;
-        
-    }
-    
-    private Connection getProdOracleConnection() throws ClassNotFoundException, SQLException{
+    private Connection getProdOracleConnection() throws ClassNotFoundException, SQLException {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
         } catch (ClassNotFoundException e) {
@@ -74,7 +43,7 @@ public class DBmigrate {
         return con;
     }
     
-    private Connection getTestOracleConnection() throws ClassNotFoundException, SQLException{
+    private Connection getTestOracleConnection() throws ClassNotFoundException, SQLException {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
         } catch (ClassNotFoundException e) {
@@ -193,6 +162,7 @@ public class DBmigrate {
                 Date assigned = rs.getDate("date_assigned");
                 Integer deleted = rs.getInt("is_deleted");
                 
+                //TODO maybe make this a prepared statement for speed?
                 sql = "INSERT INTO "+table_name+" VALUES ( '"+accession+"' , '"+userAccession+"' , '"+submissionAccession+"' , to_date('"+assigned+"', 'YYYY-MM-DD') , '"+deleted+"' )";
                 log.debug(sql);
                 targetstatement.execute(sql);
