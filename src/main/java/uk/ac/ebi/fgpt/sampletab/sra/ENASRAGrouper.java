@@ -1,6 +1,8 @@
 package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -26,10 +28,12 @@ public class ENASRAGrouper {
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public ENASRAGrouper(ExecutorService pool) {
+    public ENASRAGrouper(ExecutorService pool, Boolean flagEraPro) {
         populate("DRS", 0, 5000, pool);
-        populate("ERS", 0, 250000, pool);
         populate("SRS", 0, 500000, pool);
+        if(flagEraPro = false){
+        populate("ERS", 0, 250000, pool);
+        }
         
         if (pool != null) {
             synchronized (pool) {
@@ -57,6 +61,20 @@ public class ENASRAGrouper {
         //abandon hope
     }
     
+    public void ERAPROGrouper(ResultSet rs){
+    	try {
+			while(rs.next()){
+				String sampleId = rs.getString("SAMPLE_ID");
+				Runnable t = new GroupRunnable(sampleId);
+				t.run();
+			}
+		} catch (SQLException e) {
+			log.error("Problem with retrieving elements from the result set!");
+			e.printStackTrace();
+		}
+    	
+    }
+    
     
     public void populate(String prefix, int minCount, int maxCount, ExecutorService pool) {
         for (int i = minCount; i < maxCount; i++){
@@ -73,7 +91,12 @@ public class ENASRAGrouper {
         }        
     }
     
-    private class GroupRunnable implements Runnable {
+    public void getERSSampleId( ResultSet set){
+    	
+    	
+    }
+    
+    protected class GroupRunnable implements Runnable {
         private final String sampleId;
         
         private Logger log = LoggerFactory.getLogger(getClass());
