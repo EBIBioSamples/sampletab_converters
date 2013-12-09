@@ -31,11 +31,8 @@ public class EraProDriver extends AbstractDriver {
 		    super.doMain(args);
 		    
 		   EraProManager era = new EraProManager();
-		   ResultSet rs = era.getSampleId(minDate,maxDate);
+		   ResultSet rs = era.getUpdatesSampleId(minDate,maxDate);
 		   ENASRACron cron = new ENASRACron(rs);
 		   
-	 }
-	 
-	 
-	 
+	 }	 
 }

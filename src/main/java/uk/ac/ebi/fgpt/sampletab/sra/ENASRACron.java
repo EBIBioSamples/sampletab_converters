@@ -37,19 +37,20 @@ public class ENASRACron {
     @Option(name = "--threads", aliases = { "-t" }, usage = "number of additional threads")
     private int threads = 0;
 
-    @Option(name = "--no-conan", usage = "do not trigger conan loads?")
+    @Option(name = "--no-conan", usage = "do not trigger conan loads")
     private boolean noconan = false;
     
-    @Option(name = "--no-ERAPRO", usage = "Do not get sample ids from ERA-PRO?")
+    @Option(name = "--no-ERAPRO", usage = "do not query ERA-PRO")
     private boolean noEraPro = false;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     private ResultSet rs = null;
 
-    ENASRACron(){
+    public ENASRACron() {
     	
     }
-    ENASRACron(ResultSet rs) {
+    
+    public ENASRACron(ResultSet rs) {
         this.rs = rs;
     }
 

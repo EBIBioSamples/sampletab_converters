@@ -3,13 +3,13 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -78,23 +78,18 @@ public class EraProManager {
 		}
 		return ds;
 	}
+    public ResultSet getSampleId(Date minDate) {
+        return getUpdatesSampleId(minDate, new Date());
+    }
 
-	public ResultSet getSampleId(Date minDate, Date maxDate) {
-		
-		
+	public ResultSet getUpdatesSampleId(Date minDate, Date maxDate) {
 		PreparedStatement stmt = null;
 		Connection con = null;
 		ResultSet rs = null;
-		//final DateFormat fmt = new SimpleDateFormat("dd-MMM-yy");
-		//Date currentDate = new Date();
-		//String defaultDate = fmt.format(currentDate);
-		//String startDate = fmt.format(mindate);
 		if (maxDate == null){
-			 maxDate = new Date(new java.util.Date().getTime());
+			 maxDate = new Date();
 		}
 		
-		//String query = "SELECT SAMPLE_ID FROM SAMPLE WHERE SAMPLE_ID LIKE 'ERS%' AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' " +
-				//"AND (LAST_UPDATED BETWEEN TO_DATE ('" +startDate+ "','dd-MON-yy') AND TO_DATE ('"+endDate+"','dd-MON-yy'))";
 		String query = "SELECT SAMPLE_ID FROM SAMPLE WHERE SAMPLE_ID LIKE 'ERS%' AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' " +
 				"AND (LAST_UPDATED BETWEEN ? AND ?)";
 		
@@ -102,32 +97,34 @@ public class EraProManager {
 			BoneCPDataSource ds1 = getDataSource();
 			con = ds1.getConnection();
 			stmt = con.prepareStatement(query);
-			stmt.setDate(1, minDate);
-			stmt.setDate(2, maxDate);
+			stmt.setDate(1, new java.sql.Date(minDate.getTime()));
+			stmt.setDate(2, new java.sql.Date(maxDate.getTime()));
 			rs = stmt.executeQuery(query);
-			con.commit();
 			if (rs == null){
-				log.info("No Updates have been committed during the time period provided");
+				log.info("No Updates during the time period provided");
 			}
-		}
-
-		catch (SQLException e) {
-			e.printStackTrace();
+		} catch (SQLException e) {
+		    log.error("Problem acessing database", e);
 		} catch (ClassNotFoundException e) {
-			log.error("The BoneCPDatasouce class for connection to the database cannot be found :"
-					+ e.getMessage());
+			log.error("The BoneCPDatasouce class for connection to the database cannot be found", e);
 		} finally {
 			if (stmt != null) {
-				try {
-					stmt.close();
-					rs.close();
-					con.close();
-				} catch (SQLException e) {
-					log.error("Problem in closing the statement: "
-							+ e.getMessage());
-
-				}
-
+			    //close each of these separately in case of errors
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
 			}
 		}
 

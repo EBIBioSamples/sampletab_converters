@@ -31,8 +31,8 @@ public class ENASRAGrouper {
     public ENASRAGrouper(ExecutorService pool, Boolean flagEraPro) {
         populate("DRS", 0, 5000, pool);
         populate("SRS", 0, 500000, pool);
-        if(flagEraPro = false){
-        populate("ERS", 0, 250000, pool);
+        if (flagEraPro = false) {
+            populate("ERS", 0, 250000, pool);
         }
         
         if (pool != null) {
