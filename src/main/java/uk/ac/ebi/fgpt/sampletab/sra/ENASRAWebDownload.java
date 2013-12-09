@@ -71,7 +71,7 @@ public class ENASRAWebDownload {
             }
         }
         
-        log.info("Downloading "+accession+" to disk");
+        log.trace("Downloading "+accession+" to disk");
         outdir.mkdirs();
         //write the xml to disk
         OutputStream os = null;

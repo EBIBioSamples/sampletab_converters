@@ -198,7 +198,7 @@ public class ENASRAXMLToSampleTab {
                 "http://www.ebi.ac.uk/ena/data/view/" + accession, accession));
 
         
-        log.info("MSI section complete, starting SCD section.");
+        log.trace("MSI section complete, starting SCD section.");
 
         // start on the samples        
         File indir = infile.getParentFile();
@@ -230,7 +230,7 @@ public class ENASRAXMLToSampleTab {
                 throw new ParseException("Accession in XML content does not match filename");
             }
 
-            log.info("Processing sample " + sampleAccession);
+            log.trace("Processing sample " + sampleAccession);
 
             // create the actual sample node
             SampleNode samplenode = new SampleNode();
@@ -400,15 +400,15 @@ public class ENASRAXMLToSampleTab {
             st.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(st);
         }
 
-        log.info("Finished convert()");
+        log.trace("Finished convert()");
         return st;
     }
 
     public void convert(File file, Writer writer) throws IOException, ParseException, DocumentException {
-        log.debug("recieved xml, preparing to convert");
+        log.trace("recieved xml, preparing to convert");
         SampleData st = convert(file);
 
-        log.info("SampleTab converted, preparing to write");
+        log.trace("SampleTab converted, preparing to write");
 
         Validator<SampleData> validator = new SampleTabValidator();
         validator.validate(st);
@@ -418,7 +418,7 @@ public class ENASRAXMLToSampleTab {
         
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
         sampletabwriter.write(st);
-        log.info("SampleTab written");
+        log.trace("SampleTab written");
         sampletabwriter.close();
 
     }
