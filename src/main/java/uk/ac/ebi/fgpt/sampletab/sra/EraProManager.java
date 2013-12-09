@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
 
@@ -43,7 +45,7 @@ public class EraProManager {
 							"/era-pro.properties");
 					properties.load(is);
 				} catch (IOException e) {
-					log.error("Unable to read resource oracle.properties", e);
+					log.error("Unable to read resource era-pro.properties", e);
 				}
 				String hostname = properties.getProperty("hostname");
 				Integer port = new Integer(properties.getProperty("port"));
@@ -59,9 +61,7 @@ public class EraProManager {
 							e);
 					throw e;
 				}
-
-				String jdbc = "jdbc:oracle:thin//" + hostname + ":" + port
-						+ "/" + database;
+                String jdbc = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
 				log.trace("JDBC URL = " + jdbc);
 				log.trace("USER = " + username);
 				log.trace("PW = " + password);
@@ -78,11 +78,11 @@ public class EraProManager {
 		}
 		return ds;
 	}
-    public ResultSet getSampleId(Date minDate) {
+    public Collection<String> getSampleId(Date minDate) {
         return getUpdatesSampleId(minDate, new Date());
     }
 
-	public ResultSet getUpdatesSampleId(Date minDate, Date maxDate) {
+	public Collection<String> getUpdatesSampleId(Date minDate, Date maxDate) {
 		PreparedStatement stmt = null;
 		Connection con = null;
 		ResultSet rs = null;
@@ -93,42 +93,56 @@ public class EraProManager {
 		String query = "SELECT SAMPLE_ID FROM SAMPLE WHERE SAMPLE_ID LIKE 'ERS%' AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' " +
 				"AND (LAST_UPDATED BETWEEN ? AND ?)";
 		
+		Collection<String> sampleIds = new ArrayList<String>();
+		
 		try {
 			BoneCPDataSource ds1 = getDataSource();
 			con = ds1.getConnection();
 			stmt = con.prepareStatement(query);
 			stmt.setDate(1, new java.sql.Date(minDate.getTime()));
 			stmt.setDate(2, new java.sql.Date(maxDate.getTime()));
-			rs = stmt.executeQuery(query);
+			rs = stmt.executeQuery();
 			if (rs == null){
 				log.info("No Updates during the time period provided");
+			} else {
+			    
+			    while (rs.next()) {
+			        String sampleId = rs.getString(1); //result sets are one-indexed, not zero-indexed
+			        if (!sampleIds.contains(sampleId)) {
+			            sampleIds.add(sampleId);
+			        }
+			    }
 			}
 		} catch (SQLException e) {
 		    log.error("Problem acessing database", e);
 		} catch (ClassNotFoundException e) {
 			log.error("The BoneCPDatasouce class for connection to the database cannot be found", e);
 		} finally {
-			if (stmt != null) {
-			    //close each of these separately in case of errors
+		    //close each of these separately in case of errors
+            if (rs != null) {
                 try {
                     rs.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
-                try {
-                    con.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
+            }
+            if (stmt != null) {
                 try {
                     stmt.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
-			}
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                    //do nothing
+                }
+            }
 		}
 
-		return rs;
+		return sampleIds;
 	}
 
 }

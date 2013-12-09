@@ -3,6 +3,7 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,76 +23,58 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FileRecursiveIterable;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
-public class ENASRACron {
-
-    @Option(name = "--help", aliases = { "-h" }, usage = "display help")
-    private boolean help;
+public class ENASRACron  extends AbstractDriver {
 
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output directory")
-    private String outputDirName;
+    private File outputDir;
 
     @Option(name = "--threads", aliases = { "-t" }, usage = "number of additional threads")
     private int threads = 0;
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads")
     private boolean noconan = false;
-    
-    @Option(name = "--no-ERAPRO", usage = "do not query ERA-PRO")
-    private boolean noEraPro = false;
 
+    private ExecutorService pool;
+    private List<Future<Void>> futures = new LinkedList<Future<Void>>();
+    
     private Logger log = LoggerFactory.getLogger(getClass());
-    private ResultSet rs = null;
 
     public ENASRACron() {
     	
     }
     
-    public ENASRACron(ResultSet rs) {
-        this.rs = rs;
-    }
+    private File getOutputDir() {
+        if (outputDir.exists() && !outputDir.isDirectory()) {
+            System.err.println("Target is not a directory");
+            System.exit(1);
+        }
 
+        if (!outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+        return outputDir;
+    }
+    
+    public void doGroups(ENASRAGrouper grouper) {
+        log.info("Getting sample ids by brute force");
+        grouper.groupBruteForce(pool);
+        log.info("Finishing getting sample ids by brute force");
+    }
+    
     public static void main(String[] args) {
         new ENASRACron().doMain(args);
     }
+    
+    @Override
+    public void doMain(String[] args){
+        super.doMain(args);
 
-    public void doMain(String[] args) {
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments.
-            parser.parseArgument(args);
-            // TODO check for extra arguments?
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printSingleLineUsage(System.err);
-            System.err.println();
-            parser.printUsage(System.err);
-            System.err.println();
-            System.exit(1);
-            return;
-        }
-
-        File outdir = new File(this.outputDirName);
-
-        if (outdir.exists() && !outdir.isDirectory()) {
-            System.err.println("Target is not a directory");
-            System.exit(1);
-            return;
-        }
-
-        if (!outdir.exists()) {
-            outdir.mkdirs();
-        }
-
-        ExecutorService pool = null;
+        pool = null;
         if (threads > 0) {
             pool = Executors.newFixedThreadPool(threads);
         }
@@ -99,35 +82,61 @@ public class ENASRACron {
         //first get a map of all possible submissions
         //this might take a while
         log.info("Getting groups...");
-        ENASRAGrouper grouper = new ENASRAGrouper(pool, noEraPro);
-        
-        if (noEraPro != false){
-        	log.info("Getting sample ids from ERAPRO");
-        	grouper.ERAPROGrouper(rs);
-        }
-        
+        ENASRAGrouper grouper = new ENASRAGrouper();
+        doGroups(grouper);
         log.info("Got groups...");
         
         log.info("Checking deletions");
         //also get a set of existing submissions to delete
         Set<String> toDelete = new HashSet<String>();
-        for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", new File(outdir, "sra"))) { 
-            //TODO do this properly somehow
+        for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", new File(getOutputDir(), "sra"))) {
+            //get submission identifier based on parent directory
             File subdir = sampletabpre.getParentFile();
             String subId = subdir.getName();
             if (!grouper.groups.containsKey(subId) && !grouper.ungrouped.contains(subId)) {
                 toDelete.add(subId);
             }
         }
-        
-        log.info("Processing updates");
+        log.info("Finished checking deletions");
         
         //restart the pool for part II        
         pool = null;
         if (threads > 0) {
             pool = Executors.newFixedThreadPool(threads);
         }
-        List<Future<Void>> futures = new LinkedList<Future<Void>>();
+        
+        processUpdates(grouper);
+        processDeletions(toDelete);
+        
+        if (pool != null) {
+            //wait for threading to finish
+            for (Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    //something went wrong
+                    log.error("problem processing update", e);
+                }
+            }
+            // run the pool and then close it afterwards
+            // must synchronize on the pool object
+            synchronized (pool) {
+                pool.shutdown();
+                try {
+                    // allow 24h to execute. Rather too much, but meh
+                    pool.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    log.error("Interuppted awaiting thread pool termination", e);
+                }
+            }
+        }
+    }
+   
+    
+    
+    private void processUpdates(ENASRAGrouper grouper) {
+
+        log.info("Processing updates");
         
         //process updates
         ENASRAWebDownload downloader = new ENASRAWebDownload();
@@ -137,7 +146,7 @@ public class ENASRACron {
             File outsubdir = SampleTabUtils.getSubmissionDirFile(submissionID);
             boolean changed = false;
             
-            outsubdir = new File(outdir.toString(), outsubdir.toString());
+            outsubdir = new File(outputDir.toString(), outsubdir.toString());
             try {
                 changed = downloader.downloadXML(key, outsubdir);
             } catch (IOException e) {
@@ -181,9 +190,14 @@ public class ENASRACron {
             }
         }
         
+        log.info("Finished processing updates");
+    }
+    
+    private void processDeletions(Collection<String> toDelete) {
+
         //process deletes
         for (String submissionID : toDelete) {
-            File sampletabpre = new File(outdir.toString(), SampleTabUtils.getSubmissionDirFile(submissionID).toString());
+            File sampletabpre = new File(outputDir.toString(), SampleTabUtils.getSubmissionDirFile(submissionID).toString());
             sampletabpre = new File(sampletabpre, "sampletab.pre.txt");
             try {
                 SampleTabUtils.releaseInACentury(sampletabpre);
@@ -207,30 +221,6 @@ public class ENASRACron {
                 }
             }
         }
-        
-        if (pool != null) {
-            //wait for threading to finish
-            for (Future<?> f : futures) {
-                try {
-                    f.get();
-                } catch (Exception e) {
-                    //something went wrong
-                    log.error("problem processing update", e);
-                }
-            }
-            // run the pool and then close it afterwards
-            // must synchronize on the pool object
-            synchronized (pool) {
-                pool.shutdown();
-                try {
-                    // allow 24h to execute. Rather too much, but meh
-                    pool.awaitTermination(1, TimeUnit.DAYS);
-                } catch (InterruptedException e) {
-                    log.error("Interuppted awaiting thread pool termination", e);
-                }
-            }
-        }
-        log.info("Finished processing updates");
     }
     
     private class PrivatizeRunnable implements Runnable {

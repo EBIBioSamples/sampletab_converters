@@ -28,12 +28,10 @@ public class ENASRAGrouper {
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public ENASRAGrouper(ExecutorService pool, Boolean flagEraPro) {
+    public void groupBruteForce(ExecutorService pool) {
         populate("DRS", 0, 5000, pool);
         populate("SRS", 0, 500000, pool);
-        if (flagEraPro = false) {
-            populate("ERS", 0, 250000, pool);
-        }
+        populate("ERS", 0, 250000, pool);
         
         if (pool != null) {
             synchronized (pool) {
@@ -59,27 +57,21 @@ public class ENASRAGrouper {
         }
         //some of them may still have failed
         //abandon hope
+        
     }
     
-    public void ERAPROGrouper(ResultSet rs){
-    	try {
-			while(rs.next()){
-				String sampleId = rs.getString("SAMPLE_ID");
-				Runnable t = new GroupRunnable(sampleId);
-				t.run();
-			}
-		} catch (SQLException e) {
-			log.error("Problem with retrieving elements from the result set!");
-			e.printStackTrace();
+    public void groupSampleIds(Collection<String> sampleIds){
+		for (String sampleId : sampleIds) {
+			Runnable t = new GroupRunnable(sampleId);
+			//this should use a pool
+			t.run();
 		}
-    	
+		//TODO ensure groups contain ALL sample ids, not just those that have been updated 
     }
-    
     
     public void populate(String prefix, int minCount, int maxCount, ExecutorService pool) {
-        for (int i = minCount; i < maxCount; i++){
+        for (int i = minCount; i < maxCount; i++) {
             String sampleId = String.format("%1$s%2$06d", prefix, i);
-            
             
             Runnable t = new GroupRunnable(sampleId);
             if (pool == null) {
@@ -89,11 +81,6 @@ public class ENASRAGrouper {
             }
             
         }        
-    }
-    
-    public void getERSSampleId( ResultSet set){
-    	
-    	
     }
     
     protected class GroupRunnable implements Runnable {
