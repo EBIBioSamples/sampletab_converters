@@ -2,7 +2,6 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -16,8 +15,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.dom4j.DocumentException;
 import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,18 +83,7 @@ public class ENASRACron  extends AbstractDriver {
         doGroups(grouper);
         log.info("Got groups...");
         
-        log.info("Checking deletions");
-        //also get a set of existing submissions to delete
-        Set<String> toDelete = new HashSet<String>();
-        for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", new File(getOutputDir(), "sra"))) {
-            //get submission identifier based on parent directory
-            File subdir = sampletabpre.getParentFile();
-            String subId = subdir.getName();
-            if (!grouper.groups.containsKey(subId) && !grouper.ungrouped.contains(subId)) {
-                toDelete.add(subId);
-            }
-        }
-        log.info("Finished checking deletions");
+        Collection<String> toDelete = getDeletions(grouper);
         
         //restart the pool for part II        
         pool = null;
@@ -169,6 +155,10 @@ public class ENASRACron  extends AbstractDriver {
                 }
             }
             
+            //mark it as changed if the target doesn't exist
+            File sampletabPre = new File(outsubdir, "sampletab.pre.txt");
+            changed |= !sampletabPre.exists();
+            
             if (changed) {
                 //process the subdir
                 log.info("updated "+submissionID);
@@ -191,6 +181,23 @@ public class ENASRACron  extends AbstractDriver {
         }
         
         log.info("Finished processing updates");
+    }
+    
+    protected Collection<String> getDeletions(ENASRAGrouper grouper) {
+    
+        log.info("Checking deletions");
+        //also get a set of existing submissions to delete
+        Set<String> toDelete = new HashSet<String>();
+        for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", new File(getOutputDir(), "sra"))) {
+            //get submission identifier based on parent directory
+            File subdir = sampletabpre.getParentFile();
+            String subId = subdir.getName();
+            if (!grouper.groups.containsKey(subId) && !grouper.ungrouped.contains(subId)) {
+                toDelete.add(subId);
+            }
+        }
+        log.info("Finished checking deletions");
+        return toDelete;
     }
     
     private void processDeletions(Collection<String> toDelete) {
