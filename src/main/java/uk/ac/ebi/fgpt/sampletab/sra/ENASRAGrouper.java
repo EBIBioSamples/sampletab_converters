@@ -1,8 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -63,13 +61,35 @@ public class ENASRAGrouper {
     public void groupSampleIds(Collection<String> sampleIds){
 		for (String sampleId : sampleIds) {
 			Runnable t = new GroupRunnable(sampleId);
-			//this should use a pool
+			//TODO use a pool
 			t.run();
 		}
-		//TODO ensure groups contain ALL sample ids, not just those that have been updated 
+		//now ensure groups contain ALL sample ids, not just those that have been updated
+		//TODO use a pool
+		for (String groupId : groups.keySet()) {
+		    if (groupId.matches("[EDS]RP[0-9]+")) {
+		        try {
+                    groups.get(groupId).addAll(ENAUtils.getSamplesForStudy(groupId));
+                } catch (DocumentException e) {
+                    log.error("Problem getting samples of "+groupId, e);
+                } catch (IOException e) {
+                    log.error("Problem getting samples of "+groupId, e);
+                }
+		    } else if (groupId.matches("[EDS]RA[0-9]+")) {
+                try {
+                    groups.get(groupId).addAll(ENAUtils.getSamplesForSubmission(groupId));
+                } catch (DocumentException e) {
+                    log.error("Problem getting samples of "+groupId, e);
+                } catch (IOException e) {
+                    log.error("Problem getting samples of "+groupId, e);
+                }
+            } else {
+                log.warn("Unrecognized group ID "+groupId);
+            }
+		}
     }
     
-    public void populate(String prefix, int minCount, int maxCount, ExecutorService pool) {
+    protected void populate(String prefix, int minCount, int maxCount, ExecutorService pool) {
         for (int i = minCount; i < maxCount; i++) {
             String sampleId = String.format("%1$s%2$06d", prefix, i);
             
