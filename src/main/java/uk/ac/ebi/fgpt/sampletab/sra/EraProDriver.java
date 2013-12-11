@@ -2,17 +2,12 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.sql.ResultSet;
 import java.util.Collection;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Date;
 
 import org.kohsuke.args4j.Argument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
 
 public class EraProDriver extends ENASRACron {
 
