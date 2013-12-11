@@ -6,9 +6,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -91,7 +88,7 @@ public class EraProManager {
 		}
 		
 		String query = "SELECT SAMPLE_ID FROM SAMPLE WHERE SAMPLE_ID LIKE 'ERS%' AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' " +
-				"AND (LAST_UPDATED BETWEEN ? AND ?)";
+				"AND STATUS_ID = 4 AND (LAST_UPDATED BETWEEN ? AND ?)";
 		
 		Collection<String> sampleIds = new ArrayList<String>();
 		
@@ -105,7 +102,6 @@ public class EraProManager {
 			if (rs == null){
 				log.info("No Updates during the time period provided");
 			} else {
-			    
 			    while (rs.next()) {
 			        String sampleId = rs.getString(1); //result sets are one-indexed, not zero-indexed
 			        if (!sampleIds.contains(sampleId)) {
