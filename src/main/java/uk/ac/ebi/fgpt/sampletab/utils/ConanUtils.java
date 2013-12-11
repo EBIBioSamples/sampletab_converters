@@ -50,7 +50,7 @@ public class ConanUtils {
         ObjectNode inputParameters = userOb.putObject("inputParameters");
         inputParameters.put("SampleTab Accession", submissionIdentifier);
         
-        log.info(userOb.toString());
+        log.trace(userOb.toString());
 
         // Send data
         DefaultHttpClient httpClient = new DefaultHttpClient();
