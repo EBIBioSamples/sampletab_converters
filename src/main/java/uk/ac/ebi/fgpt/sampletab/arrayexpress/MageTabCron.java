@@ -260,7 +260,8 @@ public class MageTabCron {
                         //break quite often - use curl via command line. 
                         //Sacrifices multiplatformness for reliability.
 						if (!outidf.exists() || ftpidftime.after(outidftime) 
-						        || !outsdrf.exists() || ftpsdrftime.after(outsdrftime)){
+						        || !outsdrf.exists() || ftpsdrftime.after(outsdrftime)
+						        || !outSampleTabPre.exists()){
                             //TODO fix where SDRF does not match this file pattern                            
                             Runnable t = new MageTabCronRunnable("ftp://ftp.ebi.ac.uk"+idfpath, outidf, "ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf, outSampleTabPre);
                             if (threads > 0){
