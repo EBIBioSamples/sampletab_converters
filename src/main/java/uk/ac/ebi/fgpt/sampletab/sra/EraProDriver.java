@@ -39,8 +39,13 @@ public class EraProDriver extends ENASRACron {
             throw new RuntimeException(e);
         }
         Collection<String> sampleIds = era.getUpdatesSampleId(minDate, maxDate);
-        
+        Collection<String> publicSamples = era.getPublicSamples();
+        Collection<String> privateSamples = era.getPrivateSamples();
         grouper.groupSampleIds(sampleIds);
+        EraProBioDiff diff = new EraProBioDiff();
+        diff.writeEraPublicToFile(publicSamples);
+        diff.writeEraPrivateToFile(privateSamples);
         log.info("Finishing getting sample ids from ERA-PRO");
+        
     }
 }
