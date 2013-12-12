@@ -353,8 +353,7 @@ public class MageTabCron {
                     log.warn("Hiding deleted experiment "+submission);
                     boolean doConan = false;
                     try {
-                        SampleTabUtils.releaseInACentury(sampletabFile);
-                        doConan = true;
+                        doConan = SampleTabUtils.releaseInACentury(sampletabFile);
                     } catch (IOException e) {
                         log.error("Problem with "+sampletabFile, e);
                     } catch (ParseException e) {

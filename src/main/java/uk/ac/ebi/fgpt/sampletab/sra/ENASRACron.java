@@ -206,8 +206,9 @@ public class ENASRACron  extends AbstractDriver {
         for (String submissionID : toDelete) {
             File sampletabpre = new File(outputDir.toString(), SampleTabUtils.getSubmissionDirFile(submissionID).toString());
             sampletabpre = new File(sampletabpre, "sampletab.pre.txt");
+            boolean doConan = false;
             try {
-                SampleTabUtils.releaseInACentury(sampletabpre);
+                doConan = SampleTabUtils.releaseInACentury(sampletabpre);
             } catch (IOException e) {
                 log.error("problem making "+sampletabpre+" private", e);
                 continue;
@@ -216,7 +217,7 @@ public class ENASRACron  extends AbstractDriver {
                 continue;
             }
             //trigger conan, if appropriate
-            if (!noconan) {
+            if (!noconan && doConan) {
                 if (pool != null) {
                     pool.execute(new PrivatizeRunnable(submissionID));
                 } else {

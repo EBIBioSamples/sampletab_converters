@@ -108,13 +108,13 @@ public class SampleTabUtils {
         }
     }
     
-    public static void releaseInACentury(File sampletabFile) throws IOException, ParseException {
+    public static boolean releaseInACentury(File sampletabFile) throws IOException, ParseException {
         
 
         String accession = sampletabFile.getAbsoluteFile().getParentFile().getName();
         //try to register this with subs tracking
         Event event = TrackingManager.getInstance().registerEventStart(accession, "Make private");
-        
+        boolean toReturn = false;
         try {
         
             SampleTabSaferParser parser = new SampleTabSaferParser();
@@ -129,6 +129,7 @@ public class SampleTabUtils {
                     writer = new BufferedWriter(new FileWriter(sampletabFile));
                     SampleTabWriter stwriter = new SampleTabWriter(writer);
                     stwriter.write(sd);
+                    toReturn = true;
                 } catch (IOException e){
                     throw e;
                 } finally {
@@ -148,6 +149,7 @@ public class SampleTabUtils {
             //try to register this with subs tracking
             TrackingManager.getInstance().registerEventEnd(event);
         }
+        return toReturn;
     }
     
     public static boolean releaseInACentury(SampleData sd) {
