@@ -369,6 +369,8 @@ public class Corrector {
                 || attr.type.toLowerCase().equals("dissue/developmental stage")) {
             attr.type = "developmental stage";
         } else if (attr.type.toLowerCase().equals("disease state")
+                || attr.type.toLowerCase().equals("disease status")
+                || attr.type.toLowerCase().equals("disease")
                 || attr.type.toLowerCase().equals("diseasestate")) {
             attr.type = "disease state";
         } else if (attr.type.toLowerCase().equals("ecotype")
@@ -599,6 +601,10 @@ public class Corrector {
                 || attr.type.toLowerCase().equals("sample_description")
                 ) {
             return new CommentAttribute("secondary description", attr.getAttributeValue());
+        }
+        if (attr.type.toLowerCase().equals("synonym") 
+                ) {
+            return new CommentAttribute("synonym", attr.getAttributeValue());
         }
                 
         //TODO promote some comments to characteristics
