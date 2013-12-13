@@ -383,7 +383,7 @@ public class ENASRAXMLToSampleTab {
                             valuetext);
                     
                     if (units != null && units.getTextTrim().length() > 0) {
-                        log.info("Added unit "+units.getTextTrim());
+                        log.trace("Added unit "+units.getTextTrim());
                         characteristicAttribute.unit = new UnitAttribute();
                         characteristicAttribute.unit.setAttributeValue(units.getTextTrim());
                     }
