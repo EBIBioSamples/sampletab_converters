@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class EventDAO {
 
     private JdbcTemplate jdbcTemplate;
-    private DataSource dataSource;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -26,7 +25,6 @@ public class EventDAO {
     }
 
     public void setDataSource(DataSource dataSource) {
-        this.dataSource = dataSource;
         jdbcTemplate = new JdbcTemplate(dataSource);
     }
     
