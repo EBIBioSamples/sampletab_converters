@@ -191,7 +191,7 @@ public class ENASRACron  extends AbstractDriver {
         for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", new File(getOutputDir(), "sra"))) {
             //get submission identifier based on parent directory
             File subdir = sampletabpre.getParentFile();
-            String subId = subdir.getName();
+            String subId = subdir.getName(); //get submission id
             if (!grouper.groups.containsKey(subId) && !grouper.ungrouped.contains(subId)) {
                 toDelete.add(subId);
             }
@@ -206,9 +206,8 @@ public class ENASRACron  extends AbstractDriver {
         for (String submissionID : toDelete) {
             File sampletabpre = new File(outputDir.toString(), SampleTabUtils.getSubmissionDirFile(submissionID).toString());
             sampletabpre = new File(sampletabpre, "sampletab.pre.txt");
-            boolean doConan = false;
             try {
-                doConan = SampleTabUtils.releaseInACentury(sampletabpre);
+                SampleTabUtils.releaseInACentury(sampletabpre);
             } catch (IOException e) {
                 log.error("problem making "+sampletabpre+" private", e);
                 continue;
@@ -217,7 +216,7 @@ public class ENASRACron  extends AbstractDriver {
                 continue;
             }
             //trigger conan, if appropriate
-            if (!noconan && doConan) {
+            if (!noconan) {
                 if (pool != null) {
                     pool.execute(new PrivatizeRunnable(submissionID));
                 } else {
