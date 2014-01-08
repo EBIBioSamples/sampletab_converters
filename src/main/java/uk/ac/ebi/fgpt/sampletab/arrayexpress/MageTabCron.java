@@ -7,10 +7,16 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.net.ftp.FTPClient;
@@ -49,8 +55,6 @@ public class MageTabCron {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private FTPClient ftp = null;
-	
-    private static final String SUBSEVENT = "Source Update";
 
 	private MageTabCron() {
 	}
@@ -91,56 +95,6 @@ public class MageTabCron {
 	        return false;
 	    }
 	}
-	
-	private class MageTabCronRunnable implements Runnable {
-
-        private final String idfFTPPath;
-        private final File idfOut;
-	    private final String sdrfFTPPath;
-	    private final File sdrfOut;
-	    private final File outSampleTabPre;
-	    
-	    public MageTabCronRunnable(String idfFTPPath, File idfOut, String sdrfFTPPath, File sdrfOut, File outSampleTabPre) {
-            this.idfFTPPath = idfFTPPath;
-            this.idfOut = idfOut;
-	        this.sdrfFTPPath = sdrfFTPPath;
-	        this.sdrfOut = sdrfOut;
-	        this.outSampleTabPre = outSampleTabPre;
-	    }
-	    
-        @Override
-        public void run() {
-            String accession = sdrfOut.getAbsoluteFile().getParentFile().getName();
-            //try to register this with subs tracking
-            Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
-
-            try {
-                
-                String filename = sdrfOut.getAbsolutePath();
-                log.info("Curl downloading "+filename);
-                String bashcom = "curl -z "+filename+" -o "+filename+" "+sdrfFTPPath;
-                ProcessUtils.doCommand(bashcom, null);  
-    
-                filename = idfOut.getAbsolutePath();
-                log.info("Curl downloading "+filename);
-                bashcom = "curl -z "+filename+" -o "+filename+" "+idfFTPPath;            
-                ProcessUtils.doCommand(bashcom, null);  
-                
-                MageTabToSampleTab mttst = new MageTabToSampleTab();
-                try {
-                    mttst.convert(idfOut, outSampleTabPre);
-                } catch (IOException e) {
-                    log.error("Unable to write "+outSampleTabPre, e);
-                } catch (ParseException e) {
-                    log.error("Unable to parse "+idfOut, e);
-                }  
-                
-            } finally {
-                //try to register this with subs tracking
-                TrackingManager.getInstance().registerEventEnd(event);
-            }
-        }
-	}
 
 	public void run(File outdir) {
 		FTPFile[] subdirs = null;
@@ -168,6 +122,8 @@ public class MageTabCron {
         
         Set<String> conanProcess = new HashSet<String>();
         
+
+        Map<String, Future<Boolean>> futures = new HashMap<String, Future<Boolean>>();
         
 		if (subdirs != null) {
 			//convert the subdir FTPFile objects to string names
@@ -261,16 +217,18 @@ public class MageTabCron {
                         //Sacrifices multiplatformness for reliability.
 						if (!outidf.exists() || ftpidftime.after(outidftime) 
 						        || !outsdrf.exists() || ftpsdrftime.after(outsdrftime)
-						        || !outSampleTabPre.exists()){
+						        || !outSampleTabPre.exists()) {
+						    
                             //TODO fix where SDRF does not match this file pattern                            
-                            Runnable t = new MageTabCronRunnable("ftp://ftp.ebi.ac.uk"+idfpath, outidf, "ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf, outSampleTabPre);
-                            if (threads > 0){
-                                pool.execute(t);
+						    MageTabCronCallable t = new MageTabCronCallable("ftp://ftp.ebi.ac.uk"+idfpath, outidf, "ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf, outSampleTabPre);
+						    
+                            if (threads > 0) {
+                               futures.put(submissionIdentifier, pool.submit(t));
                             } else {
-                                t.run();
-                            }
-                            if (!noconan) {
-                                conanProcess.add(submissionIdentifier);
+                                boolean success = (Boolean) t.call();
+                                if (success && !noconan) {
+                                    conanProcess.add(submissionIdentifier);
+                                }
                             }
                         }
 					}
@@ -281,6 +239,22 @@ public class MageTabCron {
         // run the pool and then close it afterwards
         // must synchronize on the pool object
 		if (pool != null) {
+		    
+            for (String submissionIdentifier : futures.keySet()) {
+                Future<Boolean> f = futures.get(submissionIdentifier);
+                boolean success = false;
+                try {
+                    success = f.get();
+                } catch (Exception e) {
+                    //something went wrong
+                    log.error("Problem retrieving future", e);
+                    success = false;
+                }
+                if (success && !noconan) {
+                    conanProcess.add(submissionIdentifier);
+                }
+            }
+            
             synchronized (pool) {
                 pool.shutdown();
                 try {
@@ -356,8 +330,10 @@ public class MageTabCron {
                         doConan = SampleTabUtils.releaseInACentury(sampletabFile);
                     } catch (IOException e) {
                         log.error("Problem with "+sampletabFile, e);
+                        doConan = false;
                     } catch (ParseException e) {
                         log.error("Problem with "+sampletabFile, e);
+                        doConan = false;
                     }
                     //trigger conan to complete processing
                     if (!noconan && doConan) {

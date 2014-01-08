@@ -480,13 +480,13 @@ public class MageTabToSampleTab {
         //due to a bug in limpopo, this can cause limpopo to hang indefinitely.
         //therefore, first parse the idf only to see if this is something to avoid.
 
-        log.info("Parsing IDF");
+        log.info("Parsing IDF "+idfFile);
         IDFParser idfparser = new IDFParser();
         IDF idf = null;
         idf = idfparser.parse(idfFile);
-        log.info("Checking IDF");
+        log.info("Checking IDF "+idfFile);
         if (idf.sdrfFile.size() != 1){
-            log.error("Non-standard sdrf file references");
+            log.error("Non-standard sdrf file references in "+idfFile);
             throw new ParseException();
         }
         
@@ -526,57 +526,5 @@ public class MageTabToSampleTab {
     public void convert(String idffilename, String stfilename)
             throws IOException, ParseException, java.text.ParseException {
         convert(idffilename, new File(stfilename));
-    }
-
-    public static void main(String[] args) {
-        new MageTabToSampleTab().doMain(args);
-    }
-
-    public void doMain(String[] args) {
-        if (args.length < 2) {
-            System.out
-                    .println("Must provide an MAGETAB IDF filename and a SampleTab output filename.");
-            System.exit(1);
-            return;
-        }
-        String idfFilename = args[0];
-        String sampleTabFilename = args[1];
-        
-        //a few idf files specify multiple sdrf files which may not all have been downloaded
-        //due to a bug in limpopo, this can cause limpopo to hang indefinitely.
-        //therefore, first parse the idf only to see if this is something to avoid.
-
-        IDFParser idfparser = new IDFParser();
-        IDF idf = null;
-        try {
-            idf = idfparser.parse(new File(idfFilename));
-        } catch (ParseException e) {
-            log.error("Error parsing " + idfFilename, e);
-            System.exit(1);
-            return;
-        }
-        
-        if (idf.sdrfFile.size() != 1){
-            log.error("Non-standard sdrf file references");
-            log.error(""+idf.sdrfFile);
-            System.exit(1);
-            return;
-        }
-
-        try {
-            convert(idfFilename, sampleTabFilename);
-        } catch (IOException e) {
-            log.error("Error converting "+idfFilename, e);
-            System.exit(2);
-            return;
-        } catch (ParseException e) {
-            log.error("Error converting "+idfFilename, e);
-            System.exit(3);
-            return;
-        } catch (java.text.ParseException e) {
-            log.error("Error converting "+idfFilename, e);
-            System.exit(4);
-            return;
-        }
     }
 }
