@@ -31,7 +31,6 @@ public class ENAUtils {
               String urlstr = "http://www.ebi.ac.uk/ena/data/view/" + id + "&display=xml";
               URL url = new URL(urlstr);
               Document doc = XMLUtils.getDocument(url);
-
               Element root = doc.getRootElement();
               return root;
           }

@@ -22,7 +22,7 @@ public class SampleTabStatus extends AbstractInfileDriver<SampleTabStatusRunnabl
         try {
             properties.load(SampleTabStatus.class.getResourceAsStream("/sampletabconverters.properties"));
         } catch (IOException e) {
-            log.error("Unable to read resource age.properties", e);
+            log.error("Unable to read resource sampletabconverters.properties", e);
         }
         ftpDirFile = new File(properties.getProperty("biosamples.ftp.path"));
     }
