@@ -87,7 +87,7 @@ public class EraProManager {
 			 maxDate = new Date();
 		}
 		
-		String query = "SELECT SAMPLE_ID FROM SAMPLE WHERE EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' " +
+		String query = "SELECT UNIQUE(SAMPLE_ID) FROM SAMPLE WHERE EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' " +
 				"AND STATUS_ID = 4 AND (LAST_UPDATED BETWEEN ? AND ?)";
 		
 		Collection<String> sampleIds = new ArrayList<String>();
