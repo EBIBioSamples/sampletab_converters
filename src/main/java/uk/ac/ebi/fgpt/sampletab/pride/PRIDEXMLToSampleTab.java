@@ -300,7 +300,7 @@ public class PRIDEXMLToSampleTab {
                 }
             }
 
-            DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, "http://www.ebi.ac.uk/pride/showExperiment.do?experimentAccessionNumber="+accession);
+            DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, " https://www.ebi.ac.uk/pride/archive/simpleSearch?q="+accession);
             
             if (isSubSample(sampledescription)){
                 //this is a sub-sample thing
