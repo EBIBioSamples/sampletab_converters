@@ -73,7 +73,7 @@ public class EraProBioDiff {
 			Date subDate = data.msi.submissionReleaseDate;
 			Date currentDate = new Date();
 			if(currentDate.after(subDate)){
-				Collection<SampleNode> sampleids = data.scd.getNodes(SampleNode.class);
+				Collection<SampleNode> sampleids = data.scd.getNodes(SampleNode.class); //specify sample node since it could also be a group node
 				for (SampleNode sampleid : sampleids){
 					if(!publicFTPSampleIds.contains(sampleid.getNodeName())){
 					publicFTPSampleIds.add(sampleid.getNodeName());
@@ -99,11 +99,55 @@ public class EraProBioDiff {
 	
 	
 	
-	private void getDiff(){
+	private void getPublicDiff(){
+		boolean size = false ;
+		int eraSize = publicEraSampleIds.size();
+		int ftpSize = publicFTPSampleIds.size();
+		if (eraSize == ftpSize){
+			size = true;
+		}
+		if (publicEraSampleIds.containsAll(publicFTPSampleIds) && size){
+			log.info("No updates in public sample");
+		}
+		if (eraSize > ftpSize){
+			Collection<String> samplesPublic = new ArrayList<String> ();
+			samplesPublic = publicEraSampleIds;
+			//remove all the ids which are common and you will get a list of ERA samples which have been updated to go public
+			samplesPublic.removeAll(publicFTPSampleIds);
+		}
 		
+		if(ftpSize > eraSize){
+			Collection<String> samplesDeleted = new ArrayList<String> ();
+			samplesDeleted = publicFTPSampleIds;
+			//remove amm the ids which are common and you will get a list of ERA samples which are no more public
+			samplesDeleted.removeAll(publicEraSampleIds);
+		}
 		
+	}
+	
+	private void getPrivateDiff(){
+		boolean size = false ;
+		int eraSize = privateEraSampleIds.size();
+		int ftpSize = privateFTPSampleIds.size();
+		if (eraSize == ftpSize){
+			size = true;
+		}
+		if (privateEraSampleIds.containsAll(privateFTPSampleIds) && size){
+			log.info("No updates in private sample");
+		}
+		if (eraSize > ftpSize){
+			Collection<String> samplesPrivate = new ArrayList<String> ();
+			samplesPrivate = privateEraSampleIds;
+			//remove all the ids which are common and you will get a list of ERA samples which have been updated to go private
+			samplesPrivate.removeAll(privateFTPSampleIds);
+		}
 		
-		
+		if(ftpSize > eraSize){
+			Collection<String> samplesDeleted = new ArrayList<String> ();
+			samplesDeleted = privateFTPSampleIds;
+			//remove all the ids which are common and you will get a list of ERA samples which are no more private
+			samplesDeleted.removeAll(privateEraSampleIds);
+		}
 	}
     
 	public boolean getFTPConnection(){
