@@ -303,7 +303,8 @@ public class ENASRAXMLToSampleTab {
                         //this is a biosamples accession, and we dont have one yet, so use it
                         samplenode.setSampleAccession(alias);
                     } else if (samplenode.getSampleAccession() != null && 
-                            alias.matches("SAM[END][A]?[0-9]+")){
+                            alias.matches("SAM[END][A]?[0-9]+") &&
+                            !samplenode.getSampleAccession().equals(alias)){
                         //this is a biosamples accession, but we already have one, report an error and store as synonym
                         log.error("Strange biosample identifiers in "+sampleAccession);
                         CommentAttribute synonymattrib = new CommentAttribute("Synonym", alias);
