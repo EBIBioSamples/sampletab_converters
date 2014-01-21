@@ -59,8 +59,10 @@ public class MageTabCronCallable implements Callable<Boolean> {
                 toReturn = true;
             } catch (IOException e) {
                 log.error("Unable to write "+outSampleTabPre, e);
+                toReturn = false;
             } catch (ParseException e) {
                 log.error("Unable to parse "+idfOut, e);
+                toReturn = false;
             }  
             
         } finally {
