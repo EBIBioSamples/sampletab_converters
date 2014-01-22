@@ -24,6 +24,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DerivedFro
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class SampleTabToLoad {
     
@@ -66,9 +67,10 @@ public class SampleTabToLoad {
         sampledata.msi.termSources = new ArrayList<TermSource>(new HashSet<TermSource>(sampledata.msi.termSources));
         
         //must have a description
-        if (sampledata.msi.submissionDescription == null || sampledata.msi.submissionDescription.trim().length() == 0){
+        if (sampledata.msi.submissionDescription == null || sampledata.msi.submissionDescription.trim().length() == 0) {
             sampledata.msi.submissionDescription = sampledata.msi.submissionTitle;
         }
+        
         
         // All samples must be in a group
         // so create a new group and add all non-grouped samples to it
@@ -96,6 +98,17 @@ public class SampleTabToLoad {
             log.info("Added Other group node");
             // also need to accession the new node
         }
+        
+        //add a link to where the file will be avaliable on the FTP site
+        for (GroupNode group : sampledata.scd.getNodes(GroupNode.class)) {
+            CommentAttribute ftpattrib = new CommentAttribute("SampleTab FTP location", 
+                    "ftp://ftp.ebi.ac.uk/pub/databases/biosamples/"+
+                    SampleTabUtils.getSubmissionDirPath(sampledata.msi.submissionIdentifier)+
+                    "/sampletab.txt"
+                );
+            group.addAttribute(ftpattrib);
+        }
+        
         
         //replace implicit derived from with explicit derived from relationships
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
