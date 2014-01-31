@@ -3,6 +3,7 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -30,7 +31,7 @@ public class EraProBioDiff {
 	private Collection<String> publicFTPSampleIds ;
 	private Collection<String> privateFTPSampleIds ;
 	private final SampleTabValidator validator = new SampleTabValidator();
-    
+    private OutputStream gonePublic = null;
     private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
 	
 
@@ -114,13 +115,24 @@ public class EraProBioDiff {
 			samplesPublic = publicEraSampleIds;
 			//remove all the ids which are common and you will get a list of ERA samples which have been updated to go public
 			samplesPublic.removeAll(publicFTPSampleIds);
+			//TODO print out the collection results in a file -- need to test - might require another ftp connection from the client
+			try {
+			gonePublic = ftpClient.storeUniqueFileStream(ftpSampleIds+"/eraPublic.txt");
+			} catch (IOException e) {
+				log.debug("Error in initiating an output stream");
+				e.printStackTrace();
+			}
+			for(String sp : samplesPublic){
+			//TODO print it
+			}
 		}
 		
 		if(ftpSize > eraSize){
 			Collection<String> samplesDeleted = new ArrayList<String> ();
 			samplesDeleted = publicFTPSampleIds;
-			//remove amm the ids which are common and you will get a list of ERA samples which are no more public
+			//remove all the ids which are common and you will get a list of ERA samples which are no more public
 			samplesDeleted.removeAll(publicEraSampleIds);
+			//TODO print out the collection results in a file 
 		}
 		
 	}
@@ -140,6 +152,7 @@ public class EraProBioDiff {
 			samplesPrivate = privateEraSampleIds;
 			//remove all the ids which are common and you will get a list of ERA samples which have been updated to go private
 			samplesPrivate.removeAll(privateFTPSampleIds);
+			//TODO print out the collection results in a file 
 		}
 		
 		if(ftpSize > eraSize){
@@ -147,6 +160,7 @@ public class EraProBioDiff {
 			samplesDeleted = privateFTPSampleIds;
 			//remove all the ids which are common and you will get a list of ERA samples which are no more private
 			samplesDeleted.removeAll(privateEraSampleIds);
+			//TODO print out the collection results in a file 
 		}
 	}
     
