@@ -15,8 +15,6 @@ public class EuroPMCUtils {
         URL url = new URL("http://www.ebi.ac.uk/europepmc/webservices/rest/search/query=ext_id:"+pubmed);
         Document doc =  XMLUtils.getDocument(url);
         
-        System.out.println(doc.asXML());
-        
         Element root = doc.getRootElement();
         if (root == null) throw new DocumentException("root is null");
         
