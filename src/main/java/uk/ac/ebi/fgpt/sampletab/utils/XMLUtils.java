@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -42,31 +43,50 @@ public class XMLUtils {
 	}
 
 	public static Document getDocument(URL url) throws DocumentException, IOException {        
-        URLConnection conn = null;
+        //proxy has to be handled via a connection object
         if (System.getProperty("proxySet") != null) {
             String hostname = System.getProperty("proxyHost");
             int port = Integer.parseInt(System.getProperty("proxyPort"));
             Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(hostname, port));
-    	    conn = url.openConnection(proxy);
-        } else {
-            conn = url.openConnection();
-        }
-       
-	    Reader r = null;
-	    Document doc = null;
-	    try {
-	        r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-	        doc = getDocument(r);
-	    } finally {
-            if (r != null) {
-                try {
-                    r.close();
-                } catch (IOException e) {
-                    //do nothing
+            //cast to the subclass to have disconnect method later
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection(proxy);
+    	    
+            Reader r = null;
+            Document doc = null;
+            try {
+                r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                doc = getDocument(r);
+            } finally {
+                if (r != null) {
+                    try {
+                        r.close();
+                    } catch (IOException e) {
+                        //do nothing
+                    }
                 }
             }
-	    }
-	    return doc;
+            conn.disconnect();
+            return doc;
+        } else {
+            //no proxy? open url directly to avoid connection leakage
+            Reader r = null;
+            Document doc = null;
+            try {
+                r = new BufferedReader(new InputStreamReader(url.openStream()));
+                doc = getDocument(r);
+            } finally {
+                if (r != null) {
+                    try {
+                        r.close();
+                    } catch (IOException e) {
+                        //do nothing
+                    }
+                }
+            }
+            
+            return doc;
+        }
+       
 	}
 
     public static Document getDocument(String xmlString) throws DocumentException {
