@@ -51,12 +51,40 @@ public class XMLUtils {
         } else {
             conn = url.openConnection();
         }
-	    
-	    return getDocument(new BufferedReader(new InputStreamReader(conn.getInputStream())));
+       
+	    Reader r = null;
+	    Document doc = null;
+	    try {
+	        r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+	        doc = getDocument(r);
+	    } finally {
+            if (r != null) {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+	    }
+	    return doc;
 	}
 
     public static Document getDocument(String xmlString) throws DocumentException {
-        return getDocument(new StringReader(xmlString));
+        Reader r = null;
+        Document doc = null;
+        try {
+            r = new StringReader(xmlString);
+            doc = getDocument(r);
+        } finally {
+            if (r != null) {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+        }
+        return doc;
     }
     
     public static Document getDocument(Reader r) throws DocumentException {
@@ -67,20 +95,11 @@ public class XMLUtils {
         
         //now do actual parsing
         Document xml = null;
-        try {
-            xml = reader.read(r);
-        } finally {
-            if (r != null) {
-                try {
-                    r.close();
-                } catch (IOException e) {
-                    //do nothing
-                }
-            }
-            //return the reader back to the queue
-            reader.resetHandlers();
-            readerQueue.add(reader);
-        }
+        
+        xml = reader.read(r);
+        //return the reader back to the queue
+        reader.resetHandlers();
+        readerQueue.add(reader);
         
         return xml;
     }
