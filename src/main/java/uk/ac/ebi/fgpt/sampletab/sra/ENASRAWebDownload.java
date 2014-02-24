@@ -66,12 +66,13 @@ public class ENASRAWebDownload {
         outdir.mkdirs();
         //write the xml to disk
         OutputStream os = null;
+        XMLWriter writer = null;
         try {
             os = new BufferedOutputStream(new FileOutputStream(sampleFile));
             //this pretty printing is messing up comparisons by trimming whitespace WITHIN an element
             //OutputFormat format = OutputFormat.createPrettyPrint();
             //XMLWriter writer = new XMLWriter(os, format);
-            XMLWriter writer = new XMLWriter(os);
+            writer = new XMLWriter(os);
             writer.write(sampledoc);
             writer.flush();
             os.close();
@@ -79,6 +80,14 @@ public class ENASRAWebDownload {
             if (os != null) {
                 try {
                     os.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+            
+            if (writer != null) {
+                try {
+                    writer.close();
                 } catch (IOException e) {
                     //do nothing
                 }
