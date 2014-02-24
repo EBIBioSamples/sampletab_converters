@@ -1,6 +1,8 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -44,5 +46,24 @@ public class BioSDUtils {
         }
         
         return accessions;
+    }
+    
+    public static boolean isBioSDAccessionPublic(String accession) {
+        try {
+            URL queryURL = new URL("http://www.ebi.ac.uk/biosamples/xml/sample/"+accession);
+            Document querydoc = XMLUtils.getDocument(queryURL);
+            //don't need to do anything with the doc, just see if it is accessible
+        } catch (MalformedURLException e) {
+            return false;
+        } catch (DocumentException e) {
+            return false;
+        } catch (FileNotFoundException e) {
+            //if the URL does not exist, then the website throws a 404 error
+            //java interprets this as a filenotfoundexception
+            return false;
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
     }
 }

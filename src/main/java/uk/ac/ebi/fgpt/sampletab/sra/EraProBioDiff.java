@@ -1,6 +1,5 @@
 package uk.ac.ebi.fgpt.sampletab.sra;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -11,6 +10,7 @@ import java.util.Properties;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +19,7 @@ import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
+
 import uk.ac.ebi.fgpt.sampletab.SampleTabStatus;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
 
@@ -38,14 +39,14 @@ public class EraProBioDiff {
 	public void writeEraPublicToFile(Collection<String> sampleIds){
 		publicEraSampleIds = new ArrayList<String> ();
 		publicEraSampleIds = sampleIds;
-		
+		//TODO finish
 	}
 	
 	
 	public void writeEraPrivateToFile(Collection<String> sampleIds){
 		privateEraSampleIds = new ArrayList<String> ();
 		privateEraSampleIds = sampleIds;
-		
+        //TODO finish
 	}
 	
 	public void getSamplesFTP(){

@@ -36,7 +36,7 @@ public class ENASRACron  extends AbstractDriver {
     @Option(name = "--no-conan", usage = "do not trigger conan loads")
     private boolean noconan = false;
 
-    private ExecutorService pool;
+    protected ExecutorService pool;
     private List<Future<Void>> futures = new LinkedList<Future<Void>>();
     
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -45,7 +45,7 @@ public class ENASRACron  extends AbstractDriver {
     	
     }
     
-    private File getOutputDir() {
+    protected File getOutputDir() {
         if (outputDir.exists() && !outputDir.isDirectory()) {
             System.err.println("Target is not a directory");
             System.exit(1);
@@ -85,18 +85,13 @@ public class ENASRACron  extends AbstractDriver {
         
         Collection<String> toDelete = getDeletions(grouper);
         
-        //restart the pool for part II        
-        pool = null;
-        if (threads > 0) {
-            pool = Executors.newFixedThreadPool(threads);
-        }
-        
         processUpdates(grouper);
+        
         processDeletions(toDelete);
         
         if (pool != null) {
             //wait for threading to finish
-            for (Future<?> f : futures) {
+            for (Future<Void> f : futures) {
                 try {
                     f.get();
                 } catch (Exception e) {
@@ -104,9 +99,11 @@ public class ENASRACron  extends AbstractDriver {
                     log.error("problem processing update", e);
                 }
             }
-            // run the pool and then close it afterwards
+            
+            // close the pool to tidy it all up
             // must synchronize on the pool object
             synchronized (pool) {
+                log.info("shutting down pool");
                 pool.shutdown();
                 try {
                     // allow 24h to execute. Rather too much, but meh
@@ -163,7 +160,7 @@ public class ENASRACron  extends AbstractDriver {
                 //process the subdir
                 log.info("updated "+submissionID);
                 
-                Callable<Void> task = new ENASRAUpdateRunnable(outsubdir, key, grouper.groups.get(key), !noconan);
+                Callable<Void> task = new ENASRAUpdateCallable(outsubdir, key, grouper.groups.get(key), !noconan);
                 if (pool == null) {
                     //no threading
                     try {
@@ -192,7 +189,7 @@ public class ENASRACron  extends AbstractDriver {
             //get submission identifier based on parent directory
             File subdir = sampletabpre.getParentFile();
             String subId = subdir.getName(); //get submission id
-            if (!grouper.groups.containsKey(subId) && !grouper.ungrouped.contains(subId)) {
+            if (!grouper.groups.containsKey(subId)) {
                 toDelete.add(subId);
             }
         }
@@ -218,7 +215,8 @@ public class ENASRACron  extends AbstractDriver {
             //trigger conan, if appropriate
             if (!noconan) {
                 if (pool != null) {
-                    pool.execute(new PrivatizeRunnable(submissionID));
+                    Future<Void> f = pool.submit(new PrivatizeCallable(submissionID));
+                    futures.add(f);
                 } else {
                     try {
                         ConanUtils.submit(submissionID, "BioSamples (other)");
@@ -230,21 +228,21 @@ public class ENASRACron  extends AbstractDriver {
         }
     }
     
-    private class PrivatizeRunnable implements Runnable {
+    private class PrivatizeCallable implements Callable<Void> {
 
         private final String submissionID;
         
-        public PrivatizeRunnable(String submissionID) {
+        public PrivatizeCallable(String submissionID) {
             this.submissionID = submissionID;
         }
-        
         @Override
-        public void run() {
+        public Void call() throws Exception {
             try {
                 ConanUtils.submit(submissionID, "BioSamples (other)");
             } catch (IOException e) {
                 log.error("problem making "+submissionID+" private through Conan", e);
             }
+            return null;
         }
         
     }

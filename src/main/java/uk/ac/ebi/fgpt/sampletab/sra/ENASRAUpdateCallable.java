@@ -18,7 +18,7 @@ import uk.ac.ebi.fgpt.sampletab.subs.Event;
 import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 
-public class ENASRAUpdateRunnable implements Callable<Void> {
+public class ENASRAUpdateCallable implements Callable<Void> {
     
     private static final String SUBSEVENT = "Source Update";
 
@@ -30,7 +30,7 @@ public class ENASRAUpdateRunnable implements Callable<Void> {
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public ENASRAUpdateRunnable(File outsubdir, String key, Collection<String> samples, boolean conan) {
+    public ENASRAUpdateCallable(File outsubdir, String key, Collection<String> samples, boolean conan) {
         this.outsubdir = outsubdir;
         this.keyId = key;
         this.sampleIds = samples;
@@ -69,7 +69,7 @@ public class ENASRAUpdateRunnable implements Callable<Void> {
                     log.error("Unable to write to "+sampletabPre, e);
                     throw e;
                 } finally {
-                    if (sampletabwriter != null){
+                    if (sampletabwriter != null) {
                         try {
                             sampletabwriter.close();
                         } catch (IOException e) {

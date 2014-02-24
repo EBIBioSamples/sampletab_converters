@@ -5,6 +5,8 @@ import junit.framework.TestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fgpt.sampletab.utils.BioSDUtils;
+
 
 public class TestBioSDUtils extends TestCase {
 
@@ -19,5 +21,14 @@ public class TestBioSDUtils extends TestCase {
             e.printStackTrace();
             fail();
         }*/
+    }
+    
+    public void testIsAccessinPublic() {
+        if (!BioSDUtils.isBioSDAccessionPublic("SAME123739")) {
+            fail();
+        }
+        if (BioSDUtils.isBioSDAccessionPublic("failthis")) {
+            fail();
+        }
     }
 }
