@@ -244,10 +244,10 @@ public class IMSRTabToSampleTab {
             	}
             }
 
-            //Strain Id as comment
+            //Strain Id 
             if(strainid.containsKey(name)){
             	for(String thisstrainId :strainid.get(name)){
-            		CommentAttribute strainIdattrib = new CommentAttribute("Strain ID", thisstrainId);
+            		CharacteristicAttribute strainIdattrib = new CharacteristicAttribute("strain", thisstrainId);
             		newnode.addAttribute(strainIdattrib);
             	}
             }
