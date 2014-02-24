@@ -44,9 +44,11 @@ public class XMLUtils {
 
 	public static Document getDocument(URL url) throws DocumentException, IOException {        
         //proxy has to be handled via a connection object
+	    /*
         if (System.getProperty("proxySet") != null) {
             String hostname = System.getProperty("proxyHost");
             int port = Integer.parseInt(System.getProperty("proxyPort"));
+            log.info("getting document via proxy http://"+hostname+":"+port);
             Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(hostname, port));
             //cast to the subclass to have disconnect method later
             HttpURLConnection conn = (HttpURLConnection) url.openConnection(proxy);
@@ -68,6 +70,8 @@ public class XMLUtils {
             conn.disconnect();
             return doc;
         } else {
+*/
+            log.info("getting document directy");
             //no proxy? open url directly to avoid connection leakage
             Reader r = null;
             Document doc = null;
@@ -85,7 +89,7 @@ public class XMLUtils {
             }
             
             return doc;
-        }
+        //}
        
 	}
 
