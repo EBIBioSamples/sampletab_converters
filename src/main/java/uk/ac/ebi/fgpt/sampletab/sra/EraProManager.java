@@ -31,6 +31,13 @@ public class EraProManager {
 
 	private static EraProManager instance = null;
 
+	/**
+	 * Private constructor, use getInstance() method to ensure singleton pattern is followed
+	 */
+	private EraProManager() {
+	    
+	}
+	
 	public synchronized static EraProManager getInstance() {
 		if (instance == null) {
 			instance = new EraProManager();
@@ -45,8 +52,7 @@ public class EraProManager {
 				// load defaults
 				Properties properties = new Properties();
 				try {
-					InputStream is = getClass().getResourceAsStream(
-							"/era-pro.properties");
+					InputStream is = getClass().getResourceAsStream("/era-pro.properties");
 					properties.load(is);
 				} catch (IOException e) {
 					log.error("Unable to read resource era-pro.properties", e);
@@ -60,9 +66,7 @@ public class EraProManager {
 				try {
 					Class.forName("oracle.jdbc.driver.OracleDriver");
 				} catch (ClassNotFoundException e) {
-					log.error(
-							"Unable to find oracle.jdbc.driver.OracleDriver",
-							e);
+					log.error("Unable to find oracle.jdbc.driver.OracleDriver", e);
 					throw e;
 				}
                 String jdbc = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
@@ -90,9 +94,9 @@ public class EraProManager {
      * Return a collection of sample ids that are public, owned by SRA, and have been updated within the date window.
      */
 	public Collection<String> getUpdatesSampleId(Date minDate, Date maxDate) {
-		PreparedStatement stmt = null;
-		Connection con = null;
-		ResultSet rs = null;
+		PreparedStatement statement = null;
+		Connection connection = null;
+		ResultSet resultset = null;
 		if (maxDate == null){
 			 maxDate = new Date();
 		}
@@ -115,17 +119,17 @@ select * from cv_status;
 		Collection<String> sampleIds = new ArrayList<String>();
 		
 		try {
-			BoneCPDataSource ds1 = getDataSource();
-			con = ds1.getConnection();
-			stmt = con.prepareStatement(query);
-			stmt.setDate(1, new java.sql.Date(minDate.getTime()));
-			stmt.setDate(2, new java.sql.Date(maxDate.getTime()));
-			rs = stmt.executeQuery();
-			if (rs == null){
+			BoneCPDataSource datasource = getDataSource();
+			connection = datasource.getConnection();
+			statement = connection.prepareStatement(query);
+			statement.setDate(1, new java.sql.Date(minDate.getTime()));
+			statement.setDate(2, new java.sql.Date(maxDate.getTime()));
+			resultset = statement.executeQuery();
+			if (resultset == null){
 				log.info("No Updates during the time period provided");
 			} else {
-			    while (rs.next()) {
-			        String sampleId = rs.getString(1); //result sets are one-indexed, not zero-indexed
+			    while (resultset.next()) {
+			        String sampleId = resultset.getString(1); //result sets are one-indexed, not zero-indexed
 			        if (!sampleIds.contains(sampleId)) {
 			            sampleIds.add(sampleId);
 			        }
@@ -137,23 +141,23 @@ select * from cv_status;
 			log.error("The BoneCPDatasouce class for connection to the database cannot be found", e);
 		} finally {
 		    //close each of these separately in case of errors
-            if (rs != null) {
+            if (resultset != null) {
                 try {
-                    rs.close();
+                    resultset.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
             }
-            if (stmt != null) {
+            if (statement != null) {
                 try {
-                    stmt.close();
+                    statement.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
             }
-            if (con != null) {
+            if (connection != null) {
                 try {
-                    con.close();
+                    connection.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
@@ -171,8 +175,8 @@ select * from cv_status;
         log.info("Getting public sample ids");
         
 		PreparedStatement statment = null;
-		Connection con = null;
-		ResultSet rs = null;
+		Connection connection = null;
+		ResultSet resultset = null;
 		/*
 select * from cv_status;
 1       draft   The entry is draft.
@@ -184,19 +188,19 @@ select * from cv_status;
 7       temporary_suppressed    the entry has been temporarily suppressed.
 8       temporary_killed        the entry has been temporarily killed.
 		 */
-		String query = " SELECT UNIQUE(SAMPLE_ID) FROM SAMPLE WHERE STATUS_ID = 4 AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' ";
+		String query = " SELECT UNIQUE(SAMPLE_ID) FROM SAMPLE WHERE STATUS_ID = 4' AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' ";
 		Collection<String> sampleIds = new HashSet<String>();
 		
 		try {
-			BoneCPDataSource ds1 = getDataSource();
-			con = ds1.getConnection();
-			statment = con.prepareStatement(query);
-			rs = statment.executeQuery();
-			if (rs == null){
+			BoneCPDataSource datasource = getDataSource();
+			connection = datasource.getConnection();
+			statment = connection.prepareStatement(query);
+			resultset = statment.executeQuery();
+			if (resultset == null){
 				log.info("No Public samples found!");
 			} else {
-			    while (rs.next()) {
-			        String sampleId = rs.getString(1); //result sets are one-indexed, not zero-indexed
+			    while (resultset.next()) {
+			        String sampleId = resultset.getString(1); //result sets are one-indexed, not zero-indexed
                     //assume all sample ids are unique because its a set collection and the SQL has a unique function
                     sampleIds.add(sampleId);
                     log.trace("adding sample id "+sampleId);
@@ -209,9 +213,9 @@ select * from cv_status;
 			log.error("The BoneCPDatasouce class for connection to the database cannot be found", e);
 		} finally {
 		    //close each of these separately in case of errors
-            if (rs != null) {
+            if (resultset != null) {
                 try {
-                    rs.close();
+                    resultset.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
@@ -223,9 +227,9 @@ select * from cv_status;
                     //do nothing
                 }
             }
-            if (con != null) {
+            if (connection != null) {
                 try {
-                    con.close();
+                    connection.close();
                 } catch (SQLException e) {
                     //do nothing
                 }
@@ -240,25 +244,25 @@ select * from cv_status;
 	
 	
 	
-	public Collection<String> getPrivateSamples(){
+	public Collection<String> getPrivateSamples() {
         log.info("Getting private sample ids");
         
-        PreparedStatement stmt = null;
-        Connection con = null;
-        ResultSet rs = null;
+        PreparedStatement statement = null;
+        Connection connection = null;
+        ResultSet resultset = null;
         //only need to deal with those that were once public
         String query = "SELECT UNIQUE(SAMPLE_ID) FROM SAMPLE WHERE STATUS_ID > 4 AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N'";
         Collection<String> sampleIds = new HashSet<String>();
         try {
-            BoneCPDataSource ds1 = getDataSource();
-            con = ds1.getConnection();
-            stmt = con.prepareStatement(query);
-            rs = stmt.executeQuery();
-            if (rs == null) {
+            BoneCPDataSource datasource = getDataSource();
+            connection = datasource.getConnection();
+            statement = connection.prepareStatement(query);
+            resultset = statement.executeQuery();
+            if (resultset == null) {
                 log.info("No Private samples found!");
             } else {
-                while (rs.next()) {
-                    String sampleId = rs.getString(1); // result sets are one-indexed, not zero-indexed
+                while (resultset.next()) {
+                    String sampleId = resultset.getString(1); // result sets are one-indexed, not zero-indexed
                     //assume all sample ids are unique because its a set collection and the SQL has a unique function
                     sampleIds.add(sampleId);
                 }
@@ -269,23 +273,23 @@ select * from cv_status;
             log.error("The BoneCPDatasouce class for connection to the database cannot be found", e);
         } finally {
             // close each of these separately in case of errors
-            if (rs != null) {
+            if (resultset != null) {
                 try {
-                    rs.close();
+                    resultset.close();
                 } catch (SQLException e) {
                     // do nothing
                 }
             }
-            if (stmt != null) {
+            if (statement != null) {
                 try {
-                    stmt.close();
+                    statement.close();
                 } catch (SQLException e) {
                     // do nothing
                 }
             }
-            if (con != null) {
+            if (connection != null) {
                 try {
-                    con.close();
+                    connection.close();
                 } catch (SQLException e) {
                     // do nothing
                 }

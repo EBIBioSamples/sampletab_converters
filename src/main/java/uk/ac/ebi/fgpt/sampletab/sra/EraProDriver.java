@@ -1,6 +1,5 @@
 package uk.ac.ebi.fgpt.sampletab.sra;
 
-import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -17,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.fgpt.sampletab.utils.BioSDUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.FileRecursiveIterable;
 
 public class EraProDriver extends ENASRACron {
 
@@ -26,9 +24,7 @@ public class EraProDriver extends ENASRACron {
 
     @Argument(required = false, index = 2, metaVar = "ENDDATE", usage = "End date as YYYY/MM/DD")
     protected String maxDateString;
-
-    protected EraProManager eraProManager = new EraProManager();
-    
+   
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public static void main(String[] args) {
@@ -43,14 +39,14 @@ public class EraProDriver extends ENASRACron {
         Date maxDate = null;
         try {
             minDate = formatter.parse(minDateString);
-            if (maxDateString != null) {
+            if (maxDateString != null) { 
                 maxDate = formatter.parse(maxDateString);
             }
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
         
-        Collection<String> sampleIds = eraProManager.getUpdatesSampleId(minDate, maxDate);
+        Collection<String> sampleIds = EraProManager.getInstance().getUpdatesSampleId(minDate, maxDate);
         
         grouper.groupSampleIds(sampleIds, pool);
 
@@ -66,7 +62,7 @@ public class EraProDriver extends ENASRACron {
         log.info("Checking deletions");
         
         //Collection<String> publicSamples = eraProManager.getPublicSamples();
-        Collection<String> privateSamples = eraProManager.getPrivateSamples();
+        Collection<String> privateSamples = EraProManager.getInstance().getPrivateSamples();
         
         //for each private sample, check against the biosamples API and see if it is accessible
         //TODO multi-thread this?
