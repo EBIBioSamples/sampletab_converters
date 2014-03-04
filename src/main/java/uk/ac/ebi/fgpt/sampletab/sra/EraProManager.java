@@ -113,8 +113,10 @@ select * from cv_status;
 7       temporary_suppressed    the entry has been temporarily suppressed.
 8       temporary_killed        the entry has been temporarily killed.
          */
+		//here we get ones that have either been updated, or have been made public in the date window
+		//once it has been public, it can only be suppressed and killed and can't go back to public again
 		String query = "SELECT UNIQUE(SAMPLE_ID) FROM SAMPLE WHERE EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' " +
-				"AND STATUS_ID = 4 AND (LAST_UPDATED BETWEEN ? AND ?)";
+				"AND STATUS_ID = 4 AND ((LAST_UPDATED BETWEEN ? AND ?) OR (FIRST_PUBLIC BETWEEN ? AND ?))";
 		
 		Collection<String> sampleIds = new ArrayList<String>();
 		
@@ -124,6 +126,8 @@ select * from cv_status;
 			statement = connection.prepareStatement(query);
 			statement.setDate(1, new java.sql.Date(minDate.getTime()));
 			statement.setDate(2, new java.sql.Date(maxDate.getTime()));
+            statement.setDate(3, new java.sql.Date(minDate.getTime()));
+            statement.setDate(4, new java.sql.Date(maxDate.getTime()));
 			resultset = statement.executeQuery();
 			if (resultset == null){
 				log.info("No Updates during the time period provided");
