@@ -116,10 +116,9 @@ public class SampleTabUtils {
         Event event = TrackingManager.getInstance().registerEventStart(accession, "Make private");
         boolean toReturn = false;
         try {
-        
             SampleTabSaferParser parser = new SampleTabSaferParser();
             SampleData sd = parser.parse(sampletabFile);
-            if (sd == null){
+            if (sd == null) {
                 log.error("Failed to parse "+sampletabFile);
                 throw new IOException("Problem reading "+sampletabFile);
             } else if(sd.msi.submissionReleaseDate.before(new Date())) {
@@ -130,10 +129,10 @@ public class SampleTabUtils {
                     SampleTabWriter stwriter = new SampleTabWriter(writer);
                     stwriter.write(sd);
                     toReturn = true;
-                } catch (IOException e){
+                } catch (IOException e) {
                     throw e;
                 } finally {
-                    if (writer != null){
+                    if (writer != null) {
                         try {
                             writer.close();
                         } catch (IOException e) {

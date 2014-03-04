@@ -126,7 +126,7 @@ public class TaxonUtils {
     );
 
     public static String getSpeciesOfID(int taxID) throws TaxonException {
-        if (taxID < 0){
+        if (taxID < 0) {
             throw new IllegalArgumentException();
         }
         
@@ -138,7 +138,7 @@ public class TaxonUtils {
     }
     
     public static String getDivisionOfID(int taxID) throws TaxonException {
-        if (taxID < 0){
+        if (taxID < 0) {
             throw new IllegalArgumentException();
         }
         
@@ -157,6 +157,7 @@ public class TaxonUtils {
         if (species == null || species.length() == 0) {
             throw new IllegalArgumentException();
         }
+        
         try {
             return taxIDCache.get(species);    
         } catch (ExecutionException e) {
