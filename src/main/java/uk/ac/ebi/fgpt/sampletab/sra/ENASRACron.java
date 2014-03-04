@@ -188,7 +188,11 @@ public class ENASRACron  extends AbstractDriver {
         for (File sampletabpre : new FileRecursiveIterable("sampletab.pre.txt", new File(getOutputDir(), "sra"))) {
             //get submission identifier based on parent directory
             File subdir = sampletabpre.getParentFile();
-            String subId = subdir.getName(); //get submission id
+            String subId = subdir.getName();
+            //strip off GEN-
+            if (subId.startsWith("GEN-")) {
+                subId = subId.substring(4);
+            }
             if (!grouper.groups.containsKey(subId)) {
                 toDelete.add(subId);
             }
