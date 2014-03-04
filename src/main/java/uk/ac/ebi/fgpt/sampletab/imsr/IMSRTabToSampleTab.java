@@ -336,7 +336,7 @@ public class IMSRTabToSampleTab {
             
             //add per strain links to IMSR
             String url = "http://www.findmice.org/summary?query="+URLEncoder.encode(name, "UTF-8")+"&repositories="+URLEncoder.encode(site, "UTF-8");
-            DatabaseAttribute dbattr = new DatabaseAttribute(site, name, url);
+            DatabaseAttribute dbattr = new DatabaseAttribute("IMSR", name, url);
             newnode.addAttribute(dbattr);
         }
         getLog().info("Finished convert()");
