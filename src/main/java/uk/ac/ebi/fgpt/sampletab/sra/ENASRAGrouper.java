@@ -26,9 +26,9 @@ public class ENASRAGrouper {
     private Logger log = LoggerFactory.getLogger(getClass());
     
     public void groupBruteForce(ExecutorService pool) {
-        populate("DRS", 0,  10000, pool);
-        populate("SRS", 0, 600000, pool);
-        populate("ERS", 0, 500000, pool);
+        populate("DRS", 1,  10000, pool);
+        populate("SRS", 1, 600000, pool);
+        populate("ERS", 1, 500000, pool);
         //no longer a need to close the pool since it is using callables with a specific future, rather than runnables
     }
     
