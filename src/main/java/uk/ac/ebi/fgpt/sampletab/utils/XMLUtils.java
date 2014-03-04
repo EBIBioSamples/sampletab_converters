@@ -34,66 +34,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class XMLUtils {
-    private static Logger log = LoggerFactory.getLogger("XMLUtils");
-
-	private static ConcurrentLinkedQueue<SAXReader> readerQueue = new ConcurrentLinkedQueue<SAXReader>();
+    //private static Logger log = LoggerFactory.getLogger("XMLUtils");
 
 	public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException {
         return getDocument(new BufferedReader(new FileReader(xmlFile)));
 	}
 
-	public static Document getDocument(URL url) throws DocumentException, IOException {        
-        //proxy has to be handled via a connection object
-	    /*
-        if (System.getProperty("proxySet") != null) {
-            String hostname = System.getProperty("proxyHost");
-            int port = Integer.parseInt(System.getProperty("proxyPort"));
-            log.info("getting document via proxy http://"+hostname+":"+port);
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(hostname, port));
-            //cast to the subclass to have disconnect method later
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection(proxy);
-    	    
-            Reader r = null;
-            Document doc = null;
-            try {
-                r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                doc = getDocument(r);
-            } finally {
-                if (r != null) {
-                    try {
-                        r.close();
-                    } catch (IOException e) {
-                        //do nothing
-                    }
-                }
-            }
+	public static Document getDocument(URL url) throws DocumentException, IOException {   
+	    //handle proxy access via command line e.g. 
+	    //-Dhttp.proxyHost=wwwcache.ebi.ac.uk -Dhttp.proxyPort=3128 -Dhttp.nonProxyHosts=*.ebi.ac.uk 
+	    //-DproxyHost=wwwcache.ebi.ac.uk -DproxyPort=3128 -DproxySet=true
+	    //can't call SAXReader directly because it ignores proxing
+        Reader r = null;
+        Document doc = null;
+        try {
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            doc = getDocument(r);
             conn.disconnect();
-            return doc;
-        } else {
-*/
-            log.info("getting document directy");
-            //no proxy? open url directly to avoid connection leakage
-            Reader r = null;
-            Document doc = null;
-            try {
-                r = new BufferedReader(new InputStreamReader(url.openStream()));
-                doc = getDocument(r);
-            } finally {
-                if (r != null) {
-                    try {
-                        r.close();
-                    } catch (IOException e) {
-                        //do nothing
-                    }
+        } finally {
+            if (r != null) {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    //do nothing
                 }
             }
-            
-            return doc;
-        //}
-       
+        }
+        
+        return doc;
 	}
 
     public static Document getDocument(String xmlString) throws DocumentException {
+        
         Reader r = null;
         Document doc = null;
         try {
@@ -112,18 +85,18 @@ public class XMLUtils {
     }
     
     public static Document getDocument(Reader r) throws DocumentException {
-        SAXReader reader = readerQueue.poll();
+        SAXReader reader = null;//readerQueue.poll();
         if (reader == null) {
             reader = new SAXReader();
         }
-        
+                
         //now do actual parsing
         Document xml = null;
         
         xml = reader.read(r);
         //return the reader back to the queue
-        reader.resetHandlers();
-        readerQueue.add(reader);
+        //reader.resetHandlers();
+        //readerQueue.add(reader);
         
         return xml;
     }
