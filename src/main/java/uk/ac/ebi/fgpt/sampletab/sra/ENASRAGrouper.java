@@ -68,10 +68,10 @@ public class ENASRAGrouper {
                     //no need to do anything with the return value since it is already added to the groups attribute
                 } catch (InterruptedException e) {
                     log.error("Problem getting group of sample", e);
-                    throw new RuntimeException(e);
+                    //throw new RuntimeException(e);
                 } catch (ExecutionException e) {
                     log.error("Problem getting group of sample", e);
-                    throw new RuntimeException(e);
+                    //throw new RuntimeException(e);
                 }
             }
         }
@@ -94,7 +94,7 @@ public class ENASRAGrouper {
                     //no need to do anything with the return value since it is already added to the groups attribute
                 } catch (Exception e) {
                     log.error("Problem getting group of sample "+sampleId, e);
-                    throw new RuntimeException(e);
+                    //throw new RuntimeException(e);
                 }
             }
         } else {
@@ -110,10 +110,10 @@ public class ENASRAGrouper {
                     //no need to do anything with the return value since it is already added to the groups attribute
                 } catch (InterruptedException e) {
                     log.error("Problem getting group of sample", e);
-                    throw new RuntimeException(e);
+                    //throw new RuntimeException(e);
                 } catch (ExecutionException e) {
                     log.error("Problem getting group of sample", e);
-                    throw new RuntimeException(e);
+                    //throw new RuntimeException(e);
                 }
             }
         }
