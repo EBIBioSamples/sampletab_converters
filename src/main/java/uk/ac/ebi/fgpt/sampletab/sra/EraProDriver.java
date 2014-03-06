@@ -51,10 +51,10 @@ public class EraProDriver extends ENASRACron {
         grouper.groupSampleIds(sampleIds, pool);
 
         //at this point we have worked out which groups need to be updated
-        //we still need to to private -> public and public -> private
+        //we still need to to private -> public 
+        //(public -> private is in the getDeletions method)
                 
-        log.info("Finishing getting sample ids from ERA-PRO");
-        
+        log.info("Finishing getting sample ids from ERA-PRO");   
     }
     
     @Override
@@ -65,9 +65,7 @@ public class EraProDriver extends ENASRACron {
         Collection<String> privateSamples = EraProManager.getInstance().getPrivateSamples();
         
         //for each private sample, check against the biosamples API and see if it is accessible
-        //TODO multi-thread this?
         Set<String> toDelete = new HashSet<String>();
-        
 
         Collection<Future<String>> futures = new ArrayList<Future<String>>();
         if (pool == null) {
@@ -80,8 +78,7 @@ public class EraProDriver extends ENASRACron {
                 } catch (Exception e) {
                     log.error("Problem testing public status of "+sampleID, e);
                 }
-            }
-            
+            }            
         } else {
             for (String sampleID : privateSamples){
                 Callable<String> c = new TestPublicCallable(sampleID);
@@ -103,7 +100,6 @@ public class EraProDriver extends ENASRACron {
                 }
             }
         }
-        
         
         for (String sampleID : privateSamples){
             log.trace("checking "+sampleID);
