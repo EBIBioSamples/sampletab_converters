@@ -123,7 +123,7 @@ public class AttributeSummary extends AbstractInfileDriver<Callable<Void>> {
         return new ProcessTask(inputFile, organism);
     }
 	
-	private class KeyComparator implements Comparator<Object> {
+	public static class KeyComparator implements Comparator<String> {
 		private final Map<String, Map<String, Integer>> map;
 		
 		public KeyComparator(Map<String, Map<String, Integer>> map){
@@ -131,7 +131,7 @@ public class AttributeSummary extends AbstractInfileDriver<Callable<Void>> {
 			this.map = map;
 		}
 		
-		public int compare(Object arg0, Object arg1) {
+		public int compare(String arg0, String arg1) {
 			int firstval = 0;
 			for (Integer value : this.map.get(arg0).values()){
 				firstval += value;
@@ -152,7 +152,7 @@ public class AttributeSummary extends AbstractInfileDriver<Callable<Void>> {
 		}
 	}
 	
-	class ValueComparator implements Comparator<Object> {
+	public static class ValueComparator implements Comparator<String> {
 		private final Map<String, Integer> map;
 		
 		public ValueComparator(Map<String, Integer> map){
@@ -160,7 +160,7 @@ public class AttributeSummary extends AbstractInfileDriver<Callable<Void>> {
 			this.map = map;
 		}
 		
-		public int compare(Object arg0, Object arg1) {
+		public int compare(String arg0, String arg1) {
 			int firstval = this.map.get(arg0);
 			int secondval = this.map.get(arg1);
 			
@@ -181,14 +181,14 @@ public class AttributeSummary extends AbstractInfileDriver<Callable<Void>> {
 	protected void postProcess(){
         
         //now to write back out
-        Writer out = null;
+        Writer writer = null;
     	
     	ArrayList<String> keys = new ArrayList<String>(attributes.keySet());
     	Collections.sort(keys, new KeyComparator(attributes));
         Collections.reverse(keys);
         
         try {
-        	out = new BufferedWriter(new FileWriter(new File(outputFilename)));
+        	writer = new BufferedWriter(new FileWriter(new File(outputFilename)));
         	
         	int rowcount = 0;
         	for (String key : keys){
@@ -196,7 +196,7 @@ public class AttributeSummary extends AbstractInfileDriver<Callable<Void>> {
 				for (Integer value : attributes.get(key).values()){
 					total += value;
 				}
-        		out.write(key+" ("+total+")\t");
+        		writer.write(key+" ("+total+")\t");
         		
         		int colcount = 0;
         		ArrayList<String> values = new ArrayList<String>(attributes.get(key).keySet());
@@ -204,14 +204,14 @@ public class AttributeSummary extends AbstractInfileDriver<Callable<Void>> {
         		Collections.reverse(values);
         		
         		for (String value : values){
-        			out.write(value+" ("+attributes.get(key).get(value)+")\t");
+        			writer.write(value+" ("+attributes.get(key).get(value)+")\t");
         			colcount += 1;
         			if (this.cols > 0 && colcount > this.cols){
         			    break;
         			}
         		}
         		
-        		out.write("\n");
+        		writer.write("\n");
         		rowcount += 1;
                 if (this.rows > 0 && rowcount > this.rows){
                     break;
@@ -221,9 +221,9 @@ public class AttributeSummary extends AbstractInfileDriver<Callable<Void>> {
         } catch (IOException e) {
 			log.error("Unable to output to "+outputFilename, e);
 		} finally {
-        	if (out != null) {
+        	if (writer != null) {
         		try {
-        			out.close();
+        			writer.close();
         		} catch (IOException e){
         			//do nothing
         		}
