@@ -92,7 +92,7 @@ public class PRIDEXMLToSampleTab {
         return st.msi.getOrAddTermSource(termSource);
     }
     
-    public Map<String, Set<String>> getProjects(){
+    public Map<String, Set<String>> getProjects() {
         if (this.projects == null){
             //read all the projects
             try {
@@ -106,11 +106,11 @@ public class PRIDEXMLToSampleTab {
     }
     
 
-    private SCDNodeAttribute cvParamToAttribute(SampleData st, Element cvparam){
+    private SCDNodeAttribute cvParamToAttribute(SampleData st, Element cvparam) {
         return  cvParamToAttribute(st, cvparam, null);
     }
 
-    private SCDNodeAttribute cvParamToAttribute(SampleData st, Element cvparam, Integer subsampleid){
+    private SCDNodeAttribute cvParamToAttribute(SampleData st, Element cvparam, Integer subsampleid) {
 
         String name = cvparam.attributeValue("name").trim();
         String value = cvparam.attributeValue("value");

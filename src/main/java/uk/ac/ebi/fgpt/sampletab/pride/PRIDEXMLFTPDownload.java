@@ -13,7 +13,7 @@ public class PRIDEXMLFTPDownload implements Runnable {
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private String accession = null;
+    private String path = null;
     private File outfile = null;
     private boolean replace = false;
 
@@ -21,22 +21,22 @@ public class PRIDEXMLFTPDownload implements Runnable {
 
     }
 
-    public PRIDEXMLFTPDownload(String accession, String outfilename, boolean replace) {
-        this(accession, outfilename);
+    public PRIDEXMLFTPDownload(String path, String outfilename, boolean replace) {
+        this(path, outfilename);
         this.replace = replace;
     }
 
-    public PRIDEXMLFTPDownload(String accession, File outfile, boolean replace) {
-        this(accession, outfile);
+    public PRIDEXMLFTPDownload(String path, File outfile, boolean replace) {
+        this(path, outfile);
         this.replace = replace;
     }
 
-    public PRIDEXMLFTPDownload(String accession, String outfilename) {
-        this(accession, new File(outfilename));
+    public PRIDEXMLFTPDownload(String path, String outfilename) {
+        this(path, new File(outfilename));
     }
 
-    public PRIDEXMLFTPDownload(String accession, File outfile) {
-        this.accession = accession;
+    public PRIDEXMLFTPDownload(String path, File outfile) {
+        this.path = path;
         this.outfile = outfile;
     }
 
@@ -44,16 +44,16 @@ public class PRIDEXMLFTPDownload implements Runnable {
         return new PRIDEXMLFTPDownload();
     }
 
-    public void download(String accession, String outfilename) {
+    public void download(String path, String outfilename) {
         // replace by default
-        this.download(accession, outfilename, true);
+        this.download(path, outfilename, true);
     }
 
-    public void download(String accession, String outfilename, boolean replace) {
-        this.download(accession, new File(outfilename), replace);
+    public void download(String path, String outfilename, boolean replace) {
+        this.download(path, new File(outfilename), replace);
     }
 
-    public void download(String accession, File outfile, boolean replace) {
+    public void download(String path, File outfile, boolean replace) {
 
         // make sure the path is valid
         // construct directories if required
@@ -65,7 +65,7 @@ public class PRIDEXMLFTPDownload implements Runnable {
 
         if (!replace && outfile.exists()) {
             // we are not supposed to overwrite, so dont
-            log.debug("Skipping " + accession + " to " + outfile);
+            log.debug("Skipping writing " + outfile);
             return;
         }
 
@@ -74,11 +74,13 @@ public class PRIDEXMLFTPDownload implements Runnable {
         List<String> command = new ArrayList<String>();
         ProcessBuilder pb = new ProcessBuilder();
         Process p;
+        
+        
 
         // now we need to download, extract & filter the file
         try {
             //curl needs to redirect stderr to stdout
-            String bashcom = "curl -o - -s ftp://ftp.ebi.ac.uk/pub/databases/pride/PRIDE_Exp_Complete_Ac_" + accession + ".xml.gz 2>&1" 
+            String bashcom = "curl -o - -s ftp://ftp.pride.ebi.ac.uk/"+path+" 2>&1" 
                 + " | gunzip -c -d"
                 + " | sed '/<GelFreeIdentification>/,/<\\/GelFreeIdentification>/d' "
                 + " | sed '/<TwoDimensionalIdentification>/,/<\\/TwoDimensionalIdentification>/d' "
@@ -92,7 +94,7 @@ public class PRIDEXMLFTPDownload implements Runnable {
             command.add(bashcom);
             pb.command(command);
 
-            log.debug("Starting bash process for "+accession);
+            log.debug("Starting bash process for "+path);
             
             p = pb.start();
             synchronized (p) {
@@ -114,19 +116,6 @@ public class PRIDEXMLFTPDownload implements Runnable {
     }
 
     public void run() {
-        download(this.accession, this.outfile, this.replace);
+        download(this.path, this.outfile, this.replace);
     }
-
-    public static void main(String[] args) {
-        if (args.length < 2) {
-            System.out.println("Must provide an PRIDE identifier and an output filename.");
-            return;
-        }
-        String accession = args[0];
-        String outdir = args[1];
-
-        PRIDEXMLFTPDownload prideftpdownload = new PRIDEXMLFTPDownload();
-        prideftpdownload.download(accession, outdir);
-    }
-
 }
