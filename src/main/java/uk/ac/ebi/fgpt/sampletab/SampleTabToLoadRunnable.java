@@ -59,16 +59,11 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
         return null;
     }
     
-    private void doWork() {
+    private void doWork() throws Exception {
         
         SampleTabSaferParser stParser = new SampleTabSaferParser();
         SampleData sd = null;
-        try {
-            sd = stParser.parse(inputFile);
-        } catch (ParseException e) {
-            log.error("Error parsing "+inputFile, e);
-            return;
-        }
+        sd = stParser.parse(inputFile);
         if (sd == null){
             log.error("Error parsing "+inputFile);
             return;
@@ -78,27 +73,8 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
         
         // do conversion
         SampleTabToLoad toloader;
-        try {
-            toloader = new SampleTabToLoad(host, port, database, username, password);
-        } catch (ClassNotFoundException e) {
-            log.error("Problem converting " + inputFile, e);
-            return;
-        } catch (SQLException e) {
-            log.error("Problem converting " + inputFile, e);
-            return;
-        }
-        try {
-            sd = toloader.convert(sd);
-        } catch (ParseException e) {
-            log.error("Problem converting " + inputFile, e);
-            return;
-        } catch (ClassNotFoundException e) {
-            log.error("Problem converting " + inputFile, e);
-            return;
-        } catch (SQLException e) {
-            log.error("Problem converting " + inputFile, e);
-            return;
-        }
+        toloader = new SampleTabToLoad(host, port, database, username, password);
+        sd = toloader.convert(sd);
         
         log.info("sampletab converted, preparing to validate " + inputFile);
         
@@ -111,7 +87,7 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
             for (ErrorItem err : e.getErrorItems()){
                 log.error(err.reportString());
             }
-            return;
+            throw e;
         }
 
         log.info("sampletab validated, preparing to output to " + outputFile);
@@ -120,18 +96,14 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
         FileWriter out = null;
         try {
             out = new FileWriter(outputFile);
-        } catch (IOException e) {
-            log.error("Error opening " + outputFile, e);
-            return;
-        }
 
-        SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-        try {
+            SampleTabWriter sampletabwriter = new SampleTabWriter(out);
             sampletabwriter.write(sd);
             sampletabwriter.close();
-        } catch (IOException e) {
-            log.error("Error writing " + outputFile, e);
-            return;
+        } finally {
+            if (out != null) {
+                out.close();
+            }
         }
         log.debug("Processed " + inputFile);
     }

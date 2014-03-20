@@ -100,10 +100,8 @@ public class SampleTabBulkRunnable implements Callable<Void> {
                 }
                 throw e;
             } catch (SQLException e) {
-                log.error("Problem processing "+sampletabpre, e);
                 throw e;
             } catch (RuntimeException e){
-                log.error("Problem processing "+sampletabpre, e);
                 throw e;
             }
 
@@ -117,7 +115,6 @@ public class SampleTabBulkRunnable implements Callable<Void> {
                 try {
                     derivedFrom.convert(st);
                 } catch (IOException e) {
-                    log.error("Unable to find derived from relationships due to error", e);
                     throw e;
                 }
 
@@ -125,7 +122,6 @@ public class SampleTabBulkRunnable implements Callable<Void> {
                 try {
                     sameAs.convert(st);
                 } catch (IOException e) {
-                    log.error("Unable to find derived from relationships due to error", e);
                     throw e;
                 }
             }
@@ -139,7 +135,6 @@ public class SampleTabBulkRunnable implements Callable<Void> {
                 sampletabwriter.write(st);
                 sampletabwriter.close();
             } catch (IOException e) {
-                log.error("Problem processing "+sampletabpre, e);
                 throw e;
             } finally {
                 if (writer != null){
