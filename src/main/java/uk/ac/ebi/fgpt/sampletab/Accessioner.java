@@ -316,13 +316,7 @@ public class Accessioner {
                     //do nothing
                 }
             }
-            if (connect != null){
-                try {
-                    connect.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
+            //don't close connect because its passed in
         }
     }
     
