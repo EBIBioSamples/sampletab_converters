@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -13,8 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,28 +62,14 @@ public class PRIDEcron {
     private Set<String> updated = new HashSet<String>();
     
     private Set<String> deleted = new HashSet<String>();
-    
+
+    private Map<String, Set<String>> groups = new HashMap<String, Set<String>>();
 
     private PRIDEcron() {
         
     }
-
-    private void close() {
-        try {
-            ftp.logout();
-        } catch (IOException e) {
-            if (ftp.isConnected()) {
-                try {
-                    ftp.disconnect();
-                } catch (IOException ioe) {
-                    // do nothing
-                }
-            }
-        }
-
-    }
     
-    private void downloads(File outdir) {
+    private void downloads() {
 
         Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
                 
@@ -89,7 +78,6 @@ public class PRIDEcron {
             pool = Executors.newFixedThreadPool(threads);
         }
         
-        Map<String, Set<String>> groups = new HashMap<String, Set<String>>();
         
         try {
             ftp = FTPUtils.connect("ftp.pride.ebi.ac.uk");
@@ -118,7 +106,7 @@ public class PRIDEcron {
                                 }
                                 groups.get(experimentID).add(accession);
                                 //download it to the update
-                                File outfile = getTrimFile(outdir, experimentID, accession);
+                                File outfile = getTrimFile(outputDir, experimentID, accession);
                                 // do not overwrite existing files unless newer
                                 Calendar ftptime = file.getTimestamp();
                                 Calendar outfiletime = new GregorianCalendar();
@@ -146,6 +134,18 @@ public class PRIDEcron {
             log.error("Unable to connect to FTP", e);
             System.exit(1);
             return;
+        } finally {
+            try {
+                ftp.logout();
+            } catch (IOException e) {
+                if (ftp.isConnected()) {
+                    try {
+                        ftp.disconnect();
+                    } catch (IOException ioe) {
+                        // do nothing
+                    }
+                }
+            }
         }
 
         /*
@@ -238,14 +238,66 @@ public class PRIDEcron {
             outputDir.mkdirs();
         }
 
-        try {
-            downloads(outputDir);
-            log.info("Completed downloading, starting parsing...");
-            //TODO hide files that have disappeared from the FTP site.            
-        } finally {
-            // tidy up ftp connection
-            this.close();
-        }
+        downloads();
+        log.info("Completed downloading, starting parsing...");
+        //TODO hide files that have disappeared from the FTP site.            
         
+        ExecutorService pool = null;
+        if (threads > 0 ) {
+            pool = Executors.newFixedThreadPool(threads);
+        
+            Collection<Future<Void>> futures = new ArrayList<Future<Void>>();
+            for (String experimentID: updated) {
+                Set<File> files = new HashSet<File>();
+                for (String accession : groups.get(experimentID)) {
+                    files.add(getTrimFile(outputDir, experimentID, accession));
+                }
+                
+                File outFile = SampleTabUtils.getSubmissionDirFile(experimentID);
+                outFile = new File(outFile, "sampletab.pre.txt");
+                
+                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, outFile);
+                futures.add(pool.submit(callable));
+            }
+            for (Future<Void> future : futures) {
+                try {
+                    future.get();
+                } catch (InterruptedException e) {
+                    //something went wrong
+                    log.error("problem getting future", e);
+                } catch (ExecutionException e) {
+                    //something went wrong
+                    log.error("problem getting future", e);
+                }
+            }
+        } else {
+            //not threaded
+            for (String experimentID: updated) {
+                Set<File> files = new HashSet<File>();
+                for (String accession : groups.get(experimentID)) {
+                    files.add(getTrimFile(outputDir, experimentID, accession));
+                }
+                
+                File outFile = SampleTabUtils.getSubmissionDirFile(experimentID);
+                outFile = new File(outFile, "sampletab.pre.txt");
+                
+                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, outFile);
+                try {
+                    callable.call();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        if (!noconan) {
+            //submit to conan
+            for (String submission : updated) {
+                try {
+                    ConanUtils.submit(submission, "BioSamples (other)");
+                } catch (IOException e) {
+                    log.error("Problem submitting "+submission+" to conan", e);
+                }
+            }
+        }
     }
 }

@@ -44,20 +44,6 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class PRIDEXMLToSampleTab {
 
-    @Option(name = "-h", aliases={"--help"}, usage = "display help")
-    private boolean help;
-
-    @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output filename")
-    private String outputFilename;
-
-    @Argument(required=true, index=1, metaVar="INPUT", usage = "input filename(s)")
-    private String inputFilename;
-
-    @Option(name = "-p", aliases={"--projects"}, usage = "projects filename")
-    private String projectsFilename;
-
-    private Map<String, Set<String>> projects = null;
-
     private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     
     // logging
@@ -66,15 +52,7 @@ public class PRIDEXMLToSampleTab {
     public PRIDEXMLToSampleTab() {
         
     }
-    
-    public PRIDEXMLToSampleTab(String projectsFilename) {
-        this.projectsFilename = projectsFilename;
-    }
-    
-    public PRIDEXMLToSampleTab(Map<String, Set<String>> projects) {
-        this.projects = projects;
-    }
-    
+        
     public String getOrAddTermSource(SampleData st, String key) {
 
         if (st == null){
@@ -90,21 +68,7 @@ public class PRIDEXMLToSampleTab {
         }
         
         return st.msi.getOrAddTermSource(termSource);
-    }
-    
-    public Map<String, Set<String>> getProjects() {
-        if (this.projects == null){
-            //read all the projects
-            try {
-                this.projects = PRIDEutils.loadProjects(new File(this.projectsFilename));
-            } catch (IOException e) {
-                log.error("Unable to read projects file "+projectsFilename, e);
-                this.projects = null;
-            }
-        }
-        return this.projects;
-    }
-    
+    }    
 
     private SCDNodeAttribute cvParamToAttribute(SampleData st, Element cvparam) {
         return  cvParamToAttribute(st, cvparam, null);
@@ -253,7 +217,10 @@ public class PRIDEXMLToSampleTab {
         st.msi.submissionReleaseDate = new Date();
         st.msi.submissionUpdateDate = new Date();
         
-        for (File infile : infiles){
+        for (File infile : infiles) {
+            //ensure using absolute filenames
+            infile = infile.getAbsoluteFile();
+            
             Element expcollection = XMLUtils.getDocument(infile).getRootElement();
             Element exp = XMLUtils.getChildByName(expcollection, "Experiment");
             Element additional = XMLUtils.getChildByName(exp, "additional");
@@ -264,8 +231,13 @@ public class PRIDEXMLToSampleTab {
             Element samplename = XMLUtils.getChildByName(admin, "sampleName");
             String accession = XMLUtils.getChildByName(exp, "ExperimentAccession").getTextTrim();
             
-            if (st.msi.submissionTitle == null || st.msi.submissionTitle.length() == 0)
+            if (st.msi.submissionTitle == null || st.msi.submissionTitle.length() == 0) {
                 st.msi.submissionTitle = XMLUtils.getChildByName(exp, "Title").getTextTrim();
+            }
+            if (st.msi.submissionIdentifier == null) {
+                st.msi.submissionIdentifier = infile.getParentFile().getName();
+            }
+            
             //PRIDE dont have submission description
             //actually maybe it does as a CVparam...
             
@@ -466,113 +438,5 @@ public class PRIDEXMLToSampleTab {
 
         convert(infiles, new File(outfilename));
     }
-    
-    
-    public void convert(String inputFilename, String outputFilename) throws IOException, DocumentException, ValidateException {
 
-        //read the given input filename to determine accession
-        String accession;
-        File inputFile = new File(inputFilename);
-        try {
-            accession = "GPR-"+PRIDEutils.extractAccession(inputFile);
-        } catch (FileNotFoundException e1) {
-            log.warn("Unable to find accession of "+inputFilename);
-            return;
-        } catch (DocumentException e1) {
-            log.warn("Unable to find accession of "+inputFilename);
-            return;
-        }
-        
-        log.debug("accession = "+accession);
-
-        //find the project
-        String projectname = null;
-        for (String name: getProjects().keySet()) {
-            //TODO handle where one accession is in multiple projects...
-            if (getProjects().get(name).contains(accession)) {
-                if (projectname == null) {
-                    projectname = name;
-                } else {
-                    log.warn("Multiple project names for "+accession+" : "+name);
-                }
-            }
-        }
-        
-        if (projectname == null){
-            log.warn("Unable to find project for "+accession);
-            projectname = accession;
-        }
-        log.debug("projectname = "+projectname);
-
-        HashSet<File> prideFiles = new HashSet<File>();
-        
-        if (projectsFilename != null) {
-            //if a project filename was given, then we find the project that the provided input filename is part of
-            if (getProjects() == null) {
-                log.warn("No files of project "+projectname+" to process");
-                return;
-            }
-            
-            //now add all the files that are similar to the input filename but with the other accessions
-            Set<String> accessions = getProjects().get(projectname);
-            for (String subaccession : accessions) {
-                prideFiles.add(new File(inputFilename.replace(accession, subaccession)));
-            }
-            
-        } else {
-            prideFiles.add(new File(inputFilename));
-        }
-        
-        if (!accession.equals(Collections.min(getProjects().get(projectname)))) {
-            log.error("Accession is not minimum in project, aborting");
-            return;
-        }
-        
-        this.convert(prideFiles, outputFilename);
-        
-    }
-
-    public static void main(String[] args) {
-        new PRIDEXMLToSampleTab().doMain(args);
-    }
-
-    public void doMain(String[] args) {
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            // parse the arguments.
-            parser.parseArgument(args);
-            // TODO check for extra arguments?
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            help = true;
-        }
-
-        if (help) {
-            // print the list of available options
-            parser.printSingleLineUsage(System.err);
-            System.err.println();
-            parser.printUsage(System.err);
-            System.err.println();
-            System.exit(1);
-            return;
-        }
-        
-        //TODO convert to using globs
-        log.info("Converting "+inputFilename+" to "+outputFilename);
-        try {
-            convert(inputFilename, outputFilename);
-        } catch (IOException e) {
-            log.error("Error converting " + inputFilename + " to " + outputFilename, e);
-            System.exit(2);
-            return;
-        } catch (DocumentException e) {
-            log.error("Error converting " + inputFilename + " to " + outputFilename, e);
-            System.exit(3);
-            return;
-        } catch (ValidateException e) {
-            log.error("Error converting " + inputFilename + " to " + outputFilename, e);
-            System.exit(4);
-            return;
-        }
-    }
 }
