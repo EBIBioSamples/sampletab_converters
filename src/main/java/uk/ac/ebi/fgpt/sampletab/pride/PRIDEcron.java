@@ -69,6 +69,12 @@ public class PRIDEcron {
         
     }
     
+    private File getTrimFile(File outDir, String experiment, String accession) {
+        File experimentDir = new File(outDir, "GPR-"+experiment);
+        File trimFile = new File(experimentDir, accession+".xml");
+        return trimFile;
+    }
+    
     private void downloads() {
 
         Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
@@ -92,6 +98,7 @@ public class PRIDEcron {
                     FTPFile[] experiments = ftp.listFiles("/pride/data/archive/"+year.getName()+"/"+month.getName());
                     for (FTPFile experiment: experiments) {
                         String experimentID = experiment.getName();
+                        log.trace("checking experiment "+experimentID);
                         FTPFile[] files = ftp.listFiles("/pride/data/archive/"+year.getName()+"/"+month.getName()+"/"+experimentID);
                         for (FTPFile file : files) {
                             //do a regular expression to match and pull out accession
@@ -122,14 +129,19 @@ public class PRIDEcron {
                                     }
                                     updated.add(experimentID);
                                 }
+
+                                //check the sampletab.pre.txt file exists, and if not flag an update
+                                File sampleTabFile = new File(new File(outputDir, "GPR-"+experimentID), "sampletab.pre.txt");
+                                if (!sampleTabFile.exists()) {
+                                    updated.add(experimentID);
+                                }
                             }
-                            
                         }
                     }
                     
                 }
             }
-            log.info("Got file listing");
+            log.info("Got PRIDE FTP file listing");
         } catch (IOException e) {
             log.error("Unable to connect to FTP", e);
             System.exit(1);
@@ -196,12 +208,6 @@ public class PRIDEcron {
             }
         }
     }
-    
-    private File getTrimFile(File outDir, String experiment, String accession) {
-        File experimentDir = new File(outDir, "GPR-"+experiment);
-        File trimFile = new File(experimentDir, accession+".xml");
-        return trimFile;
-    }
 
     public static void main(String[] args) {
         new PRIDEcron().doMain(args);
@@ -253,7 +259,7 @@ public class PRIDEcron {
                     files.add(getTrimFile(outputDir, experimentID, accession));
                 }
                 
-                File outFile = SampleTabUtils.getSubmissionDirFile(experimentID);
+                File outFile = SampleTabUtils.getSubmissionDirFile("GPR-"+experimentID);
                 outFile = new File(outFile, "sampletab.pre.txt");
                 
                 PRIDEXMLCallable callable = new PRIDEXMLCallable(files, outFile);
@@ -270,6 +276,19 @@ public class PRIDEcron {
                     log.error("problem getting future", e);
                 }
             }
+            // run the pool and then close it afterwards
+            // must synchronize on the pool object
+            if (pool != null) {
+                synchronized (pool) {
+                    pool.shutdown();
+                    try {
+                        // allow 24h to execute. Rather too much, but meh
+                        pool.awaitTermination(1, TimeUnit.DAYS);
+                    } catch (InterruptedException e) {
+                        log.error("Interuppted awaiting thread pool termination", e);
+                    }
+                }
+            }
         } else {
             //not threaded
             for (String experimentID: updated) {
@@ -278,7 +297,7 @@ public class PRIDEcron {
                     files.add(getTrimFile(outputDir, experimentID, accession));
                 }
                 
-                File outFile = SampleTabUtils.getSubmissionDirFile(experimentID);
+                File outFile = SampleTabUtils.getSubmissionDirFile("GPR-"+experimentID);
                 outFile = new File(outFile, "sampletab.pre.txt");
                 
                 PRIDEXMLCallable callable = new PRIDEXMLCallable(files, outFile);

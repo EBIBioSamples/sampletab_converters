@@ -209,7 +209,7 @@ public class PRIDEXMLToSampleTab {
     }
     
     
-    public SampleData convert(Set<File> infiles) throws DocumentException, FileNotFoundException {
+    public SampleData convert(Set<File> infiles, String submissionId) throws DocumentException, FileNotFoundException {
         
         SampleData st = new SampleData();
         st.msi.submissionReferenceLayer = false;
@@ -379,21 +379,15 @@ public class PRIDEXMLToSampleTab {
         }
         //these can only be calculated after all other steps
         
-        //submission id is the minimum sample id
-        List<String> submitids = new ArrayList<String>();
-        for (SCDNode in : st.scd.getAllNodes()){
-            submitids.add(in.getNodeName());
-        }
-        Collections.sort(submitids);
-        st.msi.submissionIdentifier = "GPR-"+submitids.get(0) ;
+        st.msi.submissionIdentifier = submissionId;
         
         log.info("Finished convert()");
         return st;
     }
 
-    public void convert(Set<File> infiles, Writer writer) throws IOException, DocumentException, ValidateException  {
+    public void convert(Set<File> infiles, Writer writer, String submissionId) throws IOException, DocumentException, ValidateException  {
         log.debug("recieved infiles, preparing to convert");
-        SampleData st = convert(infiles);
+        SampleData st = convert(infiles, submissionId);
         log.info("SampleTab converted, preparing to write");
 
         //Validator<SampleData> validator = new SampleTabValidator();
@@ -419,10 +413,11 @@ public class PRIDEXMLToSampleTab {
         if (!sampletabFile.getParentFile().exists()) {
             sampletabFile.getParentFile().mkdirs();
         }
+        String submissionId = sampletabFile.getParentFile().getName();
         FileWriter writer = null;
         try {
             writer = new FileWriter(sampletabFile); 
-            convert(infiles, writer);
+            convert(infiles, writer, submissionId);
         } finally {
             try {
                 if (writer != null ){
@@ -432,11 +427,6 @@ public class PRIDEXMLToSampleTab {
                 //do nothing
             }
         }
-    }
-
-    public void convert(Set<File> infiles, String outfilename) throws IOException, DocumentException, ValidateException  {
-
-        convert(infiles, new File(outfilename));
     }
 
 }
