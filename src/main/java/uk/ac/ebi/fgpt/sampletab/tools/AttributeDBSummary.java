@@ -106,14 +106,21 @@ public class AttributeDBSummary extends AbstractDriver {
                         
             //get key/value pairs           
 
-            String sql = "SELECT DB_REC_REF.DB_NAME, EXP_PROP_VAL.TERM_TEXT, EXP_PROP_TYPE.TERM_TEXT, BIO_PRODUCT.ACC " +
+            String sql = "SELECT DB_REC_REF.DB_NAME, EXP_PROP_VAL.TERM_TEXT, EXP_PROP_TYPE.TERM_TEXT " +
             	"FROM EXP_PROP_TYPE, EXP_PROP_VAL, PRODUCT_PV, BIO_PRODUCT, SAMPLE_DB_REC_REF, DB_REC_REF " +
             	"WHERE EXP_PROP_VAL.TYPE_ID = EXP_PROP_TYPE.ID " +
-            	"AND EXP_PROP_VAL.ID = PRODUCT_PV.PV_ID " +
-            	"AND PRODUCT_PV.OWNER_ID = BIO_PRODUCT.ID " +
-            	"AND BIO_PRODUCT.ID = SAMPLE_DB_REC_REF.SAMPLE_ID " +
-            	"AND SAMPLE_DB_REC_REF.DB_REC_ID = DB_REC_REF.ID ";            
+            	    "AND EXP_PROP_VAL.ID = PRODUCT_PV.PV_ID " +
+            	    "AND PRODUCT_PV.OWNER_ID = BIO_PRODUCT.ID " +
+            	    "AND BIO_PRODUCT.ID = SAMPLE_DB_REC_REF.SAMPLE_ID " +
+            	    "AND SAMPLE_DB_REC_REF.DB_REC_ID = DB_REC_REF.ID ";            
             
+            
+            sql = "SELECT MSI.ACC, EXP_PROP_VAL.TERM_TEXT, EXP_PROP_TYPE.TERM_TEXT " +
+        		"FROM EXP_PROP_TYPE, EXP_PROP_VAL, PRODUCT_PV, MSI_SAMPLE, MSI " +
+        		"WHERE EXP_PROP_VAL.TYPE_ID = EXP_PROP_TYPE.ID " +
+        		    "AND EXP_PROP_VAL.ID = PRODUCT_PV.PV_ID " +
+        		    "AND PRODUCT_PV.OWNER_ID = MSI_SAMPLE.SAMPLE_ID " +
+        		    "AND MSI_SAMPLE.MSI_ID = MSI.ID";   
             
             rs = statement.executeQuery(sql);
             if (rs == null) {
@@ -126,7 +133,7 @@ public class AttributeDBSummary extends AbstractDriver {
             while (rs.next()) {
                 //results are 1-indexed
                 String value= rs.getString(2);
-                String key = rs.getString(1)+":"+rs.getString(3); //SOURCE:TYPE
+                String key = rs.getString(1).substring(0, 3)+":"+rs.getString(3); //SOURCE:TYPE
                 log.trace("Got "+key+" / "+value);
 
                 if (!map.containsKey(key)) {
