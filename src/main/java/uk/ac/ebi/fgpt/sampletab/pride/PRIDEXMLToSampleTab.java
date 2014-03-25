@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
@@ -216,6 +217,11 @@ public class PRIDEXMLToSampleTab {
         //PRIDE does not track dates :(
         st.msi.submissionReleaseDate = new Date();
         st.msi.submissionUpdateDate = new Date();
+
+        st.msi.submissionIdentifier = submissionId;
+        st.msi.databases.add(new Database("PRIDE", submissionId.substring(4), 
+                "https://www.ebi.ac.uk/pride/archive/projects/"+submissionId.substring(4)));
+        
         
         for (File infile : infiles) {
             //ensure using absolute filenames
@@ -233,9 +239,6 @@ public class PRIDEXMLToSampleTab {
             
             if (st.msi.submissionTitle == null || st.msi.submissionTitle.length() == 0) {
                 st.msi.submissionTitle = XMLUtils.getChildByName(exp, "Title").getTextTrim();
-            }
-            if (st.msi.submissionIdentifier == null) {
-                st.msi.submissionIdentifier = infile.getParentFile().getName();
             }
             
             //PRIDE dont have submission description
@@ -272,7 +275,8 @@ public class PRIDEXMLToSampleTab {
                 }
             }
 
-            DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, " https://www.ebi.ac.uk/pride/archive/simpleSearch?q="+accession);
+            DatabaseAttribute dbattr = new DatabaseAttribute("PRIDE", accession, 
+                    "https://www.ebi.ac.uk/pride/archive/projects/"+submissionId.substring(4)+"/assays/"+accession);
             
             if (isSubSample(sampledescription)){
                 //this is a sub-sample thing
@@ -377,10 +381,6 @@ public class PRIDEXMLToSampleTab {
             }
             
         }
-        //these can only be calculated after all other steps
-        
-        st.msi.submissionIdentifier = submissionId;
-        
         log.info("Finished convert()");
         return st;
     }
