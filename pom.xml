@@ -3,7 +3,7 @@
 
 	<groupId>uk.ac.ebi.fgpt</groupId>
 	<artifactId>sampletab-converters</artifactId>
-	<version>1.0.8-SNAPSHOT</version>
+	<version>1.0.8</version>
 	<packaging>jar</packaging>
 
 	<name>Module for converting various format files to SampleTab</name>
@@ -28,7 +28,7 @@
 	<!-- SVN connection -->
 	<scm>
 		<connection>scm:git:git@github.com:EBIBioSamples/sampletab_converters.git</connection>
-	  <tag>HEAD</tag>
+	  <tag>v1.0.8</tag>
   </scm>
 
 	<repositories>
