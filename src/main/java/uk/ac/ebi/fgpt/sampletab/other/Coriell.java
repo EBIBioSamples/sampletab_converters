@@ -1,4 +1,4 @@
-package uk.ac.ebi.fgpt.sampletab;
+package uk.ac.ebi.fgpt.sampletab.other;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
