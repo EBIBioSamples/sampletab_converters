@@ -99,8 +99,10 @@ public abstract class AbstractInfileDriver<T extends Callable<?>> extends Abstra
             List<Future<?>> futures = new LinkedList<Future<?>>();
             for (File inputFile : inputFiles) {
                 Callable<?> t = getNewTask(inputFile);
-                Future<?> f = pool.submit(t);
-                futures.add(f);
+                if (t != null) {
+                    Future<?> f = pool.submit(t);
+                    futures.add(f);
+                }
             }
             
             for (Future<?> f : futures) {
