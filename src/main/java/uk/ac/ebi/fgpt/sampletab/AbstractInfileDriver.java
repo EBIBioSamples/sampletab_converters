@@ -118,11 +118,13 @@ public abstract class AbstractInfileDriver<T extends Callable<?>> extends Abstra
             //we are not using a pool, its all in one
             for (File inputFile : inputFiles) {
                 Callable<?> t = getNewTask(inputFile);
-                try {
-                    t.call();
-                } catch (Exception e) {
-                    //something went wrong
-                    exitCode = 1;
+                if (t != null) {
+                    try {
+                        t.call();
+                    } catch (Exception e) {
+                        //something went wrong
+                        exitCode = 1;
+                    }
                 }
             }
         }
