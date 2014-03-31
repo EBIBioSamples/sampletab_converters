@@ -116,7 +116,7 @@ public class PRIDEmigrateaccession {
                 }
             }
             
-            //do anyting about groups? no not really needed
+            //do anything about groups? no not really needed
             
         } catch (SQLRecoverableException e) {
             log.warn("Problematic exception", e);
