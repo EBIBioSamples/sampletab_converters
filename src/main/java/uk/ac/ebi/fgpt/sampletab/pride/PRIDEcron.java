@@ -57,11 +57,11 @@ public class PRIDEcron {
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    private FTPClient ftp = null;
-    
     private Set<String> updated = new HashSet<String>();
     
     private Set<String> deleted = new HashSet<String>();
+    
+    private FTPClient ftp = null;
 
     private Map<String, Set<String>> groups = new HashMap<String, Set<String>>();
 
@@ -75,6 +75,13 @@ public class PRIDEcron {
         return trimFile;
     }
     
+    private FTPClient getFTP() throws IOException {
+        if (ftp == null || !ftp.isConnected()) {
+            ftp =  FTPUtils.connect("ftp.pride.ebi.ac.uk");
+        }
+        return ftp;
+    }
+    
     private void downloads() {
 
         Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
@@ -84,22 +91,20 @@ public class PRIDEcron {
             pool = Executors.newFixedThreadPool(threads);
         }
         
-        
         try {
-            ftp = FTPUtils.connect("ftp.pride.ebi.ac.uk");
             log.info("Getting file listing...");
-            FTPFile[] years = ftp.listDirectories("/pride/data/archive");
+            FTPFile[] years = getFTP().listDirectories("/pride/data/archive");
             for (FTPFile year : years) {
                 log.trace("found year "+year.getName());
-                FTPFile[] months = ftp.listDirectories("/pride/data/archive/"+year.getName());
+                FTPFile[] months = getFTP().listDirectories("/pride/data/archive/"+year.getName());
                 for (FTPFile month : months) {
                     log.trace("found month "+month.getName());
                     //TODO something
-                    FTPFile[] experiments = ftp.listFiles("/pride/data/archive/"+year.getName()+"/"+month.getName());
+                    FTPFile[] experiments = getFTP().listFiles("/pride/data/archive/"+year.getName()+"/"+month.getName());
                     for (FTPFile experiment: experiments) {
                         String experimentID = experiment.getName();
                         log.trace("checking experiment "+experimentID);
-                        FTPFile[] files = ftp.listFiles("/pride/data/archive/"+year.getName()+"/"+month.getName()+"/"+experimentID);
+                        FTPFile[] files = getFTP().listFiles("/pride/data/archive/"+year.getName()+"/"+month.getName()+"/"+experimentID);
                         for (FTPFile file : files) {
                             //do a regular expression to match and pull out accession
                             Matcher matcher = regex.matcher(file.getName());
