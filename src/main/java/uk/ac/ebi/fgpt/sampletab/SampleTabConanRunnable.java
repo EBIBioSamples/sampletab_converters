@@ -14,16 +14,24 @@ public class SampleTabConanRunnable implements Callable<Void> {
 
     private final String submissionIdentifier;
     private final String pipeline;
+    private final int index;
     
     public SampleTabConanRunnable(String submissionIdentifier, String pipeline) {
         this.submissionIdentifier = submissionIdentifier;
         this.pipeline = pipeline;
+        this.index = 0;
+    }
+    
+    public SampleTabConanRunnable(String submissionIdentifier, String pipeline, int index) {
+        this.submissionIdentifier = submissionIdentifier;
+        this.pipeline = pipeline;
+        this.index = index;
     }
     
     @Override
     public Void call() throws Exception {
         try {
-            ConanUtils.submit(submissionIdentifier, pipeline);
+            ConanUtils.submit(submissionIdentifier, pipeline, index);
         } catch (IOException e) {
             log.error("Problem submitting "+submissionIdentifier+" to "+pipeline);
         }
