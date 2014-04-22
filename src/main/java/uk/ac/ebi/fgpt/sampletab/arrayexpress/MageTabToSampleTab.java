@@ -34,6 +34,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
@@ -451,6 +452,25 @@ public class MageTabToSampleTab {
         if (st.scd.getAllNodes().size() == 0){
             log.error("Zero nodes converted");
             throw new ParseException("Zero nodes converted");
+        }
+        
+
+        // add the samples into a group
+        GroupNode othergroup = new GroupNode("Other Group");
+        for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+            // check there is not an existing group first...
+            boolean inGroup = false;
+            
+            if (!inGroup){
+                log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
+                othergroup.addSample(sample);
+            }
+        }
+        //only add the new group if it has any samples
+        if (othergroup.getParentNodes().size() > 0){
+            st.scd.addNode(othergroup);
+            log.info("Added Other group node");
+            // also need to accession the new node
         }
                 
         log.info("Finished convert()");
