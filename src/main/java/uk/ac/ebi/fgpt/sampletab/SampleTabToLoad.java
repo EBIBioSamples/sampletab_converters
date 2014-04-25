@@ -71,6 +71,20 @@ public class SampleTabToLoad {
             sampledata.msi.submissionDescription = sampledata.msi.submissionTitle;
         }
         
+        //replace implicit derived from with explicit derived from relationships
+        for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
+            if (sample.getParentNodes().size() > 0){
+                for (Node parent : new HashSet<Node>(sample.getParentNodes())){
+                    if (SampleNode.class.isInstance(parent)){
+                        SampleNode parentsample = (SampleNode) parent;
+                        DerivedFromAttribute attr = new DerivedFromAttribute(parentsample.getSampleAccession());
+                        sample.addAttribute(attr);
+                        sample.removeParentNode(parentsample);
+                        parentsample.removeChildNode(sample);
+                    }
+                }
+            }
+        }
         
         // All samples must be in a group
         // so create a new group and add all non-grouped samples to it
@@ -81,11 +95,13 @@ public class SampleTabToLoad {
             //even if it has child nodes, both parent and child must be in a group
             //this will lead to some weird looking row duplications, but since this is an internal 
             //intermediate file it is not important
-//            for (Node n : sample.getChildNodes()) {
-//                if (GroupNode.class.isInstance(n)) {
-//                    inGroup = true;
-//                }
-//            }
+            //Follow up: since implicit derived from relationships are made explicit above, 
+            //this is not an issue any more
+            for (Node n : sample.getChildNodes()) {
+               if (GroupNode.class.isInstance(n)) {
+                    inGroup = true;
+                }
+            }
             
             if (!inGroup){
                 log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
@@ -107,22 +123,6 @@ public class SampleTabToLoad {
                     "/sampletab.txt"
                 );
             group.addAttribute(ftpattrib);
-        }
-        
-        
-        //replace implicit derived from with explicit derived from relationships
-        for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
-            if (sample.getParentNodes().size() > 0){
-                for (Node parent : new HashSet<Node>(sample.getParentNodes())){
-                    if (SampleNode.class.isInstance(parent)){
-                        SampleNode parentsample = (SampleNode) parent;
-                        DerivedFromAttribute attr = new DerivedFromAttribute(parentsample.getSampleAccession());
-                        sample.addAttribute(attr);
-                        sample.removeParentNode(parentsample);
-                        parentsample.removeChildNode(sample);
-                    }
-                }
-            }
         }
         
         //If there was an NCBI BioSamples accession as a synonym
