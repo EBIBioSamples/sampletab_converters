@@ -54,7 +54,7 @@ public class NCBIupdateDownloader {
 	int rangedate = c.get(Calendar.DATE);
 	int rangemonth;
 	int rangeyear;
-	if(currentmonth==1){
+	if(currentmonth==1 && (currentdate <=7)){
 		rangemonth =12;
 		rangeyear = currentyear-1;
 	}else{
