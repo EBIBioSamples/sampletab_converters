@@ -1,22 +1,23 @@
 package uk.ac.ebi.fgpt.sampletab.pride;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,10 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
+import uk.ac.ebi.fgpt.sampletab.SampleTabBulkDriver;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.PRIDEutils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class PRIDEcron {
@@ -44,7 +44,6 @@ public class PRIDEcron {
     private boolean help;
 
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output filename")
-    private String outputDirName;
     private File outputDir;
 
     @Option(name = "--threads", aliases={"-t"}, usage = "number of additional threads")
@@ -52,165 +51,154 @@ public class PRIDEcron {
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
+
+    @Option(name = "--migrate-accession", usage = "migrate accession numbers?")
+    private boolean migrateaccession = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
-    
-    private FTPClient ftp = null;
-
-    private Map<String, Set<String>> subs = Collections.synchronizedMap(new HashMap<String, Set<String>>());
     
     private Set<String> updated = new HashSet<String>();
     
     private Set<String> deleted = new HashSet<String>();
     
+    private FTPClient ftp = null;
+
+    private Map<String, Set<String>> groups = new HashMap<String, Set<String>>();
 
     private PRIDEcron() {
         
     }
-
-    private void close() {
-        try {
-            ftp.logout();
-        } catch (IOException e) {
-            if (ftp.isConnected()) {
-                try {
-                    ftp.disconnect();
-                } catch (IOException ioe) {
-                    // do nothing
-                }
-            }
-        }
-
-    }
-
-    private File getTrimFile(File outdir, String accesssion) {
-        File subdir = new File(outdir, "GPR-" + accesssion);
-        File trim = new File(subdir, "trimmed.xml");
-        return trim.getAbsoluteFile();
+    
+    private File getTrimFile(File outDir, String experiment, String accession) {
+        File experimentDir = new File(outDir, "GPR-"+experiment);
+        File trimFile = new File(experimentDir, accession+".xml");
+        return trimFile;
     }
     
-    private class XMLProjectRunnable implements Runnable {
+    private FTPClient getFTP() throws IOException {
+        if (ftp == null || !ftp.isConnected()) {
+            ftp =  FTPUtils.connect("ftp.pride.ebi.ac.uk");
+        }
+        return ftp;
+    }
+    
+    private void downloads() {
 
-        private File subdir = null;
-        private Map<String, Set<String>> subs = null;
-        
-        public XMLProjectRunnable(File subdir, Map<String, Set<String>> subs){
-            this.subdir = subdir;
-            this.subs = subs;
+        Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
+                
+        ExecutorService pool = null;
+        if (threads > 0 ) {
+            pool = Executors.newFixedThreadPool(threads);
         }
         
-        public void run() {
-            if (subdir.isDirectory() && subdir.getName().matches("GPR-[0-9]+")) {
-                // get the xml file in this subdirectory
-                File xmlfile = new File(subdir, "trimmed.xml");
-                if (xmlfile.exists()) {
-                    Set<String> projects;
-                    try {
-						projects = PRIDEutils.getProjects(xmlfile);
-					} catch (FileNotFoundException e) {
-						log.error("Error reading file "+xmlfile, e);
-						return;
-					} catch (DocumentException e) {
-						log.error("Error parsing file "+xmlfile, e);
-						return;
-					}
-					if (projects.size() == 0){
-					    log.warn("Unable to find any projects for "+subdir.getName());
-					    projects.add(subdir.getName());
-					}
-                    for (String project : projects) {
-                        // add it if it does not exist
-                        synchronized (this.subs) {
-                            if (!subs.containsKey(project)) {
-                                subs.put(project, Collections.synchronizedSet(new HashSet<String>()));
+        try {
+            log.info("Getting file listing...");
+            FTPFile[] years = getFTP().listDirectories("/pride/data/archive");
+            for (FTPFile year : years) {
+                log.trace("found year "+year.getName());
+                FTPFile[] months = getFTP().listDirectories("/pride/data/archive/"+year.getName());
+                for (FTPFile month : months) {
+                    log.trace("found month "+month.getName());
+                    //TODO something
+                    FTPFile[] experiments = getFTP().listFiles("/pride/data/archive/"+year.getName()+"/"+month.getName());
+                    for (FTPFile experiment: experiments) {
+                        String experimentID = experiment.getName();
+                        log.trace("checking experiment "+experimentID);
+                        FTPFile[] files = getFTP().listFiles("/pride/data/archive/"+year.getName()+"/"+month.getName()+"/"+experimentID);
+                        for (FTPFile file : files) {
+                            //do a regular expression to match and pull out accession
+                            Matcher matcher = regex.matcher(file.getName());
+                            log.trace("/pride/data/archive/"+year.getName()+"/"+month.getName()+"/");
+                            
+                            if (matcher.matches()) {
+                                String accession = matcher.group(1);
+                                //add it to the grouping
+                                if (!groups.containsKey(experimentID)) { 
+                                    groups.put(experimentID, new HashSet<String>());
+                                }
+                                groups.get(experimentID).add(accession);
+                                //download it to the update
+                                File outfile = getTrimFile(outputDir, experimentID, accession);
+                                // do not overwrite existing files unless newer
+                                Calendar ftptime = file.getTimestamp();
+                                Calendar outfiletime = new GregorianCalendar();
+                                outfiletime.setTimeInMillis(outfile.lastModified());
+                                if (!outfile.exists() || ftptime.after(outfiletime)) {
+                                    Runnable t = new PRIDEXMLFTPDownload("/pride/data/archive/"
+                                            +year.getName()+"/"+month.getName()+"/"
+                                            +experimentID+"/"+file.getName(), outfile);
+                                    if (threads > 0) {
+                                        pool.execute(t);
+                                    } else {
+                                        t.run();
+                                    }
+                                    updated.add(experimentID);
+                                }
+
+                                //check the sampletab.pre.txt file exists, and if not flag an update
+                                File sampleTabFile = new File(new File(outputDir, "GPR-"+experimentID), "sampletab.pre.txt");
+                                if (!sampleTabFile.exists()) {
+                                    updated.add(experimentID);
+                                }
                             }
                         }
-                        // now put it in the mapping
-                        subs.get(project).add(subdir.getName());
                     }
+                    
                 }
             }
-            return;
-        }
-        
-    }
-
-    private void downloads(File outdir) {
-
-        FTPFile[] files;
-        try {
-            ftp = FTPUtils.connect("ftp.ebi.ac.uk");
-            log.info("Getting file listing...");
-            files = ftp.listFiles("/pub/databases/pride/");
-            log.info("Got file listing");
+            log.info("Got PRIDE FTP file listing");
         } catch (IOException e) {
             log.error("Unable to connect to FTP", e);
             System.exit(1);
             return;
-        }
-        
-        Pattern regex = Pattern.compile("PRIDE_Exp_Complete_Ac_([0-9]+)\\.xml\\.gz");
-        //Pattern regex = Pattern.compile("PRIDE_Exp_mzData_Ac_([0-9]+)\\.xml\\.gz");
-
-        ExecutorService pool = null;
-        if (threads > 0 ){
-            pool = Executors.newFixedThreadPool(threads);
-        }
-
-        for (FTPFile file : files) {
-            String filename = file.getName();
-            //do a regular expression to match and pull out accession
-            Matcher matcher = regex.matcher(filename);
-            if (matcher.matches()) {
-                String accession = matcher.group(1);
-                File outfile = getTrimFile(outdir, accession);
-                // do not overwrite existing files unless newer
-                Calendar ftptime = file.getTimestamp();
-                Calendar outfiletime = new GregorianCalendar();
-                outfiletime.setTimeInMillis(outfile.lastModified());
-                if (!outfile.exists() 
-                        || ftptime.after(outfiletime)) {
-                    
-                    Runnable t = new PRIDEXMLFTPDownload(accession, outfile, false);
-                    
-                    if (threads > 0){
-                        pool.execute(t);
-                    } else {
-                        t.run();
+        } finally {
+            try {
+                ftp.logout();
+            } catch (IOException e) {
+                if (ftp.isConnected()) {
+                    try {
+                        ftp.disconnect();
+                    } catch (IOException ioe) {
+                        // do nothing
                     }
-                    
-                    updated.add(accession);
                 }
             }
         }
-        
-        //see which ones have been deleted
-        for (File subdir : outdir.listFiles()){
-            File trimmed = new File(subdir, "trimmed.xml");
-            if (trimmed.exists()){
-                String prideAccession = subdir.getName().substring(4);
-                String ftpFilename = "PRIDE_Exp_Complete_Ac_"+prideAccession+".xml.gz";
-                //String ftpFilename = "PRIDE_Exp_mzData_Ac_"+prideAccession+".xml.gz";
-                
-                boolean exists = false;
-                for (FTPFile file : files) {
-                    String filename = file.getName();
-                    if (filename.equals(ftpFilename)){
-                        exists = true;
-                        break;
-                    }
-                }
-                
-                if (!exists){
-                    //this has been deleted
-                    log.info("Detected deleted "+prideAccession);
-                    deleted.add(prideAccession);
-                    updated.add(prideAccession);
-                }
-                
-            }
-        }
 
+        /*
+        //output a mapping of groupings
+        for (String group : groups.keySet()) {
+            String line = group;
+            List<String> accessions = new ArrayList<String>(groups.get(group));
+            Collections.sort(accessions);
+            for (String accession : accessions) {
+                line = line+"\t"+accession;
+            }
+            //System.out.println(line);
+        }
+        */
+
+        if (migrateaccession) {
+            //output a dummy test of migrating the accessions
+            //load defaults from file
+            //will be overridden by command-line options later
+            Properties properties = new Properties();
+            try {
+                InputStream is = SampleTabBulkDriver.class.getResourceAsStream("/oracle.properties");
+                properties.load(is);
+            } catch (IOException e) {
+                log.error("Unable to read resource oracle.properties", e);
+            }
+            
+            String hostname = properties.getProperty("hostname");
+            Integer port = new Integer(properties.getProperty("port"));
+            String database = properties.getProperty("database");
+            String username = properties.getProperty("username");
+            String password = properties.getProperty("password");
+            PRIDEmigrateaccession migrate = new PRIDEmigrateaccession(groups, hostname, port, database, username, password);
+            migrate.process();
+        }
+        
         // run the pool and then close it afterwards
         // must synchronize on the pool object
         if (pool != null) {
@@ -222,64 +210,6 @@ public class PRIDEcron {
                 } catch (InterruptedException e) {
                     log.error("Interuppted awaiting thread pool termination", e);
                 }
-            }
-        }
-    }
-    
-    private void findSubs(File outdir) {
-
-        // now that all the files have been updated, parse them to extract the relevant data
-        
-        ExecutorService pool = null;
-        if (threads > 0) {
-            pool = Executors.newFixedThreadPool(threads);
-        }
-        
-        for (File subdir : outdir.listFiles()) {
-            Runnable t = new XMLProjectRunnable(subdir, subs);
-            if (threads > 0) {
-                pool.execute(t);
-            } else {
-                t.run();
-            }
-        }
-
-        if (pool != null) {
-            // run the pool and then close it afterwards
-            // must synchronize on the pool object
-            synchronized (pool) {
-                pool.shutdown();
-                try {
-                    // allow 24h to execute. Rather too much, but meh
-                    pool.awaitTermination(1, TimeUnit.DAYS);
-                } catch (InterruptedException e) {
-                    log.error("Interuppted awaiting thread pool termination", e);
-                }
-            }
-        }
-    }
-    
-    private void writeSubs(Writer writer) throws IOException {
-
-        // at this point, subs is a mapping from the project name to a set of BioSample accessions
-        // output them to a file
-        synchronized (subs) {
-            // sort them to put them in a sensible order
-            List<String> projects = new ArrayList<String>(subs.keySet());
-            Collections.sort(projects);
-            for (String project : projects) {
-
-                writer.write(project);
-                writer.write("\t");
-                List<String> accessions = new ArrayList<String>(subs.get(project));
-                Collections.sort(accessions);
-                for (String accession : accessions) {
-
-                    writer.write(accession);
-                    writer.write("\t");
-                }
-
-                writer.write("\n");
             }
         }
     }
@@ -309,110 +239,89 @@ public class PRIDEcron {
             return;
         }
         
-        outputDir = new File(this.outputDirName);
-
         if (outputDir.exists() && !outputDir.isDirectory()) {
             System.err.println("Target is not a directory");
             System.exit(1);
             return;
         }
 
-        if (!outputDir.exists())
+        if (!outputDir.exists()) {
             outputDir.mkdirs();
-
-        try {
-            downloads(outputDir);
-            log.info("Completed downloading, starting parsing...");
-            //TODO hide files that have disappeared from the FTP site.            
-        } finally {
-            // tidy up ftp connection
-            this.close();
         }
 
-        //look through xmls to determine projects
-        findSubs(outputDir);
-
-        //write out the project summary
-        //this is needed so conan jobs can read this 
-        BufferedWriter projoutwrite = null; 
-        //create it in a tempory location
-        File projout = new File(outputDir, "projects.tab.txt.tmp");
-        try {
-            projoutwrite = new BufferedWriter(new FileWriter(projout));
-            writeSubs(projoutwrite);
-            projoutwrite.close();
-        } catch (IOException e) {
-            log.error("Unable to write to " + projout, e);
-            System.exit(1);
-            return;
-        } finally {
-            if (projoutwrite != null) {
+        downloads();
+        log.info("Completed downloading, starting parsing...");
+        //TODO hide files that have disappeared from the FTP site.            
+        
+        ExecutorService pool = null;
+        if (threads > 0 ) {
+            pool = Executors.newFixedThreadPool(threads);
+        
+            Collection<Future<Void>> futures = new ArrayList<Future<Void>>();
+            for (String experimentID: updated) {
+                Set<File> files = new HashSet<File>();
+                for (String accession : groups.get(experimentID)) {
+                    files.add(getTrimFile(outputDir, experimentID, accession));
+                }
+                
+                File outFile = SampleTabUtils.getSubmissionDirFile("GPR-"+experimentID);
+                outFile = new File(outFile, "sampletab.pre.txt");
+                
+                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, outFile);
+                futures.add(pool.submit(callable));
+            }
+            for (Future<Void> future : futures) {
                 try {
-                    projoutwrite.close();
-                } catch (IOException e) {
-                    //failed within a fail so give up                    
+                    future.get();
+                } catch (InterruptedException e) {
+                    //something went wrong
+                    log.error("problem getting future", e);
+                } catch (ExecutionException e) {
+                    //something went wrong
+                    log.error("problem getting future", e);
                 }
             }
-        }
-        //then move it when it is complete
-        File projoutFinal = new File(outputDir, "projects.tab.txt");
-        try {
-            FileUtils.move(projout, projoutFinal);
-        } catch (IOException e) {
-            log.error("Unable to move "+projout+" to "+projoutFinal, e);
-        }
-
-        PRIDEXMLToSampleTab c = new PRIDEXMLToSampleTab(subs);
-        
-        //trigger conan for any project that have been extended or updated
-        Set<String> updatedProjects = new HashSet<String>();
-        for (String updatedAccession : updated){
-            for (String project : subs.keySet()){
-                if (subs.get(project).contains(updatedAccession)){
-                    updatedProjects.add(project);
+            // run the pool and then close it afterwards
+            // must synchronize on the pool object
+            if (pool != null) {
+                synchronized (pool) {
+                    pool.shutdown();
+                    try {
+                        // allow 24h to execute. Rather too much, but meh
+                        pool.awaitTermination(1, TimeUnit.DAYS);
+                    } catch (InterruptedException e) {
+                        log.error("Interuppted awaiting thread pool termination", e);
+                    }
                 }
             }
-        }
-        
-        for (String project : updatedProjects){
-            String projectSubmissionID = "GPR-"+project;
-            
-            Set<File> xmlFiles = new HashSet<File>();
-            for (String submissionID : subs.get(project)) {
-                File dirFile = SampleTabUtils.getSubmissionDirFile(submissionID);
-                File xmlFile = new File(dirFile.toString(), "trimmed.xml");
-                xmlFiles.add(xmlFile);
-            }
-            
-            File dirFile = SampleTabUtils.getSubmissionDirFile(projectSubmissionID);
-            File sampletabpre = new File(dirFile.toString(), "sampletab.pre.txt");
-            
-            try {
-                c.convert(xmlFiles, sampletabpre);
-            } catch (ValidateException e) {
-                log.error("Problem processing "+projectSubmissionID, e);
-                continue;
-            } catch (IOException e) {
-                log.error("Problem processing "+projectSubmissionID, e);
-                continue;
-            } catch (DocumentException e) {
-                log.error("Problem processing "+projectSubmissionID, e);
-                continue;
-            }
-            
-            //submit to conan for further processing if needed
-            if (!noconan){
+        } else {
+            //not threaded
+            for (String experimentID: updated) {
+                Set<File> files = new HashSet<File>();
+                for (String accession : groups.get(experimentID)) {
+                    files.add(getTrimFile(outputDir, experimentID, accession));
+                }
+                
+                File outFile = SampleTabUtils.getSubmissionDirFile("GPR-"+experimentID);
+                outFile = new File(outFile, "sampletab.pre.txt");
+                
+                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, outFile);
                 try {
-                        ConanUtils.submit(projectSubmissionID, "BioSamples (other)");
-                } catch (IOException e) {
-                    log.error("Unable to submit to conan "+projectSubmissionID, e);
+                    callable.call();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
-        
-        
-        //TODO handle removed projects
-        //get which files exist
-        //see which ones are not in FTP
+        if (!noconan) {
+            //submit to conan
+            for (String submission : updated) {
+                try {
+                    ConanUtils.submit(submission, "BioSamples (other)");
+                } catch (IOException e) {
+                    log.error("Problem submitting "+submission+" to conan", e);
+                }
+            }
+        }
     }
 }

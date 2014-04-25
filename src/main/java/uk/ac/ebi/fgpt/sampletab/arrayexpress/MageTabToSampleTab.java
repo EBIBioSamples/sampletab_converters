@@ -34,10 +34,12 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SameAsAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
@@ -50,8 +52,7 @@ public class MageTabToSampleTab {
     private final MAGETABParser<MAGETABInvestigation> parser;
     private final List<ErrorItem> errorItems;
 
-    private SimpleDateFormat magetabdateformat = new SimpleDateFormat(
-            "yyyy-MM-dd");
+    private SimpleDateFormat magetabdateformat = new SimpleDateFormat("yyyy-MM-dd");
 
     // logging
     public Logger log = LoggerFactory.getLogger(getClass());
@@ -97,7 +98,7 @@ public class MageTabToSampleTab {
         return convert(mt);
     }
     
-    private void convertPublications(MAGETABInvestigation mt, SampleData st){
+    private void convertPublications(MAGETABInvestigation mt, SampleData st) {
         for (int i = 0; i < mt.IDF.publicationDOI.size() || i < mt.IDF.pubMedId.size(); i++){
             String doi = null;
             if (i < mt.IDF.publicationDOI.size()){
@@ -114,7 +115,7 @@ public class MageTabToSampleTab {
         }
     }
     
-    private void convertPeople(MAGETABInvestigation mt, SampleData st){
+    private void convertPeople(MAGETABInvestigation mt, SampleData st) {
         for (int i = 0; i < mt.IDF.personLastName.size() || 
             i < mt.IDF.personMidInitials.size() || 
             i < mt.IDF.personFirstName.size() || 
@@ -220,7 +221,7 @@ public class MageTabToSampleTab {
         }
     }
     
-    private String convertTermSource(String name, MAGETABInvestigation mt, SampleData st) throws ParseException{
+    private String convertTermSource(String name, MAGETABInvestigation mt, SampleData st) throws ParseException {
         name = name.trim();
         if (name.length()==0){
             throw new ParseException("Cannot convert blankly named term source");
@@ -250,7 +251,7 @@ public class MageTabToSampleTab {
         throw new ParseException("Unable to find term source "+name);
     }
         
-    private void processCharacteristics(List<CharacteristicsAttribute> characteristics, SCDNode scdnode, MAGETABInvestigation mt, SampleData st){
+    private void processCharacteristics(List<CharacteristicsAttribute> characteristics, SCDNode scdnode, MAGETABInvestigation mt, SampleData st) {
         for (CharacteristicsAttribute sdrfcharacteristic : characteristics) {
             
             if (sdrfcharacteristic.getAttributeValue() != null && sdrfcharacteristic.getAttributeValue().trim().length() > 0){
@@ -286,11 +287,12 @@ public class MageTabToSampleTab {
         }
     }
     
-    private void processComments(Map<String, List<String>> comments, SCDNode scdnode){
+    private void processComments(Map<String, List<String>> comments, SCDNode scdnode) {
         if (comments != null ){
             for (String key : comments.keySet()) {
                 for (String value: comments.get(key)) {
                     if (key.equals("ENA_SAMPLE")) {
+                        /*
                         try {
                             for (String biosdacc : BioSDUtils.getBioSDAccessionOf(value)){
                                 SameAsAttribute sameas = new SameAsAttribute(biosdacc);
@@ -303,6 +305,11 @@ public class MageTabToSampleTab {
                         } catch (IOException e) {
                             log.error("Problem getting accessions of "+value, e);
                         }
+                        */
+                        String id = value;
+                        String uri = "http://www.ebi.ac.uk/ena/data/view/"+value;
+                        DatabaseAttribute dba = new DatabaseAttribute("ENA SRA", id, uri);
+                        scdnode.addAttribute(dba);
                     } else {
                         CommentAttribute comment = new CommentAttribute();
                         comment.type = key;
@@ -314,7 +321,7 @@ public class MageTabToSampleTab {
         }
     }
     
-    public SCDNode convertNode(Node sdrfnode, MAGETABInvestigation mt, SampleData st) throws ParseException{
+    public SCDNode convertNode(Node sdrfnode, MAGETABInvestigation mt, SampleData st) throws ParseException {
 
         boolean useable = false;
         List<CharacteristicsAttribute> characteristics = null;
@@ -425,18 +432,17 @@ public class MageTabToSampleTab {
         st.msi.databases.add(dblink);
         
         //add link to SRA if present
-        //  GUI Can't handle this at the moment
-//        if (mt.IDF.getComments().containsKey("SecondaryAccession")) {
-//            for (String secondary : mt.IDF.getComments().get("SecondaryAccession")) {
-//                if (secondary.matches("[DES]RP[0-9]+")) {
+        if (mt.IDF.getComments().containsKey("SecondaryAccession")) {
+            for (String secondary : mt.IDF.getComments().get("SecondaryAccession")) {
+                if (secondary.matches("[DES]RP[0-9]+")) {
 //                    log.info("This has an ENA SRA reference");
-//                    dblink = new Database("ENA SRA", 
-//                            "http://www.ebi.ac.uk/ena/data/view/" + secondary,
-//                            secondary);
-//                    st.msi.databases.add(dblink);
-//                }
-//            }
-//        }
+                    dblink = new Database("ENA SRA", 
+                            "http://www.ebi.ac.uk/ena/data/view/" + secondary,
+                            secondary);
+                    st.msi.databases.add(dblink);
+                }
+            }
+        }
 
         log.debug("Creating node names");
         for (SDRFNode sdrfnode : mt.SDRF.getRootNodes()) {
@@ -451,6 +457,25 @@ public class MageTabToSampleTab {
         if (st.scd.getAllNodes().size() == 0){
             log.error("Zero nodes converted");
             throw new ParseException("Zero nodes converted");
+        }
+        
+
+        // add the samples into a group
+        GroupNode othergroup = new GroupNode("Other Group");
+        for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+            // check there is not an existing group first...
+            boolean inGroup = false;
+            
+            if (!inGroup){
+                log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
+                othergroup.addSample(sample);
+            }
+        }
+        //only add the new group if it has any samples
+        if (othergroup.getParentNodes().size() > 0){
+            st.scd.addNode(othergroup);
+            log.info("Added Other group node");
+            // also need to accession the new node
         }
                 
         log.info("Finished convert()");

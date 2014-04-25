@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -34,44 +33,42 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class XMLUtils {
-    //private static Logger log = LoggerFactory.getLogger("XMLUtils");
+    private static Logger log = LoggerFactory.getLogger("XMLUtils");
+
+	private static ConcurrentLinkedQueue<SAXReader> readerQueue = new ConcurrentLinkedQueue<SAXReader>();
 
 	public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException {
         return getDocument(new BufferedReader(new FileReader(xmlFile)));
 	}
 
-	public static Document getDocument(URL url) throws DocumentException, IOException {   
-	    //handle proxy access via command line e.g. 
-	    //-Dhttp.proxyHost=wwwcache.ebi.ac.uk -Dhttp.proxyPort=3128 -Dhttp.nonProxyHosts=*.ebi.ac.uk 
-	    //-DproxyHost=wwwcache.ebi.ac.uk -DproxyPort=3128 -DproxySet=true
-	    //can't call SAXReader directly because it ignores proxing
-        Reader r = null;
-        Document doc = null;
-        try {
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            doc = getDocument(r);
-            conn.disconnect();
-        } finally {
-            if (r != null) {
-                try {
-                    r.close();
-                } catch (IOException e) {
-                    //do nothing
-                }
-            }
+	public static Document getDocument(URL url) throws DocumentException, IOException {        
+        URLConnection conn = null;
+        if (System.getProperty("proxySet") != null) {
+            String hostname = System.getProperty("proxyHost");
+            int port = Integer.parseInt(System.getProperty("proxyPort"));
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(hostname, port));
+    	    conn = url.openConnection(proxy);
+        } else {
+            conn = url.openConnection();
         }
-        
-        return doc;
+	    
+	    return getDocument(new BufferedReader(new InputStreamReader(conn.getInputStream())));
 	}
 
     public static Document getDocument(String xmlString) throws DocumentException {
+        return getDocument(new StringReader(xmlString));
+    }
+    
+    public static Document getDocument(Reader r) throws DocumentException {
+        SAXReader reader = readerQueue.poll();
+        if (reader == null) {
+            reader = new SAXReader();
+        }
         
-        Reader r = null;
-        Document doc = null;
+        //now do actual parsing
+        Document xml = null;
         try {
-            r = new StringReader(xmlString);
-            doc = getDocument(r);
+            xml = reader.read(r);
         } finally {
             if (r != null) {
                 try {
@@ -80,23 +77,10 @@ public class XMLUtils {
                     //do nothing
                 }
             }
+            //return the reader back to the queue
+            reader.resetHandlers();
+            readerQueue.add(reader);
         }
-        return doc;
-    }
-    
-    public static Document getDocument(Reader r) throws DocumentException {
-        SAXReader reader = null;//readerQueue.poll();
-        if (reader == null) {
-            reader = new SAXReader();
-        }
-                
-        //now do actual parsing
-        Document xml = null;
-        
-        xml = reader.read(r);
-        //return the reader back to the queue
-        //reader.resetHandlers();
-        //readerQueue.add(reader);
         
         return xml;
     }

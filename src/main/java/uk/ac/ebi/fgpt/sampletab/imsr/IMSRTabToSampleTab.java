@@ -336,7 +336,7 @@ public class IMSRTabToSampleTab {
             
             //add per strain links to IMSR
             String url = "http://www.findmice.org/summary?query="+URLEncoder.encode(name, "UTF-8")+"&repositories="+URLEncoder.encode(site, "UTF-8");
-            DatabaseAttribute dbattr = new DatabaseAttribute(site, name, url);
+            DatabaseAttribute dbattr = new DatabaseAttribute("IMSR", name, url);
             newnode.addAttribute(dbattr);
         }
         getLog().info("Finished convert()");
@@ -424,7 +424,7 @@ public class IMSRTabToSampleTab {
         st.msi.organizations.add(new Organization("International Mouse Strain Resource", null, "http://www.findmice.org/", null, null));
         st.msi.organizations.add(new Organization(summary.facilities.get(index), null, "http://www.findmice.org/", null, "Biomaterial Provider"));
         
-        st.msi.databases.add(new Database("IMSR "+site, "http://www.findmice.org/summary?query=&repositories="+site, site));
+        st.msi.databases.add(new Database("IMSR", "http://www.findmice.org/summary?query=&repositories="+site, site));
     }
 
     public static void main(String[] args) {
