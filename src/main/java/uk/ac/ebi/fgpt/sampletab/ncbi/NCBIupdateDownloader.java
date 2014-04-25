@@ -234,7 +234,8 @@ public class NCBIupdateDownloader {
 				try {
 					fetch = new URL(url);
 					ReadableByteChannel rbc = Channels.newChannel(fetch.openStream());
-			    	FileOutputStream fos = new FileOutputStream(uid+"_NCBI.xml");
+			    	//FileOutputStream fos = new FileOutputStream(uid+"_NCBI.xml");
+			    	FileOutputStream fos = new FileOutputStream(make_file(uid));
 			    	fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
 				} catch (MalformedURLException e) {
 					System.out.println("WARNING: CHECK THE URL");
@@ -250,5 +251,18 @@ public class NCBIupdateDownloader {
 		}
 		
 	}
+		
+		public File make_file(String submissionID){
+	            //NCBI biosamples
+	            File targetfile = new File("GNC");
+	            int i = 7;
+	            int groupsize = 3;
+	            while (i < submissionID.length()) {
+	                targetfile = new File(targetfile, submissionID.substring(0,i));
+	                i += groupsize;   
+	            }
+	            return new File(targetfile, submissionID);
+		}
+		
 
 }
