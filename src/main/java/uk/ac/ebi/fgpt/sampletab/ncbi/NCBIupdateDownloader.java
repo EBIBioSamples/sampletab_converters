@@ -21,10 +21,10 @@ import java.util.regex.Pattern;
 
 /**
  * @author drashtti
- * This script downloads all the 
- * sample information from NCBI biosamples
- * based on the modification and publication date 
- * within the last 30 days. 
+ *         This script downloads all the
+ *         sample information from NCBI biosamples
+ *         based on the modification and publication date
+ *         within the last 30 days.
  */
 public class NCBIupdateDownloader {
 	
@@ -264,5 +264,4 @@ public class NCBIupdateDownloader {
 	            return new File(targetfile, submissionID);
 		}
 		
-
 }

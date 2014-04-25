@@ -376,7 +376,9 @@ public class ENASRAXMLToSampleTab {
                     String valuetext;
                     if (value == null) {
                         // some ENA SRA attributes are boolean
+                        //mark them as unknwon
                         valuetext = tagtext;
+                        tagtext = "unknown";
                     } else {
                         valuetext = value.getTextTrim();
                     }

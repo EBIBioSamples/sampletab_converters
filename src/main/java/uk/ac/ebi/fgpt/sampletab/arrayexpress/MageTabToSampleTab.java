@@ -291,7 +291,7 @@ public class MageTabToSampleTab {
         if (comments != null ){
             for (String key : comments.keySet()) {
                 for (String value: comments.get(key)) {
-                    if (key.equals("ENA_SAMPLE")) {
+                    if (key.equals("ENA_SAMPLE") && value != null && value.length() > 0) {
                         /*
                         try {
                             for (String biosdacc : BioSDUtils.getBioSDAccessionOf(value)){
