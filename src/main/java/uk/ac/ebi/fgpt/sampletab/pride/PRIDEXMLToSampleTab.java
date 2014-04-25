@@ -180,8 +180,9 @@ public class PRIDEXMLToSampleTab {
         
         if (value == null){
             //some PRIDE attributes are boolean
-            //set their value to be their name
+            //set their value to be "unknown"
             value = name;
+            name = "unknown";
         } else {
             value = value.trim();
         }
