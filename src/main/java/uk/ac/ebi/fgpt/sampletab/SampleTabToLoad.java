@@ -81,8 +81,8 @@ public class SampleTabToLoad {
             //even if it has child nodes, both parent and child must be in a group
             //this will lead to some weird looking row duplications, but since this is an internal 
             //intermediate file it is not important
-//            for (Node n : sample.getChildNodes()){
-//                if (GroupNode.class.isInstance(n)){
+//            for (Node n : sample.getChildNodes()) {
+//                if (GroupNode.class.isInstance(n)) {
 //                    inGroup = true;
 //                }
 //            }
