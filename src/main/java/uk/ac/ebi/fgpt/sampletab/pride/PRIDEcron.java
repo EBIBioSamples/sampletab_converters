@@ -317,9 +317,9 @@ public class PRIDEcron {
             //submit to conan
             for (String submission : updated) {
                 try {
-                    ConanUtils.submit(submission, "BioSamples (other)");
+                    ConanUtils.submit("GPR-"+submission, "BioSamples (other)");
                 } catch (IOException e) {
-                    log.error("Problem submitting "+submission+" to conan", e);
+                    log.error("Problem submitting GPR-"+submission+" to conan", e);
                 }
             }
         }

@@ -20,13 +20,13 @@ fi
 #args environment variable can be used to provide java arguments
 
 #add some memory management
-if [ -z $java ]
+if [ -z "$args" ]
 then
-  args="-Xmx16g -XX:+UseConcMarkSweepGC $args"
+  args="-Xmx16g -XX:+UseConcMarkSweepGC"
 fi
 	
 #add proxy args
-args="-Dhttp.proxyHost=wwwcache.ebi.ac.uk -Dhttp.proxyPort=3128 -Dhttp.nonProxyHosts=*.ebi.ac.uk -DproxyHost=wwwcache.ebi.ac.uk -DproxyPort=3128 -DproxySet=true -Djava.net.preferIPv4Stack=true $args"
+args="$args -Dhttp.proxyHost=wwwcache.ebi.ac.uk -Dhttp.proxyPort=3128 -Dhttp.nonProxyHosts=*.ebi.ac.uk -DproxyHost=wwwcache.ebi.ac.uk -DproxyPort=3128 -DproxySet=true -Djava.net.preferIPv4Stack=true"
 
 
 #Combine jar files used into one variable
@@ -43,7 +43,7 @@ classpath="$jars:$base/config";
 #mostly used when files are automatically generated, e.g. from cron
 umask 002
 
-#echo $java $args -classpath $classpath "$@"
+echo $java $args -classpath $classpath "$@"
 $java $args -classpath $classpath "$@"
 
 exit $?
