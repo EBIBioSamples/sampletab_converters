@@ -20,7 +20,7 @@ fi
 #args environment variable can be used to provide java arguments
 
 #add some memory management
-if [ -z $java ]
+if [ -z $args ]
 then
   args="-Xmx16g -XX:+UseConcMarkSweepGC $args"
 fi
