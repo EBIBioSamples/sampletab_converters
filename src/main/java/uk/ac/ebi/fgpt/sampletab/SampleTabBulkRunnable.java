@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
@@ -25,6 +26,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
     private final File sampletabtoload;
     
     private final Corrector corrector;
+    private final CorrectorAddAttr correctorAddAttr;
     private final SameAs sameAs;
     private final DerivedFrom derivedFrom;
     private final Accessioner accessioner;
@@ -35,13 +37,14 @@ public class SampleTabBulkRunnable implements Callable<Void> {
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public SampleTabBulkRunnable(File subdir, Corrector corrector, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom, boolean force, boolean noload) {
+    public SampleTabBulkRunnable(File subdir, Corrector corrector, CorrectorAddAttr correctorAddAttr, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom, boolean force, boolean noload) {
         
         sampletabpre = new File(subdir, "sampletab.pre.txt");
         sampletab = new File(subdir, "sampletab.txt");
         sampletabtoload = new File(subdir, "sampletab.toload.txt");
         
         this.corrector = corrector;
+        this.correctorAddAttr = correctorAddAttr;
         this.sameAs = sameAs;
         this.derivedFrom = derivedFrom;
         this.accessioner = accessioner;
@@ -107,6 +110,11 @@ public class SampleTabBulkRunnable implements Callable<Void> {
 
             log.info("Applying corrections...");
             corrector.correct(st);
+            
+            log.info("Applying extra attributes...");
+            for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+                correctorAddAttr.addAttribute(st, sample);
+            }
 
             //dont detect relationships for reference samples
             //these will be done manually

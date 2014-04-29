@@ -44,6 +44,7 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     private File rootDir = null;
 
     private Corrector corrector = new Corrector();
+    private CorrectorAddAttr correctorAddAttr = null;
     private DerivedFrom derivedFrom = null;
     private Accessioner accessioner = null;
     private SameAs sameAs = new SameAs();
@@ -70,6 +71,8 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
         
         try {
             accessioner = new AccessionerENA(hostname, 
+                    port, database, username, password);
+            correctorAddAttr = new CorrectorAddAttr(hostname, 
                     port, database, username, password);
         } catch (ClassNotFoundException e) {
             log.error("Unable to create accessioner", e);
@@ -110,7 +113,8 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     @Override
     protected SampleTabBulkRunnable getNewTask(File inputFile) {
         File subdir = inputFile.getAbsoluteFile().getParentFile();
-        return new SampleTabBulkRunnable(subdir, corrector, accessioner, sameAs, getDerivedFrom(), force, noload);
+        return new SampleTabBulkRunnable(subdir, corrector, correctorAddAttr, 
+            accessioner, sameAs, getDerivedFrom(), force, noload);
     }
     
     private synchronized DerivedFrom getDerivedFrom() {
