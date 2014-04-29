@@ -112,11 +112,11 @@ public class TestNCBIupdateDownloader extends TestCase{
 			    
 			    break;
 		    	
-		    /**	URL fetch = new URL(fetch_url);
+		    	//comment out all the following lines if you dont want it to download the biosample files
+		    	/**URL fetch = new URL(fetch_url);
 		    	ReadableByteChannel rbc = Channels.newChannel(fetch.openStream());
-		    	FileOutputStream fos = new FileOutputStream("/temp_NCBI/"+uid+"_NCBI.xml");
+		    	FileOutputStream fos = new FileOutputStream(uid+"_NCBI.xml");
 		    	fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);*/
-		    }
 		    
 		    
 		    
@@ -124,7 +124,7 @@ public class TestNCBIupdateDownloader extends TestCase{
 		
 		
 		
-		
+		}
 		
 		
 }
