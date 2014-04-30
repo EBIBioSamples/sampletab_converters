@@ -12,18 +12,33 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.Normalizer;
+import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
+/**
+ * Given a set of input PRIDE XML files, this creates a sampletab.pre.txt file.
+ * 
+ * It will also optionally submit that new file to conan for processing
+ * 
+ * @author faulcon
+ *
+ */
 public class PRIDEXMLCallable implements Callable<Void> {
 
     private final Set<File> files;
     private final File outFile;
+    private final String submission;
+    private final boolean conan;
     
     // logging
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public PRIDEXMLCallable(Set<File> files, File outFile) {
+    public PRIDEXMLCallable(Set<File> files, String submission, boolean conan) {
         this.files = files;
-        this.outFile = outFile;
+        this.outFile = new File(SampleTabUtils.getSubmissionDirFile(submission), "sampletab.pre.txt");
+        this.submission = submission;
+        this.conan = conan;
+        
     }
     
     @Override
@@ -33,6 +48,16 @@ public class PRIDEXMLCallable implements Callable<Void> {
         xmlToSampleTab.convert(files, outFile);
 
         log.info("SampleTab written to "+outFile);
+        
+        if (conan) {
+            //submit to conan
+            try {
+                ConanUtils.submit("GPR-"+submission, "BioSamples (other)");
+            } catch (IOException e) {
+                log.error("Problem submitting GPR-"+submission+" to conan", e);
+            }
+        }
+        
         return null;
     }    
 }

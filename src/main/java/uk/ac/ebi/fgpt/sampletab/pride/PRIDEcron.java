@@ -267,7 +267,7 @@ public class PRIDEcron {
                 File outFile = SampleTabUtils.getSubmissionDirFile("GPR-"+experimentID);
                 outFile = new File(outFile, "sampletab.pre.txt");
                 
-                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, outFile);
+                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, experimentID, !noconan);
                 futures.add(pool.submit(callable));
             }
             for (Future<Void> future : futures) {
@@ -305,21 +305,13 @@ public class PRIDEcron {
                 File outFile = SampleTabUtils.getSubmissionDirFile("GPR-"+experimentID);
                 outFile = new File(outFile, "sampletab.pre.txt");
                 
-                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, outFile);
+                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, experimentID, !noconan);
+                boolean sucess = false;
                 try {
                     callable.call();
+                    sucess = true;
                 } catch (Exception e) {
                     throw new RuntimeException(e);
-                }
-            }
-        }
-        if (!noconan) {
-            //submit to conan
-            for (String submission : updated) {
-                try {
-                    ConanUtils.submit("GPR-"+submission, "BioSamples (other)");
-                } catch (IOException e) {
-                    log.error("Problem submitting GPR-"+submission+" to conan", e);
                 }
             }
         }
