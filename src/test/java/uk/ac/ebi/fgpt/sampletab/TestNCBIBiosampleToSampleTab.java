@@ -23,7 +23,8 @@ public class TestNCBIBiosampleToSampleTab extends TestCase {
 	private NCBIBiosampleRunnable converter;
 
     public void setUp() {
-        resource = getClass().getClassLoader().getResource("ncbibiosample/2.xml");
+     //  resource = getClass().getClassLoader().getResource("ncbibiosample/2_OLD.xml");
+    	resource = getClass().getClassLoader().getResource("ncbibiosample/1465_NCBI.xml");
         converter = new NCBIBiosampleRunnable(null, null);
     }
 

@@ -75,8 +75,9 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 
 		SampleData st = new SampleData();
-		Element root = ncbiBiosampleXML.getRootElement();
-		Element description = XMLUtils.getChildByName(root, "Description");
+		Element mainroot = ncbiBiosampleXML.getRootElement();
+		Element bioSampleroot = XMLUtils.getChildByName(mainroot, "BioSample");
+		Element description = XMLUtils.getChildByName(bioSampleroot, "Description");
 		Element title = XMLUtils.getChildByName(description, "Title");
 		Element descriptioncomment = XMLUtils.getChildByName(description,
 				"Comment");
@@ -88,13 +89,13 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 			descriptiontable = XMLUtils.getChildByName(descriptioncomment,
 					"Table");
 		}
-		Element owner = XMLUtils.getChildByName(root, "Owner");
+		Element owner = XMLUtils.getChildByName(bioSampleroot, "Owner");
 		Element contacts = XMLUtils.getChildByName(owner, "Contacts");
 		Element links = XMLUtils.getChildByName(owner, "Links"); 
-		Element ids = XMLUtils.getChildByName(root, "Ids");
-		Element attributes = XMLUtils.getChildByName(root, "Attributes");
+		Element ids = XMLUtils.getChildByName(bioSampleroot, "Ids");
+		Element attributes = XMLUtils.getChildByName(bioSampleroot, "Attributes");
 		Element organism = XMLUtils.getChildByName(description, "Organism");
-		Element models = XMLUtils.getChildByName(root, "Models");
+		Element models = XMLUtils.getChildByName(bioSampleroot, "Models");
 
 		// TODO unencode http conversion, e.g. &amp, if this is an issue
 		st.msi.submissionTitle = title.getTextTrim();
@@ -107,20 +108,20 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 				"yyyy-MM-dd'T'HH:mm:ss.SSS");
 		Date publicationDate;
 		try {
-			publicationDate = dateFormatNCBI.parse(root
+			publicationDate = dateFormatNCBI.parse(bioSampleroot
 					.attributeValue("publication_date"));
 		} catch (ParseException e) {
-			publicationDate = dateFormatNCBImilisecond.parse(root
+			publicationDate = dateFormatNCBImilisecond.parse(bioSampleroot
 					.attributeValue("publication_date"));
 		}
 
 		st.msi.submissionReleaseDate = publicationDate;
 		// NCBI Biosamples does not always have a last_update attribute
-		if (root.attributeValue("last_update") != null
-				&& root.attributeValue("last_update").equals("")) {
+		if (bioSampleroot.attributeValue("last_update") != null
+				&& bioSampleroot.attributeValue("last_update").equals("")) {
 			st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
-		} else if (root.attributeValue("last_update") != null) {
-			Date updateDate = dateFormatNCBI.parse(root
+		} else if (bioSampleroot.attributeValue("last_update") != null) {
+			Date updateDate = dateFormatNCBI.parse(bioSampleroot
 					.attributeValue("last_update"));
 			st.msi.submissionUpdateDate = updateDate;
 		}
@@ -129,7 +130,7 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 		// submission identifier
 		// Note that NCBI uses 1 sample = 1 submission, but EBI allows many
 		// samples in one submission
-		st.msi.submissionIdentifier = "GNC-" + root.attributeValue("id");
+		st.msi.submissionIdentifier = "GNC-" + bioSampleroot.attributeValue("id");
 		if (descriptionparagraph != null) {
 			if (!descriptionparagraph.getTextTrim().equals("none provided")) {
 				st.msi.submissionDescription = descriptionparagraph.getTextTrim();
@@ -200,9 +201,9 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 
 		SampleNode scdnode = new SampleNode();
 		//name nodes by identifier to guarantee they won't overwrite when combined.
-		scdnode.setNodeName("SAMN" + root.attributeValue("id"));
+		scdnode.setNodeName("SAMN" + bioSampleroot.attributeValue("id"));
 		scdnode.setSampleDescription(title.getTextTrim());
-		scdnode.setSampleAccession("SAMN" + root.attributeValue("id"));
+		scdnode.setSampleAccession("SAMN" + bioSampleroot.attributeValue("id"));
 		OrganismAttribute organismAttrib = new OrganismAttribute();
 		organismAttrib.setAttributeValue(organism
 				.attributeValue("taxonomy_name"));
@@ -238,9 +239,9 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 
 		DatabaseAttribute databaseAttrib = new DatabaseAttribute();
 		databaseAttrib.setAttributeValue("NCBI Biosamples");
-		databaseAttrib.databaseID = root.attributeValue("id");
+		databaseAttrib.databaseID = bioSampleroot.attributeValue("id");
 		databaseAttrib.databaseURI = "http://www.ncbi.nlm.nih.gov/biosample?term="
-				+ root.attributeValue("id") + "%5Buid%5D";
+				+ bioSampleroot.attributeValue("id") + "%5Buid%5D";
 		scdnode.addAttribute(databaseAttrib);
 		if (ids != null) {
 			for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
