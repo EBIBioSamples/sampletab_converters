@@ -1,0 +1,53 @@
+<BioSample access="public" id="2" last_update="2008-04-04T08:44:24.950"
+	publication_date="2008-04-04T08:44:25.077" submission_date="2008-04-04T08:44:24.950">
+	<Ids>
+		<Id db="SRA" is_primary="1">SRS000002</Id>
+	</Ids>
+	<Description>
+		<Organism taxonomy_id="445970" taxonomy_name="Alistipes putredinis DSM 17216">
+			<TaxaSet>
+				<Taxon>
+					<TaxId>445970</TaxId>
+					<ScientificName>Alistipes putredinis DSM 17216</ScientificName>
+					<OtherNames>
+						<EquivalentName>Alistipes putredinis str. DSM 17216</EquivalentName>
+						<EquivalentName>Alistipes putredinis strain DSM 17216</EquivalentName>
+					</OtherNames>
+					<Rank>no rank</Rank>
+					<Division>Bacteria</Division>
+					<GeneticCode>
+						<GCId>11</GCId>
+						<GCName>Bacterial, Archaeal and Plant Plastid</GCName>
+					</GeneticCode>
+					<MitoGeneticCode>
+						<MGCId>0</MGCId>
+						<MGCName>Unspecified</MGCName>
+					</MitoGeneticCode>
+					<Lineage>Bacteria; Bacteroidetes; Bacteroidia; Bacteroidales;
+						Rikenellaceae; Alistipes</Lineage>
+				</Taxon>
+			</TaxaSet>
+		</Organism>
+		<Comment>
+			<Paragraph>Alistipes putredinis (GenBank Accession Number for 16S
+				rDNA gene: L16497) is a member of the Bacteroidetes division of the
+				domain bacteria and has been isolated from human feces. It has been
+				found in 16S rDNA sequence-based enumerations of the colonic
+				microbiota of adult humans (Eckburg et. al. (2005), Ley et. al.
+				(2006)). </Paragraph>
+		</Comment>
+		<Title>Alistipes putredinis DSM 17216 SRA sample SRS000002</Title>
+	</Description>
+	<Owner>
+		<Name abbreviation="WUGSC">Washington University, Genome Sequencing
+			Center</Name>
+	</Owner>
+	<Attributes>
+		<Attribute attribute_name="strain" dictionary_name="ncbi_asn">DSM 17216</Attribute>
+	</Attributes>
+	<Links>
+		<Link label="DNA Source" type="url">http://www.dsmz.de/microorganisms/html/strains/strain.dsm017216.html</Link>
+	</Links>
+	<Status status="live" when="2008-04-04T08:44:24.950" />
+</BioSample>
+
