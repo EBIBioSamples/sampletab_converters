@@ -16,6 +16,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.Characteri
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 
 import com.jolbox.bonecp.BoneCPDataSource;
 
@@ -144,6 +145,7 @@ public class CorrectorAddAttr {
                 String termsourceID = results.getString("TERM_SOURCE_ID");
                 String termsourceURI = results.getString("TERM_SOURCE_URI");
                 String termsourceVersion = results.getString("TERM_SOURCE_VERSION");
+                String unit = results.getString("UNIT");
                 
                 TermSource termSource = null;
                 
@@ -168,14 +170,24 @@ public class CorrectorAddAttr {
                 } else if (key.toLowerCase().startsWith("characteristic[")){
                     String valueTrim = value.substring(15, value.length()-1);
                     CharacteristicAttribute attr = new CharacteristicAttribute(key, valueTrim);
-                    if (termSource != null) {
+                    if (unit != null) {
+                        attr.unit = new UnitAttribute(unit);
+                        if (termSource != null) {
+                            attr.unit.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
+                        }
+                    } else if (termSource != null) {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
                     }
                     sample.addAttribute(attr);
                 } else if (key.toLowerCase().startsWith("comment[")){
                     String valueTrim = value.substring(8, value.length()-1);
                     CommentAttribute attr = new CommentAttribute(key, valueTrim);
-                    if (termSource != null) {
+                    if (unit != null) {
+                        attr.unit = new UnitAttribute(unit);
+                        if (termSource != null) {
+                            attr.unit.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
+                        }
+                    } else if (termSource != null) {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
                     }
                     sample.addAttribute(attr);
