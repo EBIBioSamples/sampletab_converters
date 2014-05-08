@@ -112,6 +112,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
             corrector.correct(st);
             
             log.info("Applying extra attributes...");
+            correctorAddAttr.addAttribute(st);
             for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
                 correctorAddAttr.addAttribute(st, sample);
             }

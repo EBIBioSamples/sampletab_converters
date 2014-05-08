@@ -13,6 +13,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 
@@ -64,16 +65,68 @@ public class CorrectorAddAttr {
             }
         }
     }
-    
+
+    public void addAttribute(SampleData st) {
+        doSetup();
+        
+        String acc = st.msi.submissionIdentifier;
+        String sql = "SELECT * FROM ATTR_ADD WHERE SAMPLE_ID = '"+acc+"'";
+        Connection conn = null;
+        Statement statement = null;
+        ResultSet results = null;
+        try {
+            conn = ds.getConnection();
+            statement = conn.createStatement();
+            results = statement.executeQuery(sql);
+            
+            while (results.next()) {
+                String key = results.getString("ATTR_KEY");
+                String value = results.getString("ATTR_VALUE");
+                                
+                log.info("Adding "+key+" : "+value+" to "+acc);
+
+                if (key.toLowerCase().equals("submission description")) {
+                    st.msi.submissionDescription = value;
+                } else if (key.toLowerCase().equals("submission title")) {
+                    st.msi.submissionTitle = value;
+                } 
+            }
+        } catch (SQLException e) {
+            log.error("Problem running sql", e);
+        } finally {
+            if (results != null) {
+                try {
+                    results.close();
+                } catch (SQLException e) {
+                    // do nothing
+                }
+            }
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    // do nothing
+                }
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    // do nothing
+                }
+            }
+        }
+        
+    }
     public void addAttribute(SampleData st, SampleNode sample) {
         doSetup();
         
-        log.info("Checking for attributes to add to "+sample.getSampleAccession());
+        log.trace("Checking for attributes to add to "+sample.getSampleAccession());
         String acc = sample.getSampleAccession();
         if (acc == null || acc.trim().length() == 0) {
             return;
         }
-        log.info("Checking for attributes to add to "+acc);
+        log.trace("Checking for attributes to add to "+acc);
         
         String sql = "SELECT * FROM ATTR_ADD WHERE SAMPLE_ID = '"+acc+"'";
         Connection conn = null;
@@ -112,8 +165,16 @@ public class CorrectorAddAttr {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
                     }
                     sample.addAttribute(attr);
-                } else {
-                    CharacteristicAttribute attr = new CharacteristicAttribute(key, value);
+                } else if (key.toLowerCase().startsWith("characteristic[")){
+                    String valueTrim = value.substring(15, value.length()-1);
+                    CharacteristicAttribute attr = new CharacteristicAttribute(key, valueTrim);
+                    if (termSource != null) {
+                        attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
+                    }
+                    sample.addAttribute(attr);
+                } else if (key.toLowerCase().startsWith("comment[")){
+                    String valueTrim = value.substring(8, value.length()-1);
+                    CommentAttribute attr = new CommentAttribute(key, valueTrim);
                     if (termSource != null) {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
                     }
