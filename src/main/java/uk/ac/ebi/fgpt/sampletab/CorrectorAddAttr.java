@@ -168,7 +168,7 @@ public class CorrectorAddAttr {
                     }
                     sample.addAttribute(attr);
                 } else if (key.toLowerCase().startsWith("characteristic[")){
-                    String valueTrim = value.substring(15, value.length()-1);
+                    String valueTrim = value.substring(15, value.length()-2);
                     CharacteristicAttribute attr = new CharacteristicAttribute(key, valueTrim);
                     if (unit != null) {
                         attr.unit = new UnitAttribute(unit);
@@ -180,7 +180,7 @@ public class CorrectorAddAttr {
                     }
                     sample.addAttribute(attr);
                 } else if (key.toLowerCase().startsWith("comment[")){
-                    String valueTrim = value.substring(8, value.length()-1);
+                    String valueTrim = value.substring(8, value.length()-2);
                     CommentAttribute attr = new CommentAttribute(key, valueTrim);
                     if (unit != null) {
                         attr.unit = new UnitAttribute(unit);
