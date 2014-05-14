@@ -123,6 +123,7 @@ public class PRIDEcron {
                                 Calendar ftptime = file.getTimestamp();
                                 Calendar outfiletime = new GregorianCalendar();
                                 outfiletime.setTimeInMillis(outfile.lastModified());
+                                
                                 if (!outfile.exists() || ftptime.after(outfiletime)) {
                                     Runnable t = new PRIDEXMLFTPDownload("/pride/data/archive/"
                                             +year.getName()+"/"+month.getName()+"/"
@@ -136,8 +137,9 @@ public class PRIDEcron {
                                 }
 
                                 //check the sampletab.pre.txt file exists, and if not flag an update
-                                File sampleTabFile = new File(new File(outputDir, "GPR-"+experimentID), "sampletab.pre.txt");
-                                if (!sampleTabFile.exists()) {
+                                File outFile = SampleTabUtils.getSubmissionDirFile("GPR-"+experimentID);
+                                outFile = new File(outFile, "sampletab.pre.txt");
+                                if (!outFile.exists()) {
                                     updated.add(experimentID);
                                 }
                             }
@@ -263,11 +265,8 @@ public class PRIDEcron {
                 for (String accession : groups.get(experimentID)) {
                     files.add(getTrimFile(outputDir, experimentID, accession));
                 }
-                
-                File outFile = SampleTabUtils.getSubmissionDirFile("GPR-"+experimentID);
-                outFile = new File(outFile, "sampletab.pre.txt");
-                
-                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, experimentID, !noconan);
+                                
+                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, "GPR-"+experimentID, !noconan);
                 futures.add(pool.submit(callable));
             }
             for (Future<Void> future : futures) {
@@ -302,10 +301,7 @@ public class PRIDEcron {
                     files.add(getTrimFile(outputDir, experimentID, accession));
                 }
                 
-                File outFile = SampleTabUtils.getSubmissionDirFile("GPR-"+experimentID);
-                outFile = new File(outFile, "sampletab.pre.txt");
-                
-                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, experimentID, !noconan);
+                PRIDEXMLCallable callable = new PRIDEXMLCallable(files, "GPR-"+experimentID, !noconan);
                 boolean sucess = false;
                 try {
                     callable.call();
