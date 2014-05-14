@@ -25,7 +25,7 @@
 		</snapshotRepository>
 	</distributionManagement>
 
-	<!-- SVN connection -->
+	<!-- Git connection -->
 	<scm>
 		<connection>scm:git:git@github.com:EBIBioSamples/sampletab_converters.git</connection>
 		<tag>HEAD</tag>
