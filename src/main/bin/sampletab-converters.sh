@@ -43,7 +43,6 @@ classpath="$jars:$base/config";
 #mostly used when files are automatically generated, e.g. from cron
 umask 002
 
-echo $java $args -classpath $classpath "$@"
 $java $args -classpath $classpath "$@"
 
 exit $?
