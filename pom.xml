@@ -211,47 +211,6 @@
 					<artifactId>limpopo-sampletab</artifactId>
 					<version>1.1.5-SNAPSHOT</version>
 				</dependency>
-				<!-- MyEquivalents dependencies -->
-				<!-- to write directly to database -->
-				<dependency>
-					<groupId>uk.ac.ebi.fg</groupId>
-					<artifactId>myequivalents-db</artifactId>
-					<version>0.3-SNAPSHOT</version>
-					<exclusions>
-						<exclusion>
-							<artifactId>commons-io</artifactId>
-							<groupId>commons-io</groupId>
-						</exclusion>
-						<exclusion>
-							<artifactId>commons-lang</artifactId>
-							<groupId>commons-lang</groupId>
-						</exclusion>
-						<exclusion>
-							<artifactId>jaxb-api</artifactId>
-							<groupId>javax.xml.bind</groupId>
-						</exclusion>
-						<exclusion>
-							<artifactId>jutils</artifactId>
-							<groupId>uk.ac.ebi</groupId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-				<!-- to access via the web interface -->
-				<dependency>
-					<groupId>uk.ac.ebi.fg</groupId>
-					<artifactId>myequivalents-wscli</artifactId>
-					<version>0.3-SNAPSHOT</version>
-					<exclusions>
-						<exclusion>
-							<artifactId>logback-classic</artifactId>
-							<groupId>ch.qos.logback</groupId>
-						</exclusion>
-						<exclusion>
-							<artifactId>commons-lang</artifactId>
-							<groupId>commons-lang</groupId>
-						</exclusion>
-					</exclusions>
-				</dependency>
 			</dependencies>
 		</profile>
 
@@ -273,47 +232,6 @@
 					<groupId>uk.ac.ebi.arrayexpress2</groupId>
 					<artifactId>limpopo-sampletab</artifactId>
 					<version>1.1.4</version>
-				</dependency>
-				<!-- MyEquivalents dependencies -->
-				<!-- to write directly to database -->
-				<dependency>
-					<groupId>uk.ac.ebi.fg</groupId>
-					<artifactId>myequivalents-db</artifactId>
-					<version>0.3RC3</version>
-					<exclusions>
-						<exclusion>
-							<artifactId>commons-io</artifactId>
-							<groupId>commons-io</groupId>
-						</exclusion>
-						<exclusion>
-							<artifactId>commons-lang</artifactId>
-							<groupId>commons-lang</groupId>
-						</exclusion>
-						<exclusion>
-							<artifactId>jaxb-api</artifactId>
-							<groupId>javax.xml.bind</groupId>
-						</exclusion>
-						<exclusion>
-							<artifactId>jutils</artifactId>
-							<groupId>uk.ac.ebi</groupId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-				<!-- to access via the web interface -->
-				<dependency>
-					<groupId>uk.ac.ebi.fg</groupId>
-					<artifactId>myequivalents-wscli</artifactId>
-					<version>0.3RC3</version>
-					<exclusions>
-						<exclusion>
-							<artifactId>logback-classic</artifactId>
-							<groupId>ch.qos.logback</groupId>
-						</exclusion>
-						<exclusion>
-							<artifactId>commons-lang</artifactId>
-							<groupId>commons-lang</groupId>
-						</exclusion>
-					</exclusions>
 				</dependency>
 			</dependencies>
 		</profile>
