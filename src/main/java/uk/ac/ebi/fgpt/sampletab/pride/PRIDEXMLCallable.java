@@ -52,7 +52,7 @@ public class PRIDEXMLCallable implements Callable<Void> {
         if (conan) {
             //submit to conan
             try {
-                ConanUtils.submit("GPR-"+submission, "BioSamples (other)");
+                ConanUtils.submit(submission, "BioSamples (other)");
             } catch (IOException e) {
                 log.error("Problem submitting GPR-"+submission+" to conan", e);
             }
