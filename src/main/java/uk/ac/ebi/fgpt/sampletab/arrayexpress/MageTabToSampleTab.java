@@ -237,7 +237,9 @@ public class MageTabToSampleTab {
                     uri = mt.IDF.termSourceFile.get(i);
                     //bulk replace for some internal URI
                     if ("http://bar.ebi.ac.uk:8080/trac/browser/branches/curator/ExperimentalFactorOntology/ExFactorInOWL/currentrelease/eforelease/efo.owl".equals(uri)){
-                        uri = "http://www.ebi.ac.uk/efo/";
+                        uri = "http://www.ebi.ac.uk/efo";
+                    } else if ("/nfs/ma/ma-exp/GEOImportDownload/efo.obo".equals(uri)) {
+                        uri = "http://www.ebi.ac.uk/efo";
                     }
                 }
                 String version = null;
