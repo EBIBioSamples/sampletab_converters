@@ -110,6 +110,7 @@ public abstract class AbstractInfileDriver<T extends Callable<?>> extends Abstra
                     f.get();
                 } catch (Exception e) {
                     //something went wrong
+                    log.error("Problem processing", e);
                     exitCode = 1;
                 }
             }
@@ -123,6 +124,7 @@ public abstract class AbstractInfileDriver<T extends Callable<?>> extends Abstra
                         t.call();
                     } catch (Exception e) {
                         //something went wrong
+                        log.error("Problem processing "+inputFile, e);
                         exitCode = 1;
                     }
                 }
