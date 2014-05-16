@@ -49,13 +49,16 @@ public abstract class AbstractInfileDriver<T extends Callable<?>> extends Abstra
         //override in subclass
     }
     
+    protected List<String> getInputFilenames() {
+        return inputFilenames;
+    }
     
     protected void doMain(String[] args) {
         super.doMain(args);
         
 
         Iterable<File> inputFiles = null;
-        for (String inputFilename : inputFilenames) {
+        for (String inputFilename : getInputFilenames()) {
             if (recursive){
                 if (startpaths == null) {
                     log.info("Looking recursively for input files named "+inputFilename);
