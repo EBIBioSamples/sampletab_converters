@@ -126,6 +126,13 @@
 			<artifactId>bonecp</artifactId>
 			<version>0.7.1.RELEASE</version>
 		</dependency>
+		<!-- mysql driver for subs -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.26</version>
+			<scope>runtime</scope>
+		</dependency>
 		<!-- oracle driver for accessioning -->
 		<!-- this is not in public repos due to Oracle license -->
 		<dependency>
