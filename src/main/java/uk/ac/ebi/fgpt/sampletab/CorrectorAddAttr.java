@@ -168,8 +168,8 @@ public class CorrectorAddAttr {
                     }
                     sample.addAttribute(attr);
                 } else if (key.toLowerCase().startsWith("characteristic[")){
-                    String valueTrim = value.substring(15, value.length()-2);
-                    CharacteristicAttribute attr = new CharacteristicAttribute(key, valueTrim);
+                    String keyTrim = key.substring(15, key.length()-1);
+                    CharacteristicAttribute attr = new CharacteristicAttribute(keyTrim, value);
                     if (unit != null) {
                         attr.unit = new UnitAttribute(unit);
                         if (termSource != null) {
@@ -180,8 +180,8 @@ public class CorrectorAddAttr {
                     }
                     sample.addAttribute(attr);
                 } else if (key.toLowerCase().startsWith("comment[")){
-                    String valueTrim = value.substring(8, value.length()-2);
-                    CommentAttribute attr = new CommentAttribute(key, valueTrim);
+                    String keyTrim = key.substring(8, key.length()-1);
+                    CommentAttribute attr = new CommentAttribute(keyTrim, value);
                     if (unit != null) {
                         attr.unit = new UnitAttribute(unit);
                         if (termSource != null) {
@@ -191,6 +191,8 @@ public class CorrectorAddAttr {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
                     }
                     sample.addAttribute(attr);
+                } else {
+                    log.warn("Unable to add "+key+" : "+value+" to "+acc);
                 }
             }
         } catch (SQLException e) {
