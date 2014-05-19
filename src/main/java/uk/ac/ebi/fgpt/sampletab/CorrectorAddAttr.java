@@ -167,6 +167,10 @@ public class CorrectorAddAttr {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
                     }
                     sample.addAttribute(attr);
+                } else if (key.toLowerCase().equals("sample name")) {
+                    //automatically make the existing name a synonym
+                    sample.addAttribute(new CommentAttribute("synonym", sample.getNodeName()), 0);
+                    sample.setNodeName(value);
                 } else if (key.toLowerCase().startsWith("characteristic[")){
                     String keyTrim = key.substring(15, key.length()-1);
                     CharacteristicAttribute attr = new CharacteristicAttribute(keyTrim, value);
