@@ -14,18 +14,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-
-import uk.ac.ebi.fg.biosd.model.organizational.MSI;
-import uk.ac.ebi.fg.core_model.resources.Resources;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.fg.biosd.model.application_mgmt.JobRegisterEntry;
-import uk.ac.ebi.fg.biosd.model.application_mgmt.JobRegisterEntry.Operation;
-import uk.ac.ebi.fg.biosd.model.persistence.hibernate.application_mgmt.JobRegisterDAO;
 import com.jolbox.bonecp.BoneCPDataSource;
 
 public class TrackingManager {
@@ -177,26 +169,6 @@ public class TrackingManager {
             log.warn("Problem registering event end", e);
         }
     }
-    
-    
-	public void getJobRegistry() throws SQLException {
-		EntityManagerFactory emf = Resources.getInstance()
-				.getEntityManagerFactory();
-		EntityManager em = emf.createEntityManager();
-
-		JobRegisterDAO jrDao = new JobRegisterDAO(em);
-
-		List<JobRegisterEntry> logs = jrDao.find(1, MSI.class);
-		log.error("find with entityType didn't work!", 1, logs.size());
-		for (JobRegisterEntry l : logs) {
-			String accession = l.getAcc();
-			Operation operation = l.getOperation();
-			Date timestamp = l.getTimestamp();
-			String id = getExpermentId(accession);
-			writeToDatabase(id, operation.toString(), timestamp);
-		}
-
-	}
 
 	private void writeToDatabase(String id, String operation, Date timestamp) {
 

@@ -59,6 +59,7 @@ public class Validator extends AbstractInfileDriver {
                 if (sampleattributesknown.size() != 0) {
                     throw new SAXException("Multiple SampleAttributes in "+groupID);
                 }
+                //TODO FINISH ME
             } else if (name.equals("SampleAttribute")) { //TODO fix - no such thing as SampleAttribute
                 String className = atts.getValue("class");
                 if (className == null ) {
