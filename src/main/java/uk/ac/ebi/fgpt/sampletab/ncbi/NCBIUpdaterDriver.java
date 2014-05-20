@@ -6,7 +6,13 @@ import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -31,42 +37,36 @@ public class NCBIUpdaterDriver extends AbstractDriver {
     @Option(name = "-o", aliases={"--output"}, metaVar="OUTPUT", usage = "directory to write to")
     protected File outDir = null;
 
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+    @Option(name = "--threads", aliases = { "-t" }, usage = "number of additional threads")
+    protected int threads = 0;
 
-    private NCBIUpdateDownloader downloader = new NCBIUpdateDownloader();
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
     
-    protected void handleId(int id) {
-        Document document = null;
-        try {
-            document = downloader.getId(id);
-        } catch (MalformedURLException e) {
-            log.error("Problem retrieving BioSample "+id, e);
-            return;
-        } catch (DocumentException e) {
-            log.error("Problem retrieving BioSample "+id, e);
-            return;
-        } catch (IOException e) {
-            log.error("Problem retrieving BioSample "+id, e);
-            return;
-        }
+    protected void handleDocument(Document document) {
         
         Element sampleSet = document.getRootElement();
         Element sample = XMLUtils.getChildByName(sampleSet, "BioSample");
         String accession = sample.attributeValue("accession");
+        String id = sample.attributeValue("id");
         
         if (accession == null) {
             log.warn("No accession for sample "+id);
             return;
         }
         
+        
         File localOutDir = new File(outDir, SampleTabUtils.getSubmissionDirPath("GNC-"+accession));
         localOutDir = localOutDir.getAbsoluteFile();
         localOutDir.mkdirs();
         File outFile = new File(localOutDir, "out.xml");
 
+
+        //TODO only write out if target does not exist, 
+        //TODO only write out if target is different content (not text match)
+        
         log.info("writing to "+outFile);
         
         try {
@@ -90,17 +90,71 @@ public class NCBIUpdaterDriver extends AbstractDriver {
             return;
         }
                 
-        try {
-            for(int id : downloader.getUpdatedSampleIds(fromDate, toDate)) {
-                log.info("getting id "+id);
-                handleId(id);
+
+        ExecutorService pool = null;
+        if (threads > 0) {
+            pool = Executors.newFixedThreadPool(threads);
+        }
+
+        if (pool != null) {
+            //we are using a pool of threads to do stuff in parallel
+            //create some futures and then wait for them to finish
+            
+            LinkedList<Future<Document>> futures = new LinkedList<Future<Document>>();
+            for (Integer id : new NCBIUpdateDownloader.UpdateIterable(fromDate, toDate)) {
+                Callable<Document> t = new NCBIUpdateDownloader.UpdateCallable(id);
+                if (t != null) {
+                    Future<Document> f = pool.submit(t);
+                    futures.add(f);
+                }
+                //limit size of future list to limit memory consumption
+                while (futures.size() > 1000) {
+                    Future<Document> f = futures.pop();
+                    try {
+                        handleDocument(f.get());
+                    } catch (Exception e) {
+                        //something went wrong
+                        log.error("Problem processing", e);
+                    }
+                }
             }
-        } catch (MalformedURLException e) {
-            log.error("Problem retrieving BioSamples updated list", e);
-        } catch (DocumentException e) {
-            log.error("Problem retrieving BioSamples updated list", e);
-        } catch (IOException e) {
-            log.error("Problem retrieving BioSamples updated list", e);
+            
+            for (Future<Document> f : futures) {
+                try {
+                    handleDocument(f.get());
+                } catch (Exception e) {
+                    //something went wrong
+                    log.error("Problem processing", e);
+                }
+            }
+            
+        } else {
+            //we are not using a pool, its all in one
+            for (Integer id : new NCBIUpdateDownloader.UpdateIterable(fromDate, toDate)) {
+                Callable<Document> t = new NCBIUpdateDownloader.UpdateCallable(id);
+                if (t != null) {
+                    try {
+                        handleDocument(t.call());
+                    } catch (Exception e) {
+                        //something went wrong
+                        log.error("Problem processing "+id, e);
+                    }
+                }
+            }
+        }
+        
+        // run the pool and then close it afterwards
+        // must synchronize on the pool object
+        if (pool != null) {
+            synchronized (pool) {
+                pool.shutdown();
+                try {
+                    // allow 24h to execute. Rather too much, but meh
+                    pool.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    log.error("Interupted awaiting thread pool termination", e);
+                }
+            }
         }
     }
     
