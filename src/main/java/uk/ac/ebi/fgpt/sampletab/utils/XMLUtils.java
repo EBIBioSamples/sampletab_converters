@@ -1,13 +1,17 @@
 package uk.ac.ebi.fgpt.sampletab.utils;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -28,6 +32,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.DocumentSource;
 import org.dom4j.io.SAXReader;
+import org.dom4j.io.XMLWriter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,5 +150,37 @@ public class XMLUtils {
         DOMResult result = new DOMResult();
         t.transform(new DocumentSource(orig), result);
         return (org.w3c.dom.Document) result.getNode();
+    }
+    
+    public static void writeDocumentToFile(Document document, File outFile) throws IOException {
+
+        OutputStream os = null;
+        XMLWriter writer = null;
+        try {
+            os = new BufferedOutputStream(new FileOutputStream(outFile));
+            //this pretty printing is messing up comparisons by trimming whitespace WITHIN an element
+            //OutputFormat format = OutputFormat.createPrettyPrint();
+            //XMLWriter writer = new XMLWriter(os, format);
+            writer = new XMLWriter(os);
+            writer.write(document);
+            writer.flush();
+            os.close();
+        } finally {
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+            
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+        }
     }
 }
