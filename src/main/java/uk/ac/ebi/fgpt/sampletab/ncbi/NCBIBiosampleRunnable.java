@@ -22,6 +22,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
@@ -33,6 +34,8 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
     
     private final File inputfile;
     private final File outputfile;
+
+    private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -41,29 +44,6 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 	    this.outputfile = outputfile;
 	}
 
-	public String addressToString(Element address) {
-		String toreturn = "";
-		if (address != null) {
-			Element street = XMLUtils.getChildByName(address, "Street");
-			Element city = XMLUtils.getChildByName(address, "City");
-			Element sub = XMLUtils.getChildByName(address, "Sub");
-			Element country = XMLUtils.getChildByName(address, "Country");
-			// TODO handle joins better
-			if (street != null) {
-				toreturn = toreturn + street.getTextTrim() + ", ";
-			}
-			if (city != null) {
-				toreturn = toreturn + city.getTextTrim() + ", ";
-			}
-			if (sub != null) {
-				toreturn = toreturn + sub.getTextTrim() + ", ";
-			}
-			if (country != null) {
-				toreturn = toreturn + country.getTextTrim();
-			}
-		}
-		return toreturn;
-	}
 	
 	public SampleData convert(File ncbiBiosampleXMLFile)
 			throws DocumentException, ParseException,
@@ -71,226 +51,85 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 		return convert(XMLUtils.getDocument(ncbiBiosampleXMLFile));
 	}
 
-	public SampleData convert(Document ncbiBiosampleXML) throws ParseException,
+	public SampleData convert(Document document) throws ParseException,
 			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 
 		SampleData st = new SampleData();
-		Element mainroot = ncbiBiosampleXML.getRootElement();
-		Element bioSampleroot = XMLUtils.getChildByName(mainroot, "BioSample");
-		Element description = XMLUtils.getChildByName(bioSampleroot, "Description");
-		Element title = XMLUtils.getChildByName(description, "Title");
-		Element descriptioncomment = XMLUtils.getChildByName(description,
-				"Comment");
-		Element descriptionparagraph = null;
-		Element descriptiontable = null;
-		if (descriptioncomment != null) {
-			descriptionparagraph = XMLUtils.getChildByName(descriptioncomment,
-					"Paragraph");
-			descriptiontable = XMLUtils.getChildByName(descriptioncomment,
-					"Table");
-		}
-		Element owner = XMLUtils.getChildByName(bioSampleroot, "Owner");
-		Element contacts = XMLUtils.getChildByName(owner, "Contacts");
-		Element links = XMLUtils.getChildByName(owner, "Links"); 
-		Element ids = XMLUtils.getChildByName(bioSampleroot, "Ids");
-		Element attributes = XMLUtils.getChildByName(bioSampleroot, "Attributes");
-		Element organism = XMLUtils.getChildByName(description, "Organism");
-		Element models = XMLUtils.getChildByName(bioSampleroot, "Models");
 
-		// TODO unencode http conversion, e.g. &amp, if this is an issue
-		st.msi.submissionTitle = title.getTextTrim();
-
-		SimpleDateFormat dateFormatNCBI = new SimpleDateFormat(
-				"yyyy-MM-dd'T'HH:mm:ss");
-		// some NCBI data has milliseconds, some doesn't.
-		// therefore need two formatters. try one, on fail try the other
-		SimpleDateFormat dateFormatNCBImilisecond = new SimpleDateFormat(
-				"yyyy-MM-dd'T'HH:mm:ss.SSS");
-		Date publicationDate;
-		try {
-			publicationDate = dateFormatNCBI.parse(bioSampleroot
-					.attributeValue("publication_date"));
-		} catch (ParseException e) {
-			publicationDate = dateFormatNCBImilisecond.parse(bioSampleroot
-					.attributeValue("publication_date"));
-		}
-
-		st.msi.submissionReleaseDate = publicationDate;
-		// NCBI Biosamples does not always have a last_update attribute
-		if (bioSampleroot.attributeValue("last_update") != null
-				&& bioSampleroot.attributeValue("last_update").equals("")) {
-			st.msi.submissionUpdateDate = st.msi.submissionReleaseDate;
-		} else if (bioSampleroot.attributeValue("last_update") != null) {
-			Date updateDate = dateFormatNCBI.parse(bioSampleroot
-					.attributeValue("last_update"));
-			st.msi.submissionUpdateDate = updateDate;
-		}
-
-		// NCBI Biosamples identifier numbers are prefixed by GNC to get the
-		// submission identifier
-		// Note that NCBI uses 1 sample = 1 submission, but EBI allows many
-		// samples in one submission
-		st.msi.submissionIdentifier = "GNC-" + bioSampleroot.attributeValue("id");
-		if (descriptionparagraph != null) {
-			if (!descriptionparagraph.getTextTrim().equals("none provided")) {
-				st.msi.submissionDescription = descriptionparagraph.getTextTrim();
-			}
-		}
-
-		String organizationName = owner.getTextTrim();
-
-		if (contacts != null) {
-			// log.info("Processing contacts");
-			for (Element contact : XMLUtils.getChildrenByName(contacts,
-					"Contact")) {
-				Element name = XMLUtils.getChildByName(contact, "Name");
-				Element address = XMLUtils.getChildByName(contact, "Address");
-				if (name != null) {
-					// this has a name, therefore it is a person
-					Element last = XMLUtils.getChildByName(name, "Last");
-					Element first = XMLUtils.getChildByName(name, "First");
-					Element middle = XMLUtils.getChildByName(name, "Middle");
-					
-					
-					String lastname = last.getTextTrim();
-					String initials = null;
-                    // TODO fix middlename == initials assumption
-                    if (middle != null) {
-                        initials = middle.getTextTrim();
-                    }
-					String firstname = null;
-                    if (first != null) {
-                        firstname = first.getTextTrim();
-                    }
-					String email = contact.attributeValue("email");
-					String role = null;
-					Person per = new Person(lastname, initials, firstname, email, role);
-					if (!st.msi.persons.contains(per)){
-					    st.msi.persons.add(per);
-					}
-				} else {
-					// no name of this contact, therefore it is an
-					// Organisation
-
-                    // NCBI doesn't have roles or URIs
-                    // Also, NCBI only allows one organisation per
-                    // sample
-					Organization org = new Organization(organizationName, addressToString(address), null, contact
-                            .attributeValue("email"), null);
-
-                    if (!st.msi.organizations.contains(org)){
-                        st.msi.organizations.add(org);
-                    }
-				}
-			}
-		}
-		if (links != null) {
-			for (Element link : XMLUtils.getChildrenByName(links, "Link")) {
-				// pubmedids
-				// could be url, db_xref or entrez
-				// entrez never seen to date, deprecated?
-				if (link.attributeValue("type") == "db_xref"
-						&& link.attributeValue("target") == "pubmed") {
-					String PubMedID = link.getTextTrim();
-					st.msi.publications.add(new Publication(PubMedID, null));
-				}
-			}
-		}
+		Element sampleSet = document.getRootElement();
+		Element sample = XMLUtils.getChildByName(sampleSet, "BioSample");
+        Element description = XMLUtils.getChildByName(sample, "Description");
 		
-		st.msi.termSources.add(new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null));
+		String accession = sample.attributeValue("accession");
+        String ncbiId = sample.attributeValue("id");
 
-		SampleNode scdnode = new SampleNode();
-		//name nodes by identifier to guarantee they won't overwrite when combined.
-		scdnode.setNodeName("SAMN" + bioSampleroot.attributeValue("id"));
-		scdnode.setSampleDescription(title.getTextTrim());
-		scdnode.setSampleAccession("SAMN" + bioSampleroot.attributeValue("id"));
-		OrganismAttribute organismAttrib = new OrganismAttribute();
-		organismAttrib.setAttributeValue(organism
-				.attributeValue("taxonomy_name"));
-		organismAttrib.setTermSourceREF("NCBI Taxonomy");
-		organismAttrib.setTermSourceID(organism.attributeValue("taxonomy_id"));
-		scdnode.addAttribute(organismAttrib);
-
-		for (Element row : XMLUtils.getChildrenByName(
-				XMLUtils.getChildByName(descriptiontable, "Body"), "Row")) {
-			// convert to an array list to ensure random access.
-			ArrayList<Element> cells = new ArrayList<Element>(
-					XMLUtils.getChildrenByName(row, "Cell"));
-
-			CommentAttribute attrib = new CommentAttribute();
-			attrib.setAttributeValue(cells.get(1).getTextTrim());
-			attrib.type = cells.get(0).getTextTrim();
-			scdnode.addAttribute(attrib);
-		}
-
-		for (Element attribute : XMLUtils.getChildrenByName(attributes,
-				"Attribute")) {
-			CommentAttribute attrib = new CommentAttribute();
-			attrib.setAttributeValue(attribute.getTextTrim());
-			attrib.type = attribute.attributeValue("attribute_name");
-			// Dictionary name is more like a template than an ontology
-			//  do not use 
-//			if (attribute.attributeValue("dictionary_name") != null) {
-//				attrib.setTermSourceREF(attribute
-//						.attributeValue("dictionary_name"));
-//			}
-			scdnode.addAttribute(attrib);
-		}
-
-		DatabaseAttribute databaseAttrib = new DatabaseAttribute();
-		databaseAttrib.setAttributeValue("NCBI Biosamples");
-		databaseAttrib.databaseID = bioSampleroot.attributeValue("id");
-		databaseAttrib.databaseURI = "http://www.ncbi.nlm.nih.gov/biosample?term="
-				+ bioSampleroot.attributeValue("id") + "%5Buid%5D";
-		scdnode.addAttribute(databaseAttrib);
-		if (ids != null) {
-			for (Element id : XMLUtils.getChildrenByName(ids, "Id")) {
-				log.debug("Found an id");
-				// a child element to process
-				databaseAttrib = new DatabaseAttribute();
-				String dbname = id.attributeValue("db");
-				databaseAttrib.setAttributeValue(dbname);
-				databaseAttrib.databaseID = id.getTextTrim();
-				// databaseURI has different construction rules for different
-				// databases
-				// TODO clear up potential URL encoding problems
-				if (dbname == null){
-				    //do nothing more
-				} else if (dbname.equals("SRA")) {
-					databaseAttrib.databaseURI = "http://www.ebi.ac.uk/ena/data/view/"
-							+ id.getTextTrim();
-				} else if (dbname.equals("Coriell")) {
-					if (!id.getTextTrim().equals("N/A")) {
-						databaseAttrib.databaseURI = "http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref="
-								+ id.getTextTrim();
-					}
-				} else if (dbname.equals("HapMap")) {
-					// TODO work out how to do this,
-					// http://ccr.coriell.org/Sections/Collections/NHGRI/?SsId=11
-					// is a starting point
-				} else if (dbname.equals("EST")) {
-					// One sample corresponds to many many ESTs generated from
-					// that sample 
-					// Can Search by the LIBEST_xxxxxxxx identifier in free text to
-					// find them but no way to encode this search in the URL
-				} else if (dbname.equals("GSS")) {
-					// One sample corresponds to many many ESTs generated from
-					// that sample 
-					// Can Search by the LIBGSS_xxxxxxxx identifier in free text to
-					// find them but no way to encode this search in the URL
-				} else if (dbname.equals("BioSample")) {
-				    //already have a biosamples identifier, so ignore this one.
-				}
-				scdnode.addAttribute(databaseAttrib);
-			}
-		}
-        if (models != null) {
-            for (Element model : XMLUtils.getChildrenByName(links, "Model")) {
-                scdnode.addAttribute(new CommentAttribute("NCBI Model", model.getTextTrim()));
+        st.msi.submissionIdentifier = "GNC-"+accession;
+        
+        Element ownerElem = XMLUtils.getChildByName(sample, "Owner");
+        String ownerName = XMLUtils.getChildByName(ownerElem, "Name").getTextTrim();
+        
+        for (Element contactElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(ownerElem, "Contacts"), "Contact")) {
+            String ownerEmail = contactElem.attributeValue("email");
+            st.msi.organizations.add(new Organization(ownerName, null, null, ownerEmail, "submitter"));
+            
+            Element name = XMLUtils.getChildByName(contactElem, "Name");
+            if (name != null) {
+                String firstName = null;
+                String lastName = null;
+                Element firstElem = XMLUtils.getChildByName(name, "First");
+                if (firstElem != null) firstName = firstElem.getTextTrim();
+                Element lastElem = XMLUtils.getChildByName(name, "Last");
+                if (lastElem != null) lastName = lastElem.getTextTrim();
+                
+                st.msi.persons.add(new Person(lastName, "", firstName, ownerEmail, "submitter"));
             }
         }
+        
+        
+        SampleNode sn = new SampleNode(XMLUtils.getChildByName(description, "Title").getTextTrim());
+        sn.setSampleAccession(accession);
 
-		st.scd.addNode(scdnode);
+        for (Element idElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(sample, "Ids"), "Id")) {
+            String id = idElem.getTextTrim();
+            if (!sn.getSampleAccession().equals(id)) {
+                sn.addAttribute(new CommentAttribute("synonym", id));
+            }
+        }
+		
+        Element descriptionCommment = XMLUtils.getChildByName(description, "Comment");
+        if (descriptionCommment != null) {
+            Element descriptionParagraph = XMLUtils.getChildByName(description, "Paragraph");
+            if (descriptionParagraph != null) {
+                String secondaryDescription = descriptionParagraph.getTextTrim();
+                if (!sn.getNodeName().equals(secondaryDescription)) {
+                    sn.addAttribute(new CommentAttribute("secondary description", secondaryDescription));
+                }
+            }
+        }
+        
+        //handle the organism
+        Element organismElement = XMLUtils.getChildByName(description, "Organism");
+        sn.addAttribute(new OrganismAttribute(organismElement.attributeValue("taxonomy_name"),
+                st.msi.getOrAddTermSource(ncbitaxonomy),
+                Integer.parseInt(organismElement.attributeValue("taxonomy_id"))));        
+        
+        //handle attributes
+        for (Element attrElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(sample, "Attributes"), "Attribute")) {
+            String type = attrElem.attributeValue("display_name");
+            if (type == null || type.length() == 0) {
+                type = attrElem.attributeValue("attribute_name");
+            }
+            String value = attrElem.getTextTrim();
+            sn.addAttribute(new CharacteristicAttribute(type, value));
+        }
+
+        //handle model and packages
+        for (Element modelElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(sample, "Models"), "Model")) {
+            sn.addAttribute(new CommentAttribute("model", modelElem.getTextTrim()));
+        }
+        sn.addAttribute(new CommentAttribute("package", XMLUtils.getChildByName(sample, "Package").getTextTrim()));
+        
+		st.scd.addNode(sn);
 
 		return st;
 	}
