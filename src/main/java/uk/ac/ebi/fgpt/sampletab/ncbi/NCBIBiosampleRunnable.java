@@ -35,7 +35,7 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
     private final File inputfile;
     private final File outputfile;
 
-    private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
+    private static TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -45,13 +45,13 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 	}
 
 	
-	public SampleData convert(File ncbiBiosampleXMLFile)
+	public static SampleData convert(File ncbiBiosampleXMLFile)
 			throws DocumentException, ParseException,
 			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException, FileNotFoundException {
 		return convert(XMLUtils.getDocument(ncbiBiosampleXMLFile));
 	}
 
-	public SampleData convert(Document document) throws ParseException,
+	public static SampleData convert(Document document) throws ParseException,
 			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 
 		SampleData st = new SampleData();
@@ -67,10 +67,11 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
         
         Element ownerElem = XMLUtils.getChildByName(sample, "Owner");
         String ownerName = XMLUtils.getChildByName(ownerElem, "Name").getTextTrim();
+        String ownerUrl = XMLUtils.getChildByName(ownerElem, "Name").attributeValue("url");
         
         for (Element contactElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(ownerElem, "Contacts"), "Contact")) {
             String ownerEmail = contactElem.attributeValue("email");
-            st.msi.organizations.add(new Organization(ownerName, null, null, ownerEmail, "submitter"));
+            st.msi.organizations.add(new Organization(ownerName, null, ownerUrl, ownerEmail, "submitter"));
             
             Element name = XMLUtils.getChildByName(contactElem, "Name");
             if (name != null) {
@@ -128,6 +129,8 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
             sn.addAttribute(new CommentAttribute("model", modelElem.getTextTrim()));
         }
         sn.addAttribute(new CommentAttribute("package", XMLUtils.getChildByName(sample, "Package").getTextTrim()));
+        
+        //TODO handle links
         
 		st.scd.addNode(sn);
 

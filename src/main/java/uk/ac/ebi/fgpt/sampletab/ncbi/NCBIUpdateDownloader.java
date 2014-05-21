@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -15,6 +16,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
@@ -36,6 +38,10 @@ import org.dom4j.io.XMLWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.Normalizer;
+import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 /**
@@ -113,25 +119,79 @@ public class NCBIUpdateDownloader {
     /**
      * Wrapper around callable suitable for use in multithreaded applications
      * 
-     * Note: this stores the document in memory, when using large numbers of callables
-     * this may become significant.
-     * 
      * @author faulcon
      *
      */
-    public static class UpdateCallable implements Callable<Document> {
-
-        private final Integer id;
+    public static class DownloadConvertCallable implements Callable<Void> {
         
-        public UpdateCallable(int id) {
+        private final int id;
+        private File outDir;
+        
+        public DownloadConvertCallable(int id, File outDir) {
             this.id = id;
+            this.outDir = outDir;
         }
+
         
         @Override
-        public Document call() throws Exception {
-            return getId(id);            
-        }
+        public Void call() throws Exception {
+            Document document = getId(id);
 
+            Element sampleSet = document.getRootElement();
+            Element sample = XMLUtils.getChildByName(sampleSet, "BioSample");
+            String accession = sample.attributeValue("accession");
+            String id = sample.attributeValue("id");
+            
+            if (accession == null) {
+                throw new RuntimeException("No accession in sample id "+id);
+            }
+            
+            //output the XML file
+            File localOutDir = new File(outDir, SampleTabUtils.getSubmissionDirPath("GNC-"+accession));
+            localOutDir = localOutDir.getAbsoluteFile();
+            localOutDir.mkdirs();
+            File xmlFile = new File(localOutDir, "out.xml");
+            File sampletabFile = new File(localOutDir, "sampletab.pre.txt");
+
+            log.info("writing to "+xmlFile);
+            
+            XMLUtils.writeDocumentToFile(document, xmlFile);
+            
+            //do the conversion
+            SampleData st = null;
+            try {
+                st = NCBIBiosampleRunnable.convert(document);
+            } catch (ParseException e) {
+                log.error("Problem with "+accession, e);
+                throw e;
+            } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
+                log.error("Problem with "+accession, e);
+                throw e;
+            }
+
+            //output the SampleTab file
+            FileWriter out = null;
+            try {
+                out = new FileWriter(sampletabFile);
+            } catch (IOException e) {
+                log.error("Error opening " + sampletabFile, e);
+                throw e;
+            }
+
+            Normalizer norm = new Normalizer();
+            norm.normalize(st);
+
+            SampleTabWriter sampletabwriter = new SampleTabWriter(out);
+            try {
+                sampletabwriter.write(st);
+                sampletabwriter.close();
+            } catch (IOException e) {
+                log.error("Error writing " + sampletabFile, e);
+                throw e;
+            }
+            
+            return null;            
+        }
     }
     
 

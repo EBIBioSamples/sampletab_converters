@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -44,39 +45,7 @@ public class NCBIUpdaterDriver extends AbstractDriver {
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    
-    protected void handleDocument(Document document) {
-        
-        Element sampleSet = document.getRootElement();
-        Element sample = XMLUtils.getChildByName(sampleSet, "BioSample");
-        String accession = sample.attributeValue("accession");
-        String id = sample.attributeValue("id");
-        
-        if (accession == null) {
-            log.warn("No accession for sample "+id);
-            return;
-        }
-        
-        
-        File localOutDir = new File(outDir, SampleTabUtils.getSubmissionDirPath("GNC-"+accession));
-        localOutDir = localOutDir.getAbsoluteFile();
-        localOutDir.mkdirs();
-        File outFile = new File(localOutDir, "out.xml");
-
-
-        //TODO only write out if target does not exist, 
-        //TODO only write out if target is different content (not text match)
-        
-        log.info("writing to "+outFile);
-        
-        try {
-            XMLUtils.writeDocumentToFile(document, outFile);
-        } catch (IOException e) {
-            log.error("Problem writing to "+outFile, e);
-            return;
-        }
-    }
-    
+       
     protected void doMain(String[] args) {
         super.doMain(args);
 
@@ -100,18 +69,17 @@ public class NCBIUpdaterDriver extends AbstractDriver {
             //we are using a pool of threads to do stuff in parallel
             //create some futures and then wait for them to finish
             
-            LinkedList<Future<Document>> futures = new LinkedList<Future<Document>>();
+            LinkedList<Future<Void>> futures = new LinkedList<Future<Void>>();
             for (Integer id : new NCBIUpdateDownloader.UpdateIterable(fromDate, toDate)) {
-                Callable<Document> t = new NCBIUpdateDownloader.UpdateCallable(id);
+                Callable<Void> t = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir);
                 if (t != null) {
-                    Future<Document> f = pool.submit(t);
+                    Future<Void> f = pool.submit(t);
                     futures.add(f);
                 }
                 //limit size of future list to limit memory consumption
                 while (futures.size() > 1000) {
-                    Future<Document> f = futures.pop();
                     try {
-                        handleDocument(f.get());
+                        futures.pop().get();
                     } catch (Exception e) {
                         //something went wrong
                         log.error("Problem processing", e);
@@ -119,9 +87,9 @@ public class NCBIUpdaterDriver extends AbstractDriver {
                 }
             }
             
-            for (Future<Document> f : futures) {
+            for (Future<Void> f : futures) {
                 try {
-                    handleDocument(f.get());
+                    f.get();
                 } catch (Exception e) {
                     //something went wrong
                     log.error("Problem processing", e);
@@ -131,10 +99,10 @@ public class NCBIUpdaterDriver extends AbstractDriver {
         } else {
             //we are not using a pool, its all in one
             for (Integer id : new NCBIUpdateDownloader.UpdateIterable(fromDate, toDate)) {
-                Callable<Document> t = new NCBIUpdateDownloader.UpdateCallable(id);
+                Callable<Void> t = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir);
                 if (t != null) {
                     try {
-                        handleDocument(t.call());
+                        t.call();
                     } catch (Exception e) {
                         //something went wrong
                         log.error("Problem processing "+id, e);
