@@ -74,10 +74,11 @@ public class SampleTabBulkRunnable implements Callable<Void> {
     private void doWork() throws Exception {
 
         // accession sampletab.pre.txt to sampletab.txt
-        if (force
-                || !sampletab.exists()
-                || sampletab.length() == 0
-                || sampletab.lastModified() < sampletabpre.lastModified()) {
+        if (!force && sampletab.exists() && sampletab.length()==0) {
+            log.info("Skipping "+sampletab+" - is zero size");
+        } else if (!force && sampletab.exists() && sampletab.lastModified() < sampletabpre.lastModified()) {
+            log.info("Skipping "+sampletab+" - is older than target");
+        } else {
             log.info("Processing " + sampletab);
 
             SampleTabSaferParser parser = new SampleTabSaferParser(new SampleTabValidator());
@@ -159,10 +160,11 @@ public class SampleTabBulkRunnable implements Callable<Void> {
 
         // preprocess to load
         if (!noload) {
-            if (force 
-                    || !sampletabtoload.exists()
-                    || sampletabtoload.length() == 0
-                    || sampletabtoload.lastModified() < sampletab.lastModified()) {
+            if (!force && sampletabtoload.exists() && sampletabtoload.length()==0) {
+                log.info("Skipping "+sampletabtoload+" - is zero size");
+            } else if (!force && sampletabtoload.exists() && sampletabtoload.lastModified() < sampletabtoload.lastModified()) {
+                log.info("Skipping "+sampletabtoload+" - is older than target");
+            } else {
                 log.info("Processing " + sampletabtoload);
 
                 SampleTabToLoad c;
