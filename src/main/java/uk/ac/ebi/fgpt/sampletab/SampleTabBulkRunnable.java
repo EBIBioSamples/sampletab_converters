@@ -76,7 +76,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
         // accession sampletab.pre.txt to sampletab.txt
         if (!force && sampletab.exists() && sampletab.length()==0) {
             log.info("Skipping "+sampletab+" - is zero size");
-        } else if (!force && sampletab.exists() && sampletab.lastModified() < sampletabpre.lastModified()) {
+        } else if (!force && sampletab.exists() && sampletab.lastModified() > sampletabpre.lastModified()) {
             log.info("Skipping "+sampletab+" - is older than target");
         } else {
             log.info("Processing " + sampletab);
@@ -162,7 +162,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
         if (!noload) {
             if (!force && sampletabtoload.exists() && sampletabtoload.length()==0) {
                 log.info("Skipping "+sampletabtoload+" - is zero size");
-            } else if (!force && sampletabtoload.exists() && sampletabtoload.lastModified() < sampletab.lastModified()) {
+            } else if (!force && sampletabtoload.exists() && sampletabtoload.lastModified() > sampletab.lastModified()) {
                 log.info("Skipping "+sampletabtoload+" - is older than target");
             } else {
                 log.info("Processing " + sampletabtoload);
