@@ -163,12 +163,14 @@ public class CorrectorAddAttr {
                     SexAttribute attr = new SexAttribute(value);
                     if (termSource != null) {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
+                        attr.setTermSourceID(termsourceID);
                     }
                     sample.addAttribute(attr);
                 } else if (key.toLowerCase().equals("material")) {
                     MaterialAttribute attr = new MaterialAttribute(value);
                     if (termSource != null) {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
+                        attr.setTermSourceID(termsourceID);
                     }
                     sample.addAttribute(attr);
                 } else if (key.toLowerCase().equals("sample name")) {
@@ -182,9 +184,11 @@ public class CorrectorAddAttr {
                         attr.unit = new UnitAttribute(unit);
                         if (termSource != null) {
                             attr.unit.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
+                            attr.unit.setTermSourceID(termsourceID);
                         }
                     } else if (termSource != null) {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
+                        attr.setTermSourceID(termsourceID);
                     }
                     sample.addAttribute(attr);
                 } else if (key.toLowerCase().startsWith("comment[")){
@@ -194,9 +198,11 @@ public class CorrectorAddAttr {
                         attr.unit = new UnitAttribute(unit);
                         if (termSource != null) {
                             attr.unit.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
+                            attr.unit.setTermSourceID(termsourceID);
                         }
                     } else if (termSource != null) {
                         attr.setTermSourceREF(st.msi.getOrAddTermSource(termSource));
+                        attr.setTermSourceID(termsourceID);
                     }
                     sample.addAttribute(attr);
                 } else {
