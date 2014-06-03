@@ -69,16 +69,10 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
         this.username = properties.getProperty("username");
         this.password = properties.getProperty("password");
         
-        try {
-            accessioner = new AccessionerENA(hostname, 
-                    port, database, username, password);
-            correctorAddAttr = new CorrectorAddAttr(hostname, 
-                    port, database, username, password);
-        } catch (ClassNotFoundException e) {
-            log.error("Unable to create accessioner", e);
-        } catch (SQLException e) {
-            log.error("Unable to create accessioner", e);
-        }
+        accessioner = new AccessionerENA(hostname, 
+                port, database, username, password);
+        correctorAddAttr = new CorrectorAddAttr(hostname, 
+                port, database, username, password);
         
         properties = new Properties();
         try {
@@ -122,5 +116,11 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
             derivedFrom = new DerivedFrom(rootDir);
         }
         return derivedFrom;
+    }
+    
+    @Override
+    protected void postProcess() {
+        log.info("closing accessioner");
+        accessioner.close();
     }
 }

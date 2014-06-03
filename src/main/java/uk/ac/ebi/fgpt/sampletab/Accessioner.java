@@ -41,6 +41,15 @@ public class Accessioner {
     private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
     
     private BoneCPDataSource ds = null;
+    
+    private Connection con = null;
+    
+    private PreparedStatement stmGetAss = null;
+    private PreparedStatement stmGetRef = null;
+    private PreparedStatement stmGetGrp = null;
+    private PreparedStatement insertAss = null;
+    private PreparedStatement insertRef = null;
+    private PreparedStatement insertGrp = null;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -54,359 +63,218 @@ public class Accessioner {
     }
     
     public void close() {
+        if (stmGetAss != null) {
+            try {
+                stmGetAss.close();
+            } catch (SQLException e) {
+                //do nothing
+            }
+            stmGetAss = null;
+        }
+        if (stmGetRef != null) {
+            try {
+                stmGetRef.close();
+            } catch (SQLException e) {
+                //do nothing
+            }
+            stmGetRef = null;
+        }
+        if (stmGetGrp != null) {
+            try {
+                stmGetGrp.close();
+            } catch (SQLException e) {
+                //do nothing
+            }
+            stmGetGrp = null;
+        }
+        if (insertAss != null) {
+            try {
+                insertAss.close();
+            } catch (SQLException e) {
+                //do nothing
+            }
+            insertAss = null;
+        }
+        if (insertRef != null) {
+            try {
+                insertRef.close();
+            } catch (SQLException e) {
+                //do nothing
+            }
+            insertRef = null;
+        }
+        if (insertGrp != null) {
+            try {
+                insertGrp.close();
+            } catch (SQLException e) {
+                //do nothing
+            }
+            insertGrp = null;
+        }
+        
+        if (con != null) {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                //do nothing
+            }
+            con = null;
+        }
+        
         if (ds != null) {
             ds.close();
+            ds = null;
         }
     }
     
-    public SampleData convert(String sampleTabFilename) throws IOException, ParseException, SQLException {
-        return convert(new File(sampleTabFilename));
-    }
+    public void setup() throws SQLException, ClassNotFoundException {
 
-    public SampleData convert(File sampleTabFile) throws IOException, ParseException, SQLException {
-        return convert(parser.parse(sampleTabFile));
-    }
+        if (ds == null) {
 
-    public SampleData convert(URL sampleTabURL) throws IOException, ParseException, SQLException {
-        return convert(parser.parse(sampleTabURL));
-    }
+            Class.forName("oracle.jdbc.driver.OracleDriver");
 
-    public SampleData convert(InputStream dataIn) throws ParseException, SQLException {
-        return convert(parser.parse(dataIn));
-    }
-
-    protected void bulkSamples(SampleData sd, String submissionID, String prefix, String table, int retries, Connection connect, DataSource ds) throws SQLException {
-
-        //TODO check there are unaccessioned samples first
-        
-        PreparedStatement statement = null;
-        ResultSet results = null;
-        
-        try {
-            //first do one query to retrieve all that have already got accessions
-            statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM " + table
-                    + " WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
-            statement.setString(1, submissionID);
-            log.trace(statement.toString());
-            results = statement.executeQuery();
-            while (results.next()){
-                String samplename = results.getString(1).trim();
-                int accessionID = results.getInt(2);
-                String accession = prefix + accessionID;
-                SampleNode sample = sd.scd.getNode(samplename, SampleNode.class);
-                log.trace(samplename+" : "+accession);
-                if (sample != null){
-                    sample.setSampleAccession(accession);
-                } else {
-                    log.warn("Unable to find SCD sample node "+samplename+" in submission "+submissionID);
-                }
-            }
-        } catch (SQLRecoverableException e) {
-            log.warn("Trying to recover from exception", e);
-            if (retries > 0){
-                bulkSamples(sd, submissionID, prefix, table, retries-1, connect, ds);
-            } else {
-                throw e;
-            }
-        } finally {
-            if (statement != null){
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
-            if (results != null){
-                try {
-                    results.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
+            String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
+            
+            ds = new BoneCPDataSource();
+            ds.setJdbcUrl(connectURI);
+            ds.setUsername(username);
+            ds.setPassword(password);
+            
+            //remember, there is a limit of 500 on the database
+            //set each accessioner to a limit of 10, and always run less than 50 cluster jobs
+            ds.setPartitionCount(1); 
+            ds.setMaxConnectionsPerPartition(10); 
+            ds.setAcquireIncrement(2); 
         }
-    }
-
-    protected void bulkGroups(SampleData sd, String submissionID, int retries, Connection connect, DataSource ds) throws SQLException {
-
-        PreparedStatement statement = null;
-        ResultSet results = null;
         
-        try {
-            statement = connect.prepareStatement("SELECT USER_ACCESSION, ACCESSION FROM SAMPLE_GROUPS WHERE SUBMISSION_ACCESSION LIKE ? AND IS_DELETED = 0");
-            statement.setString(1, submissionID);
-            log.trace(statement.toString());
-            results = statement.executeQuery();
-            while (results.next()){
-                String groupname = results.getString(1).trim();
-                int accessionID = results.getInt(2);
-                String accession = "SAMEG" + accessionID;
-                GroupNode group = sd.scd.getNode(groupname, GroupNode.class);
-                log.trace(groupname+" : "+accession);
-                if (group != null){
-                    group.setGroupAccession(accession);
-                } else {
-                    log.warn("Unable to find SCD group node "+groupname+" in submission "+submissionID);
-                }
-            }
-        } catch (SQLRecoverableException e) {
-            log.warn("Trying to recover from exception", e);
-            if (retries > 0){
-                bulkGroups(sd, submissionID, retries-1, connect, ds);
-            } else {
-                throw e;
-            }
-        } finally {
-            if (statement != null){
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
-            if (results != null){
-                try {
-                    results.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
+        if (con == null) {
+            con = ds.getConnection();
         }
+        
+        if (stmGetAss == null) stmGetAss = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_ASSAY WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
+        if (stmGetRef == null) stmGetRef = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_REFERENCE WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
+        if (stmGetGrp == null) stmGetGrp = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
+        
+        if (insertAss == null) insertAss = con.prepareStatement("INSERT INTO SAMPLE_ASSAY ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
+        if (insertRef == null) insertRef = con.prepareStatement("INSERT INTO SAMPLE_REFERENCE ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
+        if (insertGrp == null) insertGrp = con.prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
     }
 
-    protected void singleSample(SampleData sd, SampleNode sample, String submissionID, String prefix, String table, int retries, Connection connect, DataSource ds) throws SQLException{
+    protected void singleSample(SampleData sd, SampleNode sample) throws SQLException, ClassNotFoundException{
         if (sample.getSampleAccession() == null) {
-            String accession = singleSample(sample.getNodeName().trim(), submissionID, prefix, table, retries, connect, ds);
+            String accession;
+            if (sd.msi.submissionReferenceLayer) {
+                accession = singleReferenceSample(sample.getNodeName(), sd.msi.submissionIdentifier);
+            } else {
+                accession = singleAssaySample(sample.getNodeName(), sd.msi.submissionIdentifier);
+            }
             sample.setSampleAccession(accession);
         }
     }
     
-    protected String singleSample(String name, String submissionID, String prefix, String table, int retries, Connection connect, DataSource ds) throws SQLException{
-
-        PreparedStatement statement = null;
-        ResultSet results = null;
+    public synchronized String singleAssaySample(String name, String submissionID) throws SQLException, ClassNotFoundException {
+        //do setup here so correct objects can get passed along
+        setup();
+        return singleAccession(name, submissionID, "SAMEA", stmGetAss, insertAss);
+    }
+    
+    public synchronized String singleReferenceSample(String name, String submissionID) throws SQLException, ClassNotFoundException {
+        //do setup here so correct objects can get passed along
+        setup();
+        return singleAccession(name, submissionID, "SAME", stmGetRef, insertRef);
+    }
+    
+    public synchronized String singleGroup(String name, String submissionID) throws SQLException, ClassNotFoundException {
+        //do setup here so correct objects can get passed along
+        setup();     
+        return singleAccession(name, submissionID, "SAMEG", stmGetGrp, insertGrp);
+    }
+    
+    /**
+     * Internal method to bring the different types of accessioning together into one place
+     * 
+     * @param name
+     * @param submissionID
+     * @param prefix
+     * @param stmGet
+     * @param stmPut
+     * @return
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    protected synchronized String singleAccession(String name, String submissionID, String prefix, PreparedStatement stmGet, PreparedStatement stmPut) throws SQLException, ClassNotFoundException {
+        if (name == null || name.trim().length() == 0) throw new IllegalArgumentException("name must be at least 1 character");
+        if (submissionID == null || submissionID.trim().length() == 0) throw new IllegalArgumentException("submissionID must be at least 1 character");
+        if (prefix == null ) throw new IllegalArgumentException("prefix must not be null");
+        
+        name = name.trim();
+        submissionID = submissionID.trim();
+        
         String accession = null;
-        try {
-            
-            statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
-                    + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
-            statement.setString(1, name);
-            statement.setString(2, submissionID);
-            log.trace(statement.toString());
-            results = statement.executeQuery();
-            if (results.next()){
-                accession = prefix + results.getInt(1);
-            } else {
-                log.info("Assigning new accession for "+submissionID+" : "+name);
+        stmGet.setString(1, name);
+        stmGet.setString(2, submissionID);
+        log.trace(stmGet.toString());
+        ResultSet results = stmGet.executeQuery();
+        if (results.next()){
+            accession = prefix + results.getInt(1);
+            results.close();
+        } else {
+            log.info("Assigning new accession for "+submissionID+" : "+name);
 
-                //insert it if not exists
-                statement.close();
-                statement = connect
-                        .prepareStatement("INSERT INTO "
-                                + table
-                                + " (USER_ACCESSION, SUBMISSION_ACCESSION, DATE_ASSIGNED, IS_DELETED) VALUES ( ? , ? , SYSDATE, 0 )");
-                statement.setString(1, name);
-                statement.setString(2, submissionID);
-                log.trace(statement.toString());
-                statement.executeUpdate();
-                
-                statement.close();
-                statement = connect.prepareStatement("SELECT ACCESSION FROM " + table
-                        + " WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
-                statement.setString(1, name);
-                statement.setString(2, submissionID);
-                log.trace(statement.toString());
-                results.close();
-                results = statement.executeQuery();
-                results.next();
-                accession = prefix + results.getInt(1);
-            }
-            log.debug("Assigning " + accession + " to " + name);
-        } catch (SQLRecoverableException e) {
-            log.warn("Trying to recover from exception", e);
-            if (retries > 0){
-                singleSample(name, submissionID, prefix, table, retries-1, connect, ds);
-            } else {
-                throw e;
-            }
-        } finally {
-            if (statement != null){
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
-            if (results != null){
-                try {
-                    results.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
+            //insert it if not exists
+            stmPut.setString(1, name);
+            stmPut.setString(2, submissionID);
+            log.trace(stmPut.toString());
+            stmPut.executeUpdate();
+
+            //retreive it
+            log.trace(stmGet.toString());
+            results = stmGet.executeQuery();
+            results.next();
+            accession = prefix + results.getInt(1);
+            results.close();
         }
+        
         return accession;
     }
-
-    protected void singleGroup(SampleData sd, GroupNode group, String submissionID, int retries, Connection connect, DataSource ds) throws SQLException{
-
-        PreparedStatement statement = null;
-        ResultSet results = null;
         
-        try {
-            if (group.getGroupAccession() == null) {
-
-                String name = group.getNodeName();
-                String accession = null;
-                
-                statement = connect
-                    .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
-                statement.setString(1, name);
-                statement.setString(2, submissionID);
-                log.trace(statement.toString());
-                results = statement.executeQuery();
-                
-                if (results.next()){
-                    accession = "SAMEG" + results.getInt(1);
-                } else {
-                    log.info("Assigning new accession for "+submissionID+" : "+name);
-                    statement.close();
-                    statement = connect
-                            .prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
-                    statement.setString(1, name);
-                    statement.setString(2, submissionID);
-                    //log.info(name);
-                    //log.info(submissionID);
-                    statement.executeUpdate();
-                    
-                    statement.close();
-                    statement = connect
-                            .prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION = ? AND SUBMISSION_ACCESSION = ?");
-                    statement.setString(1, name);
-                    statement.setString(2, submissionID);
-                    log.trace(statement.toString());
-                    results.close();
-                    results = statement.executeQuery();
-                    results.next();
-                    int accessionID = results.getInt(1);
-                    accession = "SAMEG" + accessionID;
-    
-                    log.debug("Assigning " + accession + " to " + name);
-                }
-                group.setGroupAccession(accession);
-            }
-        } catch (SQLRecoverableException e) {
-            log.warn("Trying to recover from exception", e);
-            if (retries > 0){
-                singleGroup(sd, group, submissionID, retries-1, connect, ds);
-            } else {
-                throw e;
-            }
-        } finally {
-            if (statement != null){
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
-            if (results != null){
-                try {
-                    results.close();
-                } catch (SQLException e) {
-                    //do nothing
-                }
-            }
-            //don't close connect because its passed in
-        }
-    }
-    
-    public SampleData convert(SampleData sampleIn) throws ParseException, SQLException {
-        String table = null;
-        String prefix = null;
-        if (sampleIn.msi.submissionReferenceLayer == true) {
-            prefix = "SAME";
-            table = "SAMPLE_REFERENCE";
-        } else if (sampleIn.msi.submissionReferenceLayer == false) {
-            prefix = "SAMEA";
-            table = "SAMPLE_ASSAY";
-        } else {
-            throw new ParseException("Must specify a Submission Reference Layer MSI attribute.");
-        }
-
-        String submission = sampleIn.msi.submissionIdentifier;
-        if (submission == null){
-            throw new ParseException("Submission Identifier cannot be null");
-        }
-        submission = submission.trim();
-        
-        //log.info("Starting accessioning");
-        
-        
-        
-        synchronized(this) {
-            if (ds == null) {
-
-                try {
-                    Class.forName("oracle.jdbc.driver.OracleDriver");
-                } catch (ClassNotFoundException e) {
-                    log.error("Unable to find oracle.jdbc.driver.OracleDriver", e);
-                    return null;
-                }
-
-                String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
-                
-                ds = new BoneCPDataSource();
-                ds.setJdbcUrl(connectURI);
-                ds.setUsername(username);
-                ds.setPassword(password);
-                
-                //remember, there is a limit of 500 on the database
-                //set each accessioner to a limit of 10, and always run less than 50 cluster jobs
-                ds.setPartitionCount(1); 
-                ds.setMaxConnectionsPerPartition(10); 
-                ds.setAcquireIncrement(2); 
-            }
-        }
-
-        Connection connect = null;
-        try {     
-            
-            connect = ds.getConnection();
-            
-            //first do one query to retrieve all that have already got accessions
-            ////actually, this slows things down because the index is on name+submission not submission
-            //log.info("Starting bulkSamples");
-            //bulkSamples(sampleIn, submission, prefix, table, 0, connect, ds);   
-            //log.info("Starting bulkGroups");      
-            //bulkGroups(sampleIn, submission, 0, connect, ds);                      
-            
-            
-            //now assign and retrieve accessions for samples that do not have them
-            //log.info("Starting singleSample");      
-            Collection<SampleNode> samples = sampleIn.scd.getNodes(SampleNode.class);
-            for (SampleNode sample : samples) {
-                singleSample(sampleIn, sample, submission, prefix, table, 0, connect, ds);
-            }
-
-            //log.info("Starting singleGroup");      
-            Collection<GroupNode> groups = sampleIn.scd.getNodes(GroupNode.class);
-            log.debug("got " + groups.size() + " groups.");
-            for (GroupNode group : groups) {
-                singleGroup(sampleIn, group, submission, 0, connect, ds);
-            }
-            
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            if (connect != null) {
-                connect.close();
-            }
-        }
-
-        return sampleIn;
+    public SampleData convert(String sampleTabFilename) throws IOException, ParseException, SQLException, ClassNotFoundException {
+        return convert(new File(sampleTabFilename));
     }
 
-    public void convert(SampleData sampleIn, Writer writer) throws IOException, ParseException, SQLException {
+    public SampleData convert(File sampleTabFile) throws IOException, ParseException, SQLException, ClassNotFoundException {
+        return convert(parser.parse(sampleTabFile));
+    }
+
+    public SampleData convert(URL sampleTabURL) throws IOException, ParseException, SQLException, ClassNotFoundException {
+        return convert(parser.parse(sampleTabURL));
+    }
+
+    public SampleData convert(InputStream dataIn) throws ParseException, SQLException, ClassNotFoundException {
+        return convert(parser.parse(dataIn));
+    }
+
+    public void convert(File inputFile, String outputFilename) throws IOException, ParseException, SQLException, ClassNotFoundException {
+        convert(inputFile, new File(outputFilename));
+    }
+
+    public void convert(File inputFile, File outputFile) throws IOException, ParseException, SQLException, ClassNotFoundException {
+        convert(inputFile, new FileWriter(outputFile));
+    }
+
+    public void convert(String inputFilename, Writer writer) throws IOException, ParseException, SQLException, ClassNotFoundException {
+        convert(new File(inputFilename), writer);
+    }
+
+    public void convert(String inputFilename, File outputFile) throws IOException, ParseException, SQLException, ClassNotFoundException {
+        convert(inputFilename, new FileWriter(outputFile));
+    }
+
+    public void convert(String inputFilename, String outputFilename) throws IOException, ParseException, SQLException, ClassNotFoundException {
+        convert(inputFilename, new File(outputFilename));
+    }
+
+    public void convert(SampleData sampleIn, Writer writer) throws IOException, ParseException, SQLException, ClassNotFoundException {
         log.trace("recieved magetab, preparing to convert");
         SampleData sampleOut = convert(sampleIn);
         log.trace("sampletab converted, preparing to output");
@@ -417,31 +285,39 @@ public class Accessioner {
 
     }
 
-    public void convert(File sampletabFile, Writer writer) throws IOException, ParseException, SQLException {
+    public void convert(File sampletabFile, Writer writer) throws IOException, ParseException, SQLException, ClassNotFoundException {
         log.trace("preparing to load SampleData");
         SampleTabSaferParser stparser = new SampleTabSaferParser();
         log.trace("created SampleTabParser<SampleData>, beginning parse");
         SampleData st = stparser.parse(sampletabFile);
         convert(st, writer);
     }
+    
+    public SampleData convert(SampleData sd) throws ParseException, SQLException, ClassNotFoundException {
+       
+        //now assign and retrieve accessions for samples that do not have them
+        Collection<SampleNode> samples = sd.scd.getNodes(SampleNode.class);
+        for (SampleNode sample : samples) {
+            if (sample.getSampleAccession() == null) {
+                String accession;
+                if (sd.msi.submissionReferenceLayer) {
+                    accession = singleReferenceSample(sample.getNodeName(), sd.msi.submissionIdentifier);
+                } else {
+                    accession = singleAssaySample(sample.getNodeName(), sd.msi.submissionIdentifier);
+                }
+                sample.setSampleAccession(accession);
+            }
+        }
 
-    public void convert(File inputFile, String outputFilename) throws IOException, ParseException, SQLException {
-        convert(inputFile, new File(outputFilename));
+        //now assign and retrieve accessions for groups that do not have them
+        Collection<GroupNode> groups = sd.scd.getNodes(GroupNode.class);
+        for (GroupNode group : groups) {
+            if (group.getGroupAccession() == null) {
+                String accession = singleGroup(group.getNodeName(), sd.msi.submissionIdentifier);
+                group.setGroupAccession(accession);
+            }
+        }
+        return sd;
     }
-
-    public void convert(File inputFile, File outputFile) throws IOException, ParseException, SQLException {
-        convert(inputFile, new FileWriter(outputFile));
-    }
-
-    public void convert(String inputFilename, Writer writer) throws IOException, ParseException, SQLException {
-        convert(new File(inputFilename), writer);
-    }
-
-    public void convert(String inputFilename, File outputFile) throws IOException, ParseException, SQLException {
-        convert(inputFilename, new FileWriter(outputFile));
-    }
-
-    public void convert(String inputFilename, String outputFilename) throws IOException, ParseException, SQLException {
-        convert(inputFilename, new File(outputFilename));
-    }
+    
 }
