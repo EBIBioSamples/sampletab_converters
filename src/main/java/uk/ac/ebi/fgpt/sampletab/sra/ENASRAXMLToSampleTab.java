@@ -236,9 +236,9 @@ public class ENASRAXMLToSampleTab {
             SampleNode samplenode = new SampleNode();
             samplenode.setNodeName(sampleAccession);
             
-            samplenode.addAttribute(new DatabaseAttribute("ENA SRA",
-                    sampleAccession, 
-                    "http://www.ebi.ac.uk/ena/data/view/" + sampleAccession));
+//            samplenode.addAttribute(new DatabaseAttribute("ENA SRA",
+//                    sampleAccession, 
+//                    "http://www.ebi.ac.uk/ena/data/view/" + sampleAccession));
 
             // process any synonyms that may exist
             if (sampleName != null) {
@@ -276,6 +276,13 @@ public class ENASRAXMLToSampleTab {
                             id.getTextTrim().matches("SAM[END][A]?[0-9]+")) {
                         //this is a biosamples accession, and we dont have one yet, so use it
                         samplenode.setSampleAccession(id.getTextTrim());
+                        
+
+                        //also use the accession as the database link
+                        samplenode.addAttribute(new DatabaseAttribute("ENA SRA",
+                                sampleAccession, 
+                                "http://www.ebi.ac.uk/ena/data/view/" + id.getTextTrim()));
+                        
                     } else if (samplenode.getSampleAccession() != null && 
                             samplenode.getSampleAccession().equals(id.getTextTrim())) {
                         //same as the existing sample accession
