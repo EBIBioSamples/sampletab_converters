@@ -80,9 +80,10 @@ public class NCBIUpdaterDriver extends AbstractDriver {
                 while (futures.size() > 1000) {
                     try {
                         futures.pop().get();
-                    } catch (Exception e) {
-                        //something went wrong
-                        log.error("Problem processing", e);
+                    } catch (InterruptedException e) {
+                        log.error("Interupted processing", e);
+                    } catch (ExecutionException e) {
+                        log.error("Problem processing", e.getCause());
                     }
                 }
             }
@@ -90,9 +91,10 @@ public class NCBIUpdaterDriver extends AbstractDriver {
             for (Future<Void> f : futures) {
                 try {
                     f.get();
-                } catch (Exception e) {
-                    //something went wrong
-                    log.error("Problem processing", e);
+                } catch (InterruptedException e) {
+                    log.error("Interupted processing", e);
+                } catch (ExecutionException e) {
+                    log.error("Problem processing", e.getCause());
                 }
             }
             
@@ -100,7 +102,7 @@ public class NCBIUpdaterDriver extends AbstractDriver {
             //we are not using a pool, its all in one
             for (Integer id : new NCBIUpdateDownloader.UpdateIterable(fromDate, toDate)) {
                 Callable<Void> t = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir);
-                if (t != null) {
+                if (t != null) {                    
                     try {
                         t.call();
                     } catch (Exception e) {
