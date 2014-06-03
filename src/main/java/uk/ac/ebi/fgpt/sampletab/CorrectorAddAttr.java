@@ -90,7 +90,9 @@ public class CorrectorAddAttr {
                     st.msi.submissionDescription = value;
                 } else if (key.toLowerCase().equals("submission title")) {
                     st.msi.submissionTitle = value;
-                } 
+                } else {
+                    log.warn("Unable to add "+key+" : "+value+" to "+acc);
+                }
             }
         } catch (SQLException e) {
             log.error("Problem running sql", e);
@@ -119,6 +121,8 @@ public class CorrectorAddAttr {
         }
         
     }
+    
+    
     public void addAttribute(SampleData st, SampleNode sample) {
         doSetup();
         
