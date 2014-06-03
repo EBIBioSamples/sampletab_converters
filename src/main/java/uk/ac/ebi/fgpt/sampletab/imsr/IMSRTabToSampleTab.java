@@ -86,7 +86,7 @@ public class IMSRTabToSampleTab {
         try {
             input = new BufferedReader(new FileReader(infile));
             while ((line = input.readLine()) != null) {
-                System.out.println(line);
+                //System.out.println(line);
                 // line too short? skip
                 if (line.length() == 0) {
                     continue;
