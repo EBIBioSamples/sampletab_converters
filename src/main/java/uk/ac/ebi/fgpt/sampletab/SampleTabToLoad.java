@@ -73,9 +73,9 @@ public class SampleTabToLoad {
         
         //replace implicit derived from with explicit derived from relationships
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
-            if (sample.getParentNodes().size() > 0){
-                for (Node parent : new HashSet<Node>(sample.getParentNodes())){
-                    if (SampleNode.class.isInstance(parent)){
+            if (sample.getParentNodes().size() > 0) {
+                for (Node parent : new HashSet<Node>(sample.getParentNodes())) {
+                    if (SampleNode.class.isInstance(parent)) {
                         SampleNode parentsample = (SampleNode) parent;
                         DerivedFromAttribute attr = new DerivedFromAttribute(parentsample.getSampleAccession());
                         sample.addAttribute(attr);
