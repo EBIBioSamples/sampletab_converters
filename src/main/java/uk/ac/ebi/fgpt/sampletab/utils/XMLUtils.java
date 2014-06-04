@@ -180,7 +180,6 @@ public class XMLUtils {
             writer = new XMLWriter(os);
             writer.write(document);
             writer.flush();
-            os.close();
         } finally {
             if (os != null) {
                 try {
