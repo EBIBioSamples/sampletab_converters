@@ -167,4 +167,36 @@ public class XMLUtils {
         t.transform(new DocumentSource(orig), result);
         return (org.w3c.dom.Document) result.getNode();
     }
+
+    public static void writeDocumentToFile(Document document, File outFile) throws IOException {
+
+        OutputStream os = null;
+        XMLWriter writer = null;
+        try {
+            os = new BufferedOutputStream(new FileOutputStream(outFile));
+            //this pretty printing is messing up comparisons by trimming whitespace WITHIN an element
+            //OutputFormat format = OutputFormat.createPrettyPrint();
+            //XMLWriter writer = new XMLWriter(os, format);
+            writer = new XMLWriter(os);
+            writer.write(document);
+            writer.flush();
+            os.close();
+        } finally {
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+            
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+        }
+    }
 }
