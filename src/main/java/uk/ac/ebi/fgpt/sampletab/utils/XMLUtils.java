@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -40,40 +41,22 @@ import org.slf4j.LoggerFactory;
 public class XMLUtils {
     private static Logger log = LoggerFactory.getLogger("XMLUtils");
 
-	private static ConcurrentLinkedQueue<SAXReader> readerQueue = new ConcurrentLinkedQueue<SAXReader>();
-
-	public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException {
+    public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException {
         return getDocument(new BufferedReader(new FileReader(xmlFile)));
-	}
-
-	public static Document getDocument(URL url) throws DocumentException, IOException {        
-        URLConnection conn = null;
-        if (System.getProperty("proxySet") != null) {
-            String hostname = System.getProperty("proxyHost");
-            int port = Integer.parseInt(System.getProperty("proxyPort"));
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(hostname, port));
-    	    conn = url.openConnection(proxy);
-        } else {
-            conn = url.openConnection();
-        }
-	    
-	    return getDocument(new BufferedReader(new InputStreamReader(conn.getInputStream())));
-	}
-
-    public static Document getDocument(String xmlString) throws DocumentException {
-        return getDocument(new StringReader(xmlString));
     }
-    
-    public static Document getDocument(Reader r) throws DocumentException {
-        SAXReader reader = readerQueue.poll();
-        if (reader == null) {
-            reader = new SAXReader();
-        }
-        
-        //now do actual parsing
-        Document xml = null;
+
+    public static Document getDocument(URL url) throws DocumentException, IOException {   
+        //handle proxy access via command line e.g. 
+        //-Dhttp.proxyHost=wwwcache.ebi.ac.uk -Dhttp.proxyPort=3128 -Dhttp.nonProxyHosts=*.ebi.ac.uk 
+        //-DproxyHost=wwwcache.ebi.ac.uk -DproxyPort=3128 -DproxySet=true
+        //can't call SAXReader directly because it ignores proxing
+        Reader r = null;
+        Document doc = null;
         try {
-            xml = reader.read(r);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            doc = getDocument(r);
+            conn.disconnect();
         } finally {
             if (r != null) {
                 try {
@@ -82,43 +65,76 @@ public class XMLUtils {
                     //do nothing
                 }
             }
-            //return the reader back to the queue
-            reader.resetHandlers();
-            readerQueue.add(reader);
         }
+        
+        return doc;
+    }
+
+    public static Document getDocument(String xmlString) throws DocumentException {
+        
+        Reader r = null;
+        Document doc = null;
+        try {
+            r = new StringReader(xmlString);
+            doc = getDocument(r);
+        } finally {
+            if (r != null) {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+        }
+        return doc;
+    }
+    
+    public static Document getDocument(Reader r) throws DocumentException {
+        SAXReader reader = null;//readerQueue.poll();
+        if (reader == null) {
+            reader = new SAXReader();
+        }
+                
+        //now do actual parsing
+        Document xml = null;
+        
+        xml = reader.read(r);
+        //return the reader back to the queue
+        //reader.resetHandlers();
+        //readerQueue.add(reader);
         
         return xml;
     }
 
-	public static Element getChildByName(Element parent, String name) {
-		if (parent == null)
-			return null;
+    public static Element getChildByName(Element parent, String name) {
+        if (parent == null)
+            return null;
 
-		for (Iterator<Element> i = parent.elementIterator(); i.hasNext();) {
-			Element child = i.next();
-			if (child.getName().equals(name)) {
-				return child;
-			}
-		}
+        for (Iterator<Element> i = parent.elementIterator(); i.hasNext();) {
+            Element child = i.next();
+            if (child.getName().equals(name)) {
+                return child;
+            }
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	public static Collection<Element> getChildrenByName(Element parent,
-			String name) {
-		Collection<Element> children = new ArrayList<Element>();
+    public static Collection<Element> getChildrenByName(Element parent,
+            String name) {
+        Collection<Element> children = new ArrayList<Element>();
 
-		if (parent == null)
-			return children;
+        if (parent == null)
+            return children;
 
-		for (Iterator<Element> i = parent.elementIterator(); i.hasNext();) {
-			Element child = i.next();
-			if (child.getName().equals(name)) {
-				children.add(child);
-			}
-		}
-		return children;
-	}
+        for (Iterator<Element> i = parent.elementIterator(); i.hasNext();) {
+            Element child = i.next();
+            if (child.getName().equals(name)) {
+                children.add(child);
+            }
+        }
+        return children;
+    }
     
     public static String stripNonValidXMLCharacters(String in) {
         //from http://blog.mark-mclaren.info/2007/02/invalid-xml-characters-when-valid-utf8_5873.html
@@ -150,37 +166,5 @@ public class XMLUtils {
         DOMResult result = new DOMResult();
         t.transform(new DocumentSource(orig), result);
         return (org.w3c.dom.Document) result.getNode();
-    }
-    
-    public static void writeDocumentToFile(Document document, File outFile) throws IOException {
-
-        OutputStream os = null;
-        XMLWriter writer = null;
-        try {
-            os = new BufferedOutputStream(new FileOutputStream(outFile));
-            //this pretty printing is messing up comparisons by trimming whitespace WITHIN an element
-            //OutputFormat format = OutputFormat.createPrettyPrint();
-            //XMLWriter writer = new XMLWriter(os, format);
-            writer = new XMLWriter(os);
-            writer.write(document);
-            writer.flush();
-            os.close();
-        } finally {
-            if (os != null) {
-                try {
-                    os.close();
-                } catch (IOException e) {
-                    //do nothing
-                }
-            }
-            
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException e) {
-                    //do nothing
-                }
-            }
-        }
     }
 }
