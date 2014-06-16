@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLRecoverableException;
 import java.util.Collection;
+import java.util.UUID;
 
 import javax.sql.DataSource;
 
@@ -147,10 +148,21 @@ public class Accessioner {
             ds.setAcquireIncrement(2); 
         }
         
+        //get a connection
         if (con == null) {
+            con = ds.getConnection();
+        } else if (!con.isValid(5)) {
+            //connection is not valid, recreate it
+            try {
+                con.close();
+            } catch (SQLException e) {
+                //do nothing
+            }
+
             con = ds.getConnection();
         }
         
+        //create prepared statements
         if (stmGetAss == null) stmGetAss = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_ASSAY WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
         if (stmGetRef == null) stmGetRef = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_REFERENCE WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
         if (stmGetGrp == null) stmGetGrp = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
@@ -176,6 +188,15 @@ public class Accessioner {
         //do setup here so correct objects can get passed along
         setup();
         return singleAccession(name, submissionID, "SAMEA", stmGetAss, insertAss);
+    }
+    
+    public synchronized String singleAssaySample(String submissionID) throws SQLException, ClassNotFoundException {
+        setup();
+
+        //use java UUID to get a temporary sample name
+        UUID uuid = UUID.randomUUID();
+        String accession = singleAssaySample(uuid.toString(), submissionID);
+        return accession;
     }
     
     public synchronized String singleReferenceSample(String name, String submissionID) throws SQLException, ClassNotFoundException {
