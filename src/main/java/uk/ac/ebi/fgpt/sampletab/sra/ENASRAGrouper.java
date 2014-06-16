@@ -164,22 +164,20 @@ public class ENASRAGrouper {
             Collection<String> studyIds = null;
             studyIds = getGroupIdentifiers(sampleId);
             
-            if (studyIds != null){
-                if (studyIds.size()== 0) {
-                    throw new RuntimeException("Unable to find any study ids for sample "+sampleId);
-                } else {
-                    for (String groupId : studyIds) {
-                        Set<String> set = groups.get(groupId);
-                        //make sure this is multithreadable with other callables being run at the same time
+            if (studyIds == null || studyIds.size()== 0) {
+                log.error("Unable to find any study ids for sample "+sampleId);
+            } else {
+                for (String groupId : studyIds) {
+                    Set<String> set = groups.get(groupId);
+                    //make sure this is multithreadable with other callables being run at the same time
+                    if (set == null) {
+                        final Set<String> value = Collections.synchronizedSet(new HashSet<String>());
+                        set = groups.putIfAbsent(groupId, value);
                         if (set == null) {
-                            final Set<String> value = Collections.synchronizedSet(new HashSet<String>());
-                            set = groups.putIfAbsent(groupId, value);
-                            if (set == null) {
-                                set = value;
-                            }
+                            set = value;
                         }
-                        set.add(sampleId);
                     }
+                    set.add(sampleId);
                 }
             }
             return studyIds;
