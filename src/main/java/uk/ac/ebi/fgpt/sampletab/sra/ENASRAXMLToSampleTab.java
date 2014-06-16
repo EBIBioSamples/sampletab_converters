@@ -406,10 +406,15 @@ public class ENASRAXMLToSampleTab {
         }
         
         //if we couldn't make a title earlier, do so now
-        if (st.msi.submissionTitle == null || st.msi.submissionTitle.length() == 0) {
+        //or got a silly title
+        if (st.msi.submissionTitle == null 
+                || st.msi.submissionTitle.length() == 0
+                || st.msi.submissionTitle.equals(st.msi.submissionDescription)) {
             st.msi.submissionTitle = SampleTabUtils.generateSubmissionTitle(st);
         }
 
+        
+        
         log.trace("Finished convert()");
         return st;
     }
