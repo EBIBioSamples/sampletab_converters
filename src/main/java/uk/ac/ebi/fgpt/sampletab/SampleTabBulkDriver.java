@@ -40,7 +40,7 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     @Option(name = "--no-load", aliases={"-l"}, usage = "skip creating sampletab.toload.txt")
     private boolean noload = false;
     
-    @Option(name = "--no-group", aliases={"-g"}, usage = "skip creating sampletab.toload.txt")
+    @Option(name = "--no-group", aliases={"-g"}, usage = "skip creating compulsory groups")
     private boolean nogroup = false;
     
     @Option(name = "--root", usage = "root directory for sampletab files")
