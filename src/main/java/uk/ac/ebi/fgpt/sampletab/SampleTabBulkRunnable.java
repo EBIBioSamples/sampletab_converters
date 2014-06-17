@@ -32,12 +32,13 @@ public class SampleTabBulkRunnable implements Callable<Void> {
     private final Accessioner accessioner;
     private final boolean force;
     private final boolean noload;
+    private final boolean nogroup;
 
     private static final String SUBSEVENT = "SampleTabBulk";
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public SampleTabBulkRunnable(File subdir, Corrector corrector, CorrectorAddAttr correctorAddAttr, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom, boolean force, boolean noload) {
+    public SampleTabBulkRunnable(File subdir, Corrector corrector, CorrectorAddAttr correctorAddAttr, Accessioner accessioner, SameAs sameAs, DerivedFrom derivedFrom, boolean force, boolean noload, boolean nogroup) {
         
         sampletabpre = new File(subdir, "sampletab.pre.txt");
         sampletab = new File(subdir, "sampletab.txt");
@@ -50,6 +51,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
         this.accessioner = accessioner;
         this.force = force;
         this.noload = noload;
+        this.nogroup = nogroup;
     }
 
     @Override
@@ -170,6 +172,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
                 SampleTabToLoad c;
                 try {
                     c = new SampleTabToLoad(accessioner);
+                    c.setInGroup(!nogroup);
                     c.convert(sampletab, sampletabtoload);
                 } catch (ClassNotFoundException e) {
                     log.error("Problem processing "+sampletab, e);

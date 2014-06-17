@@ -29,6 +29,7 @@ import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 public class SampleTabToLoad {
     
     private final Accessioner accessioner;
+    private boolean inGroup = true;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -42,9 +43,10 @@ public class SampleTabToLoad {
             throws ClassNotFoundException {
         this.accessioner = accessioner;
     }
-    
-    public Logger getLog() {
-        return log;
+
+
+    public void setInGroup(boolean inGroup) {
+        this.inGroup = inGroup;
     }
 
     public SampleData convert(String sampleTabFilename) throws IOException, ParseException, ClassNotFoundException, SQLException {
@@ -86,36 +88,39 @@ public class SampleTabToLoad {
             }
         }
         
-        // All samples must be in a group
-        // so create a new group and add all non-grouped samples to it
-        GroupNode othergroup = new GroupNode("Other Group");
-        for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
-            // check there is not an existing group first...
-            boolean inGroup = false;
-            //even if it has child nodes, both parent and child must be in a group
-            //this will lead to some weird looking row duplications, but since this is an internal 
-            //intermediate file it is not important
-            //Follow up: since implicit derived from relationships are made explicit above, 
-            //this is not an issue any more
-            for (Node n : sample.getChildNodes()) {
-               if (GroupNode.class.isInstance(n)) {
-                    inGroup = true;
+        if (inGroup) {
+            // All samples must be in a group
+            // so create a new group and add all non-grouped samples to it
+            GroupNode othergroup = new GroupNode("Other Group");
+            for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
+                // check there is not an existing group first...
+                boolean sampleInGroup = false;
+                //even if it has child nodes, both parent and child must be in a group
+                //this will lead to some weird looking row duplications, but since this is an internal 
+                //intermediate file it is not important
+                //Follow up: since implicit derived from relationships are made explicit above, 
+                //this is not an issue any more
+                for (Node n : sample.getChildNodes()) {
+                   if (GroupNode.class.isInstance(n)) {
+                        sampleInGroup = true;
+                    }
+                }
+                
+                if (!sampleInGroup){
+                    log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
+                    othergroup.addSample(sample);
                 }
             }
-            
-            if (!inGroup){
-                log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
-                othergroup.addSample(sample);
+            //only add the new group if it has any samples
+            if (othergroup.getParentNodes().size() > 0){
+                sampledata.scd.addNode(othergroup);
+                log.info("Added Other group node");
+                // also need to accession the new node
             }
         }
-        //only add the new group if it has any samples
-        if (othergroup.getParentNodes().size() > 0){
-            sampledata.scd.addNode(othergroup);
-            log.info("Added Other group node");
-            // also need to accession the new node
-        }
         
-        //add a link to where the file will be avaliable on the FTP site
+        //add a link to where the file will be available on the FTP site
+        //TODO how to handle this for single samples?
         for (GroupNode group : sampledata.scd.getNodes(GroupNode.class)) {
             CommentAttribute ftpattrib = new CommentAttribute("SampleTab FTP location", 
                     "ftp://ftp.ebi.ac.uk/pub/databases/biosamples/"+
@@ -125,7 +130,7 @@ public class SampleTabToLoad {
             group.addAttribute(ftpattrib);
         }
         
-        //If there was an NCBI BioSamples accession as a synonym
+        //If there was an NCBI BioSamples accession as a synonym, set it as the accession
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
             for (SCDNodeAttribute a : sample.getAttributes()) {
                 boolean isComment;
@@ -154,9 +159,9 @@ public class SampleTabToLoad {
 
     public void convert(SampleData st, Writer writer) throws IOException, ParseException, ClassNotFoundException, SQLException {
         st = convert(st);
-        getLog().info("sampletab converted, preparing to output");
+        log.info("sampletab converted, preparing to output");
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
-        getLog().info("created SampleTabWriter, preparing to write");
+        log.info("created SampleTabWriter, preparing to write");
         sampletabwriter.write(st);
         sampletabwriter.close();
     }

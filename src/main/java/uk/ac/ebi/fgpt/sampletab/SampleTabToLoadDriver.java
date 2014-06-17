@@ -29,6 +29,9 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
 
     @Option(name = "--password", aliases={"-p"}, usage = "server password")
     private String password;
+    
+    @Option(name = "--nogroup", aliases={"-g"}, usage = "do not put samples in groups")
+    private boolean noGroup = false;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -73,6 +76,6 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     protected Callable<Void> getNewTask(File inputFile) {
         inputFile = inputFile.getAbsoluteFile();
         File outputFile = new File(inputFile.getParentFile(), outputFilename);
-        return new SampleTabToLoadRunnable(inputFile, outputFile, hostname, port, database, username, password);
+        return new SampleTabToLoadRunnable(inputFile, outputFile, hostname, port, database, username, password, noGroup);
     }
 }

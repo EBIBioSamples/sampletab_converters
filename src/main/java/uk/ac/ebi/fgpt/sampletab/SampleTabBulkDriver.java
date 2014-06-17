@@ -40,6 +40,9 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     @Option(name = "--no-load", aliases={"-l"}, usage = "skip creating sampletab.toload.txt")
     private boolean noload = false;
     
+    @Option(name = "--no-group", aliases={"-g"}, usage = "skip creating sampletab.toload.txt")
+    private boolean nogroup = false;
+    
     @Option(name = "--root", usage = "root directory for sampletab files")
     private File rootDir = null;
 
@@ -108,7 +111,7 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     protected SampleTabBulkRunnable getNewTask(File inputFile) {
         File subdir = inputFile.getAbsoluteFile().getParentFile();
         return new SampleTabBulkRunnable(subdir, corrector, correctorAddAttr, 
-            accessioner, sameAs, getDerivedFrom(), force, noload);
+            accessioner, sameAs, getDerivedFrom(), force, noload, nogroup);
     }
     
     private synchronized DerivedFrom getDerivedFrom() {
