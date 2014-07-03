@@ -28,6 +28,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
 
+import org.custommonkey.xmlunit.Diff;
+import org.custommonkey.xmlunit.XMLUnit;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -166,6 +168,19 @@ public class XMLUtils {
         DOMResult result = new DOMResult();
         t.transform(new DocumentSource(orig), result);
         return (org.w3c.dom.Document) result.getNode();
+    }
+
+    public static boolean isSameXML(Document docA, Document docB) throws TransformerException {
+
+        XMLUnit.setIgnoreAttributeOrder(true);
+
+        org.w3c.dom.Document docw3cA = null;
+        org.w3c.dom.Document docw3cB= null;
+        docw3cA = convertDocument(docA);
+        docw3cB = convertDocument(docB);
+        
+        Diff diff = new Diff(docw3cA, docw3cB);        
+        return !diff.similar();
     }
 
     public static void writeDocumentToFile(Document document, File outFile) throws IOException {
