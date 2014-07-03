@@ -191,8 +191,6 @@ public class Accessioner {
     }
     
     public synchronized String singleAssaySample(String submissionID) throws SQLException, ClassNotFoundException {
-        setup();
-
         //use java UUID to get a temporary sample name
         UUID uuid = UUID.randomUUID();
         String accession = singleAssaySample(uuid.toString(), submissionID);
@@ -224,9 +222,12 @@ public class Accessioner {
      * @throws ClassNotFoundException
      */
     protected synchronized String singleAccession(String name, String submissionID, String prefix, PreparedStatement stmGet, PreparedStatement stmPut) throws SQLException, ClassNotFoundException {
-        if (name == null || name.trim().length() == 0) throw new IllegalArgumentException("name must be at least 1 character");
-        if (submissionID == null || submissionID.trim().length() == 0) throw new IllegalArgumentException("submissionID must be at least 1 character");
-        if (prefix == null ) throw new IllegalArgumentException("prefix must not be null");
+        if (name == null || name.trim().length() == 0) 
+            throw new IllegalArgumentException("name must be at least 1 character");
+        if (submissionID == null || submissionID.trim().length() == 0) 
+            throw new IllegalArgumentException("submissionID must be at least 1 character");
+        if (prefix == null ) 
+            throw new IllegalArgumentException("prefix must not be null");
         
         name = name.trim();
         submissionID = submissionID.trim();
@@ -234,9 +235,11 @@ public class Accessioner {
         String accession = null;
         stmGet.setString(1, name);
         stmGet.setString(2, submissionID);
+        
         log.trace(stmGet.toString());
+        
         ResultSet results = stmGet.executeQuery();
-        if (results.next()){
+        if (results.next()) {
             accession = prefix + results.getInt(1);
             results.close();
         } else {
@@ -248,7 +251,7 @@ public class Accessioner {
             log.trace(stmPut.toString());
             stmPut.executeUpdate();
 
-            //retreive it
+            //retrieve it
             log.trace(stmGet.toString());
             results = stmGet.executeQuery();
             results.next();
