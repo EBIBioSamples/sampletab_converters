@@ -24,6 +24,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -339,6 +340,26 @@ public class IMSRTabToSampleTab {
             DatabaseAttribute dbattr = new DatabaseAttribute("IMSR", name, url);
             newnode.addAttribute(dbattr);
         }
+
+        GroupNode othergroup = new GroupNode("Other Group");
+        for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+            // check there is not an existing group first...
+            boolean inGroup = false;
+            
+            if (!inGroup){
+                log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
+                othergroup.addSample(sample);
+            }
+        }
+        //only add the new group if it has any samples
+        if (othergroup.getParentNodes().size() > 1){
+            st.scd.addNode(othergroup);
+            log.info("Added Other group node");
+        }
+        
+        
+        
+        
         getLog().info("Finished convert()");
         
         Normalizer norm = new Normalizer();
