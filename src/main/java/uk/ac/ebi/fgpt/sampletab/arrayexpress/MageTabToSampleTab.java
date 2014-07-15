@@ -474,10 +474,9 @@ public class MageTabToSampleTab {
             }
         }
         //only add the new group if it has any samples
-        if (othergroup.getParentNodes().size() > 0){
+        if (othergroup.getParentNodes().size() > 1){
             st.scd.addNode(othergroup);
             log.info("Added Other group node");
-            // also need to accession the new node
         }
                 
         log.info("Finished convert()");

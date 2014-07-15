@@ -30,6 +30,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
@@ -380,8 +381,29 @@ public class PRIDEXMLToSampleTab {
                     continue;
                 }
             }
-            
         }
+        
+
+        GroupNode othergroup = new GroupNode("Other Group");
+        for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+            // check there is not an existing group first...
+            boolean inGroup = false;
+            
+            if (!inGroup){
+                log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
+                othergroup.addSample(sample);
+            }
+        }
+        //only add the new group if it has any samples
+        if (othergroup.getParentNodes().size() > 1){
+            try {
+                st.scd.addNode(othergroup);
+                log.info("Added Other group node");
+            } catch (ParseException e) {
+                log.error("Unable to add node "+othergroup, e);
+            }
+        }
+        
         log.info("Finished convert()");
         return st;
     }
