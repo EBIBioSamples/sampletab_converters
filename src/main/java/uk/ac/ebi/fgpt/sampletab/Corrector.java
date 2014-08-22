@@ -520,6 +520,9 @@ public class Corrector {
                 attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
                 attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
             } 
+            
+        } else if (attr.type.toLowerCase().equals("geographic location (country and/or sea, region)")) {
+            attr.type = "geographic location";
         } else if (attr.type.toLowerCase().equals("latitude")
                 || attr.type.toLowerCase().equals("geographic location (latitude)")
                 || attr.type.toLowerCase().equals("lat")) {
