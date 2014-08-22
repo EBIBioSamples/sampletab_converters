@@ -587,25 +587,31 @@ public class Corrector {
     }
 
     
-    private SCDNodeAttribute correctComment(CommentAttribute attr, SampleData sampledata) {        
+    private SCDNodeAttribute correctComment(CommentAttribute attr, SampleNode s, SampleData sampledata) {        
         //bulk replace underscore with space in types
         attr.type = attr.type.replace("_", " ");
 
         //change samplename into synonyms
         if (attr.type.toLowerCase().equals("sample name") 
                 || attr.type.toLowerCase().equals("sample_name")
+                || attr.type.toLowerCase().equals("synonym")
                 ) {
-            return new CommentAttribute("synonym", attr.getAttributeValue());
+            attr.type = "synonym";
         }
         //change sample description into secondary description
         if (attr.type.toLowerCase().equals("sample description") 
                 || attr.type.toLowerCase().equals("sample_description")
+                || attr.type.toLowerCase().equals("secondary description")
                 ) {
-            return new CommentAttribute("secondary description", attr.getAttributeValue());
+            attr.type = "secondary description";
         }
         if (attr.type.toLowerCase().equals("synonym") 
                 ) {
-            return new CommentAttribute("synonym", attr.getAttributeValue());
+            if (s.getNodeName().equals(attr.getAttributeValue())) {
+                return null;
+            } else {
+                attr.type = "synonym";
+            }
         }
                 
         //TODO promote some comments to characteristics
@@ -729,7 +735,7 @@ public class Corrector {
                 } else if (isOrganism) {
                     updated = correctOrganism((OrganismAttribute) a, sampledata);
                 } else if (isComment) {
-                    updated = correctComment((CommentAttribute) a, sampledata);
+                    updated = correctComment((CommentAttribute) a, s, sampledata);
                 }
                 
                 //TODO promote some comments to characteristics
