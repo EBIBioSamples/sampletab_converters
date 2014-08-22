@@ -111,7 +111,8 @@ public class CorrectorTermSource {
             }
         }
         
-        
+        /*
+         * UPDATE: Actually, we want to leave these in so you can use an ID to refer to an URI without needing the source name
         //in some cases, term sources have a null URL
         //for a sub-set of these we can guess them from being popular, e.g. EFO, NCBI Taxonomy, etc
         //for others, delete them as they are not useful
@@ -143,7 +144,7 @@ public class CorrectorTermSource {
                     sampledata.msi.termSources.set(i, tsnew);
                 }
             }
-        }
+        }*/
         //TODO add a date if no version present?
     }
 }
