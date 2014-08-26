@@ -108,6 +108,7 @@ public class Corrector {
                 || lcval.equals("yes/no")
                 || lcval.equals("y/n")
                 || lcval.equals("not specified")
+                || lcval.equals("not collected")
                 || lcval.equals("missing")) {
             return null;
         } else if (lcval.equals("meter")
