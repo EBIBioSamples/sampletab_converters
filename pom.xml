@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>uk.ac.ebi.fgpt</groupId>
@@ -36,16 +37,6 @@
 			<id>oerc-repo</id>
 			<name>OeRC Maven repository</name>
 			<url>http://frog.oerc.ox.ac.uk:8080/nexus-2.1.2/content/repositories/releases/</url>
-		</repository>
-
-		<!-- internal repository -->
-		<repository>
-			<id>coconut.ebi.ac.uk-snapshots</id>
-			<name>Coconut Snapshot Repository</name>
-			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
 		</repository>
 
 		<repository>
