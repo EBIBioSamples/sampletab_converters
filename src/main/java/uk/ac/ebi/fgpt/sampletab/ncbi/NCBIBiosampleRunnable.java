@@ -86,8 +86,13 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
             }
         }
         
-        
-        SampleNode sn = new SampleNode(XMLUtils.getChildByName(description, "Title").getTextTrim());
+        String sampleName = XMLUtils.getChildByName(description, "Title").getTextTrim();
+        //if first character of name is a hash, Limpopo will interpret the line as a comment
+        //to solve, remove the hash
+        if (sampleName.startsWith("#")) {
+            sampleName = sampleName.substring(1);
+        }
+        SampleNode sn = new SampleNode(sampleName);
         sn.setSampleAccession(accession);
 
         for (Element idElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(sample, "Ids"), "Id")) {
