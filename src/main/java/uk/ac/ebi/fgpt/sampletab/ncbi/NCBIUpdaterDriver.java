@@ -53,9 +53,14 @@ public class NCBIUpdaterDriver extends AbstractDriver {
         Date toDate = null;
         try {
             fromDate = dateFormat.parse(fromDateString);
+        } catch (ParseException e) {
+            log.error("Unable to parse date "+fromDateString);
+            return;
+        }
+        try {
             toDate = dateFormat.parse(toDateString);
         } catch (ParseException e) {
-            log.error("Unable to parse date");
+            log.error("Unable to parse date "+toDateString);
             return;
         }
                 
