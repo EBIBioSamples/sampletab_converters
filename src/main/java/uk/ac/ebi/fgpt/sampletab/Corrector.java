@@ -55,7 +55,7 @@ public class Corrector {
         return sb.toString();
     }
     
-    public String cleanString(String in) {
+    public static String cleanString(String in) {
         if (in == null){
             return in;
         }
@@ -91,6 +91,9 @@ public class Corrector {
                 
         //also strip UTF-8 control characters that invalidate XML
         out = GUIXMLOutputer.stripNonValidXMLCharacters(out);
+        
+        //strip out hashes, because Limpopo sees these as comments
+        out = out.replace("#", "");
         
         return out;
     }
