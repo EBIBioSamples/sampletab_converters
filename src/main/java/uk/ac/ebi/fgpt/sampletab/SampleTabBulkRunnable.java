@@ -64,6 +64,8 @@ public class SampleTabBulkRunnable implements Callable<Void> {
         
         try {
             doWork();
+        } catch (Exception e) {
+            throw e;
         } finally {
             //try to register this with subs tracking
             TrackingManager.getInstance().registerEventEnd(event);
