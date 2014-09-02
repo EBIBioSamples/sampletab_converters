@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAtt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.Corrector;
 import uk.ac.ebi.fgpt.sampletab.Normalizer;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
@@ -37,7 +40,7 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 
     private static TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     
-	private Logger log = LoggerFactory.getLogger(getClass());
+	private static Logger log = LoggerFactory.getLogger(NCBIBiosampleRunnable.class);
 
 	public NCBIBiosampleRunnable(File inputfile, File outputfile) {
 	    this.inputfile = inputfile;
@@ -67,11 +70,20 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
         
         Element ownerElem = XMLUtils.getChildByName(sample, "Owner");
         String ownerName = XMLUtils.getChildByName(ownerElem, "Name").getTextTrim();
-        String ownerUrl = XMLUtils.getChildByName(ownerElem, "Name").attributeValue("url");
+        URL ownerURL = null;
+        try {
+            ownerURL = new URL(XMLUtils.getChildByName(ownerElem, "Name").attributeValue("url"));
+        } catch (MalformedURLException e) {
+            log.warn("URL not well formed: "+XMLUtils.getChildByName(ownerElem, "Name").attributeValue("url"), e);
+            ownerURL = null;
+        }
         
         for (Element contactElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(ownerElem, "Contacts"), "Contact")) {
             String ownerEmail = contactElem.attributeValue("email");
-            st.msi.organizations.add(new Organization(ownerName, null, ownerUrl, ownerEmail, "submitter"));
+            String ownerURLString = null;
+            if (ownerURL != null) ownerURLString = ownerURL.toString();
+            
+            st.msi.organizations.add(new Organization(ownerName, null, ownerURLString, ownerEmail, "submitter"));
             
             Element name = XMLUtils.getChildByName(contactElem, "Name");
             if (name != null) {
@@ -98,7 +110,7 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
         for (Element idElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(sample, "Ids"), "Id")) {
             String id = idElem.getTextTrim();
             if (!sn.getSampleAccession().equals(id)) {
-                sn.addAttribute(new CommentAttribute("synonym", id));
+                sn.addAttribute(new CommentAttribute("synonym", Corrector.cleanString(id)));
             }
         }
 		
@@ -108,14 +120,14 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
             if (descriptionParagraph != null) {
                 String secondaryDescription = descriptionParagraph.getTextTrim();
                 if (!sn.getNodeName().equals(secondaryDescription)) {
-                    sn.addAttribute(new CommentAttribute("secondary description", secondaryDescription));
+                    sn.addAttribute(new CommentAttribute("secondary description", Corrector.cleanString(secondaryDescription)));
                 }
             }
         }
         
         //handle the organism
         Element organismElement = XMLUtils.getChildByName(description, "Organism");
-        sn.addAttribute(new OrganismAttribute(organismElement.attributeValue("taxonomy_name"),
+        sn.addAttribute(new OrganismAttribute(Corrector.cleanString(organismElement.attributeValue("taxonomy_name")),
                 st.msi.getOrAddTermSource(ncbitaxonomy),
                 Integer.parseInt(organismElement.attributeValue("taxonomy_id"))));        
         
@@ -126,14 +138,14 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
                 type = attrElem.attributeValue("attribute_name");
             }
             String value = attrElem.getTextTrim();
-            sn.addAttribute(new CharacteristicAttribute(type, value));
+            sn.addAttribute(new CharacteristicAttribute(Corrector.cleanString(type), Corrector.cleanString(value)));
         }
 
         //handle model and packages
         for (Element modelElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(sample, "Models"), "Model")) {
-            sn.addAttribute(new CommentAttribute("model", modelElem.getTextTrim()));
+            sn.addAttribute(new CommentAttribute(Corrector.cleanString("model"), Corrector.cleanString(modelElem.getTextTrim())));
         }
-        sn.addAttribute(new CommentAttribute("package", XMLUtils.getChildByName(sample, "Package").getTextTrim()));
+        sn.addAttribute(new CommentAttribute(Corrector.cleanString("package"), Corrector.cleanString(XMLUtils.getChildByName(sample, "Package").getTextTrim())));
         
         //TODO handle links
         
