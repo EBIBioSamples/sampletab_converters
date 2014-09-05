@@ -72,7 +72,10 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
         String ownerName = XMLUtils.getChildByName(ownerElem, "Name").getTextTrim();
         URL ownerURL = null;
         try {
-            ownerURL = new URL(XMLUtils.getChildByName(ownerElem, "Name").attributeValue("url"));
+            if (XMLUtils.getChildByName(ownerElem, "Name").attributeValue("url") != null 
+                    && XMLUtils.getChildByName(ownerElem, "Name").attributeValue("url").length() > 0) {
+                ownerURL = new URL(XMLUtils.getChildByName(ownerElem, "Name").attributeValue("url"));
+            }
         } catch (MalformedURLException e) {
             log.warn("URL not well formed: "+XMLUtils.getChildByName(ownerElem, "Name").attributeValue("url"), e);
             ownerURL = null;
