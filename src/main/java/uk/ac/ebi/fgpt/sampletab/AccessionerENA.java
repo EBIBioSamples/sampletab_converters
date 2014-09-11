@@ -29,7 +29,8 @@ public class AccessionerENA extends Accessioner {
     @Override
     protected synchronized String singleAccession(String name, String submissionID, String prefix, 
             PreparedStatement stmGet, PreparedStatement stmPut) throws SQLException, ClassNotFoundException {
-        if (isENA(submissionID)) {
+        //lump ena sample accessions together, but not groups
+        if (isENA(submissionID) && !"SAMEG".equals(prefix)) {
             submissionID = "ENA";
         }
         return super.singleAccession(name, submissionID, prefix, stmGet, stmPut);
