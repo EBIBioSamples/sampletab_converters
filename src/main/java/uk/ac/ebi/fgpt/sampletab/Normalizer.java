@@ -9,6 +9,9 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 
 public class Normalizer {
 
@@ -55,7 +58,21 @@ public class Normalizer {
         sd.msi.databases = dbs;
         
         
-        
+        for (SampleNode s : sd.scd.getNodes(SampleNode.class)) {
+            for (SCDNodeAttribute a : new ArrayList<SCDNodeAttribute>(s.getAttributes())) {
+                boolean isCommentAttribute = false;
+                synchronized(CommentAttribute.class){
+                    isCommentAttribute = CommentAttribute.class.isInstance(a);
+                }
+                if (isCommentAttribute) {
+                    CommentAttribute ca = (CommentAttribute) a;
+                    //remove synonym comments that duplicate sample name
+                    if (ca.type.equals("synonym") && ca.getAttributeValue().equals(s.getNodeName())) {
+                        s.removeAttribute(a);
+                    }
+                }
+            }
+        }
         
     }
 }
