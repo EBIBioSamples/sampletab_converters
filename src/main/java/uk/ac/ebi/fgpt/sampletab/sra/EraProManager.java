@@ -192,7 +192,7 @@ select * from cv_status;
 7       temporary_suppressed    the entry has been temporarily suppressed.
 8       temporary_killed        the entry has been temporarily killed.
 		 */
-		String query = " SELECT UNIQUE(SAMPLE_ID) FROM SAMPLE WHERE STATUS_ID = 4' AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' ";
+		String query = " SELECT UNIQUE(SAMPLE_ID) FROM SAMPLE WHERE STATUS_ID = 4 AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' ";
 		Collection<String> sampleIds = new HashSet<String>();
 		
 		try {
