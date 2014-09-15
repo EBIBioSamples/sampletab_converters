@@ -54,11 +54,11 @@ public class XMLUtils {
         //can't call SAXReader directly because it ignores proxing
         Reader r = null;
         Document doc = null;
+        HttpURLConnection conn = null;
         try {
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn = (HttpURLConnection) url.openConnection();
             r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             doc = getDocument(r);
-            conn.disconnect();
         } finally {
             if (r != null) {
                 try {
@@ -66,6 +66,9 @@ public class XMLUtils {
                 } catch (IOException e) {
                     //do nothing
                 }
+            }
+            if (conn != null) {
+                conn.disconnect();
             }
         }
         
