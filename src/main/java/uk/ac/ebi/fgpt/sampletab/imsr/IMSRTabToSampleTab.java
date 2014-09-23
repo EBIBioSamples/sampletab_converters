@@ -272,9 +272,8 @@ public class IMSRTabToSampleTab {
 
                     newnode.addChildNode(materialnode);
                     materialnode.addParentNode(newnode);
-                    // dont add the separate material node
-                    // If you do, duplication will result.
-                    // st.scd.addNode(materialnode);
+                    
+                    st.scd.addNode(materialnode);
 
                 }
 
@@ -341,20 +340,14 @@ public class IMSRTabToSampleTab {
             newnode.addAttribute(dbattr);
         }
 
+        //create a group for nodes to go into
         GroupNode othergroup = new GroupNode("Other Group");
+        st.scd.addNode(othergroup);
+        
+        //add nodes to that group
         for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
-            // check there is not an existing group first...
-            boolean inGroup = false;
-            
-            if (!inGroup){
-                log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
-                othergroup.addSample(sample);
-            }
-        }
-        //only add the new group if it has any samples
-        if (othergroup.getParentNodes().size() > 1){
-            st.scd.addNode(othergroup);
-            log.info("Added Other group node");
+            log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
+            othergroup.addSample(sample);
         }
         
         
