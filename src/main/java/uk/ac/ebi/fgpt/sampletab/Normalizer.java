@@ -67,12 +67,11 @@ public class Normalizer {
                 if (isCommentAttribute) {
                     CommentAttribute ca = (CommentAttribute) a;
                     //remove synonym comments that duplicate sample name
-                    if (ca.type.equals("synonym") && ca.getAttributeValue().equals(s.getNodeName())) {
-                        s.removeAttribute(a);
+                    if (ca.type.toLowerCase().equals("synonym") && ca.getAttributeValue().equals(s.getNodeName())) {
+                        s.removeAttribute(ca);
                     }
                 }
             }
         }
-        
     }
 }
