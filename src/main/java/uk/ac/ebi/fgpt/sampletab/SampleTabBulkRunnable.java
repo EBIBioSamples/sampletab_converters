@@ -112,15 +112,15 @@ public class SampleTabBulkRunnable implements Callable<Void> {
             } catch (RuntimeException e){
                 throw e;
             }
-
-            log.info("Applying corrections...");
-            corrector.correct(st);
             
             log.info("Applying extra attributes...");
             correctorAddAttr.addAttribute(st);
             for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
                 correctorAddAttr.addAttribute(st, sample);
             }
+
+            log.info("Applying corrections...");
+            corrector.correct(st);
 
             //dont detect relationships for reference samples
             //these will be done manually
