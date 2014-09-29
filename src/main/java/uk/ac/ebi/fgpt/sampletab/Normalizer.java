@@ -3,6 +3,9 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Database;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
@@ -15,6 +18,8 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAtt
 
 public class Normalizer {
 
+    private Logger log = LoggerFactory.getLogger(getClass());
+    
     public void normalize(SampleData sd) {
 
         List<Organization> organizations = new ArrayList<Organization>();
@@ -69,6 +74,7 @@ public class Normalizer {
                     //remove synonym comments that duplicate sample name
                     if (ca.type.toLowerCase().equals("synonym") && ca.getAttributeValue().equals(s.getNodeName())) {
                         s.removeAttribute(ca);
+                        log.info("Removed synonym of "+s.getNodeName()+" ("+ca.getAttributeValue()+")");
                     }
                 }
             }
