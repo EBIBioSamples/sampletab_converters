@@ -95,6 +95,14 @@ public class MageTabCron {
 	        return false;
 	    }
 	}
+	
+	private boolean isSubmissionForProcessing(String submission) {
+	    if (submission.matches("E-ERAD-.*")) {
+	        //exclude ERAD submissions
+	        return false;
+	    }
+	    return true;
+	}
 
 	public void run(File outdir) {
 		FTPFile[] subdirs = null;
@@ -154,6 +162,10 @@ public class MageTabCron {
 		                if (!connectFTP()){
 		                    System.exit(1);
 		                    return;
+		                }
+		                
+		                if (!isSubmissionForProcessing(subsubdir.getName())) {
+		                    continue;
 		                }
 
 					    String submissionIdentifier = "GA"+subsubdir.getName();
