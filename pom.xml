@@ -11,7 +11,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
+ <!-- 
 	<distributionManagement>
 		<repository>
 			<id>ebi-repo-old</id>
@@ -25,7 +25,22 @@
 			<url>sftp://ebi-001.ebi.ac.uk/homes/maven/public_html/m2repo_snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>	
-
+ -->
+ 
+    <distributionManagement>
+        <repository>
+            <id>coconut.ebi.ac.uk-snapshots</id>
+            <name>coconut.ebi.ac.uk-snapshots</name>
+            <url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
+        </repository>
+        <snapshotRepository>
+            <id>coconut.ebi.ac.uk-snapshots</id>
+            <name>coconut.ebi.ac.uk-snapshots</name>
+            <url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
+        </snapshotRepository>
+    </distributionManagement>
+ 
+ 
 	<!-- Git connection -->
 	<scm>
 		<connection>scm:git:git@github.com:EBIBioSamples/sampletab_converters.git</connection>
