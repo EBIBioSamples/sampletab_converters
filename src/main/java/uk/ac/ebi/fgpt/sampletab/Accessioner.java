@@ -151,7 +151,8 @@ public class Accessioner {
         //get a connection
         if (con == null) {
             con = ds.getConnection();
-        } else if (!con.isValid(5)) {
+           
+        } /* else if (!con.isValid(5)) {
             //connection is not valid, recreate it
             try {
                 con.close();
@@ -160,7 +161,7 @@ public class Accessioner {
             }
 
             con = ds.getConnection();
-        }
+        }  */
         
         //create prepared statements
         if (stmGetAss == null) stmGetAss = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_ASSAY WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
