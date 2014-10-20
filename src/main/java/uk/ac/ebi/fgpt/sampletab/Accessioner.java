@@ -34,12 +34,12 @@ public class Accessioner {
     private String hostname;
     private int port;
     private String database;
-    private String username;
-    private String password;
+    private String dbusername;
+    private String dbpassword;
 
-    private final SampleTabValidator validator = new SampleTabValidator();
+    private String username;
     
-    private final SampleTabSaferParser parser = new SampleTabSaferParser(validator);
+    private final SampleTabSaferParser parser = new SampleTabSaferParser(new SampleTabValidator());
     
     private BoneCPDataSource ds = null;
     
@@ -54,13 +54,15 @@ public class Accessioner {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public Accessioner(String host, int port, String database, String username, String password) {
+    public Accessioner(String host, int port, String database, String dbusername, String dbpassword, String username) {
         // Setup the connection with the DB
-        this.username = username;
-        this.password = password;
+        this.dbusername = dbusername;
+        this.dbpassword = dbpassword;
         this.hostname = host;
         this.port = port;
         this.database = database;
+        
+        this.username = username;
     }
     
     public void close() {
@@ -138,8 +140,8 @@ public class Accessioner {
             
             ds = new BoneCPDataSource();
             ds.setJdbcUrl(connectURI);
-            ds.setUsername(username);
-            ds.setPassword(password);
+            ds.setUsername(dbusername);
+            ds.setPassword(dbpassword);
             
             //remember, there is a limit of 500 on the database
             //set each accessioner to a limit of 10, and always run less than 50 cluster jobs
@@ -177,37 +179,37 @@ public class Accessioner {
         if (sample.getSampleAccession() == null) {
             String accession;
             if (sd.msi.submissionReferenceLayer) {
-                accession = singleReferenceSample(sample.getNodeName(), sd.msi.submissionIdentifier);
+                accession = singleReferenceSample(sample.getNodeName());
             } else {
-                accession = singleAssaySample(sample.getNodeName(), sd.msi.submissionIdentifier);
+                accession = singleAssaySample(sample.getNodeName());
             }
             sample.setSampleAccession(accession);
         }
     }
     
-    public synchronized String singleAssaySample(String name, String submissionID) throws SQLException, ClassNotFoundException {
+    public synchronized String singleAssaySample(String name) throws SQLException, ClassNotFoundException {
         //do setup here so correct objects can get passed along
         setup();
-        return singleAccession(name, submissionID, "SAMEA", stmGetAss, insertAss);
+        return singleAccession(name, "SAMEA", stmGetAss, insertAss);
     }
     
-    public synchronized String singleAssaySample(String submissionID) throws SQLException, ClassNotFoundException {
+    public synchronized String singleAssaySample() throws SQLException, ClassNotFoundException {
         //use java UUID to get a temporary sample name
         UUID uuid = UUID.randomUUID();
-        String accession = singleAssaySample(uuid.toString(), submissionID);
+        String accession = singleAssaySample(uuid.toString());
         return accession;
     }
     
-    public synchronized String singleReferenceSample(String name, String submissionID) throws SQLException, ClassNotFoundException {
+    public synchronized String singleReferenceSample(String name) throws SQLException, ClassNotFoundException {
         //do setup here so correct objects can get passed along
         setup();
-        return singleAccession(name, submissionID, "SAME", stmGetRef, insertRef);
+        return singleAccession(name, "SAME", stmGetRef, insertRef);
     }
     
-    public synchronized String singleGroup(String name, String submissionID) throws SQLException, ClassNotFoundException {
+    public synchronized String singleGroup(String name) throws SQLException, ClassNotFoundException {
         //do setup here so correct objects can get passed along
         setup();     
-        return singleAccession(name, submissionID, "SAMEG", stmGetGrp, insertGrp);
+        return singleAccession(name, "SAMEG", stmGetGrp, insertGrp);
     }
     
     /**
@@ -222,20 +224,17 @@ public class Accessioner {
      * @throws SQLException
      * @throws ClassNotFoundException
      */
-    protected synchronized String singleAccession(String name, String submissionID, String prefix, PreparedStatement stmGet, PreparedStatement stmPut) throws SQLException, ClassNotFoundException {
+    protected synchronized String singleAccession(String name, String prefix, PreparedStatement stmGet, PreparedStatement stmPut) throws SQLException, ClassNotFoundException {
         if (name == null || name.trim().length() == 0) 
             throw new IllegalArgumentException("name must be at least 1 character");
-        if (submissionID == null || submissionID.trim().length() == 0) 
-            throw new IllegalArgumentException("submissionID must be at least 1 character");
         if (prefix == null ) 
             throw new IllegalArgumentException("prefix must not be null");
         
         name = name.trim();
-        submissionID = submissionID.trim();
         
         String accession = null;
         stmGet.setString(1, name);
-        stmGet.setString(2, submissionID);
+        stmGet.setString(2, username);
         
         log.trace(stmGet.toString());
         
@@ -244,11 +243,11 @@ public class Accessioner {
             accession = prefix + results.getInt(1);
             results.close();
         } else {
-            log.info("Assigning new accession for "+submissionID+" : "+name);
+            log.info("Assigning new accession for "+username+" : "+name);
 
             //insert it if not exists
             stmPut.setString(1, name);
-            stmPut.setString(2, submissionID);
+            stmPut.setString(2, username);
             log.trace(stmPut.toString());
             stmPut.executeUpdate();
 
@@ -326,9 +325,9 @@ public class Accessioner {
             if (sample.getSampleAccession() == null) {
                 String accession;
                 if (sd.msi.submissionReferenceLayer) {
-                    accession = singleReferenceSample(sample.getNodeName(), sd.msi.submissionIdentifier);
+                    accession = singleReferenceSample(sample.getNodeName());
                 } else {
-                    accession = singleAssaySample(sample.getNodeName(), sd.msi.submissionIdentifier);
+                    accession = singleAssaySample(sample.getNodeName());
                 }
                 sample.setSampleAccession(accession);
             }
@@ -338,7 +337,7 @@ public class Accessioner {
         Collection<GroupNode> groups = sd.scd.getNodes(GroupNode.class);
         for (GroupNode group : groups) {
             if (group.getGroupAccession() == null) {
-                String accession = singleGroup(group.getNodeName(), sd.msi.submissionIdentifier);
+                String accession = singleGroup(group.getNodeName());
                 group.setGroupAccession(accession);
             }
         }

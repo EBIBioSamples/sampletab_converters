@@ -25,10 +25,13 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     private String database;
 
     @Option(name = "--username", aliases={"-u"}, usage = "server username")
-    private String username;
+    private String dbusername;
 
     @Option(name = "--password", aliases={"-p"}, usage = "server password")
-    private String password;
+    private String dbpassword;
+
+    @Option(name = "--acc-username", aliases={"-a"}, usage = "accession username")
+    private String username  = null;
     
     @Option(name = "--nogroup", aliases={"-g"}, usage = "do not put samples in groups")
     private boolean noGroup = false;
@@ -64,11 +67,11 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
         if (database == null){
             database = oracleProperties.getProperty("database");
         }
-        if (username == null){
-            username = oracleProperties.getProperty("username");
+        if (dbusername == null){
+            dbusername = oracleProperties.getProperty("username");
         }
-        if (password == null){
-            password = oracleProperties.getProperty("password");
+        if (dbpassword == null){
+            dbpassword = oracleProperties.getProperty("password");
         }
     }
 
@@ -76,6 +79,8 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     protected Callable<Void> getNewTask(File inputFile) {
         inputFile = inputFile.getAbsoluteFile();
         File outputFile = new File(inputFile.getParentFile(), outputFilename);
-        return new SampleTabToLoadRunnable(inputFile, outputFile, hostname, port, database, username, password, noGroup);
+        return new SampleTabToLoadRunnable(inputFile, outputFile, 
+                hostname, port, database, dbusername, dbpassword, 
+                noGroup, username);
     }
 }

@@ -33,10 +33,10 @@ public class SampleTabToLoad {
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public SampleTabToLoad(String host, int port, String database, String username, String password)
+    public SampleTabToLoad(String host, int port, String database, String dbusername, String dbpassword, String username)
             throws ClassNotFoundException, SQLException {
         // Setup the connection with the DB
-        accessioner = new Accessioner(host, port, database, username, password);
+        accessioner = new Accessioner(host, port, database, dbusername, dbpassword, username);
     }
 
     public SampleTabToLoad(Accessioner accessioner)
