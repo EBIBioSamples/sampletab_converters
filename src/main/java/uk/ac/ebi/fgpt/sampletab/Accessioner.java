@@ -152,7 +152,9 @@ public class Accessioner {
         if (con == null) {
             con = ds.getConnection();
            
-        } /* else if (!con.isValid(5)) {
+        } /* This has problems with which version of JDBC has the isValid method 
+        
+        else if (!con.isValid(5)) {
             //connection is not valid, recreate it
             try {
                 con.close();
