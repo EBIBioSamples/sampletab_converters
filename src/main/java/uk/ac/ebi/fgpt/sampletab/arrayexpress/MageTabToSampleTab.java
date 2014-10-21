@@ -486,15 +486,17 @@ public class MageTabToSampleTab {
         
         //do some accessioning
         //do it sample by sample since we need to handle experimental-level naming
-        for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
-            String accessionName = st.msi.submissionIdentifier+" : "+sample.getNodeName();
-            String accession = accessioner.singleAssaySample(accessionName);
-            sample.setSampleAccession(accession);
-        }
-        for (GroupNode group : st.scd.getNodes(GroupNode.class)) {
-            String accessionName = st.msi.submissionIdentifier+" : "+group.getNodeName();
-            String accession = accessioner.singleGroup(accessionName);
-            group.setGroupAccession(accession);
+        if (accessioner != null) {
+            for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+                String accessionName = st.msi.submissionIdentifier+" : "+sample.getNodeName();
+                String accession = accessioner.singleAssaySample(accessionName);
+                sample.setSampleAccession(accession);
+            }
+            for (GroupNode group : st.scd.getNodes(GroupNode.class)) {
+                String accessionName = st.msi.submissionIdentifier+" : "+group.getNodeName();
+                String accession = accessioner.singleGroup(accessionName);
+                group.setGroupAccession(accession);
+            }
         }
                 
         log.info("Finished convert()");
