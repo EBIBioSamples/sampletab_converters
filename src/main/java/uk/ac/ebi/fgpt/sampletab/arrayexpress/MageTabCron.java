@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab.arrayexpress;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -12,6 +13,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -29,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.fgpt.sampletab.Accessioner;
 import uk.ac.ebi.fgpt.sampletab.subs.Event;
 import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
@@ -52,11 +55,32 @@ public class MageTabCron {
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
     
+    
+
+
+    @Option(name = "--hostname", aliases={"-n"}, usage = "server hostname")
+    private String hostname;
+
+    @Option(name = "--port", usage = "server port")
+    private Integer port;
+
+    @Option(name = "--database", aliases={"-d"}, usage = "server database")
+    private String database;
+
+    @Option(name = "--username", aliases={"-u"}, usage = "server username")
+    private String dbusername;
+
+    @Option(name = "--password", aliases={"-p"}, usage = "server password")
+    private String dbpassword;
+    
+    
+    
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private FTPClient ftp = null;
 
 	private MageTabCron() {
+	    
 	}
 
 	private void close() {
@@ -126,10 +150,35 @@ public class MageTabCron {
         if (threads > 0) {
             pool = Executors.newFixedThreadPool(threads);
         }
+
+        //load defaults
+        Properties oracleProperties = new Properties();
+        try {
+            InputStream is = getClass().getResourceAsStream("/oracle.properties");
+            oracleProperties.load(is);
+        } catch (IOException e) {
+            log.error("Unable to read resource oracle.properties", e);
+        }
+        if (hostname == null){
+            hostname = oracleProperties.getProperty("hostname");
+        }
+        if (port == null){
+            port = new Integer(oracleProperties.getProperty("port"));
+        }
+        if (database == null){
+            database = oracleProperties.getProperty("database");
+        }
+        if (dbusername == null){
+            dbusername = oracleProperties.getProperty("username");
+        }
+        if (dbpassword == null){
+            dbpassword = oracleProperties.getProperty("password");
+        }
+        Accessioner accessioner = new Accessioner(hostname, port, database, dbusername, dbpassword, "ArrayExpress");
         
         
         Set<String> conanProcess = new HashSet<String>();
-        
+
 
         Map<String, Future<Boolean>> futures = new HashMap<String, Future<Boolean>>();
         
@@ -232,7 +281,7 @@ public class MageTabCron {
 						        || !outSampleTabPre.exists()) {
 						    
                             //TODO fix where SDRF does not match this file pattern                            
-						    MageTabCronCallable t = new MageTabCronCallable("ftp://ftp.ebi.ac.uk"+idfpath, outidf, "ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf, outSampleTabPre);
+						    MageTabCronCallable t = new MageTabCronCallable("ftp://ftp.ebi.ac.uk"+idfpath, outidf, "ftp://ftp.ebi.ac.uk"+sdrfpath, outsdrf, outSampleTabPre, accessioner);
 						    
                             if (threads > 0) {
                                futures.put(submissionIdentifier, pool.submit(t));

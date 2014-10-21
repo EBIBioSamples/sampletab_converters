@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.MalformedURLException;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SameAsAttr
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
+import uk.ac.ebi.fgpt.sampletab.Accessioner;
 import uk.ac.ebi.fgpt.sampletab.CorrectorTermSource;
 import uk.ac.ebi.fgpt.sampletab.utils.BioSDUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
@@ -52,12 +54,14 @@ public class MageTabToSampleTab {
     private final MAGETABParser<MAGETABInvestigation> parser;
     private final List<ErrorItem> errorItems;
 
+    private Accessioner accessioner = null;
+    
     private SimpleDateFormat magetabdateformat = new SimpleDateFormat("yyyy-MM-dd");
 
     // logging
     public Logger log = LoggerFactory.getLogger(getClass());
 
-    public MageTabToSampleTab() {
+    public MageTabToSampleTab(Accessioner accessioner) {
         parser = new MAGETABParser<MAGETABInvestigation>();
         errorItems = new ArrayList<ErrorItem>();
 
@@ -68,13 +72,14 @@ public class MageTabToSampleTab {
             }
         });
         
+        this.accessioner = accessioner;        
     }
 
-    public SampleData convert(String idfFilename) throws IOException, ParseException {
+    public SampleData convert(String idfFilename) throws IOException, ParseException, SQLException, ClassNotFoundException {
         return convert(new File(idfFilename));
     }
 
-    public SampleData convert(File idfFile) throws IOException, ParseException {
+    public SampleData convert(File idfFile) throws IOException, ParseException, SQLException, ClassNotFoundException {
         //A few IDF files specify multiple SDRF files which may not all have been downloaded.
         //Due to a bug in Limpopo, this can cause Limpopo to hang indefinitely.
         //therefore, first parse the IDF only to see if this is something to avoid.
@@ -401,7 +406,7 @@ public class MageTabToSampleTab {
     }
     
     public SampleData convert(MAGETABInvestigation mt)
-            throws ParseException {
+            throws ParseException, SQLException, ClassNotFoundException {
 
         SampleData st = new SampleData();
         st.msi.submissionTitle = mt.IDF.investigationTitle;
@@ -478,6 +483,19 @@ public class MageTabToSampleTab {
             st.scd.addNode(othergroup);
             log.info("Added Other group node");
         }
+        
+        //do some accessioning
+        //do it sample by sample since we need to handle experimental-level naming
+        for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+            String accessionName = st.msi.submissionIdentifier+" : "+sample.getNodeName();
+            String accession = accessioner.singleAssaySample(accessionName);
+            sample.setSampleAccession(accession);
+        }
+        for (GroupNode group : st.scd.getNodes(GroupNode.class)) {
+            String accessionName = st.msi.submissionIdentifier+" : "+group.getNodeName();
+            String accession = accessioner.singleGroup(accessionName);
+            group.setGroupAccession(accession);
+        }
                 
         log.info("Finished convert()");
         
@@ -485,7 +503,7 @@ public class MageTabToSampleTab {
     }
 
     public void convert(MAGETABInvestigation mt, Writer writer)
-            throws IOException, ParseException {
+            throws IOException, ParseException, SQLException, ClassNotFoundException {
         log.debug("recieved magetab, preparing to convert");
         SampleData st = convert(mt);
         log.debug("sampletab converted, preparing to output");
@@ -501,7 +519,7 @@ public class MageTabToSampleTab {
     }
 
     public void convert(File idfFile, Writer writer) throws IOException,
-            ParseException {
+            ParseException, SQLException, ClassNotFoundException {
         //a few idf files specify multiple sdrf files which may not all have been downloaded
         //due to a bug in limpopo, this can cause limpopo to hang indefinitely.
         //therefore, first parse the idf only to see if this is something to avoid.
@@ -530,27 +548,27 @@ public class MageTabToSampleTab {
     }
 
     public void convert(File idffile, String stfilename) throws IOException,
-            ParseException {
+            ParseException, SQLException, ClassNotFoundException {
         convert(idffile, new File(stfilename));
     }
 
     public void convert(File idffile, File stfile) throws IOException,
-            ParseException {
+            ParseException, SQLException, ClassNotFoundException {
         convert(idffile, new FileWriter(stfile));
     }
 
     public void convert(String idffilename, Writer writer) throws IOException,
-            ParseException {
+            ParseException, SQLException, ClassNotFoundException {
         convert(new File(idffilename), writer);
     }
 
     public void convert(String idffilename, File stfile) throws IOException,
-            ParseException, java.text.ParseException {
+            ParseException, java.text.ParseException, SQLException, ClassNotFoundException {
         convert(idffilename, new BufferedWriter(new FileWriter(stfile)));
     }
 
     public void convert(String idffilename, String stfilename)
-            throws IOException, ParseException, java.text.ParseException {
+            throws IOException, ParseException, java.text.ParseException, SQLException, ClassNotFoundException {
         convert(idffilename, new File(stfilename));
     }
 }
