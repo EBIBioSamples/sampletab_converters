@@ -50,11 +50,6 @@ public class LoadValidator extends SampleTabValidator {
             } 
         }
         
-        //must have zero or one MSI Database object (this is a bug to be fixed in GUI)
-        if (sampledata.msi.databases.size() > 1) {
-            fireErrorItemEvent(new ErrorItemImpl("Has multiple MSI Database obejcts", -1, getClass().getName()));
-        }
-        
         //various field length validations for relational database
         for (Person p : sampledata.msi.persons) {
             if (p.getEmail() != null && p.getEmail().length() > 60) {
