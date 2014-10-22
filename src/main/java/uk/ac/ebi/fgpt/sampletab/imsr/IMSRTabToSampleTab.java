@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URLEncoder;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -32,16 +33,20 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.DatabaseAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
+import uk.ac.ebi.fgpt.sampletab.Accessioner;
 import uk.ac.ebi.fgpt.sampletab.Normalizer;
 
 public class IMSRTabToSampleTab {
 
+
+    private Accessioner accessioner = null;
+    
     private TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public IMSRTabToSampleTab() {
-        //Nothing to do in constructor
+    public IMSRTabToSampleTab(Accessioner accessioner) {
+        this.accessioner = accessioner;
     }
 
     public Logger getLog() {
@@ -49,12 +54,12 @@ public class IMSRTabToSampleTab {
     }
 
     public SampleData convert(String filename) throws IOException, ParseException, NumberFormatException,
-            java.text.ParseException {
+            java.text.ParseException, SQLException, ClassNotFoundException {
         return convert(new File(filename));
     }
 
     public SampleData convert(File infile) throws ParseException, IOException, NumberFormatException,
-            java.text.ParseException {
+            java.text.ParseException, SQLException, ClassNotFoundException {
 
         SampleData st = new SampleData();
 
@@ -350,7 +355,21 @@ public class IMSRTabToSampleTab {
             othergroup.addSample(sample);
         }
         
-        
+
+        //do some accessioning
+        //do it sample by sample since we need to handle experimental-level naming
+        if (accessioner != null) {
+            for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+                String accessionName = st.msi.submissionIdentifier+" : "+sample.getNodeName();
+                String accession = accessioner.singleReferenceSample(accessionName);
+                sample.setSampleAccession(accession);
+            }
+            for (GroupNode group : st.scd.getNodes(GroupNode.class)) {
+                String accessionName = st.msi.submissionIdentifier+" : "+group.getNodeName();
+                String accession = accessioner.singleGroup(accessionName);
+                group.setGroupAccession(accession);
+            }
+        }
         
         
         getLog().info("Finished convert()");
@@ -362,7 +381,7 @@ public class IMSRTabToSampleTab {
     }
 
     public void convert(File file, Writer writer) throws IOException, ParseException, NumberFormatException,
-            java.text.ParseException {
+            java.text.ParseException, SQLException, ClassNotFoundException {
         getLog().debug("recieved magetab, preparing to convert");
         SampleData st = convert(file);
 
@@ -375,13 +394,13 @@ public class IMSRTabToSampleTab {
     }
 
     public void convert(File infile, String outfilename) throws IOException, ParseException, NumberFormatException,
-            java.text.ParseException {
+            java.text.ParseException, SQLException, ClassNotFoundException {
 
         convert(infile, new File(outfilename));
     }
 
     public void convert(File infile, File outfile) throws IOException, ParseException, NumberFormatException,
-            java.text.ParseException {
+            java.text.ParseException, SQLException, ClassNotFoundException {
 
         // create parent directories, if they dont exist
         outfile = outfile.getAbsoluteFile();
@@ -397,17 +416,17 @@ public class IMSRTabToSampleTab {
     }
 
     public void convert(String infilename, Writer writer) throws IOException, ParseException, NumberFormatException,
-            java.text.ParseException {
+            java.text.ParseException, SQLException, ClassNotFoundException {
         convert(new File(infilename), writer);
     }
 
     public void convert(String infilename, File outfile) throws IOException, ParseException, NumberFormatException,
-            java.text.ParseException {
+            java.text.ParseException, SQLException, ClassNotFoundException {
         convert(infilename, new FileWriter(outfile));
     }
 
     public void convert(String infilename, String outfilename) throws IOException, ParseException,
-            NumberFormatException, java.text.ParseException {
+            NumberFormatException, java.text.ParseException, SQLException, ClassNotFoundException {
         convert(infilename, new File(outfilename));
     }
 
@@ -439,40 +458,5 @@ public class IMSRTabToSampleTab {
         st.msi.organizations.add(new Organization(summary.facilities.get(index), null, "http://www.findmice.org/", null, "Biomaterial Provider"));
         
         st.msi.databases.add(new Database("IMSR", "http://www.findmice.org/summary?query=&repositories="+site, site));
-    }
-
-    public static void main(String[] args) {
-
-        IMSRTabToSampleTab converter = new IMSRTabToSampleTab();
-        converter.doMain(args);
-    }
-
-    public void doMain(String[] args){
-        if (args.length < 2) {
-            System.out.println("Must provide an IMSR Tab input filename and a SampleTab output filename.");
-            return;
-        }
-        String imsrTabFilename = args[0];
-        String sampleTabFilename = args[1];
-        
-        try {
-            convert(imsrTabFilename, sampleTabFilename);
-        } catch (ParseException e) {
-            log.error("Error converting " + imsrTabFilename + " to " + sampleTabFilename, e);
-            System.exit(2);
-            return;
-        } catch (IOException e) {
-            log.error("Error converting " + imsrTabFilename + " to " + sampleTabFilename, e);
-            System.exit(3);
-            return;
-        } catch (NumberFormatException e) {
-            log.error("Error converting " + imsrTabFilename + " to " + sampleTabFilename, e);
-            System.exit(4);
-            return;
-        } catch (java.text.ParseException e) {
-            log.error("Error converting " + imsrTabFilename + " to " + sampleTabFilename, e);
-            System.exit(5);
-            return;
-        }
     }
 }
