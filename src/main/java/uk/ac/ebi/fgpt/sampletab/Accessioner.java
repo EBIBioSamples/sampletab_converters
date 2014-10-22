@@ -1,30 +1,15 @@
 package uk.ac.ebi.fgpt.sampletab;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLRecoverableException;
-import java.util.Collection;
 import java.util.UUID;
-
-import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
-import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 
 import com.jolbox.bonecp.BoneCPDataSource;

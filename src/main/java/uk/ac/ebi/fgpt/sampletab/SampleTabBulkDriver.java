@@ -3,7 +3,6 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.Properties;
 
 import org.kohsuke.args4j.Option;

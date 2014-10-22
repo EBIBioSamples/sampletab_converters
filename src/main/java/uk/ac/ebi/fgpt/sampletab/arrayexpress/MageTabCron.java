@@ -10,12 +10,9 @@ import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -32,11 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.fgpt.sampletab.Accessioner;
-import uk.ac.ebi.fgpt.sampletab.subs.Event;
-import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.FTPUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.ProcessUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class MageTabCron {

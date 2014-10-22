@@ -9,11 +9,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import junit.framework.TestCase;
 
 public class TestEnaProManager extends TestCase{
 	

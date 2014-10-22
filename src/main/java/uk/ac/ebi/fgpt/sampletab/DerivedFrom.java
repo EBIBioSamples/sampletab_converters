@@ -3,7 +3,6 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,13 +11,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +27,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAtt
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.CachedParser;
-import uk.ac.ebi.fgpt.sampletab.utils.FileGlobIterable;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class DerivedFrom {

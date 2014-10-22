@@ -23,9 +23,9 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.jolbox.bonecp.BoneCPDataSource;
-
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
+
+import com.jolbox.bonecp.BoneCPDataSource;
 
 public class AttributeDBSummary extends AbstractDriver {
 

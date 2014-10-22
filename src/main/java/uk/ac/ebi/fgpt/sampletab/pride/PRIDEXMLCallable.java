@@ -1,7 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab.pride;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -9,9 +8,6 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
-import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-import uk.ac.ebi.fgpt.sampletab.Normalizer;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
