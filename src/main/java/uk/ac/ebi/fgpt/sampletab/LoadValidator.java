@@ -26,12 +26,6 @@ public class LoadValidator extends SampleTabValidator {
         
         Date now = new Date();
 
-        //release date is in the future
-        if (sampledata.msi.submissionReleaseDate.after(now)){
-            //errors.add(getErrorItemFromCode(1528));
-            //dont throw this as an error, but warn instead
-            log.warn("Release date is in the future "+sampledata.msi.getSubmissionReleaseDateAsString());
-        }
         
         //check all samples are in at least one group
         for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
