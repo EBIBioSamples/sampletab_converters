@@ -148,6 +148,29 @@ public class SampleTabToLoad {
             }
         }
         
+        for (int i = 0; i < sampledata.msi.publications.size(); i++) {
+            Publication p = sampledata.msi.publications.get(i);
+
+            //PMIDs must be integers, even if source says otherwise
+            Integer number = null;
+            try {
+                number = Integer.parseInt(p.getPubMedID());
+            } catch (NumberFormatException e) {
+                log.warn("Non-numeric pubmedid "+p.getPubMedID());
+            }
+            if (number == null) {
+                p = new Publication(null, p.getDOI());
+            } else {
+                p = new Publication(number.toString(), p.getDOI());
+            }
+
+            //discard DOIs that aren't sane
+            if (!p.getDOI().matches("^.+/.+$")) {
+                p = new Publication(null, null);
+            }
+            
+            sampledata.msi.publications.set(i, p);
+        }
         
         log.info("completed initial conversion, re-accessioning...");
         
