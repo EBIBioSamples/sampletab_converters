@@ -1,24 +1,17 @@
 package uk.ac.ebi.fgpt.sampletab;
 
-import java.util.Date;
 
 import org.mged.magetab.error.ErrorItemImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.arrayexpress2.magetab.datamodel.graph.Node;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
 
 public class LoadValidator extends SampleTabValidator {
-
-    private Logger log = LoggerFactory.getLogger(getClass());
     
     public synchronized void validate(SampleData sampledata) throws ValidateException {
         
@@ -50,6 +43,6 @@ public class LoadValidator extends SampleTabValidator {
                     fireErrorItemEvent(new ErrorItemImpl("Too long attribute name "+a.getAttributeType()+" on sample "+s.getNodeName(), -1, getClass().getName()));
                 }
             }
-         }
+        }
     }
 }
