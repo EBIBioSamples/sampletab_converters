@@ -33,9 +33,6 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
 
     @Option(name = "--password", aliases={"-p"}, usage = "server password")
     private String dbpassword  = null;
-
-    @Option(name = "--acc-username", aliases={"-a"}, usage = "accession username")
-    private String username  = null;
     
     @Option(name = "--force", aliases={"-f"}, usage = "overwrite targets")
     private boolean force = false;
@@ -76,8 +73,7 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
         this.dbpassword = properties.getProperty("password");
         
         accessioner = new Accessioner(hostname, 
-                port, database, dbusername, dbpassword,
-                username);
+                port, database, dbusername, dbpassword);
         correctorAddAttr = new CorrectorAddAttr(hostname, 
                 port, database, dbusername, dbpassword);
         

@@ -33,10 +33,10 @@ public class SampleTabToLoad {
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public SampleTabToLoad(String host, int port, String database, String dbusername, String dbpassword, String username)
+    public SampleTabToLoad(String host, int port, String database, String dbusername, String dbpassword)
             throws ClassNotFoundException, SQLException {
         // Setup the connection with the DB
-        accessioner = new Accessioner(host, port, database, dbusername, dbpassword, username);
+        accessioner = new Accessioner(host, port, database, dbusername, dbpassword);
     }
 
     public SampleTabToLoad(Accessioner accessioner)
@@ -113,9 +113,10 @@ public class SampleTabToLoad {
             }
             //only add the new group if it has any samples
             if (othergroup.getParentNodes().size() > 0){
-                sampledata.scd.addNode(othergroup);
-                log.info("Added Other group node");
-                // also need to accession the new node
+                //Now that accessions are assigned via a username,
+                //a new group cann't be created this late in the process.
+                //Instead, if a group would be created, throw an error
+                throw new RuntimeException("Cannot create other group without accesion");
             }
         }
         
@@ -150,10 +151,7 @@ public class SampleTabToLoad {
         
         
         log.info("completed initial conversion, re-accessioning...");
-        
-        // assign accession to any created groups
-        sampledata = accessioner.convert(sampledata);
-        
+                
         return sampledata;
     }
 

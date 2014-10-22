@@ -32,14 +32,12 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
     private String dbpassword;
     
     private final boolean noGroup;
-    
-    private final String username;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public SampleTabToLoadRunnable(File inputFile, File outputFile, 
             String host, int port, String database, String dbusername, String dbpassword, 
-            boolean noGroup, String username) {
+            boolean noGroup) {
         
         this.inputFile = inputFile;
         this.outputFile = outputFile;
@@ -51,8 +49,6 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
         this.dbpassword = dbpassword;
         
         this.noGroup = noGroup;
-        
-        this.username = username;
     }
 
     @Override
@@ -86,7 +82,7 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
         
         // do conversion
         SampleTabToLoad toloader;
-        toloader = new SampleTabToLoad(host, port, database, dbusername, dbpassword, username);
+        toloader = new SampleTabToLoad(host, port, database, dbusername, dbpassword);
         toloader.setInGroup(!noGroup);
         sd = toloader.convert(sd);
         

@@ -29,9 +29,6 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
 
     @Option(name = "--password", aliases={"-p"}, usage = "server password")
     private String dbpassword;
-
-    @Option(name = "--acc-username", aliases={"-a"}, usage = "accession username")
-    private String username  = null;
     
     @Option(name = "--nogroup", aliases={"-g"}, usage = "do not put samples in groups")
     private boolean noGroup = false;
@@ -81,6 +78,6 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
         File outputFile = new File(inputFile.getParentFile(), outputFilename);
         return new SampleTabToLoadRunnable(inputFile, outputFile, 
                 hostname, port, database, dbusername, dbpassword, 
-                noGroup, username);
+                noGroup);
     }
 }

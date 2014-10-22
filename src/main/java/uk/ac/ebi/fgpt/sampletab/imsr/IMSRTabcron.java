@@ -122,7 +122,7 @@ public class IMSRTabcron {
         if (dbpassword == null){
             dbpassword = oracleProperties.getProperty("password");
         }
-        Accessioner accessioner = new Accessioner(hostname, port, database, dbusername, dbpassword, "ArrayExpress");
+        Accessioner accessioner = new Accessioner(hostname, port, database, dbusername, dbpassword);
         
 
 		IMSRTabWebSummary summary = null;
