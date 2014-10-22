@@ -55,13 +55,6 @@ public class LoadValidator extends SampleTabValidator {
             fireErrorItemEvent(new ErrorItemImpl("Has multiple MSI Database obejcts", -1, getClass().getName()));
         }
         
-        //must have SAMExxxx or SAMEAxxxx accessions (this is a bug to be fixed in GUI)
-        for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
-           if (s.getSampleAccession() == null || !s.getSampleAccession().matches("^SAMEA?[1-9][0-9]$")) {
-               fireErrorItemEvent(new ErrorItemImpl("Sample "+s.getNodeName()+" has a non-EBI accession "+s.getSampleAccession(), -1, getClass().getName()));
-           }
-        }
-        
         //various field length validations for relational database
         for (Person p : sampledata.msi.persons) {
             if (p.getEmail() != null && p.getEmail().length() > 60) {
