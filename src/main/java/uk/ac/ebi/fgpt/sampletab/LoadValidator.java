@@ -24,26 +24,6 @@ public class LoadValidator extends SampleTabValidator {
         
         super.validate(sampledata);
         
-        Date now = new Date();
-
-        
-        //check all samples are in at least one group
-        for (SampleNode s : sampledata.scd.getNodes(SampleNode.class)) {
-            if (s.getChildNodes().size() == 0) {
-                fireErrorItemEvent(new ErrorItemImpl("Sample "+s.getNodeName()+" is not in any group", -1, getClass().getName()));
-            } else if (s.getChildNodes().size() >= 2) {
-                fireErrorItemEvent(new ErrorItemImpl("Sample "+s.getNodeName()+" has 2+ child nodes", -1, getClass().getName()));
-            } else if (s.getChildNodes().size() == 1) {
-                for (Node n : s.getChildNodes()) {
-                    synchronized(GroupNode.class) {
-                        if (!GroupNode.class.isInstance(n)) {
-                            fireErrorItemEvent(new ErrorItemImpl("Sample "+s.getNodeName()+" has a child node that is not a group", -1, getClass().getName()));
-                        }
-                    }
-                }
-            } 
-        }
-        
         //various field length validations for relational database
         for (Person p : sampledata.msi.persons) {
             if (p.getEmail() != null && p.getEmail().length() > 60) {
