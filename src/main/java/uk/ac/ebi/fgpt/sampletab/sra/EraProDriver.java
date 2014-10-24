@@ -1,5 +1,6 @@
 package uk.ac.ebi.fgpt.sampletab.sra;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.dom4j.DocumentException;
 import org.kohsuke.args4j.Argument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +110,22 @@ public class EraProDriver extends ENASRACron {
                 toDelete.add(sampleID);
             }
         }
-        log.info("Finished checking deletions, found "+toDelete.size());
+        log.info("Finished checking deletions, found "+toDelete.size()+" samples");
+        
+        //now we have a list of samples to delete.
+        //need to convert this into a list of BSD submissions to delete
+        
+        Set<String> submissions = new HashSet<String>();
+        for (String sampleAcc : toDelete) {
+            try {
+                submissions.addAll(BioSDUtils.getSubmissions(sampleAcc));
+            } catch (DocumentException e) {
+                log.error("Unable to get subissions for "+sampleAcc, e);
+            } catch (IOException e) {
+                log.error("Unable to get subissions for "+sampleAcc, e);
+            }
+        }
+        
         return toDelete;
     }
     
