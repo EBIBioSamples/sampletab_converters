@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -14,6 +15,7 @@ import java.util.concurrent.Future;
 
 import org.dom4j.DocumentException;
 import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +34,8 @@ public class EraProDriver extends ENASRACron {
     public static void main(String[] args) {
         new EraProDriver().doMain(args);
     }
-    
+
+    @Override
     public void doGroups(ENASRAGrouper grouper) {
         log.info("Getting sample ids from ERA-PRO");
         
@@ -49,6 +52,16 @@ public class EraProDriver extends ENASRACron {
         }
         
         Collection<String> sampleIds = EraProManager.getInstance().getUpdatesSampleId(minDate, maxDate);
+        
+        if (enaonly) {
+            Iterator<String> i = sampleIds.iterator();
+            while (i.hasNext()) {
+                String sampleId = i.next();
+                if (!sampleId.startsWith("ERS")) {
+                    i.remove();
+                }
+            }
+        }
         
         grouper.groupSampleIds(sampleIds, pool);
 
