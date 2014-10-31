@@ -342,7 +342,9 @@ select * from cv_status;
                 while (resultset.next()) {
                     String sampleId = resultset.getString(1); // result sets are one-indexed,
                     String biosampleId = resultset.getString(2);
-                    sampleIds.put(sampleId, biosampleId);
+                    if (sampleId != null && biosampleId != null) {
+                        sampleIds.put(sampleId, biosampleId);
+                    }
                 }
             }
         } catch (SQLException e) {
