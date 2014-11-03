@@ -304,6 +304,9 @@ public class Corrector {
     private SCDNodeAttribute correctCharacteristic(CharacteristicAttribute attr, SampleData sampledata) {        
         //bulk replace underscore with space in types
         attr.type = attr.type.replace("_", " ");
+        
+        //bulk remove ae prefix
+        attr.type = attr.type.replace("ArrayExpress-", "");
 
         //remove technical attributes
         if (attr.type.toLowerCase().equals("channel")) {
