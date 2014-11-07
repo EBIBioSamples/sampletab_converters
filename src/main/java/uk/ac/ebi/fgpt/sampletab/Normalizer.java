@@ -74,7 +74,7 @@ public class Normalizer {
                     //remove synonym comments that duplicate sample name
                     if (ca.type.toLowerCase().equals("synonym") && ca.getAttributeValue().equals(s.getNodeName())) {
                         s.removeAttribute(ca);
-                        log.info("Removed synonym of "+s.getNodeName()+" ("+ca.getAttributeValue()+")");
+                        log.trace("Removed synonym of "+s.getNodeName()+" ("+ca.getAttributeValue()+")");
                     }
                 }
             }
