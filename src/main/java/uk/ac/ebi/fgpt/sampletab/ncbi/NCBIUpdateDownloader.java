@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.Normalizer;
+import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
@@ -126,10 +127,12 @@ public class NCBIUpdateDownloader {
         
         private final int id;
         private File outDir;
+        private final boolean conan;
         
-        public DownloadConvertCallable(int id, File outDir) {
+        public DownloadConvertCallable(int id, File outDir, boolean conan) {
             this.id = id;
             this.outDir = outDir;
+            this.conan = conan;
         }
 
         
@@ -146,8 +149,10 @@ public class NCBIUpdateDownloader {
                 throw new RuntimeException("No accession in sample id "+id);
             }
             
+            String submission ="GNC-"+accession;
+            
             //output the XML file
-            File localOutDir = new File(outDir, SampleTabUtils.getSubmissionDirPath("GNC-"+accession));
+            File localOutDir = new File(outDir, SampleTabUtils.getSubmissionDirPath(submission));
             localOutDir = localOutDir.getAbsoluteFile();
             localOutDir.mkdirs();
             File xmlFile = new File(localOutDir, "out.xml");
@@ -188,6 +193,15 @@ public class NCBIUpdateDownloader {
             } catch (IOException e) {
                 log.error("Error writing " + sampletabFile, e);
                 throw e;
+            }
+
+            if (conan) {
+                //submit to conan
+                try {
+                    ConanUtils.submit(submission, "BioSamples (other)");
+                } catch (IOException e) {
+                    log.error("Problem submitting "+submission+" to conan", e);
+                }
             }
             
             return null;            
