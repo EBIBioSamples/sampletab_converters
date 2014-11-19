@@ -117,7 +117,7 @@ public class SampleTabStatusRunnable implements Callable<Void> {
     }
     
     private void removeFromFTP() {
-        log.info("Removing from FTP "+sd.msi.submissionIdentifier);
+        log.trace("Removing from FTP "+sd.msi.submissionIdentifier);
         File ftpFile = getFTPFile();
         if (ftpFile.exists()) {
             if (!ftpFile.delete()) {
@@ -127,7 +127,7 @@ public class SampleTabStatusRunnable implements Callable<Void> {
     }
     
     private void copyToFTP() {
-        log.info("Copying to FTP "+sd.msi.submissionIdentifier);
+        log.trace("Copying to FTP "+sd.msi.submissionIdentifier);
 
         File ftpFile = getFTPFile();
                 

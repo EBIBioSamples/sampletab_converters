@@ -79,11 +79,11 @@ public class SampleTabBulkRunnable implements Callable<Void> {
 
         // accession sampletab.pre.txt to sampletab.txt
         if (!force && sampletab.exists() && sampletab.length()==0) {
-            log.info("Skipping "+sampletab+" - is zero size");
+            log.trace("Skipping "+sampletab+" - is zero size");
         } else if (!force && sampletab.exists() && sampletab.lastModified() > sampletabpre.lastModified()) {
-            log.info("Skipping "+sampletab+" - modifed after "+sampletabpre);
+            log.trace("Skipping "+sampletab+" - modifed after "+sampletabpre);
         } else {
-            log.info("Processing " + sampletab);
+            log.trace("Processing " + sampletab);
 
             SampleTabSaferParser parser = new SampleTabSaferParser(new SampleTabValidator());
             
@@ -113,26 +113,26 @@ public class SampleTabBulkRunnable implements Callable<Void> {
                 throw e;
             }
             
-            log.info("Applying extra attributes...");
+            log.trace("Applying extra attributes...");
             correctorAddAttr.addAttribute(st);
             for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
                 correctorAddAttr.addAttribute(st, sample);
             }
 
-            log.info("Applying corrections...");
+            log.trace("Applying corrections...");
             corrector.correct(st);
 
             //dont detect relationships for reference samples
             //these will be done manually
             if (!st.msi.submissionReferenceLayer) {
-                log.info("Detecting derived from...");
+                log.trace("Detecting derived from...");
                 try {
                     derivedFrom.convert(st);
                 } catch (IOException e) {
                     throw e;
                 }
 
-                log.info("Detecting same as...");
+                log.trace("Detecting same as...");
                 try {
                     sameAs.convert(st);
                 } catch (IOException e) {
@@ -145,7 +145,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
             try {
                 writer = new FileWriter(sampletab);
                 SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
-                log.info("created SampleTabWriter");
+                log.trace("created SampleTabWriter");
                 sampletabwriter.write(st);
                 sampletabwriter.close();
             } catch (IOException e) {
@@ -165,11 +165,11 @@ public class SampleTabBulkRunnable implements Callable<Void> {
         // preprocess to load
         if (!noload) {
             if (!force && sampletabtoload.exists() && sampletabtoload.length()==0) {
-                log.info("Skipping "+sampletabtoload+" - is zero size");
+                log.trace("Skipping "+sampletabtoload+" - is zero size");
             } else if (!force && sampletabtoload.exists() && sampletabtoload.lastModified() > sampletab.lastModified()) {
-                log.info("Skipping "+sampletabtoload+" - modifed after "+sampletab);
+                log.trace("Skipping "+sampletabtoload+" - modifed after "+sampletab);
             } else {
-                log.info("Processing " + sampletabtoload);
+                log.trace("Processing " + sampletabtoload);
 
                 SampleTabToLoad c;
                 try {
