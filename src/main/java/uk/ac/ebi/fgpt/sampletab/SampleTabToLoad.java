@@ -165,7 +165,7 @@ public class SampleTabToLoad {
             }
 
             //discard DOIs that aren't sane
-            if (!p.getDOI().matches("^.+/.+$")) {
+            if (p.getDOI() == null || !p.getDOI().matches("^.+/.+$")) {
                 p = new Publication(null, null);
             } else if (!p.getDOI().startsWith("doi:")) {
                 p = new Publication(p.getPubMedID(), "doi:"+p.getDOI());
