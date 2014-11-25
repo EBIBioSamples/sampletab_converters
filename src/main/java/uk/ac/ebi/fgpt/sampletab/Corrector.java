@@ -709,6 +709,7 @@ public class Corrector {
                             || cha.getAttributeValue().toLowerCase().equals("unknown")
                             || cha.getAttributeValue().toLowerCase().equals("--")
                             || cha.getAttributeValue().toLowerCase().equals("not applicable")
+                            || cha.getAttributeValue().toLowerCase().equals("not collected")
                             || cha.getAttributeValue().toLowerCase().equals("null")
                             || cha.getAttributeValue().toLowerCase().equals("missing")
                             || cha.getAttributeValue().toLowerCase().equals("[not reported]")
