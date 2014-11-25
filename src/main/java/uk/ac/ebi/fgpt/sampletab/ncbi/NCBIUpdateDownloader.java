@@ -31,6 +31,10 @@ import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.transform.TransformerException;
+
+import org.custommonkey.xmlunit.Diff;
+import org.custommonkey.xmlunit.XMLUnit;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -149,6 +153,8 @@ public class NCBIUpdateDownloader {
                 throw new RuntimeException("No accession in sample id "+id);
             }
             
+            
+            
             String submission ="GNC-"+accession;
             
             //output the XML file
@@ -158,50 +164,76 @@ public class NCBIUpdateDownloader {
             File xmlFile = new File(localOutDir, "out.xml");
             File sampletabFile = new File(localOutDir, "sampletab.pre.txt");
 
-            log.info("writing to "+xmlFile);
+
+            //compare the XML file to the version on disk, if any
+            boolean saveXML = true;
+			if (xmlFile.exists()) {
+	            Document existingDoc = XMLUtils.getDocument(xmlFile);
+	            XMLUnit.setIgnoreAttributeOrder(true);
+	            XMLUnit.setIgnoreWhitespace(true);
+
+	            org.w3c.dom.Document docOrig = null;
+	            org.w3c.dom.Document docNew = null;
+	            try {
+	                docOrig = XMLUtils.convertDocument(existingDoc);
+	                docNew = XMLUtils.convertDocument(document);
+	            } catch (TransformerException e) {
+	                log.error("Unable to convert from dom4j to w3c Document");
+	            }
+	            
+	            Diff diff = new Diff(docOrig, docNew);
+	            if (diff.similar()) {
+	                //equivalent to last file, no update needed
+	            	saveXML = false;
+	            }
+			}
+            if (saveXML) {
+	            log.info("writing to "+xmlFile);
+	            
+	            XMLUtils.writeDocumentToFile(document, xmlFile);
             
-            XMLUtils.writeDocumentToFile(document, xmlFile);
+	            //do the conversion
+	            SampleData st = null;
+	            try {
+	                st = NCBIBiosampleRunnable.convert(document);
+	            } catch (ParseException e) {
+	                log.error("Problem with "+accession, e);
+	                throw e;
+	            } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
+	                log.error("Problem with "+accession, e);
+	                throw e;
+	            }
+	
+	            //output the SampleTab file
+	            FileWriter out = null;
+	            try {
+	                out = new FileWriter(sampletabFile);
+	            } catch (IOException e) {
+	                log.error("Error opening " + sampletabFile, e);
+	                throw e;
+	            }
+	
+	            Normalizer norm = new Normalizer();
+	            norm.normalize(st);
+	
+	            SampleTabWriter sampletabwriter = new SampleTabWriter(out);
+	            try {
+	                sampletabwriter.write(st);
+	                sampletabwriter.close();
+	            } catch (IOException e) {
+	                log.error("Error writing " + sampletabFile, e);
+	                throw e;
+	            }
+	
+	            if (conan) {
+	                //submit to conan
+	                try {
+	                    ConanUtils.submit(submission, "BioSamples (other)");
+	                } catch (IOException e) {
+	                    log.error("Problem submitting "+submission+" to conan", e);
+	                }
+	            }
             
-            //do the conversion
-            SampleData st = null;
-            try {
-                st = NCBIBiosampleRunnable.convert(document);
-            } catch (ParseException e) {
-                log.error("Problem with "+accession, e);
-                throw e;
-            } catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
-                log.error("Problem with "+accession, e);
-                throw e;
-            }
-
-            //output the SampleTab file
-            FileWriter out = null;
-            try {
-                out = new FileWriter(sampletabFile);
-            } catch (IOException e) {
-                log.error("Error opening " + sampletabFile, e);
-                throw e;
-            }
-
-            Normalizer norm = new Normalizer();
-            norm.normalize(st);
-
-            SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-            try {
-                sampletabwriter.write(st);
-                sampletabwriter.close();
-            } catch (IOException e) {
-                log.error("Error writing " + sampletabFile, e);
-                throw e;
-            }
-
-            if (conan) {
-                //submit to conan
-                try {
-                    ConanUtils.submit(submission, "BioSamples (other)");
-                } catch (IOException e) {
-                    log.error("Problem submitting "+submission+" to conan", e);
-                }
             }
             
             return null;            
