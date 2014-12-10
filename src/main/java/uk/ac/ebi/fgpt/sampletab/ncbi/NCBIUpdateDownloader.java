@@ -153,7 +153,10 @@ public class NCBIUpdateDownloader {
                 throw new RuntimeException("No accession in sample id "+id);
             }
             
-            
+            if (accession.startsWith("SAME")) {
+            	log.trace("EBI accession, skipping");
+            	return null;
+            }
             
             String submission ="GNC-"+accession;
             
