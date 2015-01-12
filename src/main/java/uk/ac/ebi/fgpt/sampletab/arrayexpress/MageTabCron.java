@@ -51,6 +51,9 @@ public class MageTabCron {
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
+
+    @Option(name = "--no-geo", usage = "do not apply to geo?")
+    private boolean nogeo = false;
     
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -98,8 +101,14 @@ public class MageTabCron {
 	
 	private boolean isSubmissionForProcessing(String submission) {
 	    if (submission.matches("E-ERAD-.*")) {
-	        //exclude ERAD submissions
+	        //exclude Sanger / SequenceScape / ERA submissions
 	        return false;
+	    }
+	    if (!nogeo) {
+		    if (submission.matches("E-GEOD-.*")) {
+		        //exclude GEO submissions
+		        return false;
+		    }
 	    }
 	    return true;
 	}
