@@ -73,6 +73,11 @@ public class SampleTabToLoad {
             sampledata.msi.submissionDescription = sampledata.msi.submissionTitle;
         }
         
+        //make sure the title is an acceptable size
+        if (sampledata.msi.submissionTitle.length() > 250) {
+        	sampledata.msi.submissionTitle = sampledata.msi.submissionTitle.substring(0, 250)+" [truncated]";
+        }
+        
         //replace implicit derived from with explicit derived from relationships
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
             if (sample.getParentNodes().size() > 0) {
