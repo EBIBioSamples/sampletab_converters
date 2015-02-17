@@ -45,6 +45,7 @@ public class ENASRAWebDownload {
             
             Document existingDoc = XMLUtils.getDocument(sampleFile);
             XMLUnit.setIgnoreAttributeOrder(true);
+            XMLUnit.setIgnoreWhitespace(true);
 
             org.w3c.dom.Document docOrig = null;
             org.w3c.dom.Document docNew = null;

@@ -73,6 +73,11 @@ public class SampleTabToLoad {
             sampledata.msi.submissionDescription = sampledata.msi.submissionTitle;
         }
         
+        //make sure the title is an acceptable size
+        if (sampledata.msi.submissionTitle.length() > 250) {
+        	sampledata.msi.submissionTitle = sampledata.msi.submissionTitle.substring(0, 250)+" [truncated]";
+        }
+        
         //replace implicit derived from with explicit derived from relationships
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
             if (sample.getParentNodes().size() > 0) {
@@ -149,6 +154,32 @@ public class SampleTabToLoad {
             }
         }
         
+        for (int i = 0; i < sampledata.msi.publications.size(); i++) {
+            Publication p = sampledata.msi.publications.get(i);
+
+            //PMIDs must be integers, even if source says otherwise
+            Integer number = null;
+            try {
+                number = Integer.parseInt(p.getPubMedID());
+            } catch (NumberFormatException e) {
+                log.warn("Non-numeric pubmedid "+p.getPubMedID());
+            }
+            if (number == null) {
+                p = new Publication(null, p.getDOI());
+            } else {
+                p = new Publication(number.toString(), p.getDOI());
+            }
+
+            //discard DOIs that aren't sane
+            if (p.getDOI() == null || !p.getDOI().matches("^.+/.+$")) {
+                p = new Publication(null, null);
+            } else if (!p.getDOI().startsWith("doi:")) {
+                p = new Publication(p.getPubMedID(), "doi:"+p.getDOI());
+            }
+            
+            
+            sampledata.msi.publications.set(i, p);
+        }
         
         log.info("completed initial conversion, re-accessioning...");
                 

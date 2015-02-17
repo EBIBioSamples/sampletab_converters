@@ -125,17 +125,19 @@ public class Accessioner {
             ds.setPassword(dbpassword);
             
             //remember, there is a limit of 500 on the database
-            //set each accessioner to a limit of 10, and always run less than 50 cluster jobs
+            //e.g set each accessioner to a limit of 10, and always run less than 50 cluster jobs
             ds.setPartitionCount(1); 
-            ds.setMaxConnectionsPerPartition(10); 
-            ds.setAcquireIncrement(2); 
+            ds.setMaxConnectionsPerPartition(3); 
+            ds.setAcquireIncrement(1); 
         }
         
         //get a connection
         if (con == null) {
             con = ds.getConnection();
            
-        } /* else if (!con.isValid(5)) {
+        } /* This has problems with which version of JDBC has the isValid method 
+        
+        else if (!con.isValid(5)) {
             //connection is not valid, recreate it
             try {
                 con.close();

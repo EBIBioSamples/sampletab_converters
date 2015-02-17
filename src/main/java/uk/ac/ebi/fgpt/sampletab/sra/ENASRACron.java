@@ -34,7 +34,10 @@ public class ENASRACron  extends AbstractDriver {
     private int threads = 0;
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads")
-    private boolean noconan = false;
+    protected boolean noconan = false;
+
+    @Option(name = "--ena-only", usage = "only process ena samples")
+    protected boolean enaonly = false;
 
     protected ExecutorService pool;
     private List<Future<Void>> futures = new LinkedList<Future<Void>>();
@@ -125,6 +128,12 @@ public class ENASRACron  extends AbstractDriver {
         ENASRAWebDownload downloader = new ENASRAWebDownload();
         for(String key : grouper.groups.keySet()) {
             String submissionID = "GEN-"+key;
+            
+            if (enaonly && !submissionID.startsWith("GEN-E")) {
+                continue;
+            }
+            
+            
             log.info("checking "+submissionID);
             File outsubdir = SampleTabUtils.getSubmissionDirFile(submissionID);
             boolean changed = false;
