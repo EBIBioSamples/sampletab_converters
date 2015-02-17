@@ -142,10 +142,10 @@ public class Accessioner {
             ds.setPassword(password);
             
             //remember, there is a limit of 500 on the database
-            //set each accessioner to a limit of 10, and always run less than 50 cluster jobs
+            //e.g set each accessioner to a limit of 10, and always run less than 50 cluster jobs
             ds.setPartitionCount(1); 
-            ds.setMaxConnectionsPerPartition(10); 
-            ds.setAcquireIncrement(2); 
+            ds.setMaxConnectionsPerPartition(3); 
+            ds.setAcquireIncrement(1); 
         }
         
         //get a connection
@@ -187,17 +187,17 @@ public class Accessioner {
         }
     }
     
-    public synchronized String singleAssaySample(String name, String submissionID) throws SQLException, ClassNotFoundException {
-        //do setup here so correct objects can get passed along
-        setup();
-        return singleAccession(name, submissionID, "SAMEA", stmGetAss, insertAss);
-    }
-    
     public synchronized String singleAssaySample(String submissionID) throws SQLException, ClassNotFoundException {
         //use java UUID to get a temporary sample name
         UUID uuid = UUID.randomUUID();
         String accession = singleAssaySample(uuid.toString(), submissionID);
         return accession;
+    }
+    
+    public synchronized String singleAssaySample(String name, String submissionID) throws SQLException, ClassNotFoundException {
+        //do setup here so correct objects can get passed along
+        setup();
+        return singleAccession(name, submissionID, "SAMEA", stmGetAss, insertAss);
     }
     
     public synchronized String singleReferenceSample(String name, String submissionID) throws SQLException, ClassNotFoundException {
