@@ -28,20 +28,12 @@ import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class SampleTabToLoad {
     
-    private final Accessioner accessioner;
     private boolean inGroup = true;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public SampleTabToLoad(String host, int port, String database, String dbusername, String dbpassword)
-            throws ClassNotFoundException, SQLException {
-        // Setup the connection with the DB
-        accessioner = new Accessioner(host, port, database, dbusername, dbpassword);
-    }
-
-    public SampleTabToLoad(Accessioner accessioner)
-            throws ClassNotFoundException {
-        this.accessioner = accessioner;
+    public SampleTabToLoad() {
+    	//do nothing
     }
 
 

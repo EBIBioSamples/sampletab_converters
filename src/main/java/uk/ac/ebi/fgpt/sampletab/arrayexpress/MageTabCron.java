@@ -18,6 +18,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.kohsuke.args4j.Argument;
@@ -177,7 +179,16 @@ public class MageTabCron {
         if (dbpassword == null){
             dbpassword = oracleProperties.getProperty("password");
         }
-        Accessioner accessioner = new Accessioner(hostname, port, database, dbusername, dbpassword);
+        
+        DataSource ds = null;
+		try {
+			ds = Accessioner.getDataSource(hostname, 
+			        port, database, dbusername, dbpassword);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+        
+		Accessioner accessioner = new Accessioner(ds);
         
         
         Set<String> conanProcess = new HashSet<String>();

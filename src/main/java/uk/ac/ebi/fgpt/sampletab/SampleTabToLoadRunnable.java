@@ -79,7 +79,7 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
         
         // do conversion
         SampleTabToLoad toloader;
-        toloader = new SampleTabToLoad(host, port, database, dbusername, dbpassword);
+        toloader = new SampleTabToLoad();
         toloader.setInGroup(!noGroup);
         sd = toloader.convert(sd);
         

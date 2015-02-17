@@ -8,6 +8,8 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.Properties;
 
+import javax.sql.DataSource;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -122,7 +124,16 @@ public class IMSRTabcron {
         if (dbpassword == null){
             dbpassword = oracleProperties.getProperty("password");
         }
-        Accessioner accessioner = new Accessioner(hostname, port, database, dbusername, dbpassword);
+        
+        DataSource ds = null;
+		try {
+			ds = Accessioner.getDataSource(hostname, 
+			        port, database, dbusername, dbpassword);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+        
+        Accessioner accessioner = new Accessioner(ds);
         
 
 		IMSRTabWebSummary summary = null;

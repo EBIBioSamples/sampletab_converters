@@ -187,7 +187,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
 
                 SampleTabToLoad c;
                 try {
-                    c = new SampleTabToLoad(accessioner);
+                    c = new SampleTabToLoad();
                     c.setInGroup(!nogroup);
                     c.convert(sampletab, sampletabtoload);
                 } catch (ClassNotFoundException e) {

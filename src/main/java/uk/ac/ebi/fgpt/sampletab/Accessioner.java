@@ -1,186 +1,96 @@
 package uk.ac.ebi.fgpt.sampletab;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
+
+import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
-import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.jolbox.bonecp.BoneCPDataSource;
 
 public class Accessioner {
-
-    private final String hostname;
-    private final int port;
-    private final String database;
-    private final String dbusername;
-    private final String dbpassword;
+	//create prepared statements
+	String stmGetAss = "SELECT ACCESSION FROM SAMPLE_ASSAY WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?";
+    String stmGetRef = "SELECT ACCESSION FROM SAMPLE_REFERENCE WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?";
+    String stmGetGrp = "SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?";
     
-    private final SampleTabSaferParser parser = new SampleTabSaferParser(new SampleTabValidator());
+    String insertAss = "INSERT INTO SAMPLE_ASSAY ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )";
+    String insertRef = "INSERT INTO SAMPLE_REFERENCE ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )";
+    String insertGrp = "INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )";
     
-    private BoneCPDataSource ds = null;
-    
-    private Connection con = null;
-    
-    protected PreparedStatement stmGetAss = null;
-    protected PreparedStatement stmGetRef = null;
-    protected PreparedStatement stmGetGrp = null;
-    protected PreparedStatement insertAss = null;
-    protected PreparedStatement insertRef = null;
-    protected PreparedStatement insertGrp = null;
+    private JdbcTemplate jdbcTemplate;
 
     private Logger log = LoggerFactory.getLogger(getClass());
-
-    public Accessioner(String host, int port, String database, String dbusername, String dbpassword) {
+    
+    public static DataSource getDataSource(String hostname, int port, String database, String dbusername, String dbpassword) throws ClassNotFoundException {
         // Setup the connection with the DB
-        this.dbusername = dbusername;
-        this.dbpassword = dbpassword;
-        this.hostname = host;
-        this.port = port;
-        this.database = database;
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw e;
+        }
+
+        Class.forName("oracle.jdbc.driver.OracleDriver");
+
+        String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
+        
+        BoneCPDataSource ds = new BoneCPDataSource();
+        ds.setJdbcUrl(connectURI);
+        ds.setUsername(dbusername);
+        ds.setPassword(dbpassword);
+        
+        //remember, there is a limit of 500 on the database
+        //e.g set each accessioner to a limit of 10, and always run less than 50 cluster jobs
+        ds.setPartitionCount(1); 
+        ds.setMaxConnectionsPerPartition(3); 
+        ds.setAcquireIncrement(1);
+    	return ds;
     }
     
-    public void close() {
-        if (stmGetAss != null) {
-            try {
-                stmGetAss.close();
-            } catch (SQLException e) {
-                //do nothing
-            }
-            stmGetAss = null;
-        }
-        if (stmGetRef != null) {
-            try {
-                stmGetRef.close();
-            } catch (SQLException e) {
-                //do nothing
-            }
-            stmGetRef = null;
-        }
-        if (stmGetGrp != null) {
-            try {
-                stmGetGrp.close();
-            } catch (SQLException e) {
-                //do nothing
-            }
-            stmGetGrp = null;
-        }
-        if (insertAss != null) {
-            try {
-                insertAss.close();
-            } catch (SQLException e) {
-                //do nothing
-            }
-            insertAss = null;
-        }
-        if (insertRef != null) {
-            try {
-                insertRef.close();
-            } catch (SQLException e) {
-                //do nothing
-            }
-            insertRef = null;
-        }
-        if (insertGrp != null) {
-            try {
-                insertGrp.close();
-            } catch (SQLException e) {
-                //do nothing
-            }
-            insertGrp = null;
-        }
-        
-        if (con != null) {
-            try {
-                con.close();
-            } catch (SQLException e) {
-                //do nothing
-            }
-            con = null;
-        }
-        
-        if (ds != null) {
-            ds.close();
-            ds = null;
-        }
+    public Accessioner(DataSource dataSource) {
+    	setDataSource(dataSource);
     }
     
-    public void setup() throws SQLException, ClassNotFoundException {
-
-        if (ds == null) {
-
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-
-            String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
-            
-            ds = new BoneCPDataSource();
-            ds.setJdbcUrl(connectURI);
-            ds.setUsername(dbusername);
-            ds.setPassword(dbpassword);
-            
-            //remember, there is a limit of 500 on the database
-            //e.g set each accessioner to a limit of 10, and always run less than 50 cluster jobs
-            ds.setPartitionCount(1); 
-            ds.setMaxConnectionsPerPartition(3); 
-            ds.setAcquireIncrement(1); 
-        }
-        
-        //get a connection
-        if (con == null) {
-            con = ds.getConnection();
-           
-        } /* This has problems with which version of JDBC has the isValid method 
-        
-        else if (!con.isValid(5)) {
-            //connection is not valid, recreate it
-            try {
-                con.close();
-            } catch (SQLException e) {
-                //do nothing
-            }
-
-            con = ds.getConnection();
-        }  */
-        
-        //create prepared statements
-        if (stmGetAss == null) stmGetAss = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_ASSAY WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
-        if (stmGetRef == null) stmGetRef = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_REFERENCE WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
-        if (stmGetGrp == null) stmGetGrp = con.prepareStatement("SELECT ACCESSION FROM SAMPLE_GROUPS WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?");
-        
-        if (insertAss == null) insertAss = con.prepareStatement("INSERT INTO SAMPLE_ASSAY ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
-        if (insertRef == null) insertRef = con.prepareStatement("INSERT INTO SAMPLE_REFERENCE ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
-        if (insertGrp == null) insertGrp = con.prepareStatement("INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )");
+    public void setDataSource(DataSource dataSource) {
+        jdbcTemplate = new JdbcTemplate(dataSource);
     }
     
-    public synchronized String singleAssaySample(String username) throws SQLException, ClassNotFoundException {
+    public synchronized String singleAssaySample(String username) {
         //use java UUID to get a temporary sample name
-        UUID uuid = UUID.randomUUID();
-        String accession = singleAssaySample(uuid.toString(), username);
+        String accession = singleAssaySample(UUID.randomUUID().toString(), username);
+        //technically, this may have collisions but they should be very rare, if ever
         return accession;
     }
     
-    public synchronized String singleAssaySample(String name, String username) throws SQLException, ClassNotFoundException {
-        //do setup here so correct objects can get passed along
-        setup();
+    public synchronized String singleAssaySample(String name, String username)  {
         return singleAccession(name, "SAMEA", username, stmGetAss, insertAss);
     }
     
-    public synchronized String singleReferenceSample(String name, String username) throws SQLException, ClassNotFoundException {
-        //do setup here so correct objects can get passed along
-        setup();
-        return singleAccession(name, username, "SAME", stmGetRef, insertRef);
+    public synchronized String singleReferenceSample(String name, String username) {
+        return singleAccession(name, "SAME", username, stmGetRef, insertRef);
     }
     
-    public synchronized String singleGroup(String name, String username) throws SQLException, ClassNotFoundException {
-        //do setup here so correct objects can get passed along
-        setup();     
+    public synchronized String singleGroup(String name, String username) {
         return singleAccession(name, "SAMEG", username, stmGetGrp, insertGrp);
+    }
+    
+    public synchronized boolean testAssaySample(String name, String username)  {
+        return testAccession(name, "SAMEA", username, stmGetAss);
+    }
+    
+    public synchronized boolean testReferenceSample(String name, String username) {
+        return testAccession(name, "SAME", username, stmGetRef);
+    }
+    
+    public synchronized boolean testGroup(String name, String username) {
+        return testAccession(name, "SAMEG", username, stmGetGrp);
     }
     
     /**
@@ -195,42 +105,56 @@ public class Accessioner {
      * @throws SQLException
      * @throws ClassNotFoundException
      */
-    protected synchronized String singleAccession(String name, String prefix, String username, PreparedStatement stmGet, PreparedStatement stmPut) throws SQLException, ClassNotFoundException {
+    @Transactional
+    protected synchronized String singleAccession(String name, String prefix, String username, String stmGet, String stmPut) {
         if (name == null || name.trim().length() == 0) 
             throw new IllegalArgumentException("name must be at least 1 character");
         if (prefix == null ) 
             throw new IllegalArgumentException("prefix must not be null");
         
         name = name.trim();
-        
-        String accession = null;
-        stmGet.setString(1, name);
-        stmGet.setString(2, username);
-        
-        log.trace(stmGet.toString());
-        
-        ResultSet results = stmGet.executeQuery();
-        if (results.next()) {
-            accession = prefix + results.getInt(1);
-            results.close();
+        List<String> results = jdbcTemplate.query(stmGetAss, new AccessionRowMapper());        
+        if (results.size() > 1) {
+        	throw new RuntimeException("more that one matching accession found!");
+        } else if (results.size() == 1) {
+        	return prefix+results.get(0);
         } else {
-            log.info("Assigning new accession for "+username+" : "+name);
-
-            //insert it if not exists
-            stmPut.setString(1, name);
-            stmPut.setString(2, username);
-            log.trace(stmPut.toString());
-            stmPut.executeUpdate();
-
-            //retrieve it
-            log.trace(stmGet.toString());
-            results = stmGet.executeQuery();
-            results.next();
-            accession = prefix + results.getInt(1);
-            results.close();
+        	jdbcTemplate.update(stmPut, new Object[]{name, username});
+        	results = jdbcTemplate.query(stmGetAss, new AccessionRowMapper());
+        	return prefix+results.get(0);
         }
-        
-        return accession;
     }
+    
+    /**
+     * Internal method to test if an accession has been assigned to a username and name
+     * @param name
+     * @param prefix
+     * @param username
+     * @param stmGet
+     * @return
+     */
+    private boolean testAccession(String name, String prefix, String username, String stmGet) {
+        if (name == null || name.trim().length() == 0) 
+            throw new IllegalArgumentException("name must be at least 1 character");
+        if (prefix == null ) 
+            throw new IllegalArgumentException("prefix must not be null");
+        
+        name = name.trim();
+        List<String> results = jdbcTemplate.query(stmGetAss, new AccessionRowMapper());
+        if (results.size() > 1) {
+        	throw new RuntimeException("more that one matching accession found!");
+        } else if (results.size() == 1) {
+        	return true;
+        } else {
+        	return false;
+        }
+    }
+
+	protected class AccessionRowMapper implements RowMapper<String>
+	{
+		public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+			return rs.getString(1);
+		}
+	}
     
 }

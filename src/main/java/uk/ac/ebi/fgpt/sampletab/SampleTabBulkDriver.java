@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import javax.sql.DataSource;
+
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,11 +73,6 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
         this.dbusername = properties.getProperty("username");
         this.dbpassword = properties.getProperty("password");
         
-        accessioner = new Accessioner(hostname, 
-                port, database, dbusername, dbpassword);
-        correctorAddAttr = new CorrectorAddAttr(hostname, 
-                port, database, dbusername, dbpassword);
-        
         properties = new Properties();
         try {
             InputStream is = this.getClass().getResourceAsStream("/sampletabconverters.properties");
@@ -121,8 +118,18 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     }
     
     @Override
-    protected void postProcess() {
-        log.info("closing accessioner");
-        accessioner.close();
+    protected void preProcess() {
+        
+        DataSource ds = null;
+		try {
+			ds = Accessioner.getDataSource(hostname, 
+			        port, database, dbusername, dbpassword);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+        
+        accessioner = new Accessioner(ds);
+        correctorAddAttr = new CorrectorAddAttr(hostname, 
+                port, database, dbusername, dbpassword);
     }
 }
