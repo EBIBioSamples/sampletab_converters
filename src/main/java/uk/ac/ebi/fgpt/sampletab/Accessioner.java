@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,6 +13,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.annotation.Transactional;
+
+import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 
 import com.jolbox.bonecp.BoneCPDataSource;
 
@@ -156,5 +162,34 @@ public class Accessioner {
 			return rs.getString(1);
 		}
 	}
-    
+
+	public SampleData convert(SampleData sd) throws ParseException {
+
+		// now assign and retrieve accessions for samples that do not have them
+		Collection<SampleNode> samples = sd.scd.getNodes(SampleNode.class);
+		for (SampleNode sample : samples) {
+			if (sample.getSampleAccession() == null) {
+				String accession;
+				if (sd.msi.submissionReferenceLayer) {
+					accession = singleReferenceSample(sample.getNodeName(),
+							sd.msi.submissionIdentifier);
+				} else {
+					accession = singleAssaySample(sample.getNodeName(),
+							sd.msi.submissionIdentifier);
+				}
+				sample.setSampleAccession(accession);
+			}
+		}
+
+		// now assign and retrieve accessions for groups that do not have them
+		Collection<GroupNode> groups = sd.scd.getNodes(GroupNode.class);
+		for (GroupNode group : groups) {
+			if (group.getGroupAccession() == null) {
+				String accession = singleGroup(group.getNodeName(),
+						sd.msi.submissionIdentifier);
+				group.setGroupAccession(accession);
+			}
+		}
+		return sd;
+	}
 }
