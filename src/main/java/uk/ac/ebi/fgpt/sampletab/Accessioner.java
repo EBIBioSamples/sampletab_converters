@@ -75,6 +75,7 @@ public class Accessioner {
         return accession;
     }
     
+    
     public synchronized String singleAssaySample(String name, String username)  {
         return singleAccession(name, "SAMEA", username, stmGetAss, insertAss);
     }
@@ -87,16 +88,30 @@ public class Accessioner {
         return singleAccession(name, "SAMEG", username, stmGetGrp, insertGrp);
     }
     
+    
+    public synchronized String retrieveAssaySample(String name, String username)  {
+        return singleAccession(name, "SAMEA", username, stmGetAss, null);
+    }
+    
+    public synchronized String retrieveReferenceSample(String name, String username) {
+        return singleAccession(name, "SAME", username, stmGetRef, null);
+    }
+    
+    public synchronized String retrieveGroup(String name, String username) {
+        return singleAccession(name, "SAMEG", username, stmGetGrp, null);
+    }
+    
+    
     public synchronized boolean testAssaySample(String name, String username)  {
-        return testAccession(name, "SAMEA", username, stmGetAss);
+    	return singleAccession(name, "SAMEA", username, stmGetAss, null) != null;
     }
     
     public synchronized boolean testReferenceSample(String name, String username) {
-        return testAccession(name, "SAME", username, stmGetRef);
+    	return singleAccession(name, "SAME", username, stmGetRef, null) != null;
     }
     
     public synchronized boolean testGroup(String name, String username) {
-        return testAccession(name, "SAMEG", username, stmGetGrp);
+    	return singleAccession(name, "SAMEG", username, stmGetGrp, null) != null;
     }
     
     /**
@@ -125,37 +140,17 @@ public class Accessioner {
         } else if (results.size() == 1) {
         	return prefix+results.get(0);
         } else {
-        	jdbcTemplate.update(stmPut, new Object[]{name, username});
-        	results = jdbcTemplate.query(stmGetAss, new AccessionRowMapper());
-        	return prefix+results.get(0);
+        	//if there was no put statment provided, end here
+        	if (stmPut == null) {
+        		return null;
+        	} else {
+	        	jdbcTemplate.update(stmPut, new Object[]{name, username});
+	        	results = jdbcTemplate.query(stmGetAss, new AccessionRowMapper());
+	        	return prefix+results.get(0);
+        	}
         }
     }
     
-    /**
-     * Internal method to test if an accession has been assigned to a username and name
-     * @param name
-     * @param prefix
-     * @param username
-     * @param stmGet
-     * @return
-     */
-    private boolean testAccession(String name, String prefix, String username, String stmGet) {
-        if (name == null || name.trim().length() == 0) 
-            throw new IllegalArgumentException("name must be at least 1 character");
-        if (prefix == null ) 
-            throw new IllegalArgumentException("prefix must not be null");
-        
-        name = name.trim();
-        List<String> results = jdbcTemplate.query(stmGetAss, new AccessionRowMapper());
-        if (results.size() > 1) {
-        	throw new RuntimeException("more that one matching accession found!");
-        } else if (results.size() == 1) {
-        	return true;
-        } else {
-        	return false;
-        }
-    }
-
 	protected class AccessionRowMapper implements RowMapper<String>
 	{
 		public String mapRow(ResultSet rs, int rowNum) throws SQLException {
