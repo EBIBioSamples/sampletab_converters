@@ -48,40 +48,40 @@
 	</scm>
 
 	<repositories>
-		<repository>
-			<id>oerc-repo</id>
-			<name>OeRC Maven repository</name>
-			<url>http://frog.oerc.ox.ac.uk:8080/nexus-2.1.2/content/repositories/releases/</url>
-		</repository>
+<!-- 		<repository> -->
+<!-- 			<id>oerc-repo</id> -->
+<!-- 			<name>OeRC Maven repository</name> -->
+<!-- 			<url>http://frog.oerc.ox.ac.uk:8080/nexus-2.1.2/content/repositories/releases/</url> -->
+<!-- 		</repository> -->
 
-		<repository>
-			<id>ebi-repo</id>
-			<name>EBI Repository</name>
-			<url>http://www.ebi.ac.uk/~maven/m2repo/</url>
-		</repository>
+<!-- 		<repository> -->
+<!-- 			<id>ebi-repo</id> -->
+<!-- 			<name>EBI Repository</name> -->
+<!-- 			<url>http://www.ebi.ac.uk/~maven/m2repo/</url> -->
+<!-- 		</repository> -->
 
-		<repository>
-			<id>ebi-repo-snapshot</id>
-			<name>EBI Repository</name>
-			<url>http://www.ebi.ac.uk/~maven/m2repo_snapshots/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
+<!-- 		<repository> -->
+<!-- 			<id>ebi-repo-snapshot</id> -->
+<!-- 			<name>EBI Repository</name> -->
+<!-- 			<url>http://www.ebi.ac.uk/~maven/m2repo_snapshots/</url> -->
+<!-- 			<snapshots> -->
+<!-- 				<enabled>true</enabled> -->
+<!-- 			</snapshots> -->
+<!-- 		</repository> -->
 
-		<repository>
-			<id>limpopo-repo</id>
-			<name>Limpopo Mini-SF Repository</name>
-			<url>http://limpopo.sourceforge.net/maven/repo</url>
-		</repository>
+<!-- 		<repository> -->
+<!-- 			<id>limpopo-repo</id> -->
+<!-- 			<name>Limpopo Mini-SF Repository</name> -->
+<!-- 			<url>http://limpopo.sourceforge.net/maven/repo</url> -->
+<!-- 		</repository> -->
 
-		<repository>
-			<id>hasbanana-repo</id>
-			<url>http://www.hasbanana.com/maven/repo</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
+<!-- 		<repository> -->
+<!-- 			<id>hasbanana-repo</id> -->
+<!-- 			<url>http://www.hasbanana.com/maven/repo</url> -->
+<!-- 			<snapshots> -->
+<!-- 				<enabled>true</enabled> -->
+<!-- 			</snapshots> -->
+<!-- 		</repository> -->
 
 		<repository>
 			<id>coconut.ebi.ac.uk-snapshots</id>
