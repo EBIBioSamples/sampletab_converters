@@ -104,11 +104,9 @@ public class MageTabCron {
 	        //exclude Sanger / SequenceScape / ERA submissions
 	        return false;
 	    }
-	    if (!nogeo) {
-		    if (submission.matches("E-GEOD-.*")) {
-		        //exclude GEO submissions
-		        return false;
-		    }
+	    if (submission.matches("E-GEOD-.*") && nogeo) {
+	        //exclude GEO submissions
+	        return false;
 	    }
 	    return true;
 	}
