@@ -134,18 +134,18 @@ public class Accessioner {
             throw new IllegalArgumentException("prefix must not be null");
         
         name = name.trim();
-        List<String> results = jdbcTemplate.query(stmGetAss, new AccessionRowMapper());        
+        List<String> results = jdbcTemplate.query(stmGet, new AccessionRowMapper(), name, username);        
         if (results.size() > 1) {
         	throw new RuntimeException("more that one matching accession found!");
         } else if (results.size() == 1) {
         	return prefix+results.get(0);
         } else {
-        	//if there was no put statment provided, end here
+        	//if there was no put statement provided, end here
         	if (stmPut == null) {
         		return null;
         	} else {
-	        	jdbcTemplate.update(stmPut, new Object[]{name, username});
-	        	results = jdbcTemplate.query(stmGetAss, new AccessionRowMapper());
+	        	jdbcTemplate.update(stmPut, name, username);
+	        	results = jdbcTemplate.query(stmGet, new AccessionRowMapper(), name, username);
 	        	return prefix+results.get(0);
         	}
         }
