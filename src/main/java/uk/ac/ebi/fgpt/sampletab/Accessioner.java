@@ -134,6 +134,8 @@ public class Accessioner {
             throw new IllegalArgumentException("prefix must not be null");
         
         name = name.trim();
+        username = username.toLowerCase().trim();
+        
         List<String> results = jdbcTemplate.query(stmGet, new AccessionRowMapper(), name, username);        
         if (results.size() > 1) {
         	throw new RuntimeException("more that one matching accession found!");
