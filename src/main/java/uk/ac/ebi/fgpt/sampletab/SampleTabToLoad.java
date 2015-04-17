@@ -129,7 +129,13 @@ public class SampleTabToLoad {
         }
         
         //If there was an NCBI BioSamples accession as a synonym, set it as the accession
+        //unless we are already using a NCBI accession
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
+        	if (sample.getSampleAccession().matches("SAMN[0-9]*")) {
+        		//already a NCBI accession, so don't try to update it
+        		continue;
+        	}
+        	
             for (SCDNodeAttribute a : sample.getAttributes()) {
                 boolean isComment;
                 synchronized (CommentAttribute.class) {
