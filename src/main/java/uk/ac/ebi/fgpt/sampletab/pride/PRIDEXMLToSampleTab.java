@@ -385,7 +385,7 @@ public class PRIDEXMLToSampleTab {
             }
         }
         //only add the new group if it has any samples
-        if (othergroup.getParentNodes().size() > 1){
+        if (othergroup.getParentNodes().size() > 1) {
             try {
                 st.scd.addNode(othergroup);
                 log.info("Added Other group node");
