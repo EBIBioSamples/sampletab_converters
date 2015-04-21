@@ -464,7 +464,7 @@ public class MageTabToSampleTab {
         
 
         // add the samples into a group
-        GroupNode othergroup = new GroupNode("Other Group");
+        GroupNode othergroup = new GroupNode(mt.IDF.accession);
         for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
             // check there is not an existing group first...
             boolean inGroup = false;
@@ -477,7 +477,7 @@ public class MageTabToSampleTab {
         //only add the new group if it has any samples
         if (othergroup.getParentNodes().size() > 1){
             st.scd.addNode(othergroup);
-            log.info("Added Other group node");
+            log.debug("Added group node");
         }
         
         //do some accessioning
