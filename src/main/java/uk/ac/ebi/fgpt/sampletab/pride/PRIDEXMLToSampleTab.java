@@ -374,7 +374,7 @@ public class PRIDEXMLToSampleTab {
         }
         
 
-        GroupNode othergroup = new GroupNode("Other Group");
+        GroupNode othergroup = new GroupNode(st.msi.submissionIdentifier);
         for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
             // check there is not an existing group first...
             boolean inGroup = false;
