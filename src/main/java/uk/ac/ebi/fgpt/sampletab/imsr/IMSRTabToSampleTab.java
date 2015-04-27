@@ -346,7 +346,7 @@ public class IMSRTabToSampleTab {
         }
 
         //create a group for nodes to go into
-        GroupNode othergroup = new GroupNode("Other Group");
+        GroupNode othergroup = new GroupNode(st.msi.submissionIdentifier);
         st.scd.addNode(othergroup);
         
         //add nodes to that group
@@ -358,6 +358,7 @@ public class IMSRTabToSampleTab {
 
         //do some accessioning
         //do it sample by sample since we need to handle experimental-level naming
+        //this doens't handle duplicates correctly, but good enough for now
         if (accessioner != null) {
             for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
                 String accessionName = st.msi.submissionIdentifier+" : "+sample.getNodeName();
