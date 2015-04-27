@@ -25,6 +25,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Organization;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -293,6 +294,13 @@ public class Cosmic extends AbstractDriver {
                 }
                 
                 
+            }
+            
+            //group samples
+
+            GroupNode groupNode = new GroupNode(st.msi.submissionIdentifier);
+            for (SampleNode sampleNode : st.scd.getNodes(SampleNode.class)) {
+                groupNode.addSample(sampleNode);
             }
             
             
