@@ -362,12 +362,11 @@ public class IMSRTabToSampleTab {
         if (accessioner != null) {
             for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
                 String accessionName = st.msi.submissionIdentifier+" : "+sample.getNodeName();
-                String accession = accessioner.singleReferenceSample(accessionName, "IMSR");
+                String accession = accessioner.singleReferenceSample(accessionName, "imsr");
                 sample.setSampleAccession(accession);
             }
             for (GroupNode group : st.scd.getNodes(GroupNode.class)) {
-                String accessionName = st.msi.submissionIdentifier+" : "+group.getNodeName();
-                String accession = accessioner.singleGroup(accessionName, "IMSR");
+                String accession = accessioner.singleGroup(group.getNodeName(), "imsr");
                 group.setGroupAccession(accession);
             }
         }
