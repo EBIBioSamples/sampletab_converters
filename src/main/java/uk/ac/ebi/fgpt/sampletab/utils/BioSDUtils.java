@@ -55,6 +55,11 @@ public class BioSDUtils {
         try {
             URL queryURL = new URL("http://www.ebi.ac.uk/biosamples/xml/sample/"+accession);
             Document querydoc = XMLUtils.getDocument(queryURL);
+            if (querydoc.getRootElement() == null) {
+            	return false;
+            } else {
+            	return true;
+            }
             //don't need to do anything with the doc, just see if it is accessible
         } catch (MalformedURLException e) {
             return false;
@@ -67,7 +72,6 @@ public class BioSDUtils {
         } catch (IOException e) {
             return false;
         }
-        return true;
     }
     
     /**
