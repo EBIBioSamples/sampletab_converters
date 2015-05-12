@@ -64,8 +64,8 @@ public class ENAUtils {
 
         return newidents;
     }
-
-    public static Set<String> getStudiesForSample(String srsId) throws DocumentException, IOException {
+    
+    public static Element getElementById(String srsId)  throws DocumentException, IOException {
         Element elem = null;
         try {
             elem = lookupElement.get(srsId);
@@ -82,7 +82,23 @@ public class ENAUtils {
                 throw new RuntimeException("Unrecognised ExecutionException", e2);
             }
         }
-        return getStudiesForSample(elem);
+    	return elem;
+    }
+    
+    public static Element getStudyElement(String studyId)  throws DocumentException, IOException {
+    	return getElementById(studyId);
+    }
+
+    public static Element getSubmissionElement(String subId)  throws DocumentException, IOException {
+    	return getElementById(subId);
+    }
+
+    public static Element getSampleElement(String srsId) throws DocumentException, IOException {
+    	return getElementById(srsId);
+    }
+
+    public static Set<String> getStudiesForSample(String srsId) throws DocumentException, IOException {
+        return getStudiesForSample(getSampleElement(srsId));
     }
 
     public static Set<String> getStudiesForSample(Element root) {
@@ -107,23 +123,7 @@ public class ENAUtils {
     }
     
     public static Set<String> getSamplesForStudy(String srsId) throws DocumentException, IOException {
-        Element elem = null;
-        try {
-            elem = lookupElement.get(srsId);
-        } catch (ExecutionException e) {
-            try {
-                throw e.getCause();
-            } catch (DocumentException e2) {
-                throw e2;
-            } catch (MalformedURLException e2) {
-                throw e2;
-            } catch (IOException e2) {
-                throw e2;
-            } catch (Throwable e2) {
-                throw new RuntimeException("Unrecognised ExecutionException", e2);
-            }
-        }
-        return getSamplesForStudy(elem);
+        return getSamplesForStudy(getStudyElement(srsId));
     }
 
     public static Set<String> getSamplesForStudy(Element root) {
@@ -148,23 +148,7 @@ public class ENAUtils {
     }
     
     public static Set<String> getSubmissionsForSample(String srsId) throws DocumentException, IOException {
-        Element elem = null;
-        try {
-            elem = lookupElement.get(srsId);
-        } catch (ExecutionException e) {
-            try {
-                throw e.getCause();
-            } catch (DocumentException e2) {
-                throw e2;
-            } catch (MalformedURLException e2) {
-                throw e2;
-            } catch (IOException e2) {
-                throw e2;
-            } catch (Throwable e2) {
-                throw new RuntimeException("Unrecognised ExecutionException", e2);
-            }
-        }
-        return getSubmissionsForSample(elem);
+        return getSubmissionsForSample(getSampleElement(srsId));
     }
 
     public static Set<String> getSubmissionsForSample(Element root) {
@@ -189,23 +173,7 @@ public class ENAUtils {
     }
 
     public static Set<String> getStudiesForSubmission(String srsId) throws DocumentException, IOException {
-        Element elem = null;
-        try {
-            elem = lookupElement.get(srsId);
-        } catch (ExecutionException e) {
-            try {
-                throw e.getCause();
-            } catch (DocumentException e2) {
-                throw e2;
-            } catch (MalformedURLException e2) {
-                throw e2;
-            } catch (IOException e2) {
-                throw e2;
-            } catch (Throwable e2) {
-                throw new RuntimeException("Unrecognised ExecutionException", e2);
-            }
-        }
-        return getStudiesForSubmission(elem);
+        return getStudiesForSubmission(getSubmissionElement(srsId));
     }
 
     public static Set<String> getStudiesForSubmission(Element root) {
@@ -230,23 +198,7 @@ public class ENAUtils {
     }
     
     public static Set<String> getSamplesForSubmission(String srsId) throws DocumentException, IOException {
-        Element elem = null;
-        try {
-            elem = lookupElement.get(srsId);
-        } catch (ExecutionException e) {
-            try {
-                throw e.getCause();
-            } catch (DocumentException e2) {
-                throw e2;
-            } catch (MalformedURLException e2) {
-                throw e2;
-            } catch (IOException e2) {
-                throw e2;
-            } catch (Throwable e2) {
-                throw new RuntimeException("Unrecognised ExecutionException", e2);
-            }
-        }
-        return getSamplesForSubmission(elem);
+        return getSamplesForSubmission(getSubmissionElement(srsId));
     }
 
     public static Set<String> getSamplesForSubmission(Element root) {
@@ -271,23 +223,7 @@ public class ENAUtils {
     }
     
     public static Set<String> getSamplesForExperiment(String srxId) throws DocumentException, IOException {
-        Element elem = null;
-        try {
-            elem = lookupElement.get(srxId);
-        } catch (ExecutionException e) {
-            try {
-                throw e.getCause();
-            } catch (DocumentException e2) {
-                throw e2;
-            } catch (MalformedURLException e2) {
-                throw e2;
-            } catch (IOException e2) {
-                throw e2;
-            } catch (Throwable e2) {
-                throw new RuntimeException("Unrecognised ExecutionException", e2);
-            }
-        }
-        return getSamplesForExperiment(elem);
+        return getSamplesForExperiment(getElementById(srxId));
     }
 
     public static Set<String> getSamplesForExperiment(Element root) {
@@ -312,23 +248,7 @@ public class ENAUtils {
     }
     
     public static Set<String> getSamplesForRun(String srrId) throws DocumentException, IOException {
-        Element elem = null;
-        try {
-            elem = lookupElement.get(srrId);
-        } catch (ExecutionException e) {
-            try {
-                throw e.getCause();
-            } catch (DocumentException e2) {
-                throw e2;
-            } catch (MalformedURLException e2) {
-                throw e2;
-            } catch (IOException e2) {
-                throw e2;
-            } catch (Throwable e2) {
-                throw new RuntimeException("Unrecognised ExecutionException", e2);
-            }
-        }
-        return getSamplesForRun(elem);
+        return getSamplesForRun(getElementById(srrId));
     }
 
     public static Set<String> getSamplesForRun(Element root) {
@@ -381,6 +301,24 @@ public class ENAUtils {
         }
         return secondarys;
     }
+
+    public static String getBioSampleIdForSample(String enaId) throws DocumentException, IOException {
+        return getBioSampleIdForSample(getElementById(enaId));
+    }
     
+    public static String getBioSampleIdForSample(Element sampleElement) {
+    	String biosampleId = null;
+        Element identifiers = XMLUtils.getChildByName(sampleElement, "IDENTIFIERS");
+        for (Element otherId : XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID")) {
+        	if ("BioSample".equals(otherId.attributeValue("namespace"))) {
+        		if (biosampleId == null) {
+        			biosampleId = otherId.attributeValue("namespace");
+        		} else {
+                    throw new RuntimeException("Multiple BioSample IDs in "+sampleElement.attributeValue("accession"));
+        		}
+        	}
+        }
+        return biosampleId;
+    }
     
 }
