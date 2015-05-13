@@ -40,6 +40,8 @@ public class ERAUpdateCallable implements Callable<Void> {
 
     private final String submissionId;
     
+    private final File outDir;
+    
     private final boolean conan;
     
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -56,7 +58,8 @@ public class ERAUpdateCallable implements Callable<Void> {
         characteristicsIgnore = Collections.unmodifiableCollection(characteristicsIgnore);
     }
     
-	public ERAUpdateCallable(String submissionId, boolean conan) {
+	public ERAUpdateCallable(File outDir, String submissionId, boolean conan) {
+		this.outDir = outDir;
 		this.submissionId = submissionId;
 		this.conan = conan;
 	}
@@ -309,7 +312,7 @@ public class ERAUpdateCallable implements Callable<Void> {
         Normalizer norm = new Normalizer();
         norm.normalize(st);
 
-        File outsubdir = SampleTabUtils.getSubmissionDirFile(st.msi.submissionIdentifier);
+        File outsubdir = new File(outDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
         outsubdir.mkdirs();
         File file = new File(outsubdir, "sampletab.pre.txt");
 

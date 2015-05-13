@@ -106,7 +106,7 @@ select * from cv_status;
         
         if (pool == null) {
         	for (String submissionId : submissions) {
-        		Callable<Void> call = new ERAUpdateCallable(submissionId, !noconan);
+        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan);
         		try {
 					call.call();
 				} catch (Exception e) {
@@ -117,7 +117,7 @@ select * from cv_status;
         	List<Future<Void>> futures = new ArrayList<Future<Void>>();
 
         	for (String submissionId : submissions) {
-        		Callable<Void> call = new ERAUpdateCallable(submissionId, !noconan);
+        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan);
         		futures.add(pool.submit(call));
         	}
         	for (int i = 0; i < futures.size(); i++) {
