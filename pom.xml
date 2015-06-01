@@ -49,9 +49,9 @@
  
 	<!-- Git connection -->
 	<scm>
-		<connection>scm:git:https://github.com/EBIBioSamples/sampletab_converters.git</connection>
-    	<developerConnection>scm:git:https://github.com/EBIBioSamples/sampletab_converters.git</developerConnection>
-		<tag>HEAD</tag>
+		<connection>scm:git:http://github.com/EBIBioSamples/sampletab_converters.git</connection>
+    	<developerConnection>scm:git:http://github.com/EBIBioSamples/sampletab_converters.git</developerConnection>
+		<tag>head</tag>
 	</scm>
 
 	<repositories>
