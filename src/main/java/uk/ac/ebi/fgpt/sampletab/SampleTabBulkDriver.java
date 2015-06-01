@@ -3,8 +3,9 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
@@ -29,10 +30,10 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     private String database = null;
 
     @Option(name = "--username", aliases={"-u"}, usage = "server username")
-    private String username = null;
+    private String dbusername = null;
 
     @Option(name = "--password", aliases={"-p"}, usage = "server password")
-    private String password  = null;
+    private String dbpassword  = null;
     
     @Option(name = "--force", aliases={"-f"}, usage = "overwrite targets")
     private boolean force = false;
@@ -69,13 +70,8 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
         this.hostname = properties.getProperty("hostname");
         this.port = new Integer(properties.getProperty("port"));
         this.database = properties.getProperty("database");
-        this.username = properties.getProperty("username");
-        this.password = properties.getProperty("password");
-        
-        accessioner = new AccessionerENA(hostname, 
-                port, database, username, password);
-        correctorAddAttr = new CorrectorAddAttr(hostname, 
-                port, database, username, password);
+        this.dbusername = properties.getProperty("username");
+        this.dbpassword = properties.getProperty("password");
         
         properties = new Properties();
         try {
@@ -97,9 +93,9 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
         if (database != null)
             this.database = database;
         if (username != null)
-            this.username = username;
+            this.dbusername = username;
         if (password != null)
-            this.password = password;
+            this.dbpassword = password;
         this.force = force;
     }
         
@@ -122,8 +118,18 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     }
     
     @Override
-    protected void postProcess() {
-        log.info("closing accessioner");
-        accessioner.close();
+    protected void preProcess() {
+        
+        DataSource ds = null;
+		try {
+			ds = Accessioner.getDataSource(hostname, 
+			        port, database, dbusername, dbpassword);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+        
+        accessioner = new Accessioner(ds);
+        correctorAddAttr = new CorrectorAddAttr(hostname, 
+                port, database, dbusername, dbpassword);
     }
 }

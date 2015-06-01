@@ -2,8 +2,13 @@ package uk.ac.ebi.fgpt.sampletab.imsr;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Properties;
+
+import javax.sql.DataSource;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -11,6 +16,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.fgpt.sampletab.Accessioner;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 
 public class IMSRTabcron {
@@ -23,7 +29,27 @@ public class IMSRTabcron {
 
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
-        
+    
+
+
+
+    @Option(name = "--hostname", aliases={"-n"}, usage = "server hostname")
+    private String hostname;
+
+    @Option(name = "--port", usage = "server port")
+    private Integer port;
+
+    @Option(name = "--database", aliases={"-d"}, usage = "server database")
+    private String database;
+
+    @Option(name = "--username", aliases={"-u"}, usage = "server username")
+    private String dbusername;
+
+    @Option(name = "--password", aliases={"-p"}, usage = "server password")
+    private String dbpassword;
+    
+    
+    
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	private IMSRTabcron() {
@@ -73,6 +99,42 @@ public class IMSRTabcron {
 
 		if (!outdir.exists())
 			outdir.mkdirs();
+		
+
+        //load defaults
+        Properties oracleProperties = new Properties();
+        try {
+            InputStream is = getClass().getResourceAsStream("/oracle.properties");
+            oracleProperties.load(is);
+        } catch (IOException e) {
+            log.error("Unable to read resource oracle.properties", e);
+        }
+        if (hostname == null){
+            hostname = oracleProperties.getProperty("hostname");
+        }
+        if (port == null){
+            port = new Integer(oracleProperties.getProperty("port"));
+        }
+        if (database == null){
+            database = oracleProperties.getProperty("database");
+        }
+        if (dbusername == null){
+            dbusername = oracleProperties.getProperty("username");
+        }
+        if (dbpassword == null){
+            dbpassword = oracleProperties.getProperty("password");
+        }
+        
+        DataSource ds = null;
+		try {
+			ds = Accessioner.getDataSource(hostname, 
+			        port, database, dbusername, dbpassword);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+        
+        Accessioner accessioner = new Accessioner(ds);
+        
 
 		IMSRTabWebSummary summary = null;
 		try {
@@ -114,7 +176,7 @@ public class IMSRTabcron {
             
             if (preDate == null || summary.updates.get(i).after(preDate)) {
                 // convert raw.tab.txt to sampletab.pre.txt
-                IMSRTabToSampleTab c = new IMSRTabToSampleTab();
+                IMSRTabToSampleTab c = new IMSRTabToSampleTab(accessioner);
                 try {
                     c.convert(rawFile, preFile);
                 } catch (NumberFormatException e) {
@@ -130,6 +192,12 @@ public class IMSRTabcron {
                     log.error("Problem processing "+rawFile, e);
                     return;
                 } catch (RuntimeException e) {
+                    log.error("Problem processing "+rawFile, e);
+                    return;
+                } catch (SQLException e) {
+                    log.error("Problem processing "+rawFile, e);
+                    return;
+                } catch (ClassNotFoundException e) {
                     log.error("Problem processing "+rawFile, e);
                     return;
                 }

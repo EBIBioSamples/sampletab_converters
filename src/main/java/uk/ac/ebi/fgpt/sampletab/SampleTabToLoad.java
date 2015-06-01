@@ -28,20 +28,12 @@ import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class SampleTabToLoad {
     
-    private final Accessioner accessioner;
     private boolean inGroup = true;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
-    public SampleTabToLoad(String host, int port, String database, String username, String password)
-            throws ClassNotFoundException, SQLException {
-        // Setup the connection with the DB
-        accessioner = new Accessioner(host, port, database, username, password);
-    }
-
-    public SampleTabToLoad(Accessioner accessioner)
-            throws ClassNotFoundException {
-        this.accessioner = accessioner;
+    public SampleTabToLoad() {
+    	//do nothing
     }
 
 
@@ -118,9 +110,10 @@ public class SampleTabToLoad {
             }
             //only add the new group if it has any samples
             if (othergroup.getParentNodes().size() > 0){
-                sampledata.scd.addNode(othergroup);
-                log.info("Added Other group node");
-                // also need to accession the new node
+                //Now that accessions are assigned via a username,
+                //a new group cann't be created this late in the process.
+                //Instead, if a group would be created, throw an error
+                throw new RuntimeException("Cannot create other group without accesion");
             }
         }
         
@@ -136,7 +129,13 @@ public class SampleTabToLoad {
         }
         
         //If there was an NCBI BioSamples accession as a synonym, set it as the accession
+        //unless we are already using a NCBI accession
         for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
+        	if (sample.getSampleAccession().matches("SAMN[0-9]*")) {
+        		//already a NCBI accession, so don't try to update it
+        		continue;
+        	}
+        	
             for (SCDNodeAttribute a : sample.getAttributes()) {
                 boolean isComment;
                 synchronized (CommentAttribute.class) {
@@ -181,10 +180,7 @@ public class SampleTabToLoad {
         }
         
         log.info("completed initial conversion, re-accessioning...");
-        
-        // assign accession to any created groups
-        sampledata = accessioner.convert(sampledata);
-        
+                
         return sampledata;
     }
 

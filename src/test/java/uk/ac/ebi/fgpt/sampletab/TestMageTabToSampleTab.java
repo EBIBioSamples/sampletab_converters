@@ -3,6 +3,7 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class TestMageTabToSampleTab extends TestCase {
         resource = getClass().getClassLoader().getResource("E-MEXP-986/E-MEXP-986.idf.txt");
         //this breaks limpopo
         //resource = getClass().getClassLoader().getResource("E-GEOD-20076/E-GEOD-20076.idf.txt");
-        converter = new MageTabToSampleTab();
+        converter = new MageTabToSampleTab(null);
         mtparser = new MAGETABParser<MAGETABInvestigation>();
         errorItems = new ArrayList<ErrorItem>();
         mtparser.addErrorItemListener(new ErrorItemListener() {
@@ -68,7 +69,13 @@ public class TestMageTabToSampleTab extends TestCase {
 		} catch (ParseException e) {
             e.printStackTrace();
             fail();
-		} 
+		} catch (SQLException e) {
+            e.printStackTrace();
+            fail();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            fail();
+        } 
     }
 
 }

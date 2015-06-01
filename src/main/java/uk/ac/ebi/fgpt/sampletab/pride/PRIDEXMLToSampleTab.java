@@ -5,20 +5,11 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +22,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Person;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.Publication;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.msi.TermSource;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
-import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CharacteristicAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.CommentAttribute;
@@ -384,7 +374,7 @@ public class PRIDEXMLToSampleTab {
         }
         
 
-        GroupNode othergroup = new GroupNode("Other Group");
+        GroupNode othergroup = new GroupNode(st.msi.submissionIdentifier);
         for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
             // check there is not an existing group first...
             boolean inGroup = false;
@@ -395,7 +385,7 @@ public class PRIDEXMLToSampleTab {
             }
         }
         //only add the new group if it has any samples
-        if (othergroup.getParentNodes().size() > 1){
+        if (othergroup.getParentNodes().size() > 1) {
             try {
                 st.scd.addNode(othergroup);
                 log.info("Added Other group node");

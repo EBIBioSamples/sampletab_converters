@@ -1,13 +1,10 @@
 package uk.ac.ebi.fgpt.sampletab.ncbi;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -15,17 +12,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
-import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
-import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class NCBIUpdaterDriver extends AbstractDriver {
 

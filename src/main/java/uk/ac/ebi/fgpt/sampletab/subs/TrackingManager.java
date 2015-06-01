@@ -11,9 +11,7 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Properties;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

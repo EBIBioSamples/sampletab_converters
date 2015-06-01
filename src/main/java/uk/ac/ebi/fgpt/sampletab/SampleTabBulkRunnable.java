@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
@@ -100,7 +101,20 @@ public class SampleTabBulkRunnable implements Callable<Void> {
             
             
             try {
-                accessioner.convert(st);
+                //previously, we would accession here
+                //now we need to accession earlier with a specific username
+                //Therefore, check for unaccessioned stuff and report as errors
+
+                for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
+                    if (sample.getSampleAccession() == null) {
+                        throw new Exception("Unaccessioned sample "+sample.getNodeName());
+                    }
+                }
+                for (GroupNode group : st.scd.getNodes(GroupNode.class)) {
+                    if (group.getGroupAccession() == null) {
+                        throw new Exception("Unaccessioned group "+group.getNodeName());
+                    }
+                }
             } catch (ParseException e) {
                 log.error("Problem processing "+sampletabpre, e);
                 for (ErrorItem err : e.getErrorItems()){
@@ -173,7 +187,7 @@ public class SampleTabBulkRunnable implements Callable<Void> {
 
                 SampleTabToLoad c;
                 try {
-                    c = new SampleTabToLoad(accessioner);
+                    c = new SampleTabToLoad();
                     c.setInGroup(!nogroup);
                     c.convert(sampletab, sampletabtoload);
                 } catch (ClassNotFoundException e) {

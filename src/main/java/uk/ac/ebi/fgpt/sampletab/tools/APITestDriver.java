@@ -5,7 +5,6 @@ import java.io.File;
 import org.kohsuke.args4j.Option;
 
 import uk.ac.ebi.fgpt.sampletab.AbstractInfileDriver;
-import uk.ac.ebi.fgpt.sampletab.SampleTabToLoadDriver;
 
 public class APITestDriver extends AbstractInfileDriver<APITestCallable> {
 

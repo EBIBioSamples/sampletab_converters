@@ -2,15 +2,12 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.concurrent.Callable;
 
 import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
@@ -24,23 +21,30 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
     
     private final File inputFile;
     private final File outputFile;
+    
     private final String host;
     private final int port;
     private final String database;
-    private final String username;
-    private String password;
+    private final String dbusername;
+    private String dbpassword;
+    
     private final boolean noGroup;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public SampleTabToLoadRunnable(File inputFile, File outputFile, String host, int port, String database, String username, String password, boolean noGroup) {
+    public SampleTabToLoadRunnable(File inputFile, File outputFile, 
+            String host, int port, String database, String dbusername, String dbpassword, 
+            boolean noGroup) {
+        
         this.inputFile = inputFile;
         this.outputFile = outputFile;
+        
         this.host = host;
         this.port = port;
         this.database = database;
-        this.username = username;
-        this.password = password;
+        this.dbusername = dbusername;
+        this.dbpassword = dbpassword;
+        
         this.noGroup = noGroup;
     }
 
@@ -75,7 +79,7 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
         
         // do conversion
         SampleTabToLoad toloader;
-        toloader = new SampleTabToLoad(host, port, database, username, password);
+        toloader = new SampleTabToLoad();
         toloader.setInGroup(!noGroup);
         sd = toloader.convert(sd);
         

@@ -55,6 +55,11 @@ public class BioSDUtils {
         try {
             URL queryURL = new URL("http://www.ebi.ac.uk/biosamples/xml/sample/"+accession);
             Document querydoc = XMLUtils.getDocument(queryURL);
+            if (querydoc.getRootElement() == null) {
+            	return false;
+            } else {
+            	return true;
+            }
             //don't need to do anything with the doc, just see if it is accessible
         } catch (MalformedURLException e) {
             return false;
@@ -67,54 +72,6 @@ public class BioSDUtils {
         } catch (IOException e) {
             return false;
         }
-        return true;
     }
     
-    /**
-     * For a provided biosamples accession, get all biosamples submissions that use it.
-     * @param accession
-     * @return
-     * @throws IOException 
-     * @throws DocumentException 
-     */
-    public static Collection<String> getSubmissions(String accession) throws DocumentException, IOException {
-        Collection<String> groups = new ArrayList<String>();
-        //get matched group
-        URL queryURL = new URL("http://www.ebi.ac.uk/biosamples/xml/group/query="+accession);
-        Document querydoc = XMLUtils.getDocument(queryURL);
-        Element queryel = querydoc.getRootElement();
-        for (Element resultgroup : XMLUtils.getChildrenByName(queryel, "BioSampleGroup")){
-            String groupid = resultgroup.attributeValue("id");
-            //get matched samples in that group
-            URL groupURL = new URL("http://www.ebi.ac.uk/biosamples/xml/groupsamples/"+groupid+"/query="+accession);
-            Document groupdoc = XMLUtils.getDocument(groupURL);
-            Element groupel = groupdoc.getRootElement();
-            for (Element resultsample : XMLUtils.getChildrenByName(groupel, "BioSample")){
-                String sampleid = resultsample.attributeValue("id");
-                if (sampleid.equals(accession)) {
-                    groups.add(groupid);
-                }
-            }
-        }
-        
-        //at this point we have a list of biosampels groups
-        //need to know what submission each group is in
-        Collection<String> submissions = new ArrayList<String>();
-        
-        for (String groupid : groups) {
-
-            URL groupURL = new URL("http://www.ebi.ac.uk/biosamples/xml/group/"+groupid);
-            Document groupdoc = XMLUtils.getDocument(groupURL);
-            Element grouped = groupdoc.getRootElement();
-            for (Element propertyel : XMLUtils.getChildrenByName(grouped, "Property")){
-                if (propertyel.attributeValue("class").equals("Submission Identifier")){
-                    Element qualifiedValue = XMLUtils.getChildByName(propertyel, "QualifiedValue");
-                    Element value = XMLUtils.getChildByName(qualifiedValue, "Value");
-                    submissions.add(value.getTextTrim());
-                }
-            }
-        }
-        
-        return submissions;
-    }
 }
