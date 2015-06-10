@@ -1,9 +1,13 @@
 package uk.ac.ebi.fgpt.sampletab.sra;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URL;
 import java.util.Collection;
@@ -11,8 +15,14 @@ import java.util.Collections;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
+import javax.xml.transform.TransformerException;
+
+import org.custommonkey.xmlunit.Diff;
+import org.custommonkey.xmlunit.XMLUnit;
 import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.io.XMLWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +57,8 @@ public class ERAUpdateCallable implements Callable<Void> {
     private Validator<SampleData> validator = new SampleTabValidator();
     
     private Logger log = LoggerFactory.getLogger(getClass());
+    
+    private boolean updated = false;
 
     private static TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     //characteristics that we want to ignore
@@ -74,10 +86,15 @@ public class ERAUpdateCallable implements Callable<Void> {
         SampleData st = new SampleData();
         st.msi.submissionIdentifier = "GEN-"+submissionId;
         
+        Document subDocument = getDocumentIfUpdated(submissionId);
+        ENAUtils.getSamplesForSubmission(subDocument.getRootElement());
+        
 		//get the samples
-		for (String sampleId : ENAUtils.getSamplesForSubmission(submissionId)) {			
+		for (String sampleId : ENAUtils.getSamplesForSubmission(subDocument.getRootElement())) {			
 
-            Element sampleroot = ENAUtils.getElementById(sampleId);
+			Document sampleDocument = getDocumentIfUpdated(sampleId);
+			
+            Element sampleroot = sampleDocument.getRootElement();
             Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
             Element sampleName = XMLUtils.getChildByName(sampleElement, "SAMPLE_NAME");
             Element sampledescription = XMLUtils.getChildByName(sampleElement, "DESCRIPTION");
@@ -260,8 +277,10 @@ public class ERAUpdateCallable implements Callable<Void> {
 		}
 		
 		//get the groups
-		for (String studyId : ENAUtils.getStudiesForSubmission(submissionId)) {
-            Element root = ENAUtils.getElementById(studyId);
+		for (String studyId : ENAUtils.getStudiesForSubmission(submissionId)) {		
+
+			Document studyDocument = getDocumentIfUpdated(studyId);
+            Element root = studyDocument.getRootElement();
             
             Element mainElement = XMLUtils.getChildByName(root, "STUDY");
             Element descriptor = XMLUtils.getChildByName(mainElement, "DESCRIPTOR");
@@ -308,37 +327,106 @@ public class ERAUpdateCallable implements Callable<Void> {
             st.scd.addNode(groupNode);
 		}
 
-        log.trace("SampleTab converted, preparing to write");
+		//only write out and trigger conan if there was an update
+		
+		if (updated){
+			
+	        log.trace("SampleTab converted, preparing to write");
+	        
+	        synchronized(validator) {
+	        	validator.validate(st);
+	        }
+	
+	        Normalizer norm = new Normalizer();
+	        norm.normalize(st);
+	
+	        File outsubdir = new File(outDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
+	        outsubdir.mkdirs();
+	        File file = new File(outsubdir, "sampletab.pre.txt");
+	
+	        SampleTabWriter sampletabwriter = null;
+	        try {
+		        sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(file.getAbsolutePath())));
+		        sampletabwriter.write(st);
+		        log.trace("SampleTab written");
+	        } finally {
+	        	sampletabwriter.close();
+	        }
+	        
+	        //trigger conan if appropriate
+	        if (conan) {
+	            ConanUtils.submit(st.msi.submissionIdentifier, "BioSamples (other)");
+	        }
         
-        synchronized(validator) {
-        	validator.validate(st);
-        }
-
-        Normalizer norm = new Normalizer();
-        norm.normalize(st);
-
-        File outsubdir = new File(outDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
-        outsubdir.mkdirs();
-        File file = new File(outsubdir, "sampletab.pre.txt");
-
-        SampleTabWriter sampletabwriter = null;
-        try {
-	        sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(file.getAbsolutePath())));
-	        sampletabwriter.write(st);
-	        log.trace("SampleTab written");
-        } finally {
-        	sampletabwriter.close();
-        }
-        
-
-        //trigger conan if appropriate
-        if (conan) {
-            ConanUtils.submit(st.msi.submissionIdentifier, "BioSamples (other)");
-        }
-        
+		}
 		log.info("processing finished for "+submissionId);
-        
+		//have to return something from this function
 		return null;
 	}
 
+	private Document getDocumentIfUpdated(String accession) throws DocumentException, IOException {
+		//get the document from the web service
+		Document newDoc = ENAUtils.getDocumentById(accession);
+
+        File outsubdir = new File(outDir, SampleTabUtils.getSubmissionDirPath("GEN-"+submissionId));
+        outsubdir.mkdirs();
+        File localCopy = new File(outsubdir, accession+".xml");
+        if (localCopy.exists()) {
+    		//get the copy from disk (if present)        	
+	        Document existingDoc = XMLUtils.getDocument(localCopy);
+
+	        //diff the XML files
+	        XMLUnit.setIgnoreAttributeOrder(true);
+	        XMLUnit.setIgnoreWhitespace(true);
+
+		    //need them to be in the right class for XMLTest to use
+	        org.w3c.dom.Document docOrig = null;
+	        org.w3c.dom.Document docNew = null;
+	        try {
+	            docOrig = XMLUtils.convertDocument(existingDoc);
+	            docNew = XMLUtils.convertDocument(newDoc);
+	        } catch (TransformerException e) {
+	            log.error("Unable to convert from dom4j to w3c Document");
+	        }
+	        
+	        Diff diff = new Diff(docOrig, docNew);
+	        if (diff.similar()) {
+	            //equivalent to last file, no update needed
+	            return existingDoc;
+	        }
+        }
+        //either the disk version was missing or different, so its an update
+    	updated = true;
+
+    	//save the new/updated version to disk
+        OutputStream os = null;
+        XMLWriter writer = null;
+        try {
+            os = new BufferedOutputStream(new FileOutputStream(localCopy));
+            //this pretty printing is messing up comparisons by trimming whitespace WITHIN an element
+            //OutputFormat format = OutputFormat.createPrettyPrint();
+            //XMLWriter writer = new XMLWriter(os, format);
+            writer = new XMLWriter(os);
+            writer.write(newDoc);
+        } finally {
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+            
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    //do nothing
+                }
+            }
+        }
+    	
+    	return newDoc;
+	}
+	
 }
