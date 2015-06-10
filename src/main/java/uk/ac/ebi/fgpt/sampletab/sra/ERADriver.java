@@ -8,7 +8,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -114,20 +116,31 @@ select * from cv_status;
 				}
         	}
         } else {
-        	List<Future<Void>> futures = new ArrayList<Future<Void>>();
-
-        	for (String submissionId : submissions) {
+        	Deque<Future<Void>> futures = new LinkedList<Future<Void>>();
+        	for (int i = 0 ; i < submissions.size(); i++) {
+        		String submissionId = submissions.get(i);
         		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan);
-        		futures.add(pool.submit(call));
+        		futures.push(pool.submit(call));
+        		while (futures.size() > 100) {
+        			Future<Void> future = futures.pop();
+            		try {
+    					future.get();
+    				} catch (InterruptedException e) {
+    					log.error("Problem processing "+submissions.get(i-futures.size()-1), e);
+    				} catch (ExecutionException e) {
+    					log.error("Problem processing "+submissions.get(i-futures.size()-1), e);
+    				}
+        		}
         	}
-        	for (int i = 0; i < futures.size(); i++) {
-        		Future<Void> future = futures.get(i);
+        	
+    		while (futures.size() > 0) {
+        		Future<Void> future = futures.pop();
         		try {
 					future.get();
 				} catch (InterruptedException e) {
-					log.error("Problem processing "+submissions.get(i), e);
+					log.error("Problem processing "+submissions.get(submissions.size()-futures.size()-1), e);
 				} catch (ExecutionException e) {
-					log.error("Problem processing "+submissions.get(i), e);
+					log.error("Problem processing "+submissions.get(submissions.size()-futures.size()-1), e);
 				}
         	}
         }

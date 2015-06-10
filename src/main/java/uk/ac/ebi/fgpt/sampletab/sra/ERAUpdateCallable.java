@@ -67,6 +67,8 @@ public class ERAUpdateCallable implements Callable<Void> {
 	@Override
 	public Void call() throws Exception {
         
+		log.info("processing started for "+submissionId);
+		
         SampleData st = new SampleData();
         st.msi.submissionIdentifier = "GEN-"+submissionId;
         
