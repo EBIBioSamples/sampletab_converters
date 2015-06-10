@@ -43,6 +43,8 @@ public class ERAUpdateCallable implements Callable<Void> {
     private final File outDir;
     
     private final boolean conan;
+
+    private Validator<SampleData> validator = new SampleTabValidator();
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -307,9 +309,10 @@ public class ERAUpdateCallable implements Callable<Void> {
 		}
 
         log.trace("SampleTab converted, preparing to write");
-
-        Validator<SampleData> validator = new SampleTabValidator();
-        validator.validate(st);
+        
+        synchronized(validator) {
+        	validator.validate(st);
+        }
 
         Normalizer norm = new Normalizer();
         norm.normalize(st);
@@ -332,6 +335,8 @@ public class ERAUpdateCallable implements Callable<Void> {
         if (conan) {
             ConanUtils.submit(st.msi.submissionIdentifier, "BioSamples (other)");
         }
+        
+		log.info("processing finished for "+submissionId);
         
 		return null;
 	}
