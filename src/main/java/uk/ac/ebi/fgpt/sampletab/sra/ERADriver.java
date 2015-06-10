@@ -105,6 +105,8 @@ select * from cv_status;
         	
 		
 		List<String> submissions = jdbcTemplate.queryForList(query, String.class, minDate, maxDate, minDate, maxDate);
+		
+		log.info("Foud "+submissions.size()+" submissions to process");
         
         if (pool == null) {
         	for (String submissionId : submissions) {
