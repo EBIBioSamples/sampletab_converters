@@ -124,7 +124,7 @@ select * from cv_status;
         		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan);
         		futures.push(pool.submit(call));
         		while (futures.size() > 100) {
-        			Future<Void> future = futures.pop();
+        			Future<Void> future = futures.pollLast();
             		try {
     					future.get();
     				} catch (InterruptedException e) {
@@ -136,7 +136,7 @@ select * from cv_status;
         	}
         	
     		while (futures.size() > 0) {
-        		Future<Void> future = futures.pop();
+        		Future<Void> future = futures.pollLast();
         		try {
 					future.get();
 				} catch (InterruptedException e) {
