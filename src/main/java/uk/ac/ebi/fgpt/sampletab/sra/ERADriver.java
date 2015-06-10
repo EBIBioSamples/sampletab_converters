@@ -101,7 +101,7 @@ select * from cv_status;
 
 		//if its not an ENA sub don't do anything with it (yet)
 		String query = "SELECT UNIQUE(SUBMISSION_ID) FROM SAMPLE WHERE SUBMISSION_ID LIKE 'ER%' AND EGA_ID IS NULL AND BIOSAMPLE_AUTHORITY= 'N' " +
-				"AND STATUS_ID = 4 AND ((LAST_UPDATED BETWEEN ? AND ?) OR (FIRST_PUBLIC BETWEEN ? AND ?))";
+				"AND STATUS_ID = 4 AND ((LAST_UPDATED BETWEEN ? AND ?) OR (FIRST_PUBLIC BETWEEN ? AND ?)) ORDER BY SUBMISSION_ID ASC";
         	
 		
 		List<String> submissions = jdbcTemplate.queryForList(query, String.class, minDate, maxDate, minDate, maxDate);
