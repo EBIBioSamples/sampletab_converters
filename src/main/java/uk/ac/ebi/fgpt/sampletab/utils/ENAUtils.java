@@ -22,17 +22,16 @@ import com.google.common.cache.LoadingCache;
 public class ENAUtils {
 
     private static Logger log = LoggerFactory.getLogger(ENAUtils.class);
-
-    private static LoadingCache<String, Element> lookupElement = CacheBuilder.newBuilder()
+    
+    private static LoadingCache<String, Document> lookupDocument = CacheBuilder.newBuilder()
     .maximumSize(1000)
     .build(
-        new CacheLoader<String, Element>() {
-          public Element load(String id) throws DocumentException, MalformedURLException, IOException {
+        new CacheLoader<String, Document>() {
+          public Document load(String id) throws DocumentException, MalformedURLException, IOException {
               String urlstr = "http://www.ebi.ac.uk/ena/data/view/" + id + "&display=xml";
               URL url = new URL(urlstr);
               Document doc = XMLUtils.getDocument(url);
-              Element root = doc.getRootElement();
-              return root;
+              return doc;
           }
         });
     
@@ -65,10 +64,30 @@ public class ENAUtils {
         return newidents;
     }
     
+    public static Document getDocumentById(String srsId)  throws DocumentException, IOException {
+        Document doc = null;
+        try {
+        	doc = lookupDocument.get(srsId);
+        } catch (ExecutionException e) {
+            try {
+                throw e.getCause();
+            } catch (DocumentException e2) {
+                throw e2;
+            } catch (MalformedURLException e2) {
+                throw e2;
+            } catch (IOException e2) {
+                throw e2;
+            } catch (Throwable e2) {
+                throw new RuntimeException("Unrecognised ExecutionException", e2);
+            }
+        }
+    	return doc;
+    }
+    
     public static Element getElementById(String srsId)  throws DocumentException, IOException {
         Element elem = null;
         try {
-            elem = lookupElement.get(srsId);
+            elem = lookupDocument.get(srsId).getRootElement();
         } catch (ExecutionException e) {
             try {
                 throw e.getCause();
@@ -275,7 +294,7 @@ public class ENAUtils {
     public static Set<String> getSecondaryAccessions(String enaId)  throws DocumentException, IOException {
         Element elem = null;
         try {
-            elem = lookupElement.get(enaId);
+            elem = lookupDocument.get(enaId).getRootElement();
         } catch (ExecutionException e) {
             try {
                 throw e.getCause();
