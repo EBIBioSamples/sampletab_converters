@@ -124,6 +124,7 @@ select * from cv_status;
         		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan);
         		futures.push(pool.submit(call));
         		while (futures.size() > 100) {
+        			log.info("No. of futures left "+futures.size());
         			Future<Void> future = futures.pollLast();
             		try {
     					future.get();
@@ -136,6 +137,7 @@ select * from cv_status;
         	}
         	
     		while (futures.size() > 0) {
+    			log.info("No. of futures left "+futures.size());
         		Future<Void> future = futures.pollLast();
         		try {
 					future.get();
@@ -147,6 +149,10 @@ select * from cv_status;
         	}
         }
         //TODO handle deletes
+        
+        if (pool != null) {
+        	pool.shutdown();
+        }
     }
     
     private void setup() throws ClassNotFoundException {
