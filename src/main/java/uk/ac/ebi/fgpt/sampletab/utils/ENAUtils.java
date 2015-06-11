@@ -375,7 +375,7 @@ public class ENAUtils {
         		}
         	}
         }
-        if (!biosampleId.matches("SAM[END][AG]?")) {
+        if (!biosampleId.matches("SAM[END][AG]?[0-9]+")) {
         	throw new RuntimeException("Unrecognized biosample accession "+biosampleId);
         }
         
