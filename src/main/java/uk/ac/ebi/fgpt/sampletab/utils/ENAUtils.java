@@ -359,11 +359,11 @@ public class ENAUtils {
         return secondarys;
     }
 
-    public static String getBioSampleIdForSample(String enaId) throws DocumentException, IOException {
+    public static String getBioSampleIdForSample(String enaId) throws DocumentException, IOException, UnrecognizedBioSampleException, MissingBioSampleException {
         return getBioSampleIdForSample(getElementById(enaId));
     }
     
-    public static String getBioSampleIdForSample(Element sampleElement) {
+    public static String getBioSampleIdForSample(Element sampleElement) throws UnrecognizedBioSampleException, MissingBioSampleException {
     	String biosampleId = null;
         Element identifiers = XMLUtils.getChildByName(sampleElement, "IDENTIFIERS");
         for (Element otherId : XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID")) {
@@ -371,15 +371,37 @@ public class ENAUtils {
         		if (biosampleId == null) {
         			biosampleId = otherId.getTextTrim();
         		} else {
+        			//TODO make explicit exception
                     throw new RuntimeException("Multiple BioSample IDs in "+sampleElement.attributeValue("accession"));
         		}
         	}
         }
+        
+        if (biosampleId == null) {
+        	throw new MissingBioSampleException("Missing biosample accession in "+sampleElement.attributeValue("accession"));
+        }
+        
         if (!biosampleId.matches("SAM[END][AG]?[0-9]+")) {
-        	throw new RuntimeException("Unrecognized biosample accession "+biosampleId);
+        	throw new UnrecognizedBioSampleException("Unrecognized biosample accession "+biosampleId);
         }
         
         return biosampleId;
+    }
+    
+    public static class MissingBioSampleException extends Exception {
+
+		public MissingBioSampleException(String string) {
+			super(string);
+		}
+    	
+    }
+    
+    public static class UnrecognizedBioSampleException extends Exception {
+
+		public UnrecognizedBioSampleException(String string) {
+			super(string);
+		}
+    	
     }
     
 }

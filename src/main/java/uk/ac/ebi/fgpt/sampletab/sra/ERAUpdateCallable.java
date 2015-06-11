@@ -44,6 +44,8 @@ import uk.ac.ebi.fgpt.sampletab.Accessioner;
 import uk.ac.ebi.fgpt.sampletab.Normalizer;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils.MissingBioSampleException;
+import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils.UnrecognizedBioSampleException;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
@@ -105,7 +107,15 @@ public class ERAUpdateCallable implements Callable<Void> {
 
         // create the actual sample node
         SampleNode samplenode = new SampleNode(sampleId);
-        samplenode.setSampleAccession(ENAUtils.getBioSampleIdForSample(sampleElement));
+        try {
+			samplenode.setSampleAccession(ENAUtils.getBioSampleIdForSample(sampleElement));
+		} catch (UnrecognizedBioSampleException e) {
+			log.error("Problem with "+sampleId, e);
+			return;
+		} catch (MissingBioSampleException e) {
+			log.error("Problem with "+sampleId, e);
+			return;
+		}
         
 
         // process any synonyms that may exist
@@ -267,7 +277,15 @@ public class ERAUpdateCallable implements Callable<Void> {
         
         // create the actual sample node
         SampleNode samplenode = new SampleNode(sampleId);
-        samplenode.setSampleAccession(ENAUtils.getBioSampleIdForSample(sampleElement));
+        try {
+			samplenode.setSampleAccession(ENAUtils.getBioSampleIdForSample(sampleElement));
+		} catch (UnrecognizedBioSampleException e) {
+			log.error("Problem with "+sampleId, e);
+			return;
+		} catch (MissingBioSampleException e) {
+			log.error("Problem with "+sampleId, e);
+			return;
+		}
         
         st.scd.addNode(samplenode);
 	}
