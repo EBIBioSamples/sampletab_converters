@@ -40,6 +40,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
+import uk.ac.ebi.fgpt.sampletab.Accessioner;
 import uk.ac.ebi.fgpt.sampletab.Normalizer;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
@@ -53,6 +54,8 @@ public class ERAUpdateCallable implements Callable<Void> {
     private final File outDir;
     
     private final boolean conan;
+    
+    private final Accessioner accessioner;
 
     private Validator<SampleData> validator = new SampleTabValidator();
     
@@ -72,10 +75,11 @@ public class ERAUpdateCallable implements Callable<Void> {
         characteristicsIgnore = Collections.unmodifiableCollection(characteristicsIgnore);
     }
     
-	public ERAUpdateCallable(File outDir, String submissionId, boolean conan) {
+	public ERAUpdateCallable(File outDir, String submissionId, boolean conan, Accessioner accessioner) {
 		this.outDir = outDir;
 		this.submissionId = submissionId;
 		this.conan = conan;
+		this.accessioner = accessioner;
 	}
 
 	@Override
@@ -305,8 +309,6 @@ public class ERAUpdateCallable implements Callable<Void> {
             groupNode.addAttribute(new DatabaseAttribute("ENA SRA", studyId, "http://www.ebi.ac.uk/ena/data/view/" + studyId));
 
             //study links
-            
-            
             for (String id : ENAUtils.getSamplesForStudy(studyId)) {
         		SampleNode sampleNode = st.scd.getNode(id, SampleNode.class);
         		if (sampleNode == null) {
@@ -322,7 +324,8 @@ public class ERAUpdateCallable implements Callable<Void> {
             	
             }
             
-            
+            //groups need to have an accession assigned to them
+            groupNode.setGroupAccession(accessioner.singleGroup(studyId, "ENA"));
             
             st.scd.addNode(groupNode);
 		}

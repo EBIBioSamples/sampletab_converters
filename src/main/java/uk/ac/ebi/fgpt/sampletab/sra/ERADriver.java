@@ -21,6 +21,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.sql.DataSource;
+
 import org.dom4j.DocumentException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -30,6 +32,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
+import uk.ac.ebi.fgpt.sampletab.Accessioner;
 import uk.ac.ebi.fgpt.sampletab.utils.BioSDUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 
@@ -83,7 +86,33 @@ public class ERADriver extends AbstractDriver {
             }
         } catch (ParseException e) {
         	log.error("Unable to parse date", e);
+        	return;
         }
+        
+        //load defaults for accessioning
+        Properties oracleProperties = new Properties();
+        try {
+            InputStream is = getClass().getResourceAsStream("/oracle.properties");
+            oracleProperties.load(is);
+        } catch (IOException e) {
+            log.error("Unable to read resource oracle.properties", e);
+            return;
+        }
+        String hostname = oracleProperties.getProperty("hostname");
+        int port = new Integer(oracleProperties.getProperty("port"));
+        String database = oracleProperties.getProperty("database");
+        String dbusername = oracleProperties.getProperty("username");
+        String dbpassword = oracleProperties.getProperty("password");
+        
+        DataSource ds;
+        try {
+			ds = Accessioner.getDataSource(hostname, port, database, dbusername, dbpassword);
+		} catch (ClassNotFoundException e) {
+			log.error("Unable to create data source", e);
+			return;
+		}
+        
+        Accessioner accession = new Accessioner(ds);
         
         /*
 select * from cv_status;
@@ -110,7 +139,7 @@ select * from cv_status;
         
         if (pool == null) {
         	for (String submissionId : submissions) {
-        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan);
+        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession);
         		try {
 					call.call();
 				} catch (Exception e) {
@@ -121,7 +150,7 @@ select * from cv_status;
         	Deque<Future<Void>> futures = new LinkedList<Future<Void>>();
         	for (int i = 0 ; i < submissions.size(); i++) {
         		String submissionId = submissions.get(i);
-        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan);
+        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession);
         		futures.push(pool.submit(call));
         		while (futures.size() > 100) {
         			log.info("No. of futures left "+futures.size());
