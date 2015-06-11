@@ -360,6 +360,9 @@ public class ENAUtils {
     }
 
     public static String getBioSampleIdForSample(String enaId) throws DocumentException, IOException, UnrecognizedBioSampleException, MissingBioSampleException {
+    	if (!enaId.matches("[ESD]RS[0-9]+")) { 
+    		throw new IllegalArgumentException(""+enaId+" is not a valid identifier");
+    	}
         return getBioSampleIdForSample(getElementById(enaId));
     }
     
@@ -382,7 +385,7 @@ public class ENAUtils {
         }
         
         if (!biosampleId.matches("SAM[END][AG]?[0-9]+")) {
-        	throw new UnrecognizedBioSampleException("Unrecognized biosample accession "+biosampleId);
+        	throw new UnrecognizedBioSampleException("Unrecognized biosample accession "+biosampleId);        
         }
         
         return biosampleId;
