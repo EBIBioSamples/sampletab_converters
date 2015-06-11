@@ -158,9 +158,9 @@ select * from cv_status;
             		try {
     					future.get();
     				} catch (InterruptedException e) {
-    					log.error("Problem processing "+submissions.get(i-futures.size()-1), e);
+    					log.error("Problem processing "+submissions.get(i-futures.size()), e);
     				} catch (ExecutionException e) {
-    					log.error("Problem processing "+submissions.get(i-futures.size()-1), e);
+    					log.error("Problem processing "+submissions.get(i-futures.size()), e);
     				}
         		}
         	}
@@ -171,9 +171,9 @@ select * from cv_status;
         		try {
 					future.get();
 				} catch (InterruptedException e) {
-					log.error("Problem processing "+submissions.get(submissions.size()-futures.size()-1), e);
+					log.error("Problem processing "+submissions.get(submissions.size()-futures.size()), e);
 				} catch (ExecutionException e) {
-					log.error("Problem processing "+submissions.get(submissions.size()-futures.size()-1), e);
+					log.error("Problem processing "+submissions.get(submissions.size()-futures.size()), e);
 				}
         	}
         }
