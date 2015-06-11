@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -166,12 +167,13 @@ public class ENAUtils {
         return sampleIDs;
     }
     
-    public static Set<String> getSubmissionsForSample(String srsId) throws DocumentException, IOException {
-        return getSubmissionsForSample(getSampleElement(srsId));
+    
+    public static String getSubmissionForSample(String srsId) throws DocumentException, IOException {
+        return getSubmissionForSample(getSampleElement(srsId));
     }
 
-    public static Set<String> getSubmissionsForSample(Element root) {
-        Set<String> studyIDs = new HashSet<String>();
+    public static String getSubmissionForSample(Element root) {
+        List<String> studyIds = new ArrayList<String>(1);
         Element sample = XMLUtils.getChildByName(root, "SAMPLE");
         if (sample != null) {
             Element links = XMLUtils.getChildByName(sample, "SAMPLE_LINKS");
@@ -182,13 +184,49 @@ public class ENAUtils {
                         Element db = XMLUtils.getChildByName(xref, "DB");
                         Element id = XMLUtils.getChildByName(xref, "ID");
                         if (db != null && db.getText().equals("ENA-SUBMISSION") && id != null) {
-                            studyIDs.addAll(getIdentifiers(id.getText()));
+                            studyIds.addAll(getIdentifiers(id.getText()));
                         }
                     }
                 }
             }
         }
-        return studyIDs;
+        //check that only one submission identifier is present
+        if (studyIds.size() != 1) {
+        	throw new RuntimeException("Found more than one submission id for "+sample.attributeValue("accession"));
+        }
+        
+        return studyIds.get(0);
+    }
+    
+    
+    public static String getSubmissionForStudy(String srsId) throws DocumentException, IOException {
+        return getSubmissionForStudy(getStudyElement(srsId));
+    }
+
+    public static String getSubmissionForStudy(Element root) {
+        List<String> studyIds = new ArrayList<String>(1);
+        Element study = XMLUtils.getChildByName(root, "STUDY");
+        if (study != null) {
+            Element links = XMLUtils.getChildByName(study, "STUDY_LINKS");
+            if (links != null) {
+                for (Element link : XMLUtils.getChildrenByName(links, "STUDY_LINK")) {
+                    Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
+                    if (xref != null) {
+                        Element db = XMLUtils.getChildByName(xref, "DB");
+                        Element id = XMLUtils.getChildByName(xref, "ID");
+                        if (db != null && db.getText().equals("ENA-SUBMISSION") && id != null) {
+                            studyIds.addAll(getIdentifiers(id.getText()));
+                        }
+                    }
+                }
+            }
+        }
+        //check that only one submission identifier is present
+        if (studyIds.size() != 1) {
+        	throw new RuntimeException("Found more than one submission id for "+study.attributeValue("accession"));
+        }
+        
+        return studyIds.get(0);
     }
 
     public static Set<String> getStudiesForSubmission(String srsId) throws DocumentException, IOException {
