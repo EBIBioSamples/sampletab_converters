@@ -56,6 +56,8 @@ public class ERADriver extends AbstractDriver {
    
 
     protected ExecutorService pool;
+
+    protected Accessioner accession;
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -89,30 +91,6 @@ public class ERADriver extends AbstractDriver {
         	return;
         }
         
-        //load defaults for accessioning
-        Properties oracleProperties = new Properties();
-        try {
-            InputStream is = getClass().getResourceAsStream("/oracle.properties");
-            oracleProperties.load(is);
-        } catch (IOException e) {
-            log.error("Unable to read resource oracle.properties", e);
-            return;
-        }
-        String hostname = oracleProperties.getProperty("hostname");
-        int port = new Integer(oracleProperties.getProperty("port"));
-        String database = oracleProperties.getProperty("database");
-        String dbusername = oracleProperties.getProperty("username");
-        String dbpassword = oracleProperties.getProperty("password");
-        
-        DataSource ds;
-        try {
-			ds = Accessioner.getDataSource(hostname, port, database, dbusername, dbpassword);
-		} catch (ClassNotFoundException e) {
-			log.error("Unable to create data source", e);
-			return;
-		}
-        
-        Accessioner accession = new Accessioner(ds);
         
         /*
 select * from cv_status;
@@ -211,7 +189,31 @@ select * from cv_status;
             pool = Executors.newFixedThreadPool(threads);
         }
         
+
+        //load defaults for accessioning
+        Properties oracleProperties = new Properties();
+        try {
+            InputStream is = getClass().getResourceAsStream("/oracle.properties");
+            oracleProperties.load(is);
+        } catch (IOException e) {
+            log.error("Unable to read resource oracle.properties", e);
+            return;
+        }
+        String hostnameAcc = oracleProperties.getProperty("hostname");
+        int portAcc = new Integer(oracleProperties.getProperty("port"));
+        String databaseAcc = oracleProperties.getProperty("database");
+        String dbusernameAcc = oracleProperties.getProperty("username");
+        String dbpasswordAcc = oracleProperties.getProperty("password");
         
+        DataSource ds;
+        try {
+			ds = Accessioner.getDataSource(hostnameAcc, portAcc, databaseAcc, dbusernameAcc, dbpasswordAcc);
+		} catch (ClassNotFoundException e) {
+			log.error("Unable to create data source", e);
+			return;
+		}
+        
+        accession = new Accessioner(ds);
     }
 	
 	
