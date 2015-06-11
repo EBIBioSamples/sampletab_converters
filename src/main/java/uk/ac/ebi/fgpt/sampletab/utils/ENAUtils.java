@@ -369,12 +369,16 @@ public class ENAUtils {
         for (Element otherId : XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID")) {
         	if ("BioSample".equals(otherId.attributeValue("namespace"))) {
         		if (biosampleId == null) {
-        			biosampleId = otherId.attributeValue("namespace");
+        			biosampleId = otherId.getTextTrim();
         		} else {
                     throw new RuntimeException("Multiple BioSample IDs in "+sampleElement.attributeValue("accession"));
         		}
         	}
         }
+        if (!biosampleId.matches("SAM[END][AG]?")) {
+        	throw new RuntimeException("Unrecognized biosample accession "+biosampleId);
+        }
+        
         return biosampleId;
     }
     
