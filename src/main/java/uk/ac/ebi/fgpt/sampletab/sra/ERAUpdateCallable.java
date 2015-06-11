@@ -56,8 +56,10 @@ public class ERAUpdateCallable implements Callable<Void> {
     private final boolean conan;
     
     private final Accessioner accessioner;
+    
+    private final SampleData st = new SampleData();
 
-    private Validator<SampleData> validator = new SampleTabValidator();
+    private static Validator<SampleData> validator = new SampleTabValidator();
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -81,202 +83,218 @@ public class ERAUpdateCallable implements Callable<Void> {
 		this.conan = conan;
 		this.accessioner = accessioner;
 	}
+	
+	private void handleSample(String sampleId, Document sampleDocument) throws ParseException {
 
+        Element sampleroot = sampleDocument.getRootElement();
+        Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
+        Element sampleName = XMLUtils.getChildByName(sampleElement, "SAMPLE_NAME");
+        Element sampledescription = XMLUtils.getChildByName(sampleElement, "DESCRIPTION");
+        Element synonym = XMLUtils.getChildByName(sampleElement, "TITLE");
+        
+        //sometimes the study is public but the samples are private
+        //check for that and skip sample
+        if (sampleElement == null){
+            return;
+        }
+        // check that this actually is the sample we want
+        if (sampleElement.attributeValue("accession") != null
+                && !sampleElement.attributeValue("accession").equals(sampleId)) {
+            throw new ParseException("Accession in XML content does not match filename");
+        }
+
+        // create the actual sample node
+        SampleNode samplenode = new SampleNode(sampleId);
+        samplenode.setSampleAccession(ENAUtils.getBioSampleIdForSample(sampleElement));
+        
+
+        // process any synonyms that may exist
+        Element taxon = XMLUtils.getChildByName(sampleName, "TAXON_ID");
+        Element indivname = XMLUtils.getChildByName(sampleName, "INDIVIDUAL_NAME");
+        Element scientificname = XMLUtils.getChildByName(sampleName, "SCIENTIFIC_NAME");
+        Element annonname = XMLUtils.getChildByName(sampleName, "ANONYMIZED_NAME");
+        
+        // insert all synonyms at position zero so they display next to name
+        if (indivname != null) {
+            CommentAttribute synonymattrib = new CommentAttribute("Synonym", indivname.getTextTrim());
+            samplenode.addAttribute(synonymattrib, 0);
+        }
+        if (annonname != null) {
+            CommentAttribute synonymattrib = new CommentAttribute("Synonym", annonname.getTextTrim());
+            samplenode.addAttribute(synonymattrib, 0);
+        }
+        if (synonym != null) {
+            CommentAttribute synonymattrib = new CommentAttribute("Synonym", synonym.getTextTrim());
+            samplenode.addAttribute(synonymattrib, 0);
+        }
+        
+        
+        //colect various IDs together
+        Element identifiers = XMLUtils.getChildByName(sampleElement, "IDENTIFIERS");
+        Collection<Element> otherIDs = XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID");
+        otherIDs.addAll(XMLUtils.getChildrenByName(identifiers, "SUBMITTER_ID"));
+        otherIDs.addAll(XMLUtils.getChildrenByName(identifiers, "SECONDARY_ID"));
+        
+        for (Element id : otherIDs) {
+        	
+            //these should be database ids rather than synonyms when possible
+            if (samplenode.getSampleAccession() != null && 
+                    samplenode.getSampleAccession().equals(id.getTextTrim())) {
+                //same as the existing sample accession
+                //do nothing
+            } else if (samplenode.getSampleAccession() != null && 
+                    id.getTextTrim().matches("SAM[END][A]?[0-9]+") &&
+                    !samplenode.getSampleAccession().equals(id.getTextTrim())){
+                //this is a biosamples accession, but we already have one, report an error and store as synonym
+                log.error("Strange biosample identifiers in "+sampleId);
+                CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
+                samplenode.addAttribute(synonymattrib, 0);                        
+            } else {
+                //store it as a synonym
+                CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
+                samplenode.addAttribute(synonymattrib, 0);
+            }
+        }
+        
+        //process any alias present
+        String alias = sampleElement.attributeValue("alias");
+        if (alias != null) {
+            alias = alias.trim();
+            if (samplenode.getSampleAccession() == null && 
+                    alias.matches("SAM[END][A]?[0-9]+")) {
+                //this is a biosamples accession, and we dont have one yet, so use it
+                samplenode.setSampleAccession(alias);
+            } else if (samplenode.getSampleAccession() != null && 
+                    alias.matches("SAM[END][A]?[0-9]+") &&
+                    !samplenode.getSampleAccession().equals(alias)){
+                //this is a biosamples accession, but we already have one, report an error and store as synonym
+                log.error("Strange biosample identifiers in "+sampleId);
+                CommentAttribute synonymattrib = new CommentAttribute("Synonym", alias);
+                samplenode.addAttribute(synonymattrib, 0);                        
+            } else {
+                //store it as a synonym
+                CommentAttribute synonymattrib = new CommentAttribute("Synonym", alias);
+                samplenode.addAttribute(synonymattrib, 0);
+            }
+        }
+        
+        // now process organism
+        if (taxon != null) {
+            Integer taxid = new Integer(taxon.getTextTrim());
+            // could get taxon name by lookup, but this will be done by correction later on.
+            String taxName = null;
+            if (scientificname != null ) {
+                taxName = scientificname.getTextTrim();
+            } else {
+                taxName = taxid.toString();
+            }
+            
+            OrganismAttribute organismAttribute = null;
+            if (taxName != null && taxid != null) {
+                organismAttribute = new OrganismAttribute(taxName, st.msi.getOrAddTermSource(ncbitaxonomy), taxid);
+            } else if (taxName != null) {
+                organismAttribute = new OrganismAttribute(taxName);
+            }
+
+            if (organismAttribute != null) {
+                samplenode.addAttribute(organismAttribute);
+            }
+        }
+
+        if (sampleElement.attributeValue("alias") != null) {
+            CommentAttribute synonymattrib = new CommentAttribute("Synonym", sampleElement.attributeValue("alias"));
+            samplenode.addAttribute(synonymattrib, 0);
+        }
+        
+        if (sampledescription != null) {
+            String descriptionstring = sampledescription.getTextTrim();
+            samplenode.setSampleDescription(descriptionstring);
+        }
+
+        // finally, any other attributes ENA SRA provides
+        Element sampleAttributes = XMLUtils.getChildByName(sampleElement, "SAMPLE_ATTRIBUTES");
+        if (sampleAttributes != null) {
+            for (Element sampleAttribute : XMLUtils.getChildrenByName(sampleAttributes, "SAMPLE_ATTRIBUTE")) {
+                Element tag = XMLUtils.getChildByName(sampleAttribute, "TAG");
+                Element value = XMLUtils.getChildByName(sampleAttribute, "VALUE");
+                Element units = XMLUtils.getChildByName(sampleAttribute, "UNITS");
+                String tagtext;
+                
+                if (tag == null || tag.getTextTrim().length() == 0) {
+                    tagtext = "unknown";
+                } else {
+                    tagtext = tag.getTextTrim();
+                }
+                    
+                if (characteristicsIgnore.contains(tagtext)) {
+                    //skip this characteristic
+                    log.debug("Skipping characteristic attribute "+tagtext);
+                    continue;
+                }
+                
+                String valuetext;
+                if (value == null) {
+                    // some ENA SRA attributes are boolean
+                    //mark them as unknown
+                    valuetext = tagtext;
+                    tagtext = "unknown";
+                } else {
+                    valuetext = value.getTextTrim();
+                }
+                CharacteristicAttribute characteristicAttribute = new CharacteristicAttribute(tagtext,
+                        valuetext);
+                
+                if (units != null && units.getTextTrim().length() > 0) {
+                    log.trace("Added unit "+units.getTextTrim());
+                    characteristicAttribute.unit = new UnitAttribute();
+                    characteristicAttribute.unit.setAttributeValue(units.getTextTrim());
+                }
+
+                samplenode.addAttribute(characteristicAttribute);
+            }
+        }
+        
+        samplenode.addAttribute(new DatabaseAttribute("ENA SRA", sampleId, "http://www.ebi.ac.uk/ena/data/view/" + sampleId));
+
+        st.scd.addNode(samplenode);
+	}
+
+	private void referenceSample(String sampleId, Document sampleDocument) throws ParseException {
+		//need a reference to the sample, so name and accession only
+
+        Element sampleroot = sampleDocument.getRootElement();
+        Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
+        
+        // create the actual sample node
+        SampleNode samplenode = new SampleNode(sampleId);
+        samplenode.setSampleAccession(ENAUtils.getBioSampleIdForSample(sampleElement));
+        
+        st.scd.addNode(samplenode);
+	}
+	
 	@Override
 	public Void call() throws Exception {
         
 		log.info("processing started for "+submissionId);
 		
-        SampleData st = new SampleData();
         st.msi.submissionIdentifier = "GEN-"+submissionId;
         
         Document subDocument = getDocumentIfUpdated(submissionId);
-        ENAUtils.getSamplesForSubmission(subDocument.getRootElement());
         
 		//get the samples
 		for (String sampleId : ENAUtils.getSamplesForSubmission(subDocument.getRootElement())) {			
 
 			Document sampleDocument = getDocumentIfUpdated(sampleId);
 			
-            Element sampleroot = sampleDocument.getRootElement();
-            Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
-            Element sampleName = XMLUtils.getChildByName(sampleElement, "SAMPLE_NAME");
-            Element sampledescription = XMLUtils.getChildByName(sampleElement, "DESCRIPTION");
-            Element synonym = XMLUtils.getChildByName(sampleElement, "TITLE");
-            
-            //sometimes the study is public but the samples are private
-            //check for that and skip sample
-            if (sampleElement == null){
-                continue;
-            }
-            // check that this actually is the sample we want
-            if (sampleElement.attributeValue("accession") != null
-                    && !sampleElement.attributeValue("accession").equals(sampleId)) {
-                throw new ParseException("Accession in XML content does not match filename");
-            }
-
-            // create the actual sample node
-            SampleNode samplenode = new SampleNode();
-            samplenode.setNodeName(sampleId);
-            
-
-            // process any synonyms that may exist
-            Element taxon = XMLUtils.getChildByName(sampleName, "TAXON_ID");
-            Element indivname = XMLUtils.getChildByName(sampleName, "INDIVIDUAL_NAME");
-            Element scientificname = XMLUtils.getChildByName(sampleName, "SCIENTIFIC_NAME");
-            Element annonname = XMLUtils.getChildByName(sampleName, "ANONYMIZED_NAME");
-            
-            // insert all synonyms at position zero so they display next to name
-            if (indivname != null) {
-                CommentAttribute synonymattrib = new CommentAttribute("Synonym", indivname.getTextTrim());
-                samplenode.addAttribute(synonymattrib, 0);
-            }
-            if (annonname != null) {
-                CommentAttribute synonymattrib = new CommentAttribute("Synonym", annonname.getTextTrim());
-                samplenode.addAttribute(synonymattrib, 0);
-            }
-            if (synonym != null) {
-                CommentAttribute synonymattrib = new CommentAttribute("Synonym", synonym.getTextTrim());
-                samplenode.addAttribute(synonymattrib, 0);
-            }
-            
-            
-            //colect various IDs together
-            Element identifiers = XMLUtils.getChildByName(sampleElement, "IDENTIFIERS");
-            Collection<Element> otherIDs = XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID");
-            otherIDs.addAll(XMLUtils.getChildrenByName(identifiers, "SUBMITTER_ID"));
-            otherIDs.addAll(XMLUtils.getChildrenByName(identifiers, "SECONDARY_ID"));
-            for (Element id : otherIDs) {
-                //these should be database ids rather than synonyms when possible
-                if (samplenode.getSampleAccession() == null && 
-                        id.getTextTrim().matches("SAM[END][A]?[0-9]+")) {
-                    //this is a biosamples accession, and we dont have one yet, so use it
-                    samplenode.setSampleAccession(id.getTextTrim());
-                    
-                    //also use the accession as the database link
-                    samplenode.addAttribute(new DatabaseAttribute("ENA SRA",
-                    		id.getTextTrim(), 
-                            "http://www.ebi.ac.uk/ena/data/view/" + id.getTextTrim()));
-                    
-                } else if (samplenode.getSampleAccession() != null && 
-                        samplenode.getSampleAccession().equals(id.getTextTrim())) {
-                    //same as the existing sample accession
-                    //do nothing
-                } else if (samplenode.getSampleAccession() != null && 
-                        id.getTextTrim().matches("SAM[END][A]?[0-9]+") &&
-                        !samplenode.getSampleAccession().equals(id.getTextTrim())){
-                    //this is a biosamples accession, but we already have one, report an error and store as synonym
-                    log.error("Strange biosample identifiers in "+sampleId);
-                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
-                    samplenode.addAttribute(synonymattrib, 0);                        
-                } else {
-                    //store it as a synonym
-                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", id.getTextTrim());
-                    samplenode.addAttribute(synonymattrib, 0);
-                }
-            }
-            
-            //process any alias present
-            String alias = sampleElement.attributeValue("alias");
-            if (alias != null) {
-                alias = alias.trim();
-                if (samplenode.getSampleAccession() == null && 
-                        alias.matches("SAM[END][A]?[0-9]+")) {
-                    //this is a biosamples accession, and we dont have one yet, so use it
-                    samplenode.setSampleAccession(alias);
-                } else if (samplenode.getSampleAccession() != null && 
-                        alias.matches("SAM[END][A]?[0-9]+") &&
-                        !samplenode.getSampleAccession().equals(alias)){
-                    //this is a biosamples accession, but we already have one, report an error and store as synonym
-                    log.error("Strange biosample identifiers in "+sampleId);
-                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", alias);
-                    samplenode.addAttribute(synonymattrib, 0);                        
-                } else {
-                    //store it as a synonym
-                    CommentAttribute synonymattrib = new CommentAttribute("Synonym", alias);
-                    samplenode.addAttribute(synonymattrib, 0);
-                }
-            }
-            
-            // now process organism
-            if (taxon != null) {
-                Integer taxid = new Integer(taxon.getTextTrim());
-                // could get taxon name by lookup, but this will be done by correction later on.
-                String taxName = null;
-                if (scientificname != null ) {
-                    taxName = scientificname.getTextTrim();
-                } else {
-                    taxName = taxid.toString();
-                }
-                
-                OrganismAttribute organismAttribute = null;
-                if (taxName != null && taxid != null) {
-                    organismAttribute = new OrganismAttribute(taxName, st.msi.getOrAddTermSource(ncbitaxonomy), taxid);
-                } else if (taxName != null) {
-                    organismAttribute = new OrganismAttribute(taxName);
-                }
-
-                if (organismAttribute != null) {
-                    samplenode.addAttribute(organismAttribute);
-                }
-            }
-
-            if (sampleElement.attributeValue("alias") != null) {
-                CommentAttribute synonymattrib = new CommentAttribute("Synonym", sampleElement.attributeValue("alias"));
-                samplenode.addAttribute(synonymattrib, 0);
-            }
-            
-            if (sampledescription != null) {
-                String descriptionstring = sampledescription.getTextTrim();
-                samplenode.setSampleDescription(descriptionstring);
-            }
-
-            // finally, any other attributes ENA SRA provides
-            Element sampleAttributes = XMLUtils.getChildByName(sampleElement, "SAMPLE_ATTRIBUTES");
-            if (sampleAttributes != null) {
-                for (Element sampleAttribute : XMLUtils.getChildrenByName(sampleAttributes, "SAMPLE_ATTRIBUTE")) {
-                    Element tag = XMLUtils.getChildByName(sampleAttribute, "TAG");
-                    Element value = XMLUtils.getChildByName(sampleAttribute, "VALUE");
-                    Element units = XMLUtils.getChildByName(sampleAttribute, "UNITS");
-                    String tagtext;
-                    
-                    if (tag == null || tag.getTextTrim().length() == 0) {
-                        tagtext = "unknown";
-                    } else {
-                        tagtext = tag.getTextTrim();
-                    }
-                        
-                    if (characteristicsIgnore.contains(tagtext)) {
-                        //skip this characteristic
-                        log.debug("Skipping characteristic attribute "+tagtext);
-                        continue;
-                    }
-                    
-                    String valuetext;
-                    if (value == null) {
-                        // some ENA SRA attributes are boolean
-                        //mark them as unknown
-                        valuetext = tagtext;
-                        tagtext = "unknown";
-                    } else {
-                        valuetext = value.getTextTrim();
-                    }
-                    CharacteristicAttribute characteristicAttribute = new CharacteristicAttribute(tagtext,
-                            valuetext);
-                    
-                    if (units != null && units.getTextTrim().length() > 0) {
-                        log.trace("Added unit "+units.getTextTrim());
-                        characteristicAttribute.unit = new UnitAttribute();
-                        characteristicAttribute.unit.setAttributeValue(units.getTextTrim());
-                    }
-
-                    samplenode.addAttribute(characteristicAttribute);
-                }
-            }
-            
-            samplenode.addAttribute(new DatabaseAttribute("ENA SRA", sampleId, "http://www.ebi.ac.uk/ena/data/view/" + sampleId));
-
-            st.scd.addNode(samplenode);
+			//check that this sample is for this submission
+			if (submissionId.equals(ENAUtils.getSubmissionForSample(sampleDocument.getRootElement()))) {
+				//this sample is owned by this submission
+				handleSample(sampleId, sampleDocument);
+			} else {
+				//this sample is referenced by this submission, but not included in it
+				referenceSample(sampleId, sampleDocument);
+			}
+			
             
 		}
 		
@@ -284,49 +302,57 @@ public class ERAUpdateCallable implements Callable<Void> {
 		for (String studyId : ENAUtils.getStudiesForSubmission(submissionId)) {		
 
 			Document studyDocument = getDocumentIfUpdated(studyId);
-            Element root = studyDocument.getRootElement();
-            
-            Element mainElement = XMLUtils.getChildByName(root, "STUDY");
-            Element descriptor = XMLUtils.getChildByName(mainElement, "DESCRIPTOR");
-            
-            String description = null;
-            if (XMLUtils.getChildByName(descriptor, "STUDY_ABSTRACT") != null) {
-                description = XMLUtils.getChildByName(descriptor, "STUDY_ABSTRACT").getTextTrim();
-            } else if (XMLUtils.getChildByName(descriptor, "STUDY_DESCRIPTION") != null) {
-                description = XMLUtils.getChildByName(descriptor, "STUDY_DESCRIPTION").getTextTrim();
-            } else if (XMLUtils.getChildByName(descriptor, "STUDY_TITLE") != null) {
-            	description = XMLUtils.getChildByName(descriptor, "STUDY_TITLE").getTextTrim();
-            } else {
-                log.warn("no STUDY_ABSTRACT or STUDY_DESCRIPTION");
-            }
+			Element root = studyDocument.getRootElement();
 
-            
             GroupNode groupNode = new GroupNode(studyId);
-            if (description != null) {
-            	groupNode.setGroupDescription(description);
-            }
-
-            groupNode.addAttribute(new DatabaseAttribute("ENA SRA", studyId, "http://www.ebi.ac.uk/ena/data/view/" + studyId));
-
-            //study links
-            for (String id : ENAUtils.getSamplesForStudy(studyId)) {
-        		SampleNode sampleNode = st.scd.getNode(id, SampleNode.class);
-        		if (sampleNode == null) {
-        			//study refers to sample in other submission
-        			sampleNode = new SampleNode(id);
-        			String biosampleId = ENAUtils.getBioSampleIdForSample(id);
-        			sampleNode.setSampleAccession(biosampleId);
-        			st.scd.addNode(sampleNode);
-                    groupNode.addSample(sampleNode);
-        		} else {
-                    groupNode.addSample(sampleNode);
-        		}
-            	
-            }
-            
             //groups need to have an accession assigned to them
             groupNode.setGroupAccession(accessioner.singleGroup(studyId, "ENA"));
             
+			//check that this group is in this submission
+			if (submissionId.equals(ENAUtils.getSubmissionForStudy(root))) {
+				//owned by this submission
+	            Element mainElement = XMLUtils.getChildByName(root, "STUDY");
+	            Element descriptor = XMLUtils.getChildByName(mainElement, "DESCRIPTOR");
+	            
+	            String description = null;
+	            if (XMLUtils.getChildByName(descriptor, "STUDY_ABSTRACT") != null) {
+	                description = XMLUtils.getChildByName(descriptor, "STUDY_ABSTRACT").getTextTrim();
+	            } else if (XMLUtils.getChildByName(descriptor, "STUDY_DESCRIPTION") != null) {
+	                description = XMLUtils.getChildByName(descriptor, "STUDY_DESCRIPTION").getTextTrim();
+	            } else if (XMLUtils.getChildByName(descriptor, "STUDY_TITLE") != null) {
+	            	description = XMLUtils.getChildByName(descriptor, "STUDY_TITLE").getTextTrim();
+	            } else {
+	                log.warn("no STUDY_ABSTRACT or STUDY_DESCRIPTION");
+	            }
+
+	            
+	            if (description != null) {
+	            	groupNode.setGroupDescription(description);
+	            }
+
+	            groupNode.addAttribute(new DatabaseAttribute("ENA SRA", studyId, "http://www.ebi.ac.uk/ena/data/view/" + studyId));
+
+	            //study links
+	            for (String id : ENAUtils.getSamplesForStudy(studyId)) {
+	        		SampleNode sampleNode = st.scd.getNode(id, SampleNode.class);
+	        		if (sampleNode == null) {
+	        			//study refers to sample in other submission
+	        			sampleNode = new SampleNode(id);
+	        			String biosampleId = ENAUtils.getBioSampleIdForSample(id);
+	        			sampleNode.setSampleAccession(biosampleId);
+	        			st.scd.addNode(sampleNode);
+	                    groupNode.addSample(sampleNode);
+	                    
+	        		} else {
+	                    groupNode.addSample(sampleNode);
+	        		}
+	            	
+	            }
+			} else {
+				//referenced by this submission
+				//group node already has name and accession
+			}
+			          
             st.scd.addNode(groupNode);
 		}
 
@@ -334,7 +360,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 		
 		if (updated){
 			
-	        log.trace("SampleTab converted, preparing to write");
+	        log.info("SampleTab converted, preparing to write "+submissionId);
 	        
 	        synchronized(validator) {
 	        	validator.validate(st);
