@@ -367,6 +367,11 @@ public class ENAUtils {
     }
     
     public static String getBioSampleIdForSample(Element sampleElement) throws UnrecognizedBioSampleException, MissingBioSampleException {
+    	
+    	if (sampleElement == null) {
+    		throw new IllegalArgumentException("sampleElement cannot be null");
+    	}
+    	
     	String biosampleId = null;
         Element identifiers = XMLUtils.getChildByName(sampleElement, "IDENTIFIERS");
         for (Element otherId : XMLUtils.getChildrenByName(identifiers, "EXTERNAL_ID")) {
