@@ -380,6 +380,9 @@ public class ENAUtils {
         	if ("BioSample".equals(otherId.attributeValue("namespace"))) {
         		if (biosampleId == null) {
         			biosampleId = otherId.getTextTrim();
+        			
+        		} else if (biosampleId.equals(otherId.getTextTrim())) {
+        			//its the same ID multiple times, ignore it
         		} else {
         			//TODO make explicit exception
                     throw new RuntimeException("Multiple BioSample IDs in "+sampleElement.attributeValue("accession"));
