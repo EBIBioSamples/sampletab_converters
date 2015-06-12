@@ -376,8 +376,12 @@ public class ERAUpdateCallable implements Callable<Void> {
 		}
 
 		//only write out and trigger conan if there was an update
-		
-		if (updated){
+
+        File outsubdir = new File(outDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
+        outsubdir.mkdirs();
+        File file = new File(outsubdir, "sampletab.pre.txt");
+        
+		if (updated || !file.exists()){
 			
 	        log.info("SampleTab converted, preparing to write "+submissionId);
 	        
@@ -388,9 +392,6 @@ public class ERAUpdateCallable implements Callable<Void> {
 	        Normalizer norm = new Normalizer();
 	        norm.normalize(st);
 	
-	        File outsubdir = new File(outDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
-	        outsubdir.mkdirs();
-	        File file = new File(outsubdir, "sampletab.pre.txt");
 	
 	        SampleTabWriter sampletabwriter = null;
 	        try {
