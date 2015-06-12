@@ -358,6 +358,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 	        			sampleNode = new SampleNode(id);
 	        			String biosampleId = ENAUtils.getBioSampleIdForSample(id);
 	        			sampleNode.setSampleAccession(biosampleId);
+	        			
 	        			st.scd.addNode(sampleNode);
 	                    groupNode.addSample(sampleNode);
 	                    

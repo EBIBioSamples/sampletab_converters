@@ -363,7 +363,9 @@ public class ENAUtils {
     	if (!enaId.matches("[ESD]RS[0-9]+")) { 
     		throw new IllegalArgumentException(""+enaId+" is not a valid identifier");
     	}
-        return getBioSampleIdForSample(getElementById(enaId));
+    	Element root = getSampleElement(enaId);
+        Element sample = XMLUtils.getChildByName(root, "SAMPLE");
+        return getBioSampleIdForSample(sample);
     }
     
     public static String getBioSampleIdForSample(Element sampleElement) throws UnrecognizedBioSampleException, MissingBioSampleException {
