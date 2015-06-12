@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ROOT request="ERP000004&amp;display=xml">
+<STUDY accession="ERP000004" alias="Gorilla short-read sequencing" center_name="The Wellcome Trust Sanger Institute">
+     <IDENTIFIERS>
+          <PRIMARY_ID>ERP000004</PRIMARY_ID>
+          <SECONDARY_ID>PRJEB1976</SECONDARY_ID>
+          <SUBMITTER_ID namespace="SC">Gorilla short-read sequencing</SUBMITTER_ID>
+     </IDENTIFIERS>
+     <DESCRIPTOR>
+          <STUDY_TITLE>Whole Genome Sequencing of Gorilla gorilla gorilla</STUDY_TITLE>
+          <STUDY_DESCRIPTION>Whole Genome Sequencing of Gorilla gorilla gorilla. This data is part of a pre-publication release. For information on the proper use of pre-publication data shared by the Wellcome Trust Sanger Institute (including details of any publication moratoria), please see http://www.sanger.ac.uk/datasharing/</STUDY_DESCRIPTION>
+          <STUDY_TYPE existing_study_type="Whole Genome Sequencing"/>
+          <CENTER_PROJECT_NAME>Whole Genome Sequencing of Gorilla gorilla gorilla</CENTER_PROJECT_NAME>
+     </DESCRIPTOR>
+     <STUDY_LINKS>
+          <STUDY_LINK>
+               <XREF_LINK>
+                    <DB>ENA-SAMPLE</DB>
+                    <ID>ERS000016,ERS002007-ERS002008,ERS004138,ERS008711-ERS008714,ERS014181-ERS014182</ID>
+               </XREF_LINK>
+          </STUDY_LINK>
+          <STUDY_LINK>
+               <XREF_LINK>
+                    <DB>ENA-TAXID</DB>
+                    <ID>9595</ID>
+               </XREF_LINK>
+          </STUDY_LINK>
+          <STUDY_LINK>
+               <XREF_LINK>
+                    <DB>ENA-EXPERIMENT</DB>
+                    <ID>ERX000190-ERX000200,ERX007091-ERX007129,ERX007922-ERX007931,ERX009568,ERX010148-ERX010149,ERX010282</ID>
+               </XREF_LINK>
+          </STUDY_LINK>
+          <STUDY_LINK>
+               <XREF_LINK>
+                    <DB>ENA-RUN</DB>
+                    <ID>ERR002475-ERR002765,ERR018563-ERR018601,ERR019513-ERR019522,ERR023725-ERR023727,ERR029077-ERR029082,ERR029554</ID>
+               </XREF_LINK>
+          </STUDY_LINK>
+          <STUDY_LINK>
+               <XREF_LINK>
+                    <DB>ENA-SUBMISSION</DB>
+                    <ID>ERA000073</ID>
+               </XREF_LINK>
+          </STUDY_LINK>
+          <STUDY_LINK>
+               <XREF_LINK>
+                    <DB>ENA-FASTQ-FILES</DB>
+                    <ID>http://www.ebi.ac.uk/ena/data/warehouse/filereport?accession=ERP000004&amp;result=read_run&amp;fields=run_accession,fastq_ftp,fastq_md5,fastq_bytes</ID>
+               </XREF_LINK>
+          </STUDY_LINK>
+          <STUDY_LINK>
+               <XREF_LINK>
+                    <DB>ENA-SUBMITTED-FILES</DB>
+                    <ID>http://www.ebi.ac.uk/ena/data/warehouse/filereport?accession=ERP000004&amp;result=read_run&amp;fields=run_accession,submitted_ftp,submitted_md5,submitted_bytes,submitted_format</ID>
+               </XREF_LINK>
+          </STUDY_LINK>
+     </STUDY_LINKS>
+     <STUDY_ATTRIBUTES>
+          <STUDY_ATTRIBUTE>
+               <TAG>ENA-SPOT-COUNT</TAG>
+               <VALUE>2257361965</VALUE>
+          </STUDY_ATTRIBUTE>
+          <STUDY_ATTRIBUTE>
+               <TAG>ENA-BASE-COUNT</TAG>
+               <VALUE>210756266254</VALUE>
+          </STUDY_ATTRIBUTE>
+     </STUDY_ATTRIBUTES>
+</STUDY>
+</ROOT>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ROOT request="ERS000016&amp;display=xml">
+<SAMPLE alias="ggo-sc-2010-05-07-2833" accession="ERS000016" center_name="The Wellcome Trust Sanger Institute">
+     <IDENTIFIERS>
+          <PRIMARY_ID>ERS000016</PRIMARY_ID>
+          <EXTERNAL_ID namespace="BioSample">SAMEA868692</EXTERNAL_ID>
+          <SUBMITTER_ID namespace="SC">ggo-sc-2010-05-07-2833</SUBMITTER_ID>
+     </IDENTIFIERS>
+     <TITLE>Gorilla gorilla gorilla</TITLE>
+     <SAMPLE_NAME>
+          <COMMON_NAME>Gorilla gorilla gorilla</COMMON_NAME>
+          <TAXON_ID>9595</TAXON_ID>
+          <SCIENTIFIC_NAME>Gorilla gorilla gorilla</SCIENTIFIC_NAME>
+     </SAMPLE_NAME>
+     <SAMPLE_LINKS>
+          <SAMPLE_LINK>
+               <XREF_LINK>
+                    <DB>ENA-STUDY</DB>
+                    <ID>ERP000004</ID>
+               </XREF_LINK>
+          </SAMPLE_LINK>
+          <SAMPLE_LINK>
+               <XREF_LINK>
+                    <DB>ENA-EXPERIMENT</DB>
+                    <ID>ERX000190-ERX000200,ERX007923-ERX007929,ERX007931</ID>
+               </XREF_LINK>
+          </SAMPLE_LINK>
+          <SAMPLE_LINK>
+               <XREF_LINK>
+                    <DB>ENA-RUN</DB>
+                    <ID>ERR002475-ERR002765,ERR019513-ERR019520</ID>
+               </XREF_LINK>
+          </SAMPLE_LINK>
+          <SAMPLE_LINK>
+               <XREF_LINK>
+                    <DB>ENA-SUBMISSION</DB>
+                    <ID>ERA000073</ID>
+               </XREF_LINK>
+          </SAMPLE_LINK>
+          <SAMPLE_LINK>
+               <XREF_LINK>
+                    <DB>ENA-FASTQ-FILES</DB>
+                    <ID>http://www.ebi.ac.uk/ena/data/warehouse/filereport?accession=ERS000016&amp;result=read_run&amp;fields=run_accession,fastq_ftp,fastq_md5,fastq_bytes</ID>
+               </XREF_LINK>
+          </SAMPLE_LINK>
+          <SAMPLE_LINK>
+               <XREF_LINK>
+                    <DB>ENA-SUBMITTED-FILES</DB>
+                    <ID>http://www.ebi.ac.uk/ena/data/warehouse/filereport?accession=ERS000016&amp;result=read_run&amp;fields=run_accession,submitted_ftp,submitted_md5,submitted_bytes,submitted_format</ID>
+               </XREF_LINK>
+          </SAMPLE_LINK>
+     </SAMPLE_LINKS>
+     <SAMPLE_ATTRIBUTES>
+          <SAMPLE_ATTRIBUTE>
+               <TAG>ENA-SPOT-COUNT</TAG>
+               <VALUE>1801625609</VALUE>
+          </SAMPLE_ATTRIBUTE>
+          <SAMPLE_ATTRIBUTE>
+               <TAG>ENA-BASE-COUNT</TAG>
+               <VALUE>140441687508</VALUE>
+          </SAMPLE_ATTRIBUTE>
+     </SAMPLE_ATTRIBUTES>
+</SAMPLE>
+</ROOT>

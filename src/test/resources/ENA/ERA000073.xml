@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ROOT request="ERA000073&amp;display=xml">
+<SUBMISSION accession="ERA000073" alias="gorilla-sc-20081212" submission_date="2008-12-12T09:54:51.000Z" center_name="The Wellcome Trust Sanger Institute">
+     <IDENTIFIERS>
+          <PRIMARY_ID>ERA000073</PRIMARY_ID>
+          <SUBMITTER_ID namespace="SC">gorilla-sc-20081212</SUBMITTER_ID>
+     </IDENTIFIERS>
+     <TITLE>Submitted by The Wellcome Trust Sanger Institute on 12-DEC-2008</TITLE>
+     <SUBMISSION_LINKS>
+          <SUBMISSION_LINK>
+               <XREF_LINK>
+                    <DB>ENA-STUDY</DB>
+                    <ID>ERP000004</ID>
+               </XREF_LINK>
+          </SUBMISSION_LINK>
+          <SUBMISSION_LINK>
+               <XREF_LINK>
+                    <DB>ENA-SAMPLE</DB>
+                    <ID>ERS000016</ID>
+               </XREF_LINK>
+          </SUBMISSION_LINK>
+          <SUBMISSION_LINK>
+               <XREF_LINK>
+                    <DB>ENA-EXPERIMENT</DB>
+                    <ID>ERX000190-ERX000200</ID>
+               </XREF_LINK>
+          </SUBMISSION_LINK>
+          <SUBMISSION_LINK>
+               <XREF_LINK>
+                    <DB>ENA-RUN</DB>
+                    <ID>ERR002475-ERR002765</ID>
+               </XREF_LINK>
+          </SUBMISSION_LINK>
+          <SUBMISSION_LINK>
+               <XREF_LINK>
+                    <DB>ENA-FASTQ-FILES</DB>
+                    <ID>http://www.ebi.ac.uk/ena/data/view/reports/sra/fastq_files/ERA000073</ID>
+               </XREF_LINK>
+          </SUBMISSION_LINK>
+     </SUBMISSION_LINKS>
+     <SUBMISSION_ATTRIBUTES>
+          <SUBMISSION_ATTRIBUTE>
+               <TAG>ENA-SPOT-COUNT</TAG>
+               <VALUE>1693882518</VALUE>
+          </SUBMISSION_ATTRIBUTE>
+          <SUBMISSION_ATTRIBUTE>
+               <TAG>ENA-BASE-COUNT</TAG>
+               <VALUE>124306278956</VALUE>
+          </SUBMISSION_ATTRIBUTE>
+     </SUBMISSION_ATTRIBUTES>
+</SUBMISSION>
+</ROOT>
