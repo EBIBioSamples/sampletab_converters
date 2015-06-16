@@ -52,10 +52,17 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
 	public static SampleData convert(Document document) throws ParseException,
 			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
 
-		SampleData st = new SampleData();
-
 		Element sampleSet = document.getRootElement();
 		Element sample = XMLUtils.getChildByName(sampleSet, "BioSample");
+		return convert(sample);
+	}
+	
+
+	public static SampleData convert(Element sample) throws ParseException,
+			uk.ac.ebi.arrayexpress2.magetab.exception.ParseException {
+
+		SampleData st = new SampleData();
+
         Element description = XMLUtils.getChildByName(sample, "Description");
 		
 		String accession = sample.attributeValue("accession");
