@@ -10,8 +10,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.Node;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -68,7 +70,7 @@ public class XMLFragmenter {
 		private final DocumentBuilder docBuilder;
 		private final ElementCallback callback;
 		
-		private org.w3c.dom.Document doc = null;
+		private Document doc = null;
 		private boolean inRegion = false;
 	    private Stack<Element> elementStack = new Stack<Element>();
 	    private StringBuilder textBuffer = new StringBuilder();
@@ -83,14 +85,17 @@ public class XMLFragmenter {
 				String qName, Attributes attributes) throws SAXException {
 			//System.out.println("> "+inBioSample+" "+uri+" "+localName+" "+qName);
 			if (callback.isBlockStart(uri, localName, qName, attributes)) {
-				inRegion = true;
-				doc = docBuilder.newDocument();
+				inRegion = true;				
+				doc  = DocumentHelper.createDocument();
+				
 			}
 			if (inRegion) {
 				addTextIfNeeded();
-				Element el = doc.createElement(qName);
+				
+				Element el = doc.addElement(qName);
 				for (int i = 0; i < attributes.getLength(); i++)
-					el.setAttribute(attributes.getQName(i),
+					
+					el.addAttribute(attributes.getQName(i),
 							attributes.getValue(i));
 				elementStack.push(el);
 			}
@@ -105,17 +110,17 @@ public class XMLFragmenter {
 				
 				if (elementStack.isEmpty()) {
 					
-					doc.appendChild(closedEl);
+					doc.add(closedEl);
 					
 					//do something with the element	
-					callback.handleElement(doc.getDocumentElement());
+					callback.handleElement(doc.getRootElement());
 
 					inRegion = false;
 					doc = null;
 					
 				} else {
 					Element parentEl = elementStack.peek();
-					parentEl.appendChild(closedEl);
+					parentEl.add(closedEl);
 				}			
 			}
 		}
@@ -131,9 +136,8 @@ public class XMLFragmenter {
 		// Outputs text accumulated under the current node
 		private void addTextIfNeeded() {
 			if (textBuffer.length() > 0) {
-				Element el = elementStack.peek();
-				Node textNode = doc.createTextNode(textBuffer.toString());
-				el.appendChild(textNode);
+				Element el = elementStack.peek();				
+				el.addText(textBuffer.toString());
 				textBuffer.delete(0, textBuffer.length());
 			}
 		}
