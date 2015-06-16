@@ -91,12 +91,17 @@ public class XMLFragmenter {
 			}
 			if (inRegion) {
 				addTextIfNeeded();
-				
-				Element el = doc.addElement(qName);
-				for (int i = 0; i < attributes.getLength(); i++)
+				Element el;
+				if (elementStack.size() == 0) {
 					
+					el = doc.addElement(qName);
+				} else {
+					el = elementStack.peek().addElement(qName);
+				}
+				for (int i = 0; i < attributes.getLength(); i++) {					
 					el.addAttribute(attributes.getQName(i),
 							attributes.getValue(i));
+				}
 				elementStack.push(el);
 			}
 		}
@@ -110,7 +115,7 @@ public class XMLFragmenter {
 				
 				if (elementStack.isEmpty()) {
 					
-					doc.add(closedEl);
+					//doc.add(closedEl);
 					
 					//do something with the element	
 					callback.handleElement(doc.getRootElement());
@@ -119,8 +124,8 @@ public class XMLFragmenter {
 					doc = null;
 					
 				} else {
-					Element parentEl = elementStack.peek();
-					parentEl.add(closedEl);
+					//Element parentEl = elementStack.peek();
+					//parentEl.add(closedEl);
 				}			
 			}
 		}
