@@ -369,10 +369,17 @@ public class MageTabCron {
             }
             
             String submission = subdir.getName();
+        	log.debug("Checking submission");
             
             //extract the middle part of the accession - the array-express pipeline
             String prefix = submission.substring(4);
             prefix = prefix.substring(0, prefix.indexOf("-"));
+            
+            //ignore GEO 
+            if (prefix.equals("GEOD")) {
+            	log.debug("Skipping GEOD prefix");
+            	continue;
+            }
             
             //get the array express accession - start with AE-
             String aename = submission.substring(2);
