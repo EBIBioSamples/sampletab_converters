@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
+import oracle.jdbc.pool.OracleDataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -55,8 +57,10 @@ public class Accessioner {
         //remember, there is a limit of 500 on the database
         //e.g set each accessioner to a limit of 10, and always run less than 50 cluster jobs
         ds.setPartitionCount(1); 
-        ds.setMaxConnectionsPerPartition(3); 
+        ds.setMinConnectionsPerPartition(1);
+        ds.setMaxConnectionsPerPartition(10); 
         ds.setAcquireIncrement(1);
+        
     	return ds;
     }
     
