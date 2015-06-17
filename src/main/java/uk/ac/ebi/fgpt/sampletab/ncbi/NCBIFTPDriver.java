@@ -172,7 +172,7 @@ public class NCBIFTPDriver extends AbstractDriver {
 				return false;
 			}
 			//its not public, skip
-			if (attributes.getValue("", "access").equals("public")) {
+			if (!attributes.getValue("", "access").equals("public")) {
 				return false;
 			}
 			//its an EBI biosample, skip
@@ -377,6 +377,8 @@ public class NCBIFTPDriver extends AbstractDriver {
 			}
 			
 		}
+		
+		//TODO handle deletes
 
 	}
 	
