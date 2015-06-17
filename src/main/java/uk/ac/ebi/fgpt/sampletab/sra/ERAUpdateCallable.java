@@ -333,8 +333,9 @@ public class ERAUpdateCallable implements Callable<Void> {
 
 			Document studyDocument = getDocumentIfUpdated(studyId);
 			Element root = studyDocument.getRootElement();
+            Element studyElement = XMLUtils.getChildByName(root, "STUDY");
 	        //if its a null link, then private a do not add
-	        if (root == null) {
+	        if (studyElement == null) {
 	        	continue;
 	        }
 
@@ -342,11 +343,11 @@ public class ERAUpdateCallable implements Callable<Void> {
             //groups need to have an accession assigned to them
             groupNode.setGroupAccession(accessioner.singleGroup(studyId, "ENA"));
             
+            String studySubmissionId = ENAUtils.getSubmissionForStudy(studyElement);
 			//check that this group is in this submission
-			if (submissionId.equals(ENAUtils.getSubmissionForStudy(root))) {
+			if (submissionId.equals(studySubmissionId)) {
 				//owned by this submission
-	            Element mainElement = XMLUtils.getChildByName(root, "STUDY");
-	            Element descriptor = XMLUtils.getChildByName(mainElement, "DESCRIPTOR");
+	            Element descriptor = XMLUtils.getChildByName(studyElement, "DESCRIPTOR");
 	            
 	            String description = null;
 	            if (XMLUtils.getChildByName(descriptor, "STUDY_ABSTRACT") != null) {
