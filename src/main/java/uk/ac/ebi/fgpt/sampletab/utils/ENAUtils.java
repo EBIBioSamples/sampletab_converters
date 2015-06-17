@@ -105,36 +105,61 @@ public class ENAUtils {
     	return elem;
     }
     
-    public static Element getStudyElement(String studyId)  throws DocumentException, IOException {
-    	return getElementById(studyId);
+    public static Element getStudyElement(String studyId)  throws DocumentException, IOException, NonPublicObjectException {
+    	Element study = XMLUtils.getChildByName(getElementById(studyId), "STUDY");
+    	if (study == null) {
+    		throw new NonPublicObjectException("No public record for "+studyId);
+    	}
+    	return study;
     }
 
-    public static Element getSubmissionElement(String subId)  throws DocumentException, IOException {
-    	return getElementById(subId);
+    public static Element getSubmissionElement(String subId)  throws DocumentException, IOException, NonPublicObjectException {
+    	Element submission = XMLUtils.getChildByName(getElementById(subId), "SUBMISSION");
+    	if (submission == null) {
+    		throw new NonPublicObjectException("No public record for "+subId);
+    	}
+    	return submission;
     }
 
-    public static Element getSampleElement(String srsId) throws DocumentException, IOException {
-    	return getElementById(srsId);
+    public static Element getSampleElement(String srsId) throws DocumentException, IOException, NonPublicObjectException {
+    	Element sample = XMLUtils.getChildByName(getElementById(srsId), "SAMPLE");
+    	if (sample == null) {
+    		throw new NonPublicObjectException("No public record for "+srsId);
+    	}
+    	return sample;
     }
 
-    public static Set<String> getStudiesForSample(String srsId) throws DocumentException, IOException {
+    public static Element getExperimentElement(String srsId) throws DocumentException, IOException, NonPublicObjectException {
+    	Element experiment = XMLUtils.getChildByName(getElementById(srsId), "EXPERIMENT");
+    	if (experiment == null) {
+    		throw new NonPublicObjectException("No public record for "+srsId);
+    	}
+    	return experiment;
+    }
+
+    public static Element getRunElement(String srsId) throws DocumentException, IOException, NonPublicObjectException {
+    	Element run = XMLUtils.getChildByName(getElementById(srsId), "RUN");
+    	if (run == null) {
+    		throw new NonPublicObjectException("No public record for "+srsId);
+    	}
+    	return run;
+    }
+
+    public static Set<String> getStudiesForSample(String srsId) throws DocumentException, IOException, NonPublicObjectException {
         return getStudiesForSample(getSampleElement(srsId));
     }
 
-    public static Set<String> getStudiesForSample(Element root) {
+    public static Set<String> getStudiesForSample(Element sample) {
         Set<String> studyIDs = new HashSet<String>();
-        Element sample = XMLUtils.getChildByName(root, "SAMPLE");
-        if (sample != null) {
-            Element links = XMLUtils.getChildByName(sample, "SAMPLE_LINKS");
-            if (links != null) {
-                for (Element link : XMLUtils.getChildrenByName(links, "SAMPLE_LINK")) {
-                    Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
-                    if (xref != null) {
-                        Element db = XMLUtils.getChildByName(xref, "DB");
-                        Element id = XMLUtils.getChildByName(xref, "ID");
-                        if (db != null && db.getText().equals("ENA-STUDY") && id != null) {
-                            studyIDs.addAll(getIdentifiers(id.getText()));
-                        }
+        Element links = XMLUtils.getChildByName(sample, "SAMPLE_LINKS");
+        if (links != null) {
+            for (Element link : XMLUtils.getChildrenByName(links, "SAMPLE_LINK")) {
+                Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
+                if (xref != null) {
+                    Element db = XMLUtils.getChildByName(xref, "DB");
+                    Element id = XMLUtils.getChildByName(xref, "ID");
+                    if (db != null && db.getText().equals("ENA-STUDY") && id != null) {
+                        studyIDs.addAll(getIdentifiers(id.getText()));
                     }
                 }
             }
@@ -142,23 +167,21 @@ public class ENAUtils {
         return studyIDs;
     }
     
-    public static Set<String> getSamplesForStudy(String srsId) throws DocumentException, IOException {
+    public static Set<String> getSamplesForStudy(String srsId) throws DocumentException, IOException, NonPublicObjectException {
         return getSamplesForStudy(getStudyElement(srsId));
     }
 
-    public static Set<String> getSamplesForStudy(Element root) {
+    public static Set<String> getSamplesForStudy(Element study) {
         Set<String> sampleIDs = new HashSet<String>();
-        for (Element study : XMLUtils.getChildrenByName(root, "STUDY")) {
-            for (Element studyLinks : XMLUtils.getChildrenByName(study, "STUDY_LINKS")) {
-                for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "STUDY_LINK")) {
-                    for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
-                        Element db = XMLUtils.getChildByName(xrefLink, "DB");
-                        Element id = XMLUtils.getChildByName(xrefLink, "ID");
-                        if (db.getText().equals("ENA-SAMPLE")) {
-                            if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
-                                log.debug("Processing samples "+id.getText() );
-                                sampleIDs.addAll(getIdentifiers(id.getText()));
-                            }
+        for (Element studyLinks : XMLUtils.getChildrenByName(study, "STUDY_LINKS")) {
+            for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "STUDY_LINK")) {
+                for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
+                    Element db = XMLUtils.getChildByName(xrefLink, "DB");
+                    Element id = XMLUtils.getChildByName(xrefLink, "ID");
+                    if (db.getText().equals("ENA-SAMPLE")) {
+                        if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
+                            log.debug("Processing samples "+id.getText() );
+                            sampleIDs.addAll(getIdentifiers(id.getText()));
                         }
                     }
                 }
@@ -168,28 +191,25 @@ public class ENAUtils {
     }
     
     
-    public static String getSubmissionForSample(String srsId) throws DocumentException, IOException {
+    public static String getSubmissionForSample(String srsId) throws DocumentException, IOException, NonPublicObjectException {
         return getSubmissionForSample(getSampleElement(srsId));
     }
 
-    public static String getSubmissionForSample(Element root) {
+    public static String getSubmissionForSample(Element sample) {
         List<String> studyIds = new ArrayList<String>(1);
-        Element sample = XMLUtils.getChildByName(root, "SAMPLE");
-        if (sample != null) {
-            Element links = XMLUtils.getChildByName(sample, "SAMPLE_LINKS");
-            if (links != null) {
-                for (Element link : XMLUtils.getChildrenByName(links, "SAMPLE_LINK")) {
-                    Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
-                    if (xref != null) {
-                        Element db = XMLUtils.getChildByName(xref, "DB");
-                        Element id = XMLUtils.getChildByName(xref, "ID");
-                        if (db != null && db.getText().equals("ENA-SUBMISSION") && id != null) {
-                            studyIds.addAll(getIdentifiers(id.getText()));
-                        }
+        Element links = XMLUtils.getChildByName(sample, "SAMPLE_LINKS");
+        if (links != null) {
+            for (Element link : XMLUtils.getChildrenByName(links, "SAMPLE_LINK")) {
+                Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
+                if (xref != null) {
+                    Element db = XMLUtils.getChildByName(xref, "DB");
+                    Element id = XMLUtils.getChildByName(xref, "ID");
+                    if (db != null && db.getText().equals("ENA-SUBMISSION") && id != null) {
+                        studyIds.addAll(getIdentifiers(id.getText()));
                     }
                 }
             }
-        }
+        } 
         //check that only one submission identifier is present
         if (studyIds.size() != 1) {
         	throw new RuntimeException("Found more than one submission id for "+sample.attributeValue("accession"));
@@ -199,24 +219,21 @@ public class ENAUtils {
     }
     
     
-    public static String getSubmissionForStudy(String srsId) throws DocumentException, IOException {
+    public static String getSubmissionForStudy(String srsId) throws DocumentException, IOException, NonPublicObjectException {
         return getSubmissionForStudy(getStudyElement(srsId));
     }
 
-    public static String getSubmissionForStudy(Element root) {
+    public static String getSubmissionForStudy(Element study) {
         List<String> studyIds = new ArrayList<String>(1);
-        Element study = XMLUtils.getChildByName(root, "STUDY");
-        if (study != null) {
-            Element links = XMLUtils.getChildByName(study, "STUDY_LINKS");
-            if (links != null) {
-                for (Element link : XMLUtils.getChildrenByName(links, "STUDY_LINK")) {
-                    Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
-                    if (xref != null) {
-                        Element db = XMLUtils.getChildByName(xref, "DB");
-                        Element id = XMLUtils.getChildByName(xref, "ID");
-                        if (db != null && db.getText().equals("ENA-SUBMISSION") && id != null) {
-                            studyIds.addAll(getIdentifiers(id.getText()));
-                        }
+        Element links = XMLUtils.getChildByName(study, "STUDY_LINKS");
+        if (links != null) {
+            for (Element link : XMLUtils.getChildrenByName(links, "STUDY_LINK")) {
+                Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
+                if (xref != null) {
+                    Element db = XMLUtils.getChildByName(xref, "DB");
+                    Element id = XMLUtils.getChildByName(xref, "ID");
+                    if (db != null && db.getText().equals("ENA-SUBMISSION") && id != null) {
+                        studyIds.addAll(getIdentifiers(id.getText()));
                     }
                 }
             }
@@ -229,24 +246,21 @@ public class ENAUtils {
         return studyIds.get(0);
     }
 
-    public static Set<String> getStudiesForSubmission(String srsId) throws DocumentException, IOException {
+    public static Set<String> getStudiesForSubmission(String srsId) throws DocumentException, IOException, NonPublicObjectException {
         return getStudiesForSubmission(getSubmissionElement(srsId));
     }
 
-    public static Set<String> getStudiesForSubmission(Element root) {
+    public static Set<String> getStudiesForSubmission(Element submission) {
         Set<String> studyIDs = new HashSet<String>();
-        Element sample = XMLUtils.getChildByName(root, "SUBMISSION");
-        if (sample != null) {
-            Element links = XMLUtils.getChildByName(sample, "SUBMISSION_LINKS");
-            if (links != null) {
-                for (Element link : XMLUtils.getChildrenByName(links, "SUBMISSION_LINK")) {
-                    Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
-                    if (xref != null) {
-                        Element db = XMLUtils.getChildByName(xref, "DB");
-                        Element id = XMLUtils.getChildByName(xref, "ID");
-                        if (db != null && db.getText().equals("ENA-STUDY") && id != null) {
-                            studyIDs.addAll(getIdentifiers(id.getText()));
-                        }
+        Element links = XMLUtils.getChildByName(submission, "SUBMISSION_LINKS");
+        if (links != null) {
+            for (Element link : XMLUtils.getChildrenByName(links, "SUBMISSION_LINK")) {
+                Element xref = XMLUtils.getChildByName(link, "XREF_LINK");
+                if (xref != null) {
+                    Element db = XMLUtils.getChildByName(xref, "DB");
+                    Element id = XMLUtils.getChildByName(xref, "ID");
+                    if (db != null && db.getText().equals("ENA-STUDY") && id != null) {
+                        studyIDs.addAll(getIdentifiers(id.getText()));
                     }
                 }
             }
@@ -254,23 +268,21 @@ public class ENAUtils {
         return studyIDs;
     }
     
-    public static Set<String> getSamplesForSubmission(String srsId) throws DocumentException, IOException {
+    public static Set<String> getSamplesForSubmission(String srsId) throws DocumentException, IOException, NonPublicObjectException {
         return getSamplesForSubmission(getSubmissionElement(srsId));
     }
 
-    public static Set<String> getSamplesForSubmission(Element root) {
+    public static Set<String> getSamplesForSubmission(Element submission) {
         Set<String> sampleIDs = new HashSet<String>();
-        for (Element study : XMLUtils.getChildrenByName(root, "SUBMISSION")) {
-            for (Element studyLinks : XMLUtils.getChildrenByName(study, "SUBMISSION_LINKS")) {
-                for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "SUBMISSION_LINK")) {
-                    for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
-                        Element db = XMLUtils.getChildByName(xrefLink, "DB");
-                        Element id = XMLUtils.getChildByName(xrefLink, "ID");
-                        if (db.getText().equals("ENA-SAMPLE")) {
-                            if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
-                                log.debug("Processing samples "+id.getText() );
-                                sampleIDs.addAll(getIdentifiers(id.getText()));
-                            }
+        for (Element studyLinks : XMLUtils.getChildrenByName(submission, "SUBMISSION_LINKS")) {
+            for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "SUBMISSION_LINK")) {
+                for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
+                    Element db = XMLUtils.getChildByName(xrefLink, "DB");
+                    Element id = XMLUtils.getChildByName(xrefLink, "ID");
+                    if (db.getText().equals("ENA-SAMPLE")) {
+                        if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
+                            log.debug("Processing samples "+id.getText() );
+                            sampleIDs.addAll(getIdentifiers(id.getText()));
                         }
                     }
                 }
@@ -279,23 +291,21 @@ public class ENAUtils {
         return sampleIDs;
     }
     
-    public static Set<String> getSamplesForExperiment(String srxId) throws DocumentException, IOException {
-        return getSamplesForExperiment(getElementById(srxId));
+    public static Set<String> getSamplesForExperiment(String srxId) throws DocumentException, IOException, NonPublicObjectException {
+        return getSamplesForExperiment(getExperimentElement(srxId));
     }
 
-    public static Set<String> getSamplesForExperiment(Element root) {
+    public static Set<String> getSamplesForExperiment(Element experiment) {
         Set<String> sampleIDs = new HashSet<String>();
-        for (Element study : XMLUtils.getChildrenByName(root, "EXPERIMENT")) {
-            for (Element studyLinks : XMLUtils.getChildrenByName(study, "EXPERIMENT_LINKS")) {
-                for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "EXPERIMENT_LINK")) {
-                    for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
-                        Element db = XMLUtils.getChildByName(xrefLink, "DB");
-                        Element id = XMLUtils.getChildByName(xrefLink, "ID");
-                        if (db.getText().equals("ENA-SAMPLE")) {
-                            if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
-                                log.debug("Processing samples "+id.getText() );
-                                sampleIDs.addAll(getIdentifiers(id.getText()));
-                            }
+        for (Element studyLinks : XMLUtils.getChildrenByName(experiment, "EXPERIMENT_LINKS")) {
+            for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "EXPERIMENT_LINK")) {
+                for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
+                    Element db = XMLUtils.getChildByName(xrefLink, "DB");
+                    Element id = XMLUtils.getChildByName(xrefLink, "ID");
+                    if (db.getText().equals("ENA-SAMPLE")) {
+                        if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
+                            log.debug("Processing samples "+id.getText() );
+                            sampleIDs.addAll(getIdentifiers(id.getText()));
                         }
                     }
                 }
@@ -304,23 +314,21 @@ public class ENAUtils {
         return sampleIDs;
     }
     
-    public static Set<String> getSamplesForRun(String srrId) throws DocumentException, IOException {
-        return getSamplesForRun(getElementById(srrId));
+    public static Set<String> getSamplesForRun(String srrId) throws DocumentException, IOException, NonPublicObjectException {
+        return getSamplesForRun(getRunElement(srrId));
     }
 
-    public static Set<String> getSamplesForRun(Element root) {
+    public static Set<String> getSamplesForRun(Element run) {
         Set<String> sampleIDs = new HashSet<String>();
-        for (Element study : XMLUtils.getChildrenByName(root, "RUN")) {
-            for (Element studyLinks : XMLUtils.getChildrenByName(study, "RUN_LINKS")) {
-                for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "RUN_LINK")) {
-                    for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
-                        Element db = XMLUtils.getChildByName(xrefLink, "DB");
-                        Element id = XMLUtils.getChildByName(xrefLink, "ID");
-                        if (db.getText().equals("ENA-SAMPLE")) {
-                            if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
-                                log.debug("Processing samples "+id.getText() );
-                                sampleIDs.addAll(getIdentifiers(id.getText()));
-                            }
+        for (Element studyLinks : XMLUtils.getChildrenByName(run, "RUN_LINKS")) {
+            for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "RUN_LINK")) {
+                for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
+                    Element db = XMLUtils.getChildByName(xrefLink, "DB");
+                    Element id = XMLUtils.getChildByName(xrefLink, "ID");
+                    if (db.getText().equals("ENA-SAMPLE")) {
+                        if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
+                            log.debug("Processing samples "+id.getText() );
+                            sampleIDs.addAll(getIdentifiers(id.getText()));
                         }
                     }
                 }
@@ -359,13 +367,11 @@ public class ENAUtils {
         return secondarys;
     }
 
-    public static String getBioSampleIdForSample(String enaId) throws DocumentException, IOException, UnrecognizedBioSampleException, MissingBioSampleException {
+    public static String getBioSampleIdForSample(String enaId) throws DocumentException, IOException, UnrecognizedBioSampleException, MissingBioSampleException, NonPublicObjectException {
     	if (!enaId.matches("[ESD]RS[0-9]+")) { 
     		throw new IllegalArgumentException(""+enaId+" is not a valid identifier");
     	}
-    	Element root = getSampleElement(enaId);
-        Element sample = XMLUtils.getChildByName(root, "SAMPLE");
-        return getBioSampleIdForSample(sample);
+        return getBioSampleIdForSample(getSampleElement(enaId));
     }
     
     public static String getBioSampleIdForSample(Element sampleElement) throws UnrecognizedBioSampleException, MissingBioSampleException {
@@ -415,6 +421,13 @@ public class ENAUtils {
 			super(string);
 		}
     	
+    }
+    
+    public static class NonPublicObjectException extends Exception {
+
+		public NonPublicObjectException(String string) {
+			super(string);
+		}
     }
     
 }

@@ -45,6 +45,7 @@ import uk.ac.ebi.fgpt.sampletab.Normalizer;
 import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils.MissingBioSampleException;
+import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils.NonPublicObjectException;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils.UnrecognizedBioSampleException;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
@@ -90,6 +91,12 @@ public class ERAUpdateCallable implements Callable<Void> {
 
         Element sampleroot = sampleDocument.getRootElement();
         Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
+        
+        //if its a null link, then private a do not add
+        if (sampleElement == null) {
+        	return;
+        }
+        
         Element sampleName = XMLUtils.getChildByName(sampleElement, "SAMPLE_NAME");
         Element sampledescription = XMLUtils.getChildByName(sampleElement, "DESCRIPTION");
         Element synonym = XMLUtils.getChildByName(sampleElement, "TITLE");
@@ -275,6 +282,11 @@ public class ERAUpdateCallable implements Callable<Void> {
         Element sampleroot = sampleDocument.getRootElement();
         Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
         
+        //if its a null link, then private a do not add
+        if (sampleElement == null) {
+        	return;
+        }
+        
         // create the actual sample node
         SampleNode samplenode = new SampleNode(sampleId);
         try {
@@ -321,6 +333,10 @@ public class ERAUpdateCallable implements Callable<Void> {
 
 			Document studyDocument = getDocumentIfUpdated(studyId);
 			Element root = studyDocument.getRootElement();
+	        //if its a null link, then private a do not add
+	        if (root == null) {
+	        	continue;
+	        }
 
             GroupNode groupNode = new GroupNode(studyId);
             //groups need to have an accession assigned to them
@@ -356,7 +372,14 @@ public class ERAUpdateCallable implements Callable<Void> {
 	        		if (sampleNode == null) {
 	        			//study refers to sample in other submission
 	        			sampleNode = new SampleNode(id);
-	        			String biosampleId = ENAUtils.getBioSampleIdForSample(id);
+        				String biosampleId = null;
+	        			try {
+	        				biosampleId = ENAUtils.getBioSampleIdForSample(id);
+	        			} catch (NonPublicObjectException e) {
+	        				//group in this submission refers to another submissions sample that is not public
+	        				//skip it
+	        				continue;
+	        			}
 	        			sampleNode.setSampleAccession(biosampleId);
 	        			
 	        			st.scd.addNode(sampleNode);
