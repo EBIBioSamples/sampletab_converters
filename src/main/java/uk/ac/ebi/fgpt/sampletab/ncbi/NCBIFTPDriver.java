@@ -175,8 +175,8 @@ public class NCBIFTPDriver extends AbstractDriver {
 			if (!attributes.getValue("", "access").equals("public")) {
 				return false;
 			}
-			//its an EBI biosample, skip
-			if (attributes.getValue("", "accession").startsWith("SAME")) {
+			//its an EBI biosample, or has no accession, skip
+			if (attributes.getValue("", "accession") == null || attributes.getValue("", "accession").startsWith("SAME")) {
 				return false;
 			}
 			//check the date compared to window
