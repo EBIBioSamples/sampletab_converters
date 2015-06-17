@@ -84,7 +84,10 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
         }
         
         for (Element contactElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(ownerElem, "Contacts"), "Contact")) {
-            String[] ownerEmails = contactElem.attributeValue("email").split(",");
+            String[] ownerEmails = new String[0];
+            if (contactElem.attributeValue("email") != null) {
+            	contactElem.attributeValue("email").split(",");
+            }
             String ownerURLString = null;
             if (ownerURL != null) ownerURLString = ownerURL.toString();
             
