@@ -84,11 +84,13 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
         }
         
         for (Element contactElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(ownerElem, "Contacts"), "Contact")) {
-            String ownerEmail = contactElem.attributeValue("email");
+            String[] ownerEmails = contactElem.attributeValue("email").split(",");
             String ownerURLString = null;
             if (ownerURL != null) ownerURLString = ownerURL.toString();
             
-            st.msi.organizations.add(new Organization(ownerName, null, ownerURLString, ownerEmail, "submitter"));
+            for (String ownerEmail : ownerEmails) { 
+            	st.msi.organizations.add(new Organization(ownerName, null, ownerURLString, ownerEmail, "submitter"));
+            }
             
             Element name = XMLUtils.getChildByName(contactElem, "Name");
             if (name != null) {
@@ -98,8 +100,10 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
                 if (firstElem != null) firstName = firstElem.getTextTrim();
                 Element lastElem = XMLUtils.getChildByName(name, "Last");
                 if (lastElem != null) lastName = lastElem.getTextTrim();
-                
-                st.msi.persons.add(new Person(lastName, "", firstName, ownerEmail, "submitter"));
+
+                for (String ownerEmail : ownerEmails) { 
+                	st.msi.persons.add(new Person(lastName, "", firstName, ownerEmail, "submitter"));
+                }
             }
         }
         
