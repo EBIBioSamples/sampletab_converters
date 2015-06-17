@@ -48,6 +48,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.dom4j.Document;
@@ -334,6 +335,9 @@ public class NCBIFTPDriver extends AbstractDriver {
 			if (download) {
 				try {
 					fileoutputstream = new FileOutputStream(downloadFile);
+					//download as a binary file to do it properly
+					ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+					//download it
 					ftpClient.retrieveFile(remoteFile, fileoutputstream);
 					log.info("Downloaded " + remoteFile);
 				} catch (IOException e) {
