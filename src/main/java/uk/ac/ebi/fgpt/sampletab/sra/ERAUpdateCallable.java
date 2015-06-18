@@ -311,13 +311,17 @@ public class ERAUpdateCallable implements Callable<Void> {
         
         Document subDocument = getDocumentIfUpdated(submissionId);
         
+        Element submissionElement = XMLUtils.getChildByName(subDocument.getRootElement(), "SUBMISSION");
+        
 		//get the samples
-		for (String sampleId : ENAUtils.getSamplesForSubmission(subDocument.getRootElement())) {			
+		for (String sampleId : ENAUtils.getSamplesForSubmission(submissionElement)) {			
 
 			Document sampleDocument = getDocumentIfUpdated(sampleId);
+			Element root = sampleDocument.getRootElement();
+            Element sampleElement = XMLUtils.getChildByName(root, "STUDY");
 			
 			//check that this sample is for this submission
-			if (submissionId.equals(ENAUtils.getSubmissionForSample(sampleDocument.getRootElement()))) {
+			if (submissionId.equals(ENAUtils.getSubmissionForSample(sampleElement))) {
 				//this sample is owned by this submission
 				handleSample(sampleId, sampleDocument);
 			} else {
@@ -329,7 +333,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 		}
 		
 		//get the groups
-		for (String studyId : ENAUtils.getStudiesForSubmission(submissionId)) {		
+		for (String studyId : ENAUtils.getStudiesForSubmission(submissionElement)) {		
 
 			Document studyDocument = getDocumentIfUpdated(studyId);
 			Element root = studyDocument.getRootElement();
@@ -368,7 +372,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 	            groupNode.addAttribute(new DatabaseAttribute("ENA SRA", studyId, "http://www.ebi.ac.uk/ena/data/view/" + studyId));
 
 	            //study links
-	            for (String id : ENAUtils.getSamplesForStudy(studyId)) {
+	            for (String id : ENAUtils.getSamplesForStudy(studyElement)) {
 	        		SampleNode sampleNode = st.scd.getNode(id, SampleNode.class);
 	        		if (sampleNode == null) {
 	        			//study refers to sample in other submission
