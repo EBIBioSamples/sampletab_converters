@@ -318,7 +318,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 
 			Document sampleDocument = getDocumentIfUpdated(sampleId);
 			Element root = sampleDocument.getRootElement();
-            Element sampleElement = XMLUtils.getChildByName(root, "STUDY");
+            Element sampleElement = XMLUtils.getChildByName(root, "SAMPLE");
 			
 			//check that this sample is for this submission
 			if (submissionId.equals(ENAUtils.getSubmissionForSample(sampleElement))) {
