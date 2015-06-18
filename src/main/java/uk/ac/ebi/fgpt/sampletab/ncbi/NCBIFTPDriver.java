@@ -67,6 +67,7 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
 import uk.ac.ebi.fgpt.sampletab.Normalizer;
+import uk.ac.ebi.fgpt.sampletab.utils.ConanUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLFragmenter;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLFragmenter.ElementCallback;
@@ -129,40 +130,51 @@ public class NCBIFTPDriver extends AbstractDriver {
 				return;
 			}
 			
-			if (sd != null) {
-	            File localOutDir = new File(outputDir, SampleTabUtils.getSubmissionDirPath(submission));
-	            localOutDir = localOutDir.getAbsoluteFile();
-	            localOutDir.mkdirs();
-	            File sampletabFile = new File(localOutDir, "sampletab.pre.txt");
-
-		        // write back out
-		        FileWriter out = null;
-		        try {
-		            out = new FileWriter(sampletabFile);
-		        } catch (IOException e) {
-		            log.error("Error opening " + sampletabFile, e);
-		            return;
-		        }
-
-		        Normalizer norm = new Normalizer();
-		        norm.normalize(sd);
-
-		        SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-		        try {
-		            sampletabwriter.write(sd);
-		        } catch (IOException e) {
-		            log.error("Error writing " + sampletabFile, e);
-		            return;
-		        } finally {
-		        	if (sampletabwriter != null) {
-			            try {
-							sampletabwriter.close();
-						} catch (IOException e) {
-							//do nothing
-						}
-					}		        	
-		        }
+			if (sd == null) {
+				return;
 			}
+			
+            File localOutDir = new File(outputDir, SampleTabUtils.getSubmissionDirPath(submission));
+            localOutDir = localOutDir.getAbsoluteFile();
+            localOutDir.mkdirs();
+            File sampletabFile = new File(localOutDir, "sampletab.pre.txt");
+
+	        // write back out
+	        FileWriter out = null;
+	        try {
+	            out = new FileWriter(sampletabFile);
+	        } catch (IOException e) {
+	            log.error("Error opening " + sampletabFile, e);
+	            return;
+	        }
+
+	        Normalizer norm = new Normalizer();
+	        norm.normalize(sd);
+
+	        SampleTabWriter sampletabwriter = new SampleTabWriter(out);
+	        try {
+	            sampletabwriter.write(sd);
+	        } catch (IOException e) {
+	            log.error("Error writing " + sampletabFile, e);
+	            return;
+	        } finally {
+	        	if (sampletabwriter != null) {
+		            try {
+						sampletabwriter.close();
+					} catch (IOException e) {
+						//do nothing
+					}
+				}		        	
+	        }
+
+	        //trigger conan if appropriate
+	        if (!noconan) {
+	            try {
+					ConanUtils.submit(sd.msi.submissionIdentifier, "BioSamples (other)");
+				} catch (IOException e) {
+					log.error("Problem starting conan for "+sd.msi.submissionIdentifier);
+				}
+	        }
 		}
 
 		@Override
@@ -394,7 +406,7 @@ public class NCBIFTPDriver extends AbstractDriver {
 		fragment.handleStream(inputStream, "UTF-8", callback);		
 		Collections.sort(accessions);
 		for (String accession : accessions) {
-			System.out.println(accession);
+			//System.out.println(accession);
 		}		
 	}
 
