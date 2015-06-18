@@ -149,9 +149,9 @@ select * from cv_status;
         		try {
 					future.get();
 				} catch (InterruptedException e) {
-					log.error("Problem processing "+submissions.get(submissions.size()-futures.size()), e);
+					log.error("Problem processing "+submissions.get(submissions.size()-1-futures.size()), e);
 				} catch (ExecutionException e) {
-					log.error("Problem processing "+submissions.get(submissions.size()-futures.size()), e);
+					log.error("Problem processing "+submissions.get(submissions.size()-1-futures.size()), e);
 				}
         	}
         }
