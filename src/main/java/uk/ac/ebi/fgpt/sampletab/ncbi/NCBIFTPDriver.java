@@ -1,67 +1,32 @@
 package uk.ac.ebi.fgpt.sampletab.ncbi;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.SocketException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
-import java.util.Stack;
+import java.util.Queue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.events.XMLEvent;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stax.StAXSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPReply;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
@@ -94,29 +59,33 @@ public class NCBIFTPDriver extends AbstractDriver {
 	private boolean noconan = false;
 
 	private SimpleDateFormat argumentDateFormat = new SimpleDateFormat("yyyy/MM/dd");
-
-	private SimpleDateFormat ftpDateTimeFormat = new SimpleDateFormat("YYYYMMDDhhmmss");
 	
 	private SimpleDateFormat xmlDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 	
 	private Logger log = LoggerFactory.getLogger(getClass());
 
+	
+	private ExecutorService pool = null;
+	private LinkedList<Future<Void>> futures = new LinkedList<Future<Void>>();
 
 	private Date fromDate = null;
 	private Date toDate = null;
 
 	private XMLFragmenter fragment;
 	
-	private final List<String> accessions = new ArrayList<String>();
-	
-	private ElementCallback callback = new ElementCallback() {
+	private class ElementCallable implements Callable<Void> {
+
+		private final Element element;
+		
+		public ElementCallable(Element element){
+			this.element = element;
+		}
 		
 		@Override
-		public void handleElement(Element element) {
+		public Void call() throws Exception {
 			//all check if this is worth processing are done in isBlockStart
 			String accession = element.attributeValue("accession");
 			String submission = "GNC-"+accession;
-			accessions.add(accession);
 			log.info("Processing accession "+accession);			
 			
 			SampleData sd = null;
@@ -124,14 +93,14 @@ public class NCBIFTPDriver extends AbstractDriver {
 				sd = NCBIBiosampleRunnable.convert(element);
 			} catch (ParseException e) {
 				log.error("Unable to parse "+accession);
-				return;
+				return null;
 			} catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
 				log.error("Unable to parse "+accession);
-				return;
+				return null;
 			}
 			
 			if (sd == null) {
-				return;
+				return null;
 			}
 			
             File localOutDir = new File(outputDir, SampleTabUtils.getSubmissionDirPath(submission));
@@ -145,7 +114,7 @@ public class NCBIFTPDriver extends AbstractDriver {
 	            out = new FileWriter(sampletabFile);
 	        } catch (IOException e) {
 	            log.error("Error opening " + sampletabFile, e);
-	            return;
+	            return null;
 	        }
 
 	        Normalizer norm = new Normalizer();
@@ -156,7 +125,7 @@ public class NCBIFTPDriver extends AbstractDriver {
 	            sampletabwriter.write(sd);
 	        } catch (IOException e) {
 	            log.error("Error writing " + sampletabFile, e);
-	            return;
+	            return null;
 	        } finally {
 	        	if (sampletabwriter != null) {
 		            try {
@@ -175,6 +144,29 @@ public class NCBIFTPDriver extends AbstractDriver {
 					log.error("Problem starting conan for "+sd.msi.submissionIdentifier);
 				}
 	        }
+	        //finish here
+	        return null;
+		}
+		
+	};
+	
+	private ElementCallback callback = new ElementCallback() {
+		
+		@Override
+		public void handleElement(Element element) {
+			Callable<Void> call = new ElementCallable(element);
+			if (pool == null) {
+				try {
+					call.call();
+				} catch (Exception e) {
+					log.error("Problem handling element", e);
+				}
+			} else {
+				Future<Void> f = pool.submit(call);
+				futures.add(f);
+				//stop the queue getting too large by checking it here
+				checkQueue(threads*10);
+			}
 		}
 
 		@Override
@@ -231,25 +223,10 @@ public class NCBIFTPDriver extends AbstractDriver {
 		// dummy constructor
 	}
 	
+	/**
+	 * Do some initial setup that might throw exceptions
+	 */
 	public void setup() {
-
-		if (minDateString != null) {
-			try {
-				fromDate = argumentDateFormat.parse(minDateString);
-			} catch (ParseException e) {
-				log.error("Unable to parse date " + minDateString);
-				return;
-			}
-		}
-		
-		if (maxDateString != null) {
-			try {
-				toDate = argumentDateFormat.parse(maxDateString);
-			} catch (ParseException e) {
-				log.error("Unable to parse date " + maxDateString);
-				return;
-			}
-		}
 
 		try {
 			fragment = XMLFragmenter.newInstance();
@@ -266,136 +243,65 @@ public class NCBIFTPDriver extends AbstractDriver {
 		super.doMain(args);
 
 		setup();
+
+		//convert data parameters into date objects
+		try {
+			fromDate = argumentDateFormat.parse(minDateString);
+		} catch (ParseException e) {
+			log.error("Unable to parse date " + minDateString);
+			return;
+		}
+		try {
+			toDate = argumentDateFormat.parse(maxDateString);
+		} catch (ParseException e) {
+			log.error("Unable to parse date " + maxDateString);
+			return;
+		}
 		
-		ExecutorService pool = null;
+		//create some threads if using threading
 		if (threads > 0) {
 			pool = Executors.newFixedThreadPool(threads);
 		}
 		
-		FTPClient ftpClient = new FTPClient();
-		String server = "ftp.ncbi.nlm.nih.gov";
-		try {
-			ftpClient.connect(server);
-			ftpClient.login("anonymous", "");
-			log.info("Connected to " + server + ".");
-			log.info(ftpClient.getReplyString());
+		//establish a connection to the FTP site
+		NCBIFTP ncbiftp = new NCBIFTP();
+		ncbiftp.setup("ftp.ncbi.nlm.nih.gov");
 
-			// After connection attempt, check the reply code to verify success.
-			int reply = ftpClient.getReplyCode();
-			if (!FTPReply.isPositiveCompletion(reply)) {
-				ftpClient.disconnect();
-				throw new RuntimeException("FTP connection failed");
-			}
-		} catch (SocketException e) {
-			log.error("Unable to connect to ftp.ncbi.nlm.nih.gov", e);
-			return;
-		} catch (IOException e) {
-			log.error("Unable to connect to ftp.ncbi.nlm.nih.gov", e);
-			return;
-		}
-
+		//this is the remote filename we want
 		String remoteFile = "/biosample/biosample_set.xml.gz";
-		
-		if (downloadFile == null) {
-	
-			InputStream is = null;
-	
-			try {
-				is = ftpClient.retrieveFileStream(remoteFile);
-				handleGZStream(is);
-			} catch (ParserConfigurationException e) {
-				log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-				return;
-			} catch (SAXException e) {
-				log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-				return;
-			} catch (IOException e) {
-				log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-				return;
-			} finally {
-				if (is != null) {
-					try {
-						is.close();
-					} catch (IOException e) {
-						// do nothing
-					}
-				}
-			}
-		} else {
-			FileOutputStream fileoutputstream = null;
 
-			Date ftpModDate = null;
-			try {
-				ftpModDate = ftpDateTimeFormat.parse(ftpClient.getModificationTime(remoteFile));
-			} catch (ParseException e) {
-				log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-				return;
-			} catch (IOException e) {
-				log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-				return;
+		InputStream is = null;
+		try {
+			if (downloadFile == null) {
+				is = ncbiftp.streamFromFTP(remoteFile);
+			} else {
+				is = ncbiftp.streamFromLocalCopy(remoteFile, downloadFile);
 			}
-			
-			boolean download = true;
-			
-			if (downloadFile.exists()) {
-				Date modTime = new Date(downloadFile.lastModified());
-				if (modTime.after(ftpModDate)) {
-					download = false;
-				}
-			}
-			
-			if (download) {
+			handleGZStream(is);
+		} catch (IOException e) {
+			log.error("Error accessing ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
+			return;
+		} catch (ParseException e) {
+			log.error("Unable to read date", e);
+			return;
+		} catch (ParserConfigurationException e) {
+			log.error("Unable to create SAX parser", e);
+			return;
+		} catch (SAXException e) {
+			log.error("Unable to handle SAX", e);
+			return;
+		} finally {
+			if (is != null) {
 				try {
-					fileoutputstream = new FileOutputStream(downloadFile);
-					//download as a binary file to do it properly
-					ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-					//download it
-					ftpClient.retrieveFile(remoteFile, fileoutputstream);
-					log.info("Downloaded " + remoteFile);
+					is.close();
 				} catch (IOException e) {
-					log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-					return;
-				} finally {
-					if (fileoutputstream != null) {
-						try {
-							fileoutputstream.close();
-						} catch (IOException e) {
-							//do nothing
-						}
-					}
+					// do nothing
 				}
 			}
-
-			FileInputStream fileinputstream = null;
-			try {
-				fileinputstream = new FileInputStream(downloadFile);
-				handleGZStream(fileinputstream);
-			} catch (FileNotFoundException e) {
-				log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-				return;
-			} catch (ParserConfigurationException e) {
-				log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-				return;
-			} catch (SAXException e) {
-				log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-				return;
-			} catch (IOException e) {
-				log.error("Unable to process to ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz", e);
-				return;
-			} finally {
-				if (fileinputstream != null) {
-					try {
-						fileinputstream.close();
-					} catch (IOException e) {
-						//do nothing
-					}
-				}
-			}
-			
 		}
 		
-		//TODO handle deletes
-
+		//make sure the queue is finished if using pooling
+		checkQueue(0);
 	}
 	
 	public void handleGZStream(InputStream inputStream) throws ParserConfigurationException, SAXException, IOException {
@@ -403,13 +309,22 @@ public class NCBIFTPDriver extends AbstractDriver {
 	}
 	
 	public void handleStream(InputStream inputStream) throws ParserConfigurationException, SAXException, IOException {
-		fragment.handleStream(inputStream, "UTF-8", callback);		
-		Collections.sort(accessions);
-		for (String accession : accessions) {
-			//System.out.println(accession);
-		}		
+		fragment.handleStream(inputStream, "UTF-8", callback);	
 	}
 
+	public void checkQueue(int maxSize) {
+		while (futures.size() > maxSize) {
+			Future<Void> next = futures.removeFirst();
+			try {
+				next.get();
+			} catch (InterruptedException e) {
+				log.error("Problem handling element", e);
+			} catch (ExecutionException e) {
+				log.error("Problem handling element", e);
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
 		new NCBIFTPDriver().doMain(args);
 
