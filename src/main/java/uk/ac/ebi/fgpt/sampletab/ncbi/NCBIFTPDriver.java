@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -300,8 +301,22 @@ public class NCBIFTPDriver extends AbstractDriver {
 			}
 		}
 		
-		//make sure the queue is finished if using pooling
-		checkQueue(0);
+		if (pool != null) {
+
+			//make sure the queue is finished if using pooling
+			checkQueue(0);
+            // run the pool and then close it afterwards
+            // must synchronize on the pool object
+            synchronized (pool) {
+                pool.shutdown();
+                try {
+                    // allow 24h to execute. Rather too much, but meh
+                    pool.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    log.error("Interuppted awaiting thread pool termination", e);
+                }
+            }
+		}
 	}
 	
 	public void handleGZStream(InputStream inputStream) throws ParserConfigurationException, SAXException, IOException {

@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
@@ -134,12 +135,20 @@ public class ERADriver extends AbstractDriver {
 					log.error("Problem processing "+submissions.get(submissions.size()-1-futures.size()), e);
 				}
         	}
+
+            // run the pool and then close it afterwards
+            // must synchronize on the pool object
+            synchronized (pool) {
+                pool.shutdown();
+                try {
+                    // allow 24h to execute. Rather too much, but meh
+                    pool.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    log.error("Interuppted awaiting thread pool termination", e);
+                }
+            }
         }
-        //TODO handle deletes
-        
-        if (pool != null) {
-        	pool.shutdown();
-        }
+
     }
     
     private void setup() throws ClassNotFoundException {
