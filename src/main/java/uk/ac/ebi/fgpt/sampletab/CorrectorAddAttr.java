@@ -5,6 +5,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import oracle.jdbc.pool.OracleDataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +19,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.MaterialAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SexAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.UnitAttribute;
 
-import com.jolbox.bonecp.BoneCPDataSource;
-
 public class CorrectorAddAttr {
 
     private String hostname;
@@ -27,7 +27,7 @@ public class CorrectorAddAttr {
     private String username;
     private String password;
 
-    private BoneCPDataSource ds = null;
+    private OracleDataSource ds = null;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -40,7 +40,7 @@ public class CorrectorAddAttr {
         this.database = database;
     }
     
-    protected void doSetup() {
+    protected void doSetup() throws SQLException {
         synchronized(this) {
             if (ds == null) {
                 try {
@@ -52,21 +52,16 @@ public class CorrectorAddAttr {
 
                 String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
                 
-                ds = new BoneCPDataSource();
-                ds.setJdbcUrl(connectURI);
-                ds.setUsername(username);
-                ds.setPassword(password);
                 
-                //remember, there is a limit of 500 on the database
-                //set each accessioner to a limit of 10, and always run less than 50 cluster jobs
-                ds.setPartitionCount(1); 
-                ds.setMaxConnectionsPerPartition(10); 
-                ds.setAcquireIncrement(2); 
+                OracleDataSource ds = new OracleDataSource();
+                ds.setURL(connectURI);
+                ds.setUser(username);
+                ds.setPassword(password);
             }
         }
     }
 
-    public void addAttribute(SampleData st) {
+    public void addAttribute(SampleData st) throws SQLException {
         doSetup();
         
         String acc = st.msi.submissionIdentifier;
@@ -122,7 +117,7 @@ public class CorrectorAddAttr {
     }
     
     
-    public void addAttribute(SampleData st, SampleNode sample) {
+    public void addAttribute(SampleData st, SampleNode sample) throws SQLException {
         doSetup();
         
         log.trace("Checking for attributes to add to "+sample.getSampleAccession());

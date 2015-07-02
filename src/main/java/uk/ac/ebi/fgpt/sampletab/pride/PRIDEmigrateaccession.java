@@ -11,16 +11,18 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
+import oracle.jdbc.pool.OracleDataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.jolbox.bonecp.BoneCPDataSource;
 
 public class PRIDEmigrateaccession {
 
     private final Map<String, Set<String>> groups;
 
-    private BoneCPDataSource ds = null;
+    private DataSource ds = null;
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -37,17 +39,18 @@ public class PRIDEmigrateaccession {
         }
 
         String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
-        
-        ds = new BoneCPDataSource();
-        ds.setJdbcUrl(connectURI);
-        ds.setUsername(username);
-        ds.setPassword(password);
-        
-        //remember, there is a limit of 500 on the database
-        //set each accessioner to a limit of 10, and always run less than 50 cluster jobs
-        ds.setPartitionCount(1); 
-        ds.setMaxConnectionsPerPartition(10); 
-        ds.setAcquireIncrement(2); 
+
+        OracleDataSource ds;
+		try {
+			ds = new OracleDataSource();
+	        ds.setURL(connectURI);
+	        ds.setUser(username);
+	        ds.setPassword(password);
+		} catch (SQLException e) {
+			//bad practice, but I don't have time to go and update all the cases this is used in right now...
+			throw new RuntimeException(e);
+		}
+        this.ds = ds;
         
     }
     

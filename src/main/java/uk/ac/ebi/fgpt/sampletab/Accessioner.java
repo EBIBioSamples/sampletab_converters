@@ -21,8 +21,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 
-import com.jolbox.bonecp.BoneCPDataSource;
-
 public class Accessioner {
 	//create prepared statements
 	String stmGetAss = "SELECT ACCESSION FROM SAMPLE_ASSAY WHERE USER_ACCESSION LIKE ? AND SUBMISSION_ACCESSION LIKE ?";
@@ -49,20 +47,34 @@ public class Accessioner {
 
         String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
         
-        BoneCPDataSource ds = new BoneCPDataSource();
-        ds.setJdbcUrl(connectURI);
-        ds.setUsername(dbusername);
+        OracleDataSource ds = null;
+        
+        try {
+			ds = new OracleDataSource();
+		} catch (SQLException e1) {
+			//bad practice, but I don't have time to go and update all the cases this is used in right now...
+			throw new RuntimeException(e1);
+		}
+        ds.setURL(connectURI);
+        ds.setUser(dbusername);
         ds.setPassword(dbpassword);
+        try {
+			ds.setConnectionCachingEnabled(true);
+		} catch (SQLException e) {
+			Logger log = LoggerFactory.getLogger(Accessioner.class);
+			log.error("Problem creating cached connection pool", e);
+		} //oracle moving to UCP library at some point
         
         //remember, there is a limit of 500 on the database
         //e.g set each accessioner to a limit of 10, and always run less than 50 cluster jobs
-        ds.setPartitionCount(1); 
-        ds.setMinConnectionsPerPartition(1);
-        ds.setMaxConnectionsPerPartition(10); 
-        ds.setAcquireIncrement(1);
+        //ds.setPartitionCount(1); 
+        //ds.setMinConnectionsPerPartition(1);
+        //ds.setMaxConnectionsPerPartition(10); 
+        //ds.setAcquireIncrement(1);
         
     	return ds;
     }
+        
     
     public Accessioner(DataSource dataSource) {
     	setDataSource(dataSource);

@@ -145,6 +145,7 @@
 
 		<!-- database -->
 		<!-- connection pooling library -->
+		<!-- this is only used for mysql connections - oracle ones use built in pooling -->
 		<dependency>
 			<groupId>com.jolbox</groupId>
 			<artifactId>bonecp</artifactId>
