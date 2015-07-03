@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,9 +20,18 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
+import org.custommonkey.xmlunit.Diff;
+import org.custommonkey.xmlunit.XMLUnit;
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
@@ -88,7 +98,55 @@ public class NCBIFTPDriver extends AbstractDriver {
 			String accession = element.attributeValue("accession");
 			String submission = "GNC-"+accession;
 			log.info("Processing accession "+accession);			
-			
+
+            File localOutDir = new File(outputDir, SampleTabUtils.getSubmissionDirPath(submission));
+            localOutDir = localOutDir.getAbsoluteFile();
+            localOutDir.mkdirs();
+            File sampletabFile = new File(localOutDir, "sampletab.pre.txt");
+            File xmlFile = new File(localOutDir, "out.xml");
+            
+            //create a document containing the element
+            Document document = DocumentHelper.createDocument();
+            Element root = document.addElement("BioSampleSet");
+            root.add(element);
+            
+            boolean saveXML = true;
+            if (xmlFile.exists()) {
+        		//get the copy from disk (if present)        	
+    	        Document existingDoc = XMLUtils.getDocument(xmlFile);
+
+    	        //diff the XML files
+    	        XMLUnit.setIgnoreAttributeOrder(true);
+    	        XMLUnit.setIgnoreWhitespace(true);
+
+    		    //need them to be in the right class for XMLTest to use
+    	        org.w3c.dom.Document docOrig = null;
+    	        org.w3c.dom.Document docNew = null;
+    	        try {
+    	            docOrig = XMLUtils.convertDocument(existingDoc);
+    	            docNew = XMLUtils.convertDocument(document);
+    	        } catch (TransformerException e) {
+    	            log.error("Unable to convert from dom4j to w3c Document");
+    	        }
+    	        
+    	        Diff diff = new Diff(docOrig, docNew);
+    	        if (diff.similar()) {
+    	            //equivalent to last file, no update needed
+    	        	saveXML = false;
+    	        	log.info("No changes detected in "+xmlFile);
+    	        }
+            }
+            if (saveXML) {
+	            //output it to disk
+	            try {
+		            XMLUtils.writeDocumentToFile(document, xmlFile);
+	            } catch (IOException e) {
+					log.error("Unable to write to "+xmlFile);
+					return null;
+	            }
+            }
+            
+            //convert the element into a sampletab document
 			SampleData sd = null;
 			try {
 				sd = NCBIBiosampleRunnable.convert(element);
@@ -104,12 +162,8 @@ public class NCBIFTPDriver extends AbstractDriver {
 				return null;
 			}
 			
-            File localOutDir = new File(outputDir, SampleTabUtils.getSubmissionDirPath(submission));
-            localOutDir = localOutDir.getAbsoluteFile();
-            localOutDir.mkdirs();
-            File sampletabFile = new File(localOutDir, "sampletab.pre.txt");
 
-	        // write back out
+	        // write sampletab back out
 	        FileWriter out = null;
 	        try {
 	            out = new FileWriter(sampletabFile);
