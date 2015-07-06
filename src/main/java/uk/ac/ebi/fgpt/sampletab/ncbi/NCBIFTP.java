@@ -102,12 +102,14 @@ public class NCBIFTP {
 			Date modTime = new Date(localCopy.lastModified());
 			if (modTime.after(ftpModDate)) {
 				download = false;
+				log.info("Local copy up-to-date, no download needed");
 			}
 		}
 
 		if (download) {
+			log.info("Local copy out-of-date, no download needed");
+			
 			// if we need to download a copy, do so
-
 			FileOutputStream fileoutputstream = null;
 			try {
 				fileoutputstream = new FileOutputStream(localCopy);
@@ -121,7 +123,7 @@ public class NCBIFTP {
 					}
 				}
 			}
-			log.trace("Downloaded " + remoteFileName+" to "+localCopy);
+			log.info("Downloaded " + remoteFileName+" to "+localCopy);
 		}
 		
 		//now open a stream for the local version
