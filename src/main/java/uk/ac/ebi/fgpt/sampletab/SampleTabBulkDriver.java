@@ -3,6 +3,7 @@ package uk.ac.ebi.fgpt.sampletab;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -125,8 +126,9 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
 			ds = Accessioner.getDataSource(hostname, 
 			        port, database, dbusername, dbpassword);
 		} catch (ClassNotFoundException e) {
+			//bad practice, but I don't have time to go and update all the cases this is used in right now...
 			throw new RuntimeException(e);
-		}
+		} 
         
         accessioner = new Accessioner(ds);
         correctorAddAttr = new CorrectorAddAttr(hostname, 
