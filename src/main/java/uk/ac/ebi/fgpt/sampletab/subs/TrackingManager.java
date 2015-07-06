@@ -89,7 +89,7 @@ public class TrackingManager {
                 
                 ds.setPartitionCount(1); 
                 ds.setMaxConnectionsPerPartition(10); 
-                ds.setAcquireIncrement(2);   
+                ds.setAcquireIncrement(1);   
             }
         }
         return ds;
