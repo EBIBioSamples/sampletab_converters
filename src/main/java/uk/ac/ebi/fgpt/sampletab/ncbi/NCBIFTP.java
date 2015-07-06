@@ -23,7 +23,7 @@ import org.xml.sax.SAXException;
 public class NCBIFTP {
 
 
-	private SimpleDateFormat ftpDateTimeFormat = new SimpleDateFormat("YYYYMMDDhhmmss");
+	private SimpleDateFormat ftpDateTimeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 	
 	protected FTPClient ftpClient = null;
 	
@@ -96,10 +96,20 @@ public class NCBIFTP {
 
 		boolean download = true;
 		Date ftpModDate = null;
-		ftpModDate = ftpDateTimeFormat.parse(ftpClient.getModificationTime(remoteFileName));
+		String ftpModString = ftpClient.getModificationTime(remoteFileName);
+		//ftpModString will be like "213 20150706073959" so need to trim the first part
+		ftpModString = ftpModString.split(" ")[1];
+		ftpModDate = ftpDateTimeFormat.parse(ftpModString);
 		
 		if (localCopy.exists()) {
-			Date modTime = new Date(localCopy.lastModified());
+			long modTimeLong = localCopy.lastModified();
+			Date modTime = new Date();
+			
+			log.trace("FTP time = "+ftpModString);
+			log.trace("FTP time = "+ftpModDate);
+			log.trace("File time = "+modTimeLong);
+			log.trace("File time = "+modTime);
+			
 			if (modTime.after(ftpModDate)) {
 				download = false;
 				log.info("Local copy up-to-date, no download needed");
