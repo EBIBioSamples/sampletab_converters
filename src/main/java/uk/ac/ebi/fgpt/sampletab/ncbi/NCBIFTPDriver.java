@@ -66,6 +66,9 @@ public class NCBIFTPDriver extends AbstractDriver {
 	@Option(name = "--download", aliases = { "-d" }, usage = "downloadfile")
 	protected File downloadFile = null;
 
+	@Option(name = "--force", aliases = { "-f" }, usage = "force updates")
+	protected boolean force = false;
+
 	@Option(name = "--no-conan", usage = "do not trigger conan loads?")
 	private boolean noconan = false;
 
@@ -136,7 +139,8 @@ public class NCBIFTPDriver extends AbstractDriver {
     	        	log.info("No changes detected in "+xmlFile);
     	        }
             }
-            if (saveXML) {
+            
+            if (saveXML || force) {
 	            //output it to disk
 	            try {
 		            XMLUtils.writeDocumentToFile(document, xmlFile);
@@ -144,61 +148,63 @@ public class NCBIFTPDriver extends AbstractDriver {
 					log.error("Unable to write to "+xmlFile);
 					return null;
 	            }
+
+	            //convert the element into a sampletab document
+				SampleData sd = null;
+				try {
+					sd = NCBIBiosampleRunnable.convert(element);
+				} catch (ParseException e) {
+					log.error("Unable to parse "+accession);
+					return null;
+				} catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
+					log.error("Unable to parse "+accession);
+					return null;
+				}
+				
+				if (sd == null) {
+					return null;
+				}
+				
+
+		        // write sampletab back out
+		        FileWriter out = null;
+		        try {
+		            out = new FileWriter(sampletabFile);
+		        } catch (IOException e) {
+		            log.error("Error opening " + sampletabFile, e);
+		            return null;
+		        }
+
+		        Normalizer norm = new Normalizer();
+		        norm.normalize(sd);
+
+		        SampleTabWriter sampletabwriter = new SampleTabWriter(out);
+		        try {
+		            sampletabwriter.write(sd);
+		        } catch (IOException e) {
+		            log.error("Error writing " + sampletabFile, e);
+		            return null;
+		        } finally {
+		        	if (sampletabwriter != null) {
+			            try {
+							sampletabwriter.close();
+						} catch (IOException e) {
+							//do nothing
+						}
+					}		        	
+		        }
+
+		        //trigger conan if appropriate
+		        if (!noconan) {
+		            try {
+						ConanUtils.submit(sd.msi.submissionIdentifier, "BioSamples (other)");
+					} catch (IOException e) {
+						log.error("Problem starting conan for "+sd.msi.submissionIdentifier);
+					}
+		        }
+	            
             }
             
-            //convert the element into a sampletab document
-			SampleData sd = null;
-			try {
-				sd = NCBIBiosampleRunnable.convert(element);
-			} catch (ParseException e) {
-				log.error("Unable to parse "+accession);
-				return null;
-			} catch (uk.ac.ebi.arrayexpress2.magetab.exception.ParseException e) {
-				log.error("Unable to parse "+accession);
-				return null;
-			}
-			
-			if (sd == null) {
-				return null;
-			}
-			
-
-	        // write sampletab back out
-	        FileWriter out = null;
-	        try {
-	            out = new FileWriter(sampletabFile);
-	        } catch (IOException e) {
-	            log.error("Error opening " + sampletabFile, e);
-	            return null;
-	        }
-
-	        Normalizer norm = new Normalizer();
-	        norm.normalize(sd);
-
-	        SampleTabWriter sampletabwriter = new SampleTabWriter(out);
-	        try {
-	            sampletabwriter.write(sd);
-	        } catch (IOException e) {
-	            log.error("Error writing " + sampletabFile, e);
-	            return null;
-	        } finally {
-	        	if (sampletabwriter != null) {
-		            try {
-						sampletabwriter.close();
-					} catch (IOException e) {
-						//do nothing
-					}
-				}		        	
-	        }
-
-	        //trigger conan if appropriate
-	        if (!noconan) {
-	            try {
-					ConanUtils.submit(sd.msi.submissionIdentifier, "BioSamples (other)");
-				} catch (IOException e) {
-					log.error("Problem starting conan for "+sd.msi.submissionIdentifier);
-				}
-	        }
 	        //finish here
 	        return null;
 		}
