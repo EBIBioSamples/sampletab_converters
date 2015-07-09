@@ -105,10 +105,10 @@ public class NCBIFTP {
 			long modTimeLong = localCopy.lastModified();
 			Date modTime = new Date();
 			
-			log.trace("FTP time = "+ftpModString);
-			log.trace("FTP time = "+ftpModDate);
-			log.trace("File time = "+modTimeLong);
-			log.trace("File time = "+modTime);
+			log.info("FTP time = "+ftpModString);
+			log.info("FTP time = "+ftpModDate);
+			log.info("File time = "+modTimeLong);
+			log.info("File time = "+modTime);
 			
 			if (modTime.after(ftpModDate)) {
 				download = false;
