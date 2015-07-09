@@ -103,7 +103,7 @@ public class NCBIFTP {
 		
 		if (localCopy.exists()) {
 			long modTimeLong = localCopy.lastModified();
-			Date modTime = new Date();
+			Date modTime = new Date(modTimeLong);
 			
 			log.info("FTP time = "+ftpModString);
 			log.info("FTP time = "+ftpModDate);
