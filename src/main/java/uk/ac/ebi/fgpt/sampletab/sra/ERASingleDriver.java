@@ -27,6 +27,9 @@ public class ERASingleDriver  extends AbstractDriver{
     
     @Option(name = "--no-conan", usage = "do not trigger conan loads")
     protected boolean noconan = false;
+
+	@Option(name = "--force", aliases = { "-f" }, usage = "force updates")
+	protected boolean force = false;
     
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -71,7 +74,7 @@ public class ERASingleDriver  extends AbstractDriver{
         accession = new Accessioner(ds);
 		
         //actually process it
-		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession);
+		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession, force);
 		try {
 			call.call();
 		} catch (Exception e) {

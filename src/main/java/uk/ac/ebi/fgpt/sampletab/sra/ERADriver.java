@@ -54,6 +54,9 @@ public class ERADriver extends AbstractDriver {
     
     @Option(name = "--no-conan", usage = "do not trigger conan loads")
     protected boolean noconan = false;
+
+	@Option(name = "--force", aliases = { "-f" }, usage = "force updates")
+	protected boolean force = false;
    
 
     protected ExecutorService pool;
@@ -98,7 +101,7 @@ public class ERADriver extends AbstractDriver {
         
         if (pool == null) {
         	for (String submissionId : submissions) {
-        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession);
+        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession, force);
         		try {
 					call.call();
 				} catch (Exception e) {
@@ -109,7 +112,7 @@ public class ERADriver extends AbstractDriver {
         	Deque<Future<Void>> futures = new LinkedList<Future<Void>>();
         	for (int i = 0 ; i < submissions.size(); i++) {
         		String submissionId = submissions.get(i);
-        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession);
+        		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession, force);
         		futures.push(pool.submit(call));
         		while (futures.size() > 100) {
         			log.info("No. of futures left "+futures.size());

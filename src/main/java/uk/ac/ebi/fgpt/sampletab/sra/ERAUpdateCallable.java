@@ -60,6 +60,8 @@ public class ERAUpdateCallable implements Callable<Void> {
     
     private final Accessioner accessioner;
     
+    private final boolean force;
+    
     private final SampleData st = new SampleData();
 
     private static Validator<SampleData> validator = new SampleTabValidator();
@@ -80,11 +82,12 @@ public class ERAUpdateCallable implements Callable<Void> {
         characteristicsIgnore = Collections.unmodifiableCollection(characteristicsIgnore);
     }
     
-	public ERAUpdateCallable(File outDir, String submissionId, boolean conan, Accessioner accessioner) {
+	public ERAUpdateCallable(File outDir, String submissionId, boolean conan, Accessioner accessioner, boolean force) {
 		this.outDir = outDir;
 		this.submissionId = submissionId;
 		this.conan = conan;
 		this.accessioner = accessioner;
+		this.force = force;
 	}
 	
 	private void handleSample(String sampleId, Document sampleDocument) throws ParseException {
@@ -409,7 +412,7 @@ public class ERAUpdateCallable implements Callable<Void> {
         outsubdir.mkdirs();
         File file = new File(outsubdir, "sampletab.pre.txt");
         
-		if (updated || !file.exists()){
+		if (updated || !file.exists() || force){
 			
 	        log.info("SampleTab converted, preparing to write "+submissionId);
 	        
