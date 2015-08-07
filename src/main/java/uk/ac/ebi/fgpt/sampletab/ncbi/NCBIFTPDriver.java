@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPInputStream;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -391,10 +392,12 @@ public class NCBIFTPDriver extends AbstractDriver {
 		while (futures.size() > maxSize) {
 			Future<Void> next = futures.removeFirst();
 			try {
-				next.get();
+				next.get(12, TimeUnit.HOURS);
 			} catch (InterruptedException e) {
 				log.error("Problem handling element", e);
 			} catch (ExecutionException e) {
+				log.error("Problem handling element", e);
+			} catch (TimeoutException e) {
 				log.error("Problem handling element", e);
 			}
 		}
