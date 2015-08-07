@@ -322,15 +322,18 @@ public class ERAUpdateCallable implements Callable<Void> {
 			Document sampleDocument = getDocumentIfUpdated(sampleId);
 			Element root = sampleDocument.getRootElement();
             Element sampleElement = XMLUtils.getChildByName(root, "SAMPLE");
-			
-			//check that this sample is for this submission
-			if (submissionId.equals(ENAUtils.getSubmissionForSample(sampleElement))) {
-				//this sample is owned by this submission
-				handleSample(sampleId, sampleDocument);
-			} else {
-				//this sample is referenced by this submission, but not included in it
-				referenceSample(sampleId, sampleDocument);
-			}
+            
+            //sometimes a sample will be refered to that doesn't exist - check for that here
+            if (sampleElement != null) {
+				//check that this sample is for this submission
+				if (submissionId.equals(ENAUtils.getSubmissionForSample(sampleElement))) {
+					//this sample is owned by this submission
+					handleSample(sampleId, sampleDocument);
+				} else {
+					//this sample is referenced by this submission, but not included in it
+					referenceSample(sampleId, sampleDocument);
+				}
+            }
 			
             
 		}
