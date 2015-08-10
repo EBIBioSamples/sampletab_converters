@@ -139,18 +139,22 @@ public class SampleTabBulkRunnable implements Callable<Void> {
             //dont detect relationships for reference samples
             //these will be done manually
             if (!st.msi.submissionReferenceLayer) {
-                log.trace("Detecting derived from...");
-                try {
-                    derivedFrom.convert(st);
-                } catch (IOException e) {
-                    throw e;
-                }
+            	if (derivedFrom != null) {
+	                log.trace("Detecting derived from...");
+	                try {
+	                    derivedFrom.convert(st);
+	                } catch (IOException e) {
+	                    throw e;
+	                }
+            	}
 
                 log.trace("Detecting same as...");
-                try {
-                    sameAs.convert(st);
-                } catch (IOException e) {
-                    throw e;
+                if (sameAs != null) {
+	                try {
+	                    sameAs.convert(st);
+	                } catch (IOException e) {
+	                    throw e;
+	                }
                 }
             }
             
