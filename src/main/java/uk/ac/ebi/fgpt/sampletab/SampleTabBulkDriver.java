@@ -112,9 +112,10 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
     }
     
     private synchronized DerivedFrom getDerivedFrom() {
-        if (derivedFrom == null) {
-            derivedFrom = new DerivedFrom(rootDir);
-        }
+    	//disabled 2015/08/10 see ticket BSD-255
+        //if (derivedFrom == null) {
+        //    derivedFrom = new DerivedFrom(rootDir);
+        //}
         return derivedFrom;
     }
     
