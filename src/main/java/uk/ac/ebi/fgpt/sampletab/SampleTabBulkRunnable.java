@@ -53,6 +53,10 @@ public class SampleTabBulkRunnable implements Callable<Void> {
         this.force = force;
         this.noload = noload;
         this.nogroup = nogroup;
+        
+        if (!nogroup && noload) {
+        	log.warn("Nonsensical combination of nogroup = False and noload = true");
+        }
     }
 
     @Override
