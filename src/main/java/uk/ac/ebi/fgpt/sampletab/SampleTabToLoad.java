@@ -27,18 +27,11 @@ import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class SampleTabToLoad {
-    
-    private boolean inGroup = true;
 
     private Logger log = LoggerFactory.getLogger(getClass());
     
     public SampleTabToLoad() {
     	//do nothing
-    }
-
-
-    public void setInGroup(boolean inGroup) {
-        this.inGroup = inGroup;
     }
 
     public SampleData convert(String sampleTabFilename) throws IOException, ParseException, ClassNotFoundException, SQLException {
@@ -84,39 +77,7 @@ public class SampleTabToLoad {
                 }
             }
         }
-        
-        if (inGroup) {
-            // All samples must be in a group
-            // so create a new group and add all non-grouped samples to it
-            GroupNode othergroup = new GroupNode("Other Group");
-            for (SampleNode sample : sampledata.scd.getNodes(SampleNode.class)) {
-                // check there is not an existing group first...
-                boolean sampleInGroup = false;
-                //even if it has child nodes, both parent and child must be in a group
-                //this will lead to some weird looking row duplications, but since this is an internal 
-                //intermediate file it is not important
-                //Follow up: since implicit derived from relationships are made explicit above, 
-                //this is not an issue any more
-                for (Node n : sample.getChildNodes()) {
-                   if (GroupNode.class.isInstance(n)) {
-                        sampleInGroup = true;
-                    }
-                }
                 
-                if (!sampleInGroup){
-                    log.debug("Adding sample " + sample.getNodeName() + " to group " + othergroup.getNodeName());
-                    othergroup.addSample(sample);
-                }
-            }
-            //only add the new group if it has any samples
-            if (othergroup.getParentNodes().size() > 0){
-                //Now that accessions are assigned via a username,
-                //a new group cann't be created this late in the process.
-                //Instead, if a group would be created, throw an error
-                throw new RuntimeException("Cannot create other group without accesion");
-            }
-        }
-        
         //add a link to where the file will be available on the FTP site
         //TODO how to handle this for single samples?
         for (GroupNode group : sampledata.scd.getNodes(GroupNode.class)) {
