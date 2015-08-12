@@ -15,21 +15,6 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     @Option(name = "--output", aliases={"-o"}, usage = "output filename relative to input")
     private String outputFilename;
 
-    @Option(name = "--hostname", aliases={"-n"}, usage = "server hostname")
-    private String hostname;
-
-    @Option(name = "--port", usage = "server port")
-    private Integer port;
-
-    @Option(name = "--database", aliases={"-d"}, usage = "server database")
-    private String database;
-
-    @Option(name = "--username", aliases={"-u"}, usage = "server username")
-    private String dbusername;
-
-    @Option(name = "--password", aliases={"-p"}, usage = "server password")
-    private String dbpassword;
-
     private Logger log = LoggerFactory.getLogger(getClass());
     
     public SampleTabToLoadDriver() {
@@ -44,36 +29,12 @@ public class SampleTabToLoadDriver extends AbstractInfileDriver {
     @Override
     protected void preProcess(){
         
-        //load defaults
-        Properties oracleProperties = new Properties();
-        try {
-            InputStream is = getClass().getResourceAsStream("/oracle.properties");
-            oracleProperties.load(is);
-        } catch (IOException e) {
-            log.error("Unable to read resource oracle.properties", e);
-        }
-        if (hostname == null){
-            hostname = oracleProperties.getProperty("hostname");
-        }
-        if (port == null){
-            port = new Integer(oracleProperties.getProperty("port"));
-        }
-        if (database == null){
-            database = oracleProperties.getProperty("database");
-        }
-        if (dbusername == null){
-            dbusername = oracleProperties.getProperty("username");
-        }
-        if (dbpassword == null){
-            dbpassword = oracleProperties.getProperty("password");
-        }
     }
 
     @Override
     protected Callable<Void> getNewTask(File inputFile) {
         inputFile = inputFile.getAbsoluteFile();
         File outputFile = new File(inputFile.getParentFile(), outputFilename);
-        return new SampleTabToLoadRunnable(inputFile, outputFile, 
-                hostname, port, database, dbusername, dbpassword);
+        return new SampleTabToLoadRunnable(inputFile, outputFile);
     }
 }

@@ -21,26 +21,13 @@ public class SampleTabToLoadRunnable implements Callable<Void> {
     
     private final File inputFile;
     private final File outputFile;
-    
-    private final String host;
-    private final int port;
-    private final String database;
-    private final String dbusername;
-    private String dbpassword;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    public SampleTabToLoadRunnable(File inputFile, File outputFile, 
-            String host, int port, String database, String dbusername, String dbpassword) {
+    public SampleTabToLoadRunnable(File inputFile, File outputFile) {
         
         this.inputFile = inputFile;
         this.outputFile = outputFile;
-        
-        this.host = host;
-        this.port = port;
-        this.database = database;
-        this.dbusername = dbusername;
-        this.dbpassword = dbpassword;
     }
 
     @Override
