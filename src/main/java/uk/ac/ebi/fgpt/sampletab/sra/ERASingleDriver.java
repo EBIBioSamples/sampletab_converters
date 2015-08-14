@@ -3,6 +3,7 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
@@ -22,8 +23,8 @@ public class ERASingleDriver  extends AbstractDriver{
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output directory")
     protected File outputDir;
     
-    @Argument(required=true, index=1, metaVar="SUBMISSION", usage = "submission ID")
-    protected String submissionId;
+    @Argument(required=true, index=1, metaVar="SUBMISSION", usage = "submission ID(s)")
+    protected List<String> submissionIds;
     
     @Option(name = "--no-conan", usage = "do not trigger conan loads")
     protected boolean noconan = false;
@@ -74,12 +75,15 @@ public class ERASingleDriver  extends AbstractDriver{
         accession = new Accessioner(ds);
 		
         //actually process it
-		Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession, force);
-		try {
-			call.call();
-		} catch (Exception e) {
-			log.error("Problem processing "+submissionId, e);
-		}
+        for (String submissionId : submissionIds) {
+			Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession, force);
+			try {
+				call.call();
+			} catch (Exception e) {
+				log.error("Problem processing "+submissionId, e);
+			}
+			//TODO multithread enable this?
+        }
     }
 
 }
