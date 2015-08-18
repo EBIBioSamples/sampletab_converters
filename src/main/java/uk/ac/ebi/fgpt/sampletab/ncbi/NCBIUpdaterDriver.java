@@ -36,6 +36,9 @@ public class NCBIUpdaterDriver extends AbstractDriver {
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
 
+	@Option(name = "--force", aliases = { "-f" }, usage = "force updates")
+	protected boolean force = false;
+
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
 
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -71,7 +74,7 @@ public class NCBIUpdaterDriver extends AbstractDriver {
             
             LinkedList<Future<Void>> futures = new LinkedList<Future<Void>>();
             for (Integer id : new NCBIUpdateDownloader.UpdateIterable(fromDate, toDate)) {
-                Callable<Void> t = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir, !noconan);
+                Callable<Void> t = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir, !noconan, force);
                 if (t != null) {
                     Future<Void> f = pool.submit(t);
                     futures.add(f);
@@ -101,7 +104,7 @@ public class NCBIUpdaterDriver extends AbstractDriver {
         } else {
             //we are not using a pool, its all in one
             for (Integer id : new NCBIUpdateDownloader.UpdateIterable(fromDate, toDate)) {
-                Callable<Void> t = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir, !noconan);
+                Callable<Void> t = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir, !noconan, force);
                 if (t != null) {                    
                     try {
                         t.call();

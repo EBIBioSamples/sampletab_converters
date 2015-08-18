@@ -115,11 +115,13 @@ public class NCBIUpdateDownloader {
         private final int id;
         private File outDir;
         private final boolean conan;
+        private final boolean force;
         
-        public DownloadConvertCallable(int id, File outDir, boolean conan) {
+        public DownloadConvertCallable(int id, File outDir, boolean conan, boolean force) {
             this.id = id;
             this.outDir = outDir;
             this.conan = conan;
+            this.force  = force;
         }
 
         
@@ -152,8 +154,9 @@ public class NCBIUpdateDownloader {
 
 
             //compare the XML file to the version on disk, if any
+            //no need to compare if forcing
             boolean saveXML = true;
-			if (xmlFile.exists()) {
+			if (xmlFile.exists() && !force) {
 	            Document existingDoc = XMLUtils.getDocument(xmlFile);
 	            XMLUnit.setIgnoreAttributeOrder(true);
 	            XMLUnit.setIgnoreWhitespace(true);
@@ -173,7 +176,7 @@ public class NCBIUpdateDownloader {
 	            	saveXML = false;
 	            }
 			}
-            if (saveXML) {
+            if (saveXML || force) {
 	            log.info("writing to "+xmlFile);
 	            
 	            XMLUtils.writeDocumentToFile(document, xmlFile);

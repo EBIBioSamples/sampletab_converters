@@ -22,6 +22,9 @@ public class NCBIUpdateSingleDriver extends AbstractDriver{
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
 
+	@Option(name = "--force", aliases = { "-f" }, usage = "force updates")
+	protected boolean force = false;
+
     private Logger log = LoggerFactory.getLogger(getClass());
     	
     protected void doMain(String[] args) {
@@ -35,7 +38,7 @@ public class NCBIUpdateSingleDriver extends AbstractDriver{
 	        
 	        int id = Integer.parseInt(submissionId.substring(8, submissionId.length()));        
 	        
-	        Callable<Void> call = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir, !noconan);
+	        Callable<Void> call = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir, !noconan, force);
 			try {
 				call.call();
 			} catch (Exception e) {
