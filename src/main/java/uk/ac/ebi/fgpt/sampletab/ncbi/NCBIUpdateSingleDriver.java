@@ -28,8 +28,8 @@ public class NCBIUpdateSingleDriver extends AbstractDriver{
         super.doMain(args);
 
         for (String submissionId : submissionIds) {
-	        if (!submissionId.startsWith("GNC-SAMN")) {
-	        	log.warn("Submission ID must be an NCBI accession starting with GNC-SAMN ("+submissionId+")");
+	        if (!submissionId.startsWith("GNC-SAM") || submissionId.startsWith("GNC-SAME")) {
+	        	log.warn("Submission ID must be an NCBI accession starting with GNC-SAM not GNC-SAME ("+submissionId+")");
 	        	continue;
 	        }
 	        
