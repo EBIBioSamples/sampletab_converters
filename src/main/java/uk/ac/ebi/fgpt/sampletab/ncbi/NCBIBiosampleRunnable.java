@@ -139,9 +139,14 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
         
         //handle the organism
         Element organismElement = XMLUtils.getChildByName(description, "Organism");
-        sn.addAttribute(new OrganismAttribute(Corrector.cleanString(organismElement.attributeValue("taxonomy_name")),
-                st.msi.getOrAddTermSource(ncbitaxonomy),
-                Integer.parseInt(organismElement.attributeValue("taxonomy_id"))));        
+        if (organismElement.attributeValue("taxonomy_id") == null) {
+	        sn.addAttribute(new OrganismAttribute(Corrector.cleanString(organismElement.attributeValue("taxonomy_name"))));
+        } else {
+            sn.addAttribute(new OrganismAttribute(Corrector.cleanString(organismElement.attributeValue("taxonomy_name")),
+                    st.msi.getOrAddTermSource(ncbitaxonomy),
+                    Integer.parseInt(organismElement.attributeValue("taxonomy_id"))));
+        	
+        }
         
         //handle attributes
         for (Element attrElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(sample, "Attributes"), "Attribute")) {
