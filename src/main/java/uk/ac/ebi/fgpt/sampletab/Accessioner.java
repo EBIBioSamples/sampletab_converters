@@ -12,9 +12,12 @@ import oracle.jdbc.pool.OracleDataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.jolbox.bonecp.BoneCPDataSource;
 
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
@@ -47,30 +50,10 @@ public class Accessioner {
 
         String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
         
-        OracleDataSource ds = null;
-        
-        try {
-			ds = new OracleDataSource();
-		} catch (SQLException e1) {
-			//bad practice, but I don't have time to go and update all the cases this is used in right now...
-			throw new RuntimeException(e1);
-		}
-        ds.setURL(connectURI);
+        BoneCPDataSource ds = new BoneCPDataSource();
+        ds.setJdbcUrl(connectURI);
         ds.setUser(dbusername);
-        ds.setPassword(dbpassword);
-        try {
-			ds.setConnectionCachingEnabled(true);
-		} catch (SQLException e) {
-			Logger log = LoggerFactory.getLogger(Accessioner.class);
-			log.error("Problem creating cached connection pool", e);
-		} //oracle moving to UCP library at some point
-        
-        //remember, there is a limit of 500 on the database
-        //e.g set each accessioner to a limit of 10, and always run less than 50 cluster jobs
-        //ds.setPartitionCount(1); 
-        //ds.setMinConnectionsPerPartition(1);
-        //ds.setMaxConnectionsPerPartition(10); 
-        //ds.setAcquireIncrement(1);
+        ds.setPassword(dbpassword);     
         
     	return ds;
     }
