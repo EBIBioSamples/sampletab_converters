@@ -76,6 +76,10 @@ public class ERASingleDriver  extends AbstractDriver{
 		
         //actually process it
         for (String submissionId : submissionIds) {
+	        if (!submissionId.startsWith("ERA")) {
+	        	log.warn("Submission ID must be an ENA submission starting with ERA ("+submissionId+")");
+	        	continue;
+	        }
 			Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession, force);
 			try {
 				call.call();
