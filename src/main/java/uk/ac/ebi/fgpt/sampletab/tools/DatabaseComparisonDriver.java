@@ -10,8 +10,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
@@ -87,19 +89,25 @@ public class DatabaseComparisonDriver extends AbstractDriver {
         
         // get the SAMN/D accession public in NCBI
         log.info("Getting SAMN accessions public in NCBI");
-        Set<String> samnNcbi = getNCBISAMN();
-        output(samnNcbi, new File("samnNcbi.txt"));
+        Map<String, Integer> samnNcbi = getNCBISAMN();
+        output(samnNcbi.keySet(), new File("samnNcbi.txt"));
         log.info("Got SAMN accessions public in NCBI ("+samnNcbi.size()+")");
         
         //find SAMN/D accession public in NCBI but not biosamples
         log.info("Getting SAMN accessions in NCBI but not BioSamples");
-        Set<String> samnNcbiNotBio = getInANotB(samnNcbi, samnBio);
+        Set<String> samnNcbiNotBio = getInANotB(samnNcbi.keySet(), samnBio);
         output(samnNcbiNotBio, new File("samnNcbiNotBio.txt"));
         log.info("Got SAMN accessions in NCBI but not BioSamples ("+samnNcbiNotBio.size()+")");
         
+        //find NCBI IDs for SAMN/D accession public in NCBI but not biosamples
+        log.info("Getting NCBI IDs in NCBI but not BioSamples");
+        Set<String> idNcbiNotBio = getNCBIIDforAccession(samnNcbiNotBio, samnNcbi);
+        output(idNcbiNotBio, new File("idNcbiNotBio.txt"));
+        log.info("Got NCBI IDs in NCBI but not BioSamples ("+idNcbiNotBio.size()+")");
+        
         //find SAMN/D accession public ENA but not NCBI
         log.info("Getting SAME accessions in ENA but not NCBI");
-        Set<String> samnEnaNotNcbi = getInANotB(samnEna, samnNcbi);
+        Set<String> samnEnaNotNcbi = getInANotB(samnEna, samnNcbi.keySet());
         output(samnEnaNotNcbi, new File("samnEnaNotNcbi.txt"));
         log.info("Got SAME accessions in ENA but not NCBI ("+samnEnaNotNcbi.size()+")");
     }
@@ -207,15 +215,17 @@ public class DatabaseComparisonDriver extends AbstractDriver {
     	return acc;
     }
 
-    private Set<String> getNCBISAMN() {
+    private Map<String, Integer> getNCBISAMN() {
 
-		final Set<String> accessions = new HashSet<String>();
+		final Map<String, Integer> accessions = new HashMap<String, Integer>();
 
     	ElementCallback callback = new ElementCallback() {
     		
     		@Override
     		public void handleElement(Element e) {
-    			accessions.add(e.attributeValue("accession"));
+    			String acc = e.attributeValue("accession");
+    			Integer id = Integer.parseInt(e.attributeValue("id"));
+    			accessions.put(acc, id);
     		}
 
     		@Override
@@ -261,6 +271,14 @@ public class DatabaseComparisonDriver extends AbstractDriver {
 		}
     	
     	return accessions;
+    }
+    
+    private Set<String> getNCBIIDforAccession(Collection<String> accessionsSAMN, Map<String, Integer> samnNcbi) {
+    	Set<String> ids = new HashSet<String>();
+    	for (String accessionSAMN : accessionsSAMN) {
+    		ids.add(samnNcbi.get(accessionSAMN).toString());
+    	}
+    	return ids;
     }
     
     private Set<String> getENASubmissionsForSAMEAccessions(Collection<String> accessionsSAME) {
