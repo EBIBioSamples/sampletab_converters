@@ -71,7 +71,7 @@ public class DatabaseComparisonDriver extends AbstractDriver {
         log.info("Getting ERA submissions for samples in Ena but not BioSamples");
         Set<String> enaSubmissions = getENASubmissionsForSAMEAccessions(sameEnaNotBio);
         output(enaSubmissions, new File("eraEnaNotBio.txt"));
-        log.info("Got ERA submissions for samples in Ena but not BioSamples");
+        log.info("Got ERA submissions for samples in Ena but not BioSamples ("+enaSubmissions.size()+")");
         
         // get the SAMN/D accession in biosamples
         log.info("Getting SAMN accessions in BioSamples");
@@ -209,7 +209,7 @@ public class DatabaseComparisonDriver extends AbstractDriver {
 
     private Set<String> getNCBISAMN() {
 
-		final Set<String> accessions = new HashSet<>();
+		final Set<String> accessions = new HashSet<String>();
 
     	ElementCallback callback = new ElementCallback() {
     		
@@ -264,7 +264,7 @@ public class DatabaseComparisonDriver extends AbstractDriver {
     }
     
     private Set<String> getENASubmissionsForSAMEAccessions(Collection<String> accessionsSAME) {
-		final Set<String> accessionsERA = new HashSet<>();
+		final Set<String> accessionsERA = new HashSet<String>();
 		JdbcTemplate t = getENAJdbcTemplate();
 		Object[] args = new Object[1];
 		int[] types = new int[1];
