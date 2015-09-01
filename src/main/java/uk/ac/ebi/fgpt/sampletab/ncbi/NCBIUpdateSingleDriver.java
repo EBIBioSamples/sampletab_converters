@@ -16,8 +16,8 @@ public class NCBIUpdateSingleDriver extends AbstractDriver{
     @Argument(required=true, index=0, metaVar="OUTPUT", usage = "output directory")
     protected File outDir;
     
-    @Argument(required=true, index=1, metaVar="SUBMISSION", usage = "submission ID(s)")
-    protected List<String> submissionIds;
+    @Argument(required=true, index=1, metaVar="SUBMISSION", usage = "submission ID(s) (not accessions)")
+    protected List<String> ncbiIds;
     
     @Option(name = "--no-conan", usage = "do not trigger conan loads?")
     private boolean noconan = false;
@@ -30,19 +30,20 @@ public class NCBIUpdateSingleDriver extends AbstractDriver{
     protected void doMain(String[] args) {
         super.doMain(args);
 
-        for (String submissionId : submissionIds) {
-	        if (!submissionId.startsWith("GNC-SAM") || submissionId.startsWith("GNC-SAME")) {
-	        	log.warn("Submission ID must be an NCBI accession starting with GNC-SAM not GNC-SAME ("+submissionId+")");
+        for (String ncbiId : ncbiIds) {
+        	int id;
+	        try {
+	        	id = Integer.parseInt(ncbiId);
+	        } catch (NumberFormatException e) {
+	        	log.error("Not a number ("+ncbiId+")");
 	        	continue;
 	        }
-	        
-	        int id = Integer.parseInt(submissionId.substring(8, submissionId.length()));        
 	        
 	        Callable<Void> call = new NCBIUpdateDownloader.DownloadConvertCallable(id, outDir, !noconan, force);
 			try {
 				call.call();
 			} catch (Exception e) {
-				log.error("Problem processing "+submissionId, e);
+				log.error("Problem processing "+ncbiId, e);
 			}
         }
     }
