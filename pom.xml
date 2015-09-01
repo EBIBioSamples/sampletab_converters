@@ -3,7 +3,7 @@
 
 	<groupId>uk.ac.ebi.fgpt</groupId>
 	<artifactId>sampletab-converters</artifactId>
-	<version>1.0.21-SNAPSHOT</version>
+	<version>1.0.21</version>
 	<packaging>jar</packaging>
 
 	<parent>
@@ -51,7 +51,7 @@
 	<scm>
 		<connection>scm:git:git@github.com:EBIBioSamples/sampletab_converters.git</connection>
     	<developerConnection>scm:git:git@github.com:EBIBioSamples/sampletab_converters.git</developerConnection>
-		<tag>head</tag>
+		<tag>v1.0.21</tag>
 	</scm>
 
 	<repositories>
