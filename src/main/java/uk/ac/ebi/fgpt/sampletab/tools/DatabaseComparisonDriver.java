@@ -8,8 +8,10 @@ import java.io.Writer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,17 +53,17 @@ public class DatabaseComparisonDriver extends AbstractDriver {
     public void doMain(String[] args){
         super.doMain(args);
         
-        //get the SAME accessions in biosamples
-        log.info("Getting SAME accessions in BioSamples");
-        Set<String> sameBio = getBioSampleSAME();
-        output(sameBio, new File("sameBio.txt"));
-        log.info("Got SAME accessions in biosamples ("+sameBio.size()+")");
-        
         //get the SAME accessions public in ENA 
         log.info("Getting SAME accessions public in ENA");
         Set<String> sameEna = getENASAME();
         output(sameEna, new File("sameEna.txt"));
         log.info("Got SAME accessions public in ENA ("+sameEna.size()+")");
+        
+        //get the SAME accessions in biosamples
+        log.info("Getting SAME accessions in BioSamples");
+        Set<String> sameBio = getBioSampleSAME();
+        output(sameBio, new File("sameBio.txt"));
+        log.info("Got SAME accessions in biosamples ("+sameBio.size()+")");
         
         //find SAME accessions in ENA but not BioSamples
         log.info("Getting SAME accessions in Ena but not BioSamples");
@@ -74,6 +76,15 @@ public class DatabaseComparisonDriver extends AbstractDriver {
         Set<String> enaSubmissions = getENASubmissionsForSAMEAccessions(sameEnaNotBio);
         output(enaSubmissions, new File("eraEnaNotBio.txt"));
         log.info("Got ERA submissions for samples in Ena but not BioSamples ("+enaSubmissions.size()+")");
+        
+        //get the SAME accessions assigned by biosamples
+        log.info("Getting SAME accessions assigned by BioSamples");
+        Set<String> sameBioAssign = getBioSamplesSAMEAssign();
+        output(sameBioAssign, new File("sameBioAssign.txt"));
+        log.info("Got SAME accessions assigned by BioSamples ("+sameBioAssign.size()+")");
+        
+        //TODO get SAME accessions assigned but not used by BioSamples
+        
         
         // get the SAMN/D accession in biosamples
         log.info("Getting SAMN accessions in BioSamples");
@@ -106,13 +117,14 @@ public class DatabaseComparisonDriver extends AbstractDriver {
         log.info("Got NCBI IDs in NCBI but not BioSamples ("+idNcbiNotBio.size()+")");
         
         //find SAMN/D accession public ENA but not NCBI
-        log.info("Getting SAME accessions in ENA but not NCBI");
+        log.info("Getting SAMN accessions in ENA but not NCBI");
         Set<String> samnEnaNotNcbi = getInANotB(samnEna, samnNcbi.keySet());
         output(samnEnaNotNcbi, new File("samnEnaNotNcbi.txt"));
-        log.info("Got SAME accessions in ENA but not NCBI ("+samnEnaNotNcbi.size()+")");
+        log.info("Got SAMN accessions in ENA but not NCBI ("+samnEnaNotNcbi.size()+")");
     }
-    
-    private void output(Set<String> in, File file) {
+
+
+	private void output(Set<String> in, File file) {
     	List<String> sorted = new ArrayList<String>(in);
     	Collections.sort(sorted);
     	Writer out = null;
@@ -153,13 +165,27 @@ public class DatabaseComparisonDriver extends AbstractDriver {
         return ds;
     }
     
+    private DataSource getBioSampleAccDataSource() {
+        BoneCPDataSource ds = new BoneCPDataSource();
+        ds.setJdbcUrl("jdbc:oracle:thin:@ora-vm-023.ebi.ac.uk:1531:biosdpro");
+        ds.setUser("bsd_acc");
+        ds.setPassword("b5d4ccpr0");  
+        return ds;
+    }
+    
     private JdbcTemplate getBioSampleJdbcTemplate() {
     	JdbcTemplate t = new JdbcTemplate();
     	t.setDataSource(getBioSampleDataSource());
     	return t;
     }
     
-    private RowMapper<String> getAccessionRowMapper() {        
+    private JdbcTemplate getBioSampleAccJdbcTemplate() {
+    	JdbcTemplate t = new JdbcTemplate();
+    	t.setDataSource(getBioSampleAccDataSource());
+    	return t;
+    }
+    
+    private RowMapper<String> getStringRowMapper() {        
     	RowMapper<String> rm = new RowMapper<String>() {
 			@Override
 			public String mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -169,17 +195,39 @@ public class DatabaseComparisonDriver extends AbstractDriver {
     	return rm;    	
     }
     
+    private RowMapper<Integer> getIntegerRowMapper() {        
+    	RowMapper<Integer> rm = new RowMapper<Integer>() {
+			@Override
+			public Integer mapRow(ResultSet rs, int rowNum) throws SQLException {
+				return rs.getInt(1);
+			}
+    	};
+    	return rm;    	
+    }
+    
     private Set<String> getBioSampleSAME() {
     	Set<String> acc = new HashSet<String>();
-    	acc.addAll(getBioSampleJdbcTemplate().query("SELECT ACC FROM BIO_PRODUCT WHERE ACC LIKE 'SAME%'", getAccessionRowMapper()));    	
+    	acc.addAll(getBioSampleJdbcTemplate().query("SELECT ACC FROM BIO_PRODUCT WHERE ACC LIKE 'SAME%'", getStringRowMapper()));    	
     	return acc;
     }
     
     private Set<String> getBioSampleSAMN() {
     	Set<String> acc = new HashSet<String>();
-    	acc.addAll(getBioSampleJdbcTemplate().query("SELECT ACC FROM BIO_PRODUCT WHERE ACC LIKE 'SAM%' AND ACC NOT LIKE 'SAME%'", getAccessionRowMapper()));    	
+    	acc.addAll(getBioSampleJdbcTemplate().query("SELECT ACC FROM BIO_PRODUCT WHERE ACC LIKE 'SAM%' AND ACC NOT LIKE 'SAME%'", getStringRowMapper()));    	
     	return acc;
     }
+
+    
+    private Set<String> getBioSamplesSAMEAssign() {
+    	Set<String> acc = new HashSet<String>();
+    	for (Integer id : getBioSampleAccJdbcTemplate().query("SELECT ACCESSION FROM SAMPLE_ASSAY WHERE IS_DELETED = 0", getIntegerRowMapper())) {
+    		acc.add("SAMEA"+id);
+    	}
+    	for (Integer id : getBioSampleAccJdbcTemplate().query("SELECT ACCESSION FROM SAMPLE_REFERENCE WHERE IS_DELETED = 0", getIntegerRowMapper())) {
+    		acc.add("SAME"+id);
+    	}
+    	return acc;
+	}
     
     private DataSource getENADataSource() {
         BoneCPDataSource ds = new BoneCPDataSource();
@@ -197,21 +245,35 @@ public class DatabaseComparisonDriver extends AbstractDriver {
     
     private Set<String> getENASAME() {
     	Set<String> acc = new HashSet<String>();
+		Object[] args = new Object[1];
+		Calendar c = Calendar.getInstance();
+		c.set(Calendar.HOUR, 0);
+		c.set(Calendar.MINUTE, 0);
+		c.set(Calendar.SECOND, 0);
+		args[0] = c.getTime();
     	acc.addAll(
     			getENAJdbcTemplate().query(
     					"SELECT BIOSAMPLE_ID FROM SAMPLE WHERE BIOSAMPLE_ID LIKE 'SAME%' "
-    							+ "AND STATUS_ID = 4 AND EGA_ID IS NULL", 
-    					getAccessionRowMapper()));    	
+    							+ "AND STATUS_ID = 4 AND EGA_ID IS NULL AND FIRST_PUBLIC < ? ",
+						args,
+    					getStringRowMapper()));    	
     	return acc;
     }
     
     private Set<String> getENASAMN() {
     	Set<String> acc = new HashSet<String>();
+		Object[] args = new Object[1];
+		Calendar c = Calendar.getInstance();
+		c.set(Calendar.HOUR, 0);
+		c.set(Calendar.MINUTE, 0);
+		c.set(Calendar.SECOND, 0);
+		args[0] = c.getTime();
     	acc.addAll(
     			getENAJdbcTemplate().query(
     					"SELECT BIOSAMPLE_ID FROM SAMPLE WHERE BIOSAMPLE_ID LIKE 'SAM%' AND BIOSAMPLE_ID NOT LIKE 'SAME%' "
-    							+ "AND STATUS_ID = 4 AND EGA_ID IS NULL", 
-    					getAccessionRowMapper()));    	
+    							+ "AND STATUS_ID = 4 AND EGA_ID IS NULL AND FIRST_PUBLIC < ? ", 
+						args,
+    					getStringRowMapper()));    	
     	return acc;
     }
 
@@ -290,7 +352,7 @@ public class DatabaseComparisonDriver extends AbstractDriver {
 			args[0] = accessionSAME;
 			types[0] = java.sql.Types.VARCHAR;
 			accessionsERA.addAll(
-					t.query("SELECT SUBMISSION_ID FROM SAMPLE WHERE BIOSAMPLE_ID = ?", args, types, getAccessionRowMapper()));
+					t.query("SELECT SUBMISSION_ID FROM SAMPLE WHERE BIOSAMPLE_ID = ?", args, types, getStringRowMapper()));
 		}
 		return accessionsERA;
     }
