@@ -6,9 +6,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import oracle.net.aso.g;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -19,6 +24,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+
+import uk.ac.ebi.fgpt.sampletab.utils.FileUtils;
 
 public class NCBIFTP {
 
@@ -38,8 +45,8 @@ public class NCBIFTP {
 		try {
 			ftpClient.connect(server);
 			ftpClient.login("anonymous", "");
-			log.info("Connected to " + server + ".");
-			log.info(ftpClient.getReplyString());
+			log.trace("Connected to " + server + ".");
+			log.trace(ftpClient.getReplyString());
 
 			// After connection attempt, check the reply code to verify success.
 			int reply = ftpClient.getReplyCode();
@@ -117,12 +124,18 @@ public class NCBIFTP {
 		}
 
 		if (download) {
-			log.info("Local copy out-of-date, no download needed");
+			log.info("Local copy out-of-date, download needed");
 			
 			// if we need to download a copy, do so
+			
+			//create a local temporary location
+			//the move the tempoorary location
+			//This is a java 7 thing 
+			File localTemp = Files.createTempFile(Paths.get(localCopy.getParentFile().toURI()), "GNC", null).toFile();
+			
 			FileOutputStream fileoutputstream = null;
 			try {
-				fileoutputstream = new FileOutputStream(localCopy);
+				fileoutputstream = new FileOutputStream(localTemp);
 				ftpClient.retrieveFile(remoteFileName, fileoutputstream);
 			} finally {
 				if(fileoutputstream != null) {
@@ -133,7 +146,11 @@ public class NCBIFTP {
 					}
 				}
 			}
-			log.info("Downloaded " + remoteFileName+" to "+localCopy);
+			log.info("Downloaded " + remoteFileName+" to "+localTemp);
+			
+			FileUtils.move(localTemp, localCopy);
+			
+			log.info("Moved "+localTemp+" to "+localCopy);
 		}
 		
 		//now open a stream for the local version
