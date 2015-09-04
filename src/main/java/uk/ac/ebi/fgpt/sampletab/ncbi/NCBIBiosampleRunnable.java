@@ -114,9 +114,17 @@ public class NCBIBiosampleRunnable implements Callable<Void> {
         //if first character of name is a hash, Limpopo will interpret the line as a comment
         //to solve, remove the hash
         if (sampleName.startsWith("#")) {
-            sampleName = sampleName.substring(1);
+            sampleName = sampleName.substring(1).trim();
         }
-        SampleNode sn = new SampleNode(sampleName);
+        //if the name is double quotes, strip them
+        if (sampleName.startsWith("\"") && sampleName.endsWith("\"")) {
+        	sampleName = sampleName.substring(1, sampleName.length()-2).trim();
+        }
+        //if the name is blank, force it
+        if (sampleName.trim().length()==0) {
+        	sampleName = accession;
+        }
+        SampleNode sn = new SampleNode(sampleName.trim());
         sn.setSampleAccession(accession);
 
         for (Element idElem : XMLUtils.getChildrenByName(XMLUtils.getChildByName(sample, "Ids"), "Id")) {
