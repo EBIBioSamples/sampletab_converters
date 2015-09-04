@@ -248,18 +248,6 @@
 					<groupId>uk.ac.ebi.arrayexpress2</groupId>
 					<artifactId>limpopo-sampletab</artifactId>
 					<version>1.1.6-SNAPSHOT</version>
-					<exclusions>
-						<exclusion>
-							<groupId>net.sourceforge.fluxion</groupId>
-							<artifactId>fluxion-spi</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-				
-				<dependency>
-					<groupId>net.sourceforge.fluxion</groupId>
-					<artifactId>fluxion-spi</artifactId>
-					<version>1.0-alpha-3</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -281,19 +269,7 @@
 				<dependency>
 					<groupId>uk.ac.ebi.arrayexpress2</groupId>
 					<artifactId>limpopo-sampletab</artifactId>
-					<version>1.1.5</version>
-					<exclusions>
-						<exclusion>
-							<groupId>net.sourceforge.fluxion</groupId>
-							<artifactId>fluxion-spi</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-				
-				<dependency>
-					<groupId>net.sourceforge.fluxion</groupId>
-					<artifactId>fluxion-spi</artifactId>
-					<version>1.0-alpha-3</version>
+					<version>1.1.6</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -307,8 +283,8 @@
 				<version>3.3</version>
 				<configuration>
 					<fork>true</fork>
-					<source>1.6</source>
-					<target>1.6</target> <!-- may need to be 1.7 eventually -->
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 			<plugin>
