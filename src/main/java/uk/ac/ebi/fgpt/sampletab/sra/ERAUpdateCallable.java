@@ -380,8 +380,8 @@ public class ERAUpdateCallable implements Callable<Void> {
 	            //study links
 	            for (String id : ENAUtils.getSamplesForStudy(studyElement)) {
 	        		SampleNode sampleNode = st.scd.getNode(id, SampleNode.class);
+        			//check if this study refers to samples in another submission
 	        		if (sampleNode == null) {
-	        			//study refers to sample in other submission
 	        			sampleNode = new SampleNode(id);
         				String biosampleId = null;
 	        			try {
@@ -399,14 +399,26 @@ public class ERAUpdateCallable implements Callable<Void> {
 	        		} else {
 	                    groupNode.addSample(sampleNode);
 	        		}
-	            	
 	            }
 			} else {
-				//referenced by this submission
+				//referenced by this submission, but owned by another
 				//group node already has name and accession
+				//need to add links to samples in this submission
+	            for (String id : ENAUtils.getSamplesForStudy(studyElement)) {
+	        		SampleNode sampleNode = st.scd.getNode(id, SampleNode.class);
+        			//check if this study refers to samples in another submission
+	        		if (sampleNode == null) {
+	                    //in this case, do nothing
+	        		} else {
+	                    groupNode.addSample(sampleNode);
+	        		}
+	            }
 			}
-			          
-            st.scd.addNode(groupNode);
+
+			//only add the group if the group contains samples
+			if (groupNode.getParentNodes().size() > 0) {
+				st.scd.addNode(groupNode);
+			}
 		}
 
 		//only write out and trigger conan if there was an update

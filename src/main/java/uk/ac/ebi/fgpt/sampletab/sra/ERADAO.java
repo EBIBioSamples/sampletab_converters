@@ -65,7 +65,16 @@ select * from cv_status;
 		
 		List<String> submissions = jdbcTemplate.queryForList(query, String.class, minDate, maxDate, minDate, maxDate);
 		
+		//also query for submissions with updated groups
+		
         log.info("Got "+submissions.size()+" submission ids");
+        query = "SELECT UNIQUE(SUBMISSION_ID) FROM STUDDY WHERE SUBMISSION_ID LIKE 'ER%' AND EGA_ID IS NULL " +
+				"AND STATUS_ID = 4 AND ((LAST_UPDATED BETWEEN ? AND ?) OR (FIRST_PUBLIC BETWEEN ? AND ?)) ORDER BY SUBMISSION_ID ASC";
+        for (String submission : jdbcTemplate.queryForList(query, String.class, minDate, maxDate, minDate, maxDate) ) {
+        	if (!submissions.contains(submission)) {
+        		submissions.add(submission);
+        	}
+        }
 		
 		return submissions;
 	}
