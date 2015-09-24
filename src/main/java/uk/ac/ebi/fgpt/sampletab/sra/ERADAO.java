@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -76,6 +77,8 @@ select * from cv_status;
         	}
         }
 		
+        Collections.sort(submissions);
+        
 		return submissions;
 	}
 
