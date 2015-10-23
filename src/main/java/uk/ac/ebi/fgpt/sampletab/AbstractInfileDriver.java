@@ -93,7 +93,9 @@ public abstract class AbstractInfileDriver<T extends Callable<?>> extends Abstra
             pool = Executors.newFixedThreadPool(threads);
         }
 
+        log.info("Starting preprocesssing");
         preProcess();
+        log.info("Finished preprocesssing");
 
         if (pool != null) {
             //we are using a pool of threads to do stuff in parallel
@@ -147,8 +149,10 @@ public abstract class AbstractInfileDriver<T extends Callable<?>> extends Abstra
                 }
             }
         }
-        
+
+        log.info("Starting postprocessing");
         postProcess();
+        log.info("Finished preprocesssing");
         
         log.info("Finished reading");
         
