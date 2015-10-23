@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #Do not modify this file directly
 #It is stored at svn://bar.ebi.ac.uk/trunk/fgpt//automation/sampletab-converters/src/main/bin
@@ -14,7 +14,6 @@ umask 002
 if [ -z $java ]
 then
   java="/ebi/research/software/Linux_x86_64/opt/java/jdk1.8/bin/java"
-  #java="/ebi/research/software/Linux_x86_64/opt/java/jdk1.6.0_22/bin/java"
 fi
 
 #args environment variable can be used to provide java arguments
@@ -34,10 +33,12 @@ for file in `ls $base/lib`
 do
   jars=$jars:$base/lib/$file;
 done
+#trim leading colon
+jars=${jars:1}
 
 #Make sure the classpath contains jar to run
 #and other dependent jars
-classpath="$jars:$base/config";
+classpath="$jars";
 
 #Make sure files are group-writeable
 #mostly used when files are automatically generated, e.g. from cron
