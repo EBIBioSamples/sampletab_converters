@@ -84,11 +84,11 @@ public class SampleTabBulkRunnable implements Callable<Void> {
 
         // accession sampletab.pre.txt to sampletab.txt
         if (!force && sampletab.exists() && sampletab.length()==0) {
-            log.trace("Skipping "+sampletab+" - is zero size");
+            log.warn("Skipping "+sampletab+" - is zero size");
         } else if (!force && sampletab.exists() && sampletab.lastModified() > sampletabpre.lastModified()) {
             log.trace("Skipping "+sampletab+" - modifed after "+sampletabpre);
         } else {
-            log.trace("Processing " + sampletab);
+            log.info("Processing " + sampletab);
 
             SampleTabSaferParser parser = new SampleTabSaferParser(new SampleTabValidator());
             
@@ -187,11 +187,11 @@ public class SampleTabBulkRunnable implements Callable<Void> {
         // preprocess to load
         if (!noload) {
             if (!force && sampletabtoload.exists() && sampletabtoload.length()==0) {
-                log.trace("Skipping "+sampletabtoload+" - is zero size");
+                log.warn("Skipping "+sampletabtoload+" - is zero size");
             } else if (!force && sampletabtoload.exists() && sampletabtoload.lastModified() > sampletab.lastModified()) {
                 log.trace("Skipping "+sampletabtoload+" - modifed after "+sampletab);
             } else {
-                log.trace("Processing " + sampletabtoload);
+                log.info("Processing " + sampletabtoload);
 
                 SampleTabToLoad c;
                 try {
