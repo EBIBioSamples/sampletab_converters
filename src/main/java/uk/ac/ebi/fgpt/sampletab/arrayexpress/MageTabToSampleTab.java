@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.IDF;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.MAGETABInvestigation;
+import uk.ac.ebi.arrayexpress2.magetab.datamodel.SDRF;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.graph.Node;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.graph.utils.GraphUtils;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SDRFNode;
@@ -448,8 +449,11 @@ public class MageTabToSampleTab {
         }
 
         log.debug("Creating node names");
-        for (SDRFNode sdrfnode : mt.SDRF.getRootNodes()) {
-            convertNode(sdrfnode, mt, st);
+        
+        for (SDRF sdrf : mt.SDRFs.values()) {
+	        for (SDRFNode sdrfnode : sdrf.getRootNodes()) {
+	            convertNode(sdrfnode, mt, st);
+	        }
         }
         
         //correct any term source issues here first
