@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>uk.ac.ebi.fgpt</groupId>
@@ -11,39 +12,48 @@
 		<artifactId>biosd_common</artifactId>
 		<version>1.2.1-SNAPSHOT</version>
 	</parent>
-	
+
 	<name>Module for converting various format files to SampleTab</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
- 
-    <distributionManagement>
-        <repository>
-            <id>coconut.ebi.ac.uk-snapshots</id>
-            <name>coconut.ebi.ac.uk-snapshots</name>
-            <url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
-        </repository>
-        <snapshotRepository>
-            <id>coconut.ebi.ac.uk-snapshots</id>
-            <name>coconut.ebi.ac.uk-snapshots</name>
-            <url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
-        </snapshotRepository>
-    </distributionManagement>
- 
- 
+
+	<distributionManagement>
+		<repository>
+			<id>coconut.ebi.ac.uk-snapshots</id>
+			<name>coconut.ebi.ac.uk-snapshots</name>
+			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
+		</repository>
+		<snapshotRepository>
+			<id>coconut.ebi.ac.uk-snapshots</id>
+			<name>coconut.ebi.ac.uk-snapshots</name>
+			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+
 	<!-- Git connection -->
 	<scm>
 		<connection>scm:git:git@github.com:EBIBioSamples/sampletab_converters.git</connection>
-    	<developerConnection>scm:git:git@github.com:EBIBioSamples/sampletab_converters.git</developerConnection>
+		<developerConnection>scm:git:git@github.com:EBIBioSamples/sampletab_converters.git</developerConnection>
 		<tag>head</tag>
 	</scm>
 
 	<repositories>
-		<!-- internal EBI repository for snapshots and copyrighted code (i.e. Oracle JDBC) -->
+		<!-- internal EBI repository for snapshots and copyrighted code (i.e. Oracle 
+			JDBC) -->
 		<repository>
 			<id>coconut.ebi.ac.uk-snapshots</id>
 			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<!-- biosamples repository -->
+		<repository>
+			<id>EBIBioSamples-GH-repo</id>
+			<url>https://raw.githubusercontent.com/EBIBioSamples/EBIBioSamples.github.io/maven-repo</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
@@ -88,7 +98,6 @@
 
 		<!-- database -->
 		<!-- connection pooling library -->
-		<!-- this is only used for mysql connections - oracle ones use built in pooling -->
 		<dependency>
 			<groupId>com.jolbox</groupId>
 			<artifactId>bonecp</artifactId>
@@ -161,6 +170,11 @@
 			<version>2.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>uk.ac.ebi.arrayexpress2</groupId>
+			<artifactId>limpopo-sampletab</artifactId>
+			<version>1.1.8</version>
+		</dependency>
 
 	</dependencies>
 
@@ -179,13 +193,6 @@
 					</resource>
 				</resources>
 			</build>
-			<dependencies>
-				<dependency>
-					<groupId>uk.ac.ebi.arrayexpress2</groupId>
-					<artifactId>limpopo-sampletab</artifactId>
-					<version>1.1.8-SNAPSHOT</version>
-				</dependency>
-			</dependencies>
 		</profile>
 
 		<!-- profile for production, uses files from resources-production -->
@@ -201,13 +208,6 @@
 					</resource>
 				</resources>
 			</build>
-			<dependencies>
-				<dependency>
-					<groupId>uk.ac.ebi.arrayexpress2</groupId>
-					<artifactId>limpopo-sampletab</artifactId>
-					<version>1.1.8</version>
-				</dependency>
-			</dependencies>
 		</profile>
 	</profiles>
 
