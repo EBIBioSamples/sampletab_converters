@@ -58,6 +58,12 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+		<!-- limpopo repository on sourceforge -->
+		<repository>
+			<id>limpopo-repo</id>
+			<name>Limpopo Mini-SF Repository</name>
+			<url>http://limpopo.sourceforge.net/maven/repo</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
