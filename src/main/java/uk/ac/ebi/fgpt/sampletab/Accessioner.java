@@ -2,6 +2,7 @@ package uk.ac.ebi.fgpt.sampletab;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLRecoverableException;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -12,6 +13,7 @@ import oracle.jdbc.pool.OracleDataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -39,13 +41,6 @@ public class Accessioner {
     private Logger log = LoggerFactory.getLogger(getClass());
     
     public static DataSource getDataSource(String hostname, int port, String database, String dbusername, String dbpassword) throws ClassNotFoundException {
-        // Setup the connection with the DB
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw e;
-        }
-
         Class.forName("oracle.jdbc.driver.OracleDriver");
 
         String connectURI = "jdbc:oracle:thin:@"+hostname+":"+port+":"+database;
@@ -53,7 +48,7 @@ public class Accessioner {
         BoneCPDataSource ds = new BoneCPDataSource();
         ds.setJdbcUrl(connectURI);
         ds.setUser(dbusername);
-        ds.setPassword(dbpassword);     
+        ds.setPassword(dbpassword);  
         
     	return ds;
     }
@@ -122,11 +117,10 @@ public class Accessioner {
      * @param stmGet
      * @param stmPut
      * @return
-     * @throws SQLException
-     * @throws ClassNotFoundException
+     * @throws DataAccessException
      */
     @Transactional
-    protected synchronized String singleAccession(String name, String prefix, String username, String stmGet, String stmPut) {
+    protected synchronized String singleAccession(String name, String prefix, String username, String stmGet, String stmPut) throws DataAccessException {
         if (name == null || name.trim().length() == 0) 
             throw new IllegalArgumentException("name must be at least 1 character");
         if (prefix == null ) 
@@ -135,21 +129,29 @@ public class Accessioner {
         name = name.trim();
         username = username.toLowerCase().trim();
         
-        List<String> results = jdbcTemplate.query(stmGet, new AccessionRowMapper(), name, username);        
-        if (results.size() > 1) {
-        	throw new RuntimeException("more that one matching accession found!");
-        } else if (results.size() == 1) {
-        	return prefix+results.get(0);
-        } else {
-        	//if there was no put statement provided, end here
-        	if (stmPut == null) {
-        		return null;
-        	} else {
-	        	jdbcTemplate.update(stmPut, name, username);
-	        	results = jdbcTemplate.query(stmGet, new AccessionRowMapper(), name, username);
-	        	return prefix+results.get(0);
-        	}
+        String accession = null;
+        
+        try {        
+	        List<String> results = jdbcTemplate.query(stmGet, new AccessionRowMapper(), name, username);        
+	        if (results.size() > 1) {
+	        	throw new RuntimeException("more that one matching accession found!");
+	        } else if (results.size() == 1) {
+	        	accession = prefix+results.get(0);
+	        } else {
+	        	//if there was no put statement provided, end here
+	        	if (stmPut == null) {
+	        		accession = null;
+	        	} else {
+		        	jdbcTemplate.update(stmPut, name, username);
+		        	results = jdbcTemplate.query(stmGet, new AccessionRowMapper(), name, username);
+		        	accession = prefix+results.get(0);
+	        	}
+	        }
+        } catch (RecoverableDataAccessException e) {
+        	//if it was a recoverable error, try again
+        	return singleAccession(name, prefix, username, stmGet, stmPut);
         }
+        return accession;
     }
     
 	protected class AccessionRowMapper implements RowMapper<String>
