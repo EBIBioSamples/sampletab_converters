@@ -9,7 +9,7 @@
 	<parent>
 		<groupId>uk.ac.ebi.fg.biosd</groupId>
 		<artifactId>biosd_common</artifactId>
-		<version>1.2.1-SNAPSHOT</version>
+		<version>2.0-SNAPSHOT</version>
 	</parent>
 
 	<name>Module for converting various format files to SampleTab</name>
@@ -17,20 +17,6 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
-	<distributionManagement>
-		<repository>
-			<id>coconut.ebi.ac.uk-snapshots</id>
-			<name>coconut.ebi.ac.uk-snapshots</name>
-			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
-		</repository>
-		<snapshotRepository>
-			<id>coconut.ebi.ac.uk-snapshots</id>
-			<name>coconut.ebi.ac.uk-snapshots</name>
-			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
-		</snapshotRepository>
-	</distributionManagement>
-
 
 	<!-- Git connection -->
 	<scm>
@@ -40,15 +26,6 @@
 	</scm>
 
 	<repositories>
-		<!-- internal EBI repository for snapshots and copyrighted code (i.e. Oracle 
-			JDBC) -->
-		<repository>
-			<id>coconut.ebi.ac.uk-snapshots</id>
-			<url>http://coconut.ebi.ac.uk:8081/artifactory/local-repo</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
 		<!-- biosamples repository -->
 		<repository>
 			<id>EBIBioSamples-GH-repo</id>
