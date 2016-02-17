@@ -529,9 +529,27 @@ public class MageTabToSampleTab {
         SampleData st = convert(mt);
         log.debug("sampletab converted, preparing to output");
         
-        Validator<SampleData> validator = new SampleTabValidator();      
+        //setup the validator with listener to catch errors
+        Validator<SampleData> validator = new SampleTabValidator();        
+        List<ErrorItem> validatorErrorItems = new ArrayList<ErrorItem>();
+        validator.addErrorItemListener(new ErrorItemListener() {
+            public void errorOccurred(ErrorItem item) {
+            	validatorErrorItems.add(item);
+            }
+        });
+
+        //do the validation
         validator.validate(st);
-                
+        
+        //check if the validation worked
+        if (!validatorErrorItems.isEmpty()) {
+            // there are error items, print them and fail
+            for (ErrorItem error : validatorErrorItems){
+                log.error(error.toString());
+            }
+        	throw new ValidateException("Found validation errors on writing in "+st.msi.submissionIdentifier);
+        }
+                        
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
         log.debug("created SampleTabWriter");
         sampletabwriter.write(st);
