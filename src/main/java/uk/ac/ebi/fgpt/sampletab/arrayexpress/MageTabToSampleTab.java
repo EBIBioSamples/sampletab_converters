@@ -247,10 +247,22 @@ public class MageTabToSampleTab {
                         uri = "http://www.ebi.ac.uk/efo";
                     }
                 }
+                if (uri == null) {
+                	//try some common fixes
+                	if (name.toLowerCase().equals("efo")) {
+                        uri = "http://www.ebi.ac.uk/efo";                		
+                	}
+                }
+                //if there is still no uri, then there is no hope
+                if (uri == null) {
+                	throw new ParseException("Null URI in Term Source "+name);
+                }
+                
                 String version = null;
                 if (i < mt.IDF.termSourceVersion.size()){
                     version = mt.IDF.termSourceVersion.get(i);
                 }
+                                
                 TermSource ts = new TermSource(name, uri, version);
                 return st.msi.getOrAddTermSource(ts);
             }
