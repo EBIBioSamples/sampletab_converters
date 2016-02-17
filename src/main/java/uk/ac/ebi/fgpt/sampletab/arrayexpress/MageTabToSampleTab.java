@@ -24,6 +24,7 @@ import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SDRFNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SourceNode;
 import uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.attribute.CharacteristicsAttribute;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
+import uk.ac.ebi.arrayexpress2.magetab.exception.ValidateException;
 import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
 import uk.ac.ebi.arrayexpress2.magetab.parser.IDFParser;
 import uk.ac.ebi.arrayexpress2.magetab.parser.MAGETABParser;
@@ -52,6 +53,8 @@ public class MageTabToSampleTab {
     private final List<ErrorItem> errorItems;
 
     private Accessioner accessioner = null;
+    
+    public static final String BIOSD_SAMPLE = "BioSD_SAMPLE";
     
     private SimpleDateFormat magetabdateformat = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -362,22 +365,34 @@ public class MageTabToSampleTab {
                 scdnode = new SampleNode();
                 scdnode.setNodeName(name);
                 log.info("processing " + name);
+                
+                if (isExistingSampleReference(comments)) {
+                	//references an existing biosample
+                	//create a mini-node with no attributes
+                	scdnode.setSampleAccession(comments.get(BIOSD_SAMPLE).get(0));
+                } else {
+                	//it is a new sample for this experiment.
     
-                processCharacteristics(characteristics, scdnode, mt, st);
-                
-                processComments(comments, scdnode);
-                            
-                st.scd.addNode(scdnode);
-                
+	                processCharacteristics(characteristics, scdnode, mt, st);
+	                
+	                processComments(comments, scdnode);
+	                            
+	                st.scd.addNode(scdnode);
+                }
+                //continue to process downstream samples
+	                
                 List<uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode> downstreamSamples = new ArrayList<uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode>();
                 downstreamSamples.addAll(GraphUtils.findDownstreamNodes(sdrfnode, uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode.class));
                 //if this is a source node with a single downstream sample
                 if (prefix.equals("source") && downstreamSamples.size() == 1){
                     //combine it with the existing node
-                    uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode childSDRFNode = downstreamSamples.get(0);
-                    processCharacteristics(childSDRFNode.characteristics, scdnode, mt, st);
-                    processComments(childSDRFNode.comments, scdnode);
-                    //maybe add the samples nodes name as a synonym?
+                	//but only if its not a reference to another sample
+                	if (!isExistingSampleReference(comments)) {
+	                    uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode childSDRFNode = downstreamSamples.get(0);
+	                    processCharacteristics(childSDRFNode.characteristics, scdnode, mt, st);
+	                    processComments(childSDRFNode.comments, scdnode);
+	                    //maybe add the samples nodes name as a synonym?
+                	}
                 } else {
                     //otherwise process all downstream nodes
                     for (Node childSDRFNode : downstreamSamples){
@@ -400,6 +415,10 @@ public class MageTabToSampleTab {
             return scdnode;
         }
         return null;
+    }
+    
+    public boolean isExistingSampleReference(Map<String, List<String>> comments) {
+    	return comments.containsKey(BIOSD_SAMPLE);    	
     }
     
     public SampleData convert(MAGETABInvestigation mt)
@@ -510,9 +529,9 @@ public class MageTabToSampleTab {
         SampleData st = convert(mt);
         log.debug("sampletab converted, preparing to output");
         
-        Validator<SampleData> validator = new SampleTabValidator();
+        Validator<SampleData> validator = new SampleTabValidator();      
         validator.validate(st);
-        
+                
         SampleTabWriter sampletabwriter = new SampleTabWriter(writer);
         log.debug("created SampleTabWriter");
         sampletabwriter.write(st);
