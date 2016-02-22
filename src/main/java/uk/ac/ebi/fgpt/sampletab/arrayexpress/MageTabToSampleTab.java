@@ -389,8 +389,11 @@ public class MageTabToSampleTab {
 	                
 	                processComments(comments, scdnode);
 	                            
-	                st.scd.addNode(scdnode);
                 }
+                
+                //add the node we have just created
+                st.scd.addNode(scdnode);
+                
                 //continue to process downstream samples
 	                
                 List<uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode> downstreamSamples = new ArrayList<uk.ac.ebi.arrayexpress2.magetab.datamodel.sdrf.node.SampleNode>();
