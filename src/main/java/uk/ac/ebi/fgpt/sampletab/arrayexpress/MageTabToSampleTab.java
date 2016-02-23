@@ -522,14 +522,20 @@ public class MageTabToSampleTab {
         //do it sample by sample since we need to handle experimental-level naming
         if (accessioner != null) {
             for (SampleNode sample : st.scd.getNodes(SampleNode.class)) {
-                String accessionName = st.msi.submissionIdentifier+" : "+sample.getNodeName();
-                String accession = accessioner.singleAssaySample(accessionName, "ArrayExpress");
-                sample.setSampleAccession(accession);
+            	//only do it if not already assigned
+            	if (sample.getSampleAccession() == null || sample.getSampleAccession().trim().length() == 0) {
+	                String accessionName = st.msi.submissionIdentifier+" : "+sample.getNodeName();
+	                String accession = accessioner.singleAssaySample(accessionName, "ArrayExpress");
+	                sample.setSampleAccession(accession);
+            	}
             }
             for (GroupNode group : st.scd.getNodes(GroupNode.class)) {
-                String accessionName = st.msi.submissionIdentifier+" : "+group.getNodeName();
-                String accession = accessioner.singleGroup(accessionName, "ArrayExpress");
-                group.setGroupAccession(accession);
+            	//only do it if not already assigned
+            	if (group.getGroupAccession() == null || group.getGroupAccession().trim().length() == 0) {
+	                String accessionName = st.msi.submissionIdentifier+" : "+group.getNodeName();
+	                String accession = accessioner.singleGroup(accessionName, "ArrayExpress");
+	                group.setGroupAccession(accession);
+            	}
             }
         }
                 
