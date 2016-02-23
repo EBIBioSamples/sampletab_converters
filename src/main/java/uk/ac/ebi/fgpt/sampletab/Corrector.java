@@ -112,6 +112,8 @@ public class Corrector {
                 || lcval.equals("y/n")
                 || lcval.equals("not specified")
                 || lcval.equals("not collected")
+                || lcval.equals("not known")
+                || lcval.equals("not reported")
                 || lcval.equals("missing")) {
             return null;
         } else if (lcval.equals("meter")
