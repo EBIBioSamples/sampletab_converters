@@ -1,10 +1,13 @@
 package uk.ac.ebi.fgpt.sampletab;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLRecoverableException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.sql.DataSource;
@@ -16,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +39,11 @@ public class Accessioner {
     String insertAss = "INSERT INTO SAMPLE_ASSAY ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )";
     String insertRef = "INSERT INTO SAMPLE_REFERENCE ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )";
     String insertGrp = "INSERT INTO SAMPLE_GROUPS ( USER_ACCESSION , SUBMISSION_ACCESSION , DATE_ASSIGNED , IS_DELETED ) VALUES ( ? ,  ? , SYSDATE, 0 )";
+    
+    
+    String stmGetUsr = "SELECT APIKEY, USERNAME, PUBLICEMAIL, PUBLICURL, CONTACTNAME, CONTACTEMAIL FROM USERS WHERE APIKEY LIKE ?";
+    //String insertUsr = "INSERT INTO USERS (APIKEY, USERNAME, PUBLICEMAIL, PUBLICURL, CONTACTNAME, CONTACTEMAIL) VALUES (?, ?, ?, ?, ?, ?)";
+    
     
     private JdbcTemplate jdbcTemplate;
 
@@ -190,4 +199,60 @@ public class Accessioner {
 		}
 		return sd;
 	}
+	
+	public class AccessionUser {
+		public final String apiKey;
+		public final String username;
+		public final Optional<String> publicEmail;
+		public final Optional<URL> publicUrl; 
+		public final Optional<String> contactName;
+		public final Optional<String> contactEmail;
+		
+		public AccessionUser(String apiKey, String username, Optional<String> publicEmail, Optional<URL> publicUrl,
+				Optional<String> contactName, Optional<String> contactEmail) {
+			super();
+			this.apiKey = apiKey;
+			this.username = username;
+			this.publicEmail = publicEmail;
+			this.publicUrl = publicUrl;
+			this.contactName = contactName;
+			this.contactEmail = contactEmail;
+		}
+	}
+	
+	public Optional<AccessionUser> getUserForAPIkey(String apiKey) {
+		List<AccessionUser> users = jdbcTemplate.query(stmGetUsr, new RowMapper<AccessionUser>(){
+			@Override
+			public AccessionUser mapRow(ResultSet rs, int rowNum) throws SQLException {
+				//APIKEY, USERNAME, PUBLICEMAIL, PUBLICURL, CONTACTNAME, CONTACTEMAIL
+				String apiKey = rs.getString("APIKEY");
+				String username = rs.getString("USERNAME");
+				Optional<String> publicEmail = Optional.ofNullable(rs.getString("PUBLICEMAIL"));
+				Optional<URL> publicUrl;
+				if (rs.getString("PUBLICURL") == null) {
+					publicUrl = Optional.empty();
+				} else {
+					try {
+						publicUrl = Optional.ofNullable(new URL(rs.getString("PUBLICURL")));
+					} catch (MalformedURLException e) {
+						log.error("Invalid public URL for "+username, e);
+						publicUrl = Optional.empty();
+					}
+				}
+				Optional<String> contactName = Optional.ofNullable(rs.getString("CONTACTNAME"));
+				Optional<String> contactEmail = Optional.ofNullable(rs.getString("CONTACTEMAIL"));
+				return new AccessionUser(apiKey, username, publicEmail, publicUrl, contactName, contactEmail);
+			}}, apiKey);
+		if (users.size() == 0) {
+			//no user found
+			return Optional.empty();
+		} else if (users.size() > 1) {
+			//multiple users found
+			throw new IllegalStateException("Multiple users for API key "+apiKey);
+		} else {
+			return Optional.of(users.get(0));
+		}
+	}
+	
+	
 }
