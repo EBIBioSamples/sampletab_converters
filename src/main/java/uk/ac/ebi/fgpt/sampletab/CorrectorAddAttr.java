@@ -123,7 +123,6 @@ public class CorrectorAddAttr {
     
     
     public void addAttribute(SampleData st, SampleNode sample) {
-        doSetup();
         
         log.trace("Checking for attributes to add to "+sample.getSampleAccession());
         String acc = sample.getSampleAccession();
@@ -131,6 +130,17 @@ public class CorrectorAddAttr {
             return;
         }
         log.trace("Checking for attributes to add to "+acc);
+        
+        //only add attributes if there is at least one already
+        //this avoid confusion with refernece vs owner user of samples
+        
+        if (sample.getAttributes().size() == 0) {
+        	log.info("Sample "+acc+" is a reference, skipping");
+        	return;
+        }
+        
+        //only do setup once we are ready to add attributes
+        doSetup();
         
         String sql = "SELECT * FROM ATTR_ADD WHERE SAMPLE_ID = '"+acc+"'";
         Connection conn = null;
