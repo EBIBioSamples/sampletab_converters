@@ -45,9 +45,9 @@ public class Accessioner {
     //String insertUsr = "INSERT INTO USERS (APIKEY, USERNAME, PUBLICEMAIL, PUBLICURL, CONTACTNAME, CONTACTEMAIL) VALUES (?, ?, ?, ?, ?, ?)";
     
 
-	String stmGetUsrAss = "SELECT SUBMISSION_ACCESSION FROM SAMPLE_ASSAY WHERE ACCESSION LIKE ?";
-    String stmGetUsrRef = "SELECT SUBMISSION_ACCESSION FROM SAMPLE_REFERENCE WHERE ACCESSION LIKE ?";
-    String stmGetUsrGrp = "SELECT SUBMISSION_ACCESSION FROM SAMPLE_GROUPS WHERE ACCESSION LIKE ?";
+	String stmGetUsrAss = "SELECT SUBMISSION_ACCESSION FROM SAMPLE_ASSAY WHERE ACCESSION = ?";
+    String stmGetUsrRef = "SELECT SUBMISSION_ACCESSION FROM SAMPLE_REFERENCE WHERE ACCESSION = ?";
+    String stmGetUsrGrp = "SELECT SUBMISSION_ACCESSION FROM SAMPLE_GROUPS WHERE ACCESSION = ?";
     
     
     private JdbcTemplate jdbcTemplate;
@@ -262,23 +262,28 @@ public class Accessioner {
 	public Optional<String> getUserNameForAccession(String accession){
 		//validate accession format
 		String sql = null;
+		Integer accessionId = null;
 		if (accession.matches("SAMEA[0-9]*")) {
 			sql = stmGetUsrAss;
+			accessionId = Integer.decode(accession.substring(5));
 		} else if (accession.matches("SAME[0-9]*")) {
 			sql = stmGetUsrRef;
+			accessionId = Integer.decode(accession.substring(4));
 		} else if (accession.matches("SAMEG[0-9]*")) {
 			sql = stmGetUsrGrp;
+			accessionId = Integer.decode(accession.substring(5));
 		} else  {
 			throw new IllegalArgumentException("Invalid accession "+accession);
 		}		
 		
         try {        
-	        List<String> results = jdbcTemplate.query(sql, new SingleStringRowMapper(), accession);        
+	        List<String> results = jdbcTemplate.query(sql, new SingleStringRowMapper(), accessionId);        
 	        if (results.size() > 1) {
 	        	throw new RuntimeException("more that one matching accession found!");
 	        } else if (results.size() == 1) {
 	        	return Optional.of(results.get(0));
 	        } else {
+	        	//nothing previously assigned to that accession
 	        	return Optional.empty();
 	        }
         } catch (RecoverableDataAccessException e) {
