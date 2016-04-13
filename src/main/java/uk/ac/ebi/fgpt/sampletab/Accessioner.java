@@ -44,6 +44,11 @@ public class Accessioner {
     String stmGetUsr = "SELECT APIKEY, USERNAME, PUBLICEMAIL, PUBLICURL, CONTACTNAME, CONTACTEMAIL FROM USERS WHERE APIKEY LIKE ?";
     //String insertUsr = "INSERT INTO USERS (APIKEY, USERNAME, PUBLICEMAIL, PUBLICURL, CONTACTNAME, CONTACTEMAIL) VALUES (?, ?, ?, ?, ?, ?)";
     
+
+	String stmGetUsrAss = "SELECT SUBMISSION_ACCESSION FROM SAMPLE_ASSAY WHERE ACCESSION LIKE ?";
+    String stmGetUsrRef = "SELECT SUBMISSION_ACCESSION FROM SAMPLE_REFERENCE WHERE ACCESSION LIKE ?";
+    String stmGetUsrGrp = "SELECT SUBMISSION_ACCESSION FROM SAMPLE_GROUPS WHERE ACCESSION LIKE ?";
+    
     
     private JdbcTemplate jdbcTemplate;
 
@@ -141,7 +146,7 @@ public class Accessioner {
         String accession = null;
         
         try {        
-	        List<String> results = jdbcTemplate.query(stmGet, new AccessionRowMapper(), name, username);        
+	        List<String> results = jdbcTemplate.query(stmGet, new SingleStringRowMapper(), name, username);        
 	        if (results.size() > 1) {
 	        	throw new RuntimeException("more that one matching accession found!");
 	        } else if (results.size() == 1) {
@@ -152,7 +157,7 @@ public class Accessioner {
 	        		accession = null;
 	        	} else {
 		        	jdbcTemplate.update(stmPut, name, username);
-		        	results = jdbcTemplate.query(stmGet, new AccessionRowMapper(), name, username);
+		        	results = jdbcTemplate.query(stmGet, new SingleStringRowMapper(), name, username);
 		        	accession = prefix+results.get(0);
 	        	}
 	        }
@@ -163,7 +168,7 @@ public class Accessioner {
         return accession;
     }
     
-	protected class AccessionRowMapper implements RowMapper<String>
+	protected class SingleStringRowMapper implements RowMapper<String>
 	{
 		public String mapRow(ResultSet rs, int rowNum) throws SQLException {
 			return rs.getString(1);
@@ -251,6 +256,34 @@ public class Accessioner {
 			throw new IllegalStateException("Multiple users for API key "+apiKey);
 		} else {
 			return Optional.of(users.get(0));
+		}
+	}
+		
+	public Optional<String> getUserNameForAccession(String accession){
+		//validate accession format
+		String sql = null;
+		if (accession.matches("SAMEA[0-9]*")) {
+			sql = stmGetUsrAss;
+		} else if (accession.matches("SAME[0-9]*")) {
+			sql = stmGetUsrRef;
+		} else if (accession.matches("SAMEG[0-9]*")) {
+			sql = stmGetUsrGrp;
+		} else  {
+			throw new IllegalArgumentException("Invalid accession "+accession);
+		}		
+		
+        try {        
+	        List<String> results = jdbcTemplate.query(sql, new SingleStringRowMapper(), accession);        
+	        if (results.size() > 1) {
+	        	throw new RuntimeException("more that one matching accession found!");
+	        } else if (results.size() == 1) {
+	        	return Optional.of(results.get(0));
+	        } else {
+	        	return Optional.empty();
+	        }
+        } catch (RecoverableDataAccessException e) {
+        	//if it was a recoverable error, try again
+        	return getUserNameForAccession(accession);
 		}
 	}
 	
