@@ -175,6 +175,35 @@ public class Accessioner {
 		}
 	}
 
+	@Deprecated
+	public SampleData convertSubmission(SampleData sd) throws ParseException {
+
+		// now assign and retrieve accessions for samples that do not have them
+		Collection<SampleNode> samples = sd.scd.getNodes(SampleNode.class);
+		for (SampleNode sample : samples) {
+			if (sample.getSampleAccession() == null) {
+				String accession;
+				if (sd.msi.submissionReferenceLayer) {
+					accession = singleReferenceSample(sample.getNodeName(), sd.msi.submissionIdentifier);
+				} else {
+					accession = singleAssaySample(sample.getNodeName(),sd.msi.submissionIdentifier);
+				}
+				sample.setSampleAccession(accession);
+			}
+		}
+
+		// now assign and retrieve accessions for groups that do not have them
+		Collection<GroupNode> groups = sd.scd.getNodes(GroupNode.class);
+		for (GroupNode group : groups) {
+			if (group.getGroupAccession() == null) {
+				String accession = singleGroup(group.getNodeName(),sd.msi.submissionIdentifier);
+				group.setGroupAccession(accession);
+			}
+		}
+		return sd;
+	}
+
+	
 	public SampleData convert(SampleData sd, String username) throws ParseException {
 
 		// now assign and retrieve accessions for samples that do not have them
