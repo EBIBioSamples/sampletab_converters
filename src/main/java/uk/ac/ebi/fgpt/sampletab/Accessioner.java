@@ -175,7 +175,7 @@ public class Accessioner {
 		}
 	}
 
-	public SampleData convert(SampleData sd) throws ParseException {
+	public SampleData convert(SampleData sd, String username) throws ParseException {
 
 		// now assign and retrieve accessions for samples that do not have them
 		Collection<SampleNode> samples = sd.scd.getNodes(SampleNode.class);
@@ -183,11 +183,9 @@ public class Accessioner {
 			if (sample.getSampleAccession() == null) {
 				String accession;
 				if (sd.msi.submissionReferenceLayer) {
-					accession = singleReferenceSample(sample.getNodeName(),
-							sd.msi.submissionIdentifier);
+					accession = singleReferenceSample(sample.getNodeName(), username);
 				} else {
-					accession = singleAssaySample(sample.getNodeName(),
-							sd.msi.submissionIdentifier);
+					accession = singleAssaySample(sample.getNodeName(),username);
 				}
 				sample.setSampleAccession(accession);
 			}
@@ -197,8 +195,7 @@ public class Accessioner {
 		Collection<GroupNode> groups = sd.scd.getNodes(GroupNode.class);
 		for (GroupNode group : groups) {
 			if (group.getGroupAccession() == null) {
-				String accession = singleGroup(group.getNodeName(),
-						sd.msi.submissionIdentifier);
+				String accession = singleGroup(group.getNodeName(),username);
 				group.setGroupAccession(accession);
 			}
 		}
