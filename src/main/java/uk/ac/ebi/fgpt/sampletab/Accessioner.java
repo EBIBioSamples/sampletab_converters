@@ -221,10 +221,11 @@ public class Accessioner {
 		}
 
 		// now assign and retrieve accessions for groups that do not have them
+		//group acessions MUST be assigned per submission - too similar otherwise
 		Collection<GroupNode> groups = sd.scd.getNodes(GroupNode.class);
 		for (GroupNode group : groups) {
 			if (group.getGroupAccession() == null) {
-				String accession = singleGroup(group.getNodeName(),username);
+				String accession = singleGroup(group.getNodeName(), sd.msi.submissionIdentifier);
 				group.setGroupAccession(accession);
 			}
 		}
