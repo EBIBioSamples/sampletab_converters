@@ -114,7 +114,9 @@ public class Corrector {
                 || lcval.equals("not collected")
                 || lcval.equals("not known")
                 || lcval.equals("not reported")
-                || lcval.equals("missing")) {
+                || lcval.equals("missing"))
+        	//NOTE -this is for units ONLY. see ~line 700 for general case
+        	{
             return null;
         } else if (lcval.equals("meter")
                 || lcval.equals("meters")) {
@@ -710,12 +712,16 @@ public class Corrector {
                             || cha.getAttributeValue().toLowerCase().equals("none")
                             || cha.getAttributeValue().toLowerCase().equals("unknown")
                             || cha.getAttributeValue().toLowerCase().equals("--")
-                            || cha.getAttributeValue().toLowerCase().equals("not applicable")
-                            || cha.getAttributeValue().toLowerCase().equals("not collected")
+                            || cha.getAttributeValue().toLowerCase().equals(".")
                             || cha.getAttributeValue().toLowerCase().equals("null")
                             || cha.getAttributeValue().toLowerCase().equals("missing")
                             || cha.getAttributeValue().toLowerCase().equals("[not reported]")
-                            || cha.getAttributeValue().toLowerCase().equals("[not requested]")) {
+                            || cha.getAttributeValue().toLowerCase().equals("[not requested]")
+                            || cha.getAttributeValue().toLowerCase().equals("not applicable")
+                            || cha.getAttributeValue().toLowerCase().equals("not collected")
+                            || cha.getAttributeValue().toLowerCase().equals("not specified")
+                            || cha.getAttributeValue().toLowerCase().equals("not known")
+                            || cha.getAttributeValue().toLowerCase().equals("not reported")) {
                         //leave unknown-sex as is. implies it has been looked at and is non-determinate
                         s.removeAttribute(cha);
                         continue;
