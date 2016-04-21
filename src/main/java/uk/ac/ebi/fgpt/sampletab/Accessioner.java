@@ -225,7 +225,7 @@ public class Accessioner {
 		Collection<GroupNode> groups = sd.scd.getNodes(GroupNode.class);
 		for (GroupNode group : groups) {
 			if (group.getGroupAccession() == null) {
-				String accession = singleGroup(group.getNodeName(), sd.msi.submissionIdentifier);
+				String accession = singleGroup(group.getNodeName(), username);
 				group.setGroupAccession(accession);
 			}
 		}
