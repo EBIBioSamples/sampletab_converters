@@ -178,6 +178,9 @@
 			<build>
 				<resources>
 					<resource>
+						<directory>src/main/resources</directory>
+					</resource>
+					<resource>
 						<directory>src/main/resources-development</directory>
 					</resource>
 				</resources>
@@ -192,6 +195,9 @@
 			</activation>
 			<build>
 				<resources>
+					<resource>
+						<directory>src/main/resources</directory>
+					</resource>
 					<resource>
 						<directory>src/main/resources-production</directory>
 					</resource>
