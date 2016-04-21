@@ -37,6 +37,18 @@ import uk.ac.ebi.fgpt.sampletab.ncbi.NCBIFTP;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLFragmenter;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLFragmenter.ElementCallback;
 
+/**
+ * This class compares the database contents of ENA (ERA PRO) and BioSamples (relational)
+ * to find accessions that are public in ena but are missing from biosamples.
+ * 
+ *  It also looks at the NCBI FTP XML file and trys to find missing accessions there too.
+ *  
+ *  
+ *  Once these accessions have been found, then they can be regenerated.
+ * 
+ * @author faulcon
+ *
+ */
 public class DatabaseComparisonDriver extends AbstractDriver {
 
     private Logger log = LoggerFactory.getLogger(getClass());
