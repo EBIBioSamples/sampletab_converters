@@ -199,6 +199,7 @@
 				</resources>
 			</build>
 		</profile>
+		<!-- automatically enabled provide to disable java doc linting errors preventing release -->
 		<profile>
 			<id>doclint-java8-disable</id>
 			<activation>
