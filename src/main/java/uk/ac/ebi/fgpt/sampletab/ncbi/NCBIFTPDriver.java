@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -81,7 +82,7 @@ public class NCBIFTPDriver extends AbstractDriver {
 
 	
 	private ExecutorService pool = null;
-	private LinkedList<Future<Void>> futures = new LinkedList<Future<Void>>();
+	private Queue<Future<Void>> futures = new ArrayDeque<>();
 
 	private Date fromDate = null;
 	private Date toDate = null;
@@ -390,7 +391,7 @@ public class NCBIFTPDriver extends AbstractDriver {
 
 	public void checkQueue(int maxSize) {
 		while (futures.size() > maxSize) {
-			Future<Void> next = futures.removeFirst();
+			Future<Void> next = futures.remove();
 			try {
 				next.get(12, TimeUnit.HOURS);
 			} catch (InterruptedException e) {
