@@ -223,14 +223,18 @@ public class Corrector {
                 || attr.getAttributeValue().toLowerCase().equals("m")
                 || attr.getAttributeValue().toLowerCase().equals("man")) {
             attr.setAttributeValue("male");
-            attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001266");
-            attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+            if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	            attr.setTermSourceID("http://purl.obolibrary.org/obo/PATO_0000384");
+	            attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+            }
         } else if (attr.getAttributeValue().toLowerCase().equals("female")
                 || attr.getAttributeValue().toLowerCase().equals("f")
                 || attr.getAttributeValue().toLowerCase().equals("woman")) {
             attr.setAttributeValue("female");
-            attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0001265");
-            attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+            if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	            attr.setTermSourceID("http://purl.obolibrary.org/obo/PATO_0000383");
+	            attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+            }
         }
         
         
@@ -427,25 +431,35 @@ public class Corrector {
             attr.type = "organism part";
             if (attr.getAttributeValue().toLowerCase().equals("blood")) {
                 attr.setAttributeValue("blood");
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
+                if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+	                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
+                }
             } else if (attr.getAttributeValue().toLowerCase().equals("skin")) {
                 attr.setAttributeValue("skin");
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000962");
+                if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+	                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000962");
+                }
             } else if (attr.getAttributeValue().toLowerCase().equals("bone marrow")){
                 attr.setAttributeValue("bone marrow");
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000868");
+                if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+	                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000868");
+                }
             } else if (attr.getAttributeValue().toLowerCase().equals("liver")) {
                 attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
+                if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+	                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
+                }
             } else if (attr.getAttributeValue().toLowerCase().equals("breast")
                     || attr.getAttributeValue().toLowerCase().equals("mammary gland")) {
                 attr.setAttributeValue("mammary gland");
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
+                if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+	                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
+                }
             } 
         } else if (attr.type.toLowerCase().equals("phenotype")) {
             attr.type = "phenotype";
@@ -479,7 +493,11 @@ public class Corrector {
                 || attr.type.toLowerCase().equals("strain value")
                 || attr.type.toLowerCase().equals("plant strain")
                 || attr.type.toLowerCase().equals("type_strain")
-                || attr.type.toLowerCase().equals("cell line")
+                ) {
+            //Leave cultivar and ecotype alone
+        	//leave breed alone
+            attr.type = "strain";
+        } else if (attr.type.toLowerCase().equals("cell line")
                 || attr.type.toLowerCase().equals("cell line/clone")
                 || attr.type.toLowerCase().equals("cell line specifics")
                 || attr.type.toLowerCase().equals("cell lines")
@@ -500,11 +518,8 @@ public class Corrector {
                 || attr.type.toLowerCase().equals("coriell cell line repository identifier")
                 || attr.type.toLowerCase().equals("coriell dna id")
                 || attr.type.toLowerCase().equals("fibroblast cell strain") //TODO add cell type too
-                || attr.type.toLowerCase().equals("hapmap sample id")
-                || attr.type.toLowerCase().equals("breed")
-                ) {
-            //Leave cultivar and ecotype alone
-            attr.type = "strain";
+                || attr.type.toLowerCase().equals("hapmap sample id")) {
+            attr.type = "cell line";
         } else if (attr.type.toLowerCase().equals("time")
                 || attr.type.toLowerCase().equals("time point")) {
             attr.type = "time point";
@@ -519,17 +534,23 @@ public class Corrector {
             //TODO clarify some of these as tissue or cell type
             if (attr.getAttributeValue().toLowerCase().equals("liver")) {
                 attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
+                if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+	                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000887");
+                }
             } else if (attr.getAttributeValue().toLowerCase().equals("blood")) {
                 attr.setAttributeValue(attr.getAttributeValue().toLowerCase());
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
+                if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+	                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000296");
+                }
             } else if (attr.getAttributeValue().toLowerCase().equals("breast")
                     || attr.getAttributeValue().toLowerCase().equals("mammary gland")) {
                 attr.setAttributeValue("mammary gland");
-                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
-                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
+                if (attr.getTermSourceID() == null && attr.getTermSourceREF()==null) {
+	                attr.setTermSourceREF(sampledata.msi.getOrAddTermSource(efo));
+	                attr.setTermSourceID("http://www.ebi.ac.uk/efo/EFO_0000854");
+                }
             } 
             
         } else if (attr.type.toLowerCase().equals("geographic location (country and/or sea, region)")) {
