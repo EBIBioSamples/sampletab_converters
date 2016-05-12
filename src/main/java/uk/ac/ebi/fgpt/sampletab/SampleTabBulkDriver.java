@@ -68,11 +68,11 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
             log.error("Unable to read resource oracle.properties", e);
         }
         
-        this.hostname = properties.getProperty("hostname");
-        this.port = new Integer(properties.getProperty("port"));
-        this.database = properties.getProperty("database");
-        this.dbusername = properties.getProperty("username");
-        this.dbpassword = properties.getProperty("password");
+        this.hostname = properties.getProperty("biosamples.accession.hostname");
+        this.port = new Integer(properties.getProperty("biosamples.accession.port"));
+        this.database = properties.getProperty("biosamples.accession.database");
+        this.dbusername = properties.getProperty("biosamples.accession.username");
+        this.dbpassword = properties.getProperty("biosamples.accession.password");
         
         properties = new Properties();
         try {
@@ -82,7 +82,7 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
             log.error("Unable to read resource sampletabconverters.properties", e);
             return;
         }
-        rootDir = new File(properties.getProperty("biosamples.sampletab.path"));
+        rootDir = new File(properties.getProperty("biosamples.path.sampletab"));
     }
     
     public SampleTabBulkDriver(String hostname, Integer port, String database, String username, String password, boolean force) {
