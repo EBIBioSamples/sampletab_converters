@@ -18,8 +18,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
 import uk.ac.ebi.arrayexpress2.sampletab.validator.SampleTabValidator;
-import uk.ac.ebi.fgpt.sampletab.subs.Event;
-import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 
 public class SampleTabBulkRunnable implements Callable<Void> {
     private final File sampletabpre;
@@ -63,18 +61,9 @@ public class SampleTabBulkRunnable implements Callable<Void> {
     public Void call() throws Exception {
         
         String accession = sampletabpre.getParentFile().getName();
-
-        //try to register this with subs tracking
-        Event event = TrackingManager.getInstance().registerEventStart(accession, SUBSEVENT);
         
-        try {
-            doWork();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            //try to register this with subs tracking
-            TrackingManager.getInstance().registerEventEnd(event);
-        }
+        doWork();
+            
         return null;
         
     }

@@ -25,8 +25,6 @@ import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.OrganismAt
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.attribute.SCDNodeAttribute;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
 import uk.ac.ebi.arrayexpress2.sampletab.renderer.SampleTabWriter;
-import uk.ac.ebi.fgpt.sampletab.subs.Event;
-import uk.ac.ebi.fgpt.sampletab.subs.TrackingManager;
 
 public class SampleTabUtils {
     private static Logger log = LoggerFactory.getLogger("uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils");
@@ -112,42 +110,36 @@ public class SampleTabUtils {
         
 
         String accession = sampletabFile.getAbsoluteFile().getParentFile().getName();
-        //try to register this with subs tracking
-        Event event = TrackingManager.getInstance().registerEventStart(accession, "Make private");
+        
         boolean toReturn = false;
-        try {
-            SampleTabSaferParser parser = new SampleTabSaferParser();
-            SampleData sd = parser.parse(sampletabFile);
-            if (sd == null) {
-                log.error("Failed to parse "+sampletabFile);
-                throw new IOException("Problem reading "+sampletabFile);
-            } else if(sd.msi.submissionReleaseDate.before(new Date())) {
-                //if its already public, then release it in 100 years
-                Writer writer = null;
-                try {
-                    writer = new BufferedWriter(new FileWriter(sampletabFile));
-                    SampleTabWriter stwriter = new SampleTabWriter(writer);
-                    stwriter.write(sd);
-                    toReturn = true;
-                } catch (IOException e) {
-                    throw e;
-                } finally {
-                    if (writer != null) {
-                        try {
-                            writer.close();
-                        } catch (IOException e) {
-                            //do nothing
-                        }
+        SampleTabSaferParser parser = new SampleTabSaferParser();
+        SampleData sd = parser.parse(sampletabFile);
+        if (sd == null) {
+            log.error("Failed to parse "+sampletabFile);
+            throw new IOException("Problem reading "+sampletabFile);
+        } else if(sd.msi.submissionReleaseDate.before(new Date())) {
+            //if its already public, then release it in 100 years
+            Writer writer = null;
+            try {
+                writer = new BufferedWriter(new FileWriter(sampletabFile));
+                SampleTabWriter stwriter = new SampleTabWriter(writer);
+                stwriter.write(sd);
+                toReturn = true;
+            } catch (IOException e) {
+                throw e;
+            } finally {
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                        //do nothing
                     }
                 }
-            } else {
-                //date is in the future, no need to do anything
             }
-            
-        } finally {
-            //try to register this with subs tracking
-            TrackingManager.getInstance().registerEventEnd(event);
+        } else {
+            //date is in the future, no need to do anything
         }
+            
         return toReturn;
     }
     
