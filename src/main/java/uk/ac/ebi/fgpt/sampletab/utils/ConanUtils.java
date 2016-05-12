@@ -8,7 +8,10 @@ import java.util.Properties;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.ConnectionConfig;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -68,18 +71,25 @@ public class ConanUtils {
 
         // Send data
         HttpPost postRequest = new HttpPost(properties.getProperty("biosamples.conan.url")+"/api/submissions/");
+        postRequest.setConfig(RequestConfig.custom()
+        	    .setSocketTimeout(0)
+        	    .setConnectTimeout(0)
+        	    .setConnectionRequestTimeout(0)
+        	    .build());
         StringEntity input = new StringEntity(userOb.toString());
         input.setContentType("application/json");
         postRequest.setEntity(input);
  
         //get response
-        HttpResponse response = httpClient.execute(postRequest);
-        BufferedReader br = new BufferedReader(
-                new InputStreamReader((response.getEntity().getContent())));
-        String line;
-        while ((line = br.readLine()) != null) {
-            log.info(line);
+        try (CloseableHttpResponse response = httpClient.execute(postRequest)) {
+	        try (BufferedReader br = new BufferedReader(
+	                new InputStreamReader((response.getEntity().getContent())))) {
+	            //TODO parse response and raise exception if submit failed
+		        String line;
+		        while ((line = br.readLine()) != null) {
+		            log.info(line);
+		        }
+	        }
         }
-        //TODO parse response and raise exception if submit failed
     }
 }
