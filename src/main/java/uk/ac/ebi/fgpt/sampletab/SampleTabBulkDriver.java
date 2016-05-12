@@ -62,10 +62,10 @@ public class SampleTabBulkDriver extends AbstractInfileDriver<SampleTabBulkRunna
         //will be overridden by command-line options later
         Properties properties = new Properties();
         try {
-            InputStream is = SampleTabBulkDriver.class.getResourceAsStream("/oracle.properties");
+            InputStream is = SampleTabBulkDriver.class.getResourceAsStream("/sampletabconverters.properties");
             properties.load(is);
         } catch (IOException e) {
-            log.error("Unable to read resource oracle.properties", e);
+            log.error("Unable to read resource sampletabconverters.properties", e);
         }
         
         this.hostname = properties.getProperty("biosamples.accession.hostname");

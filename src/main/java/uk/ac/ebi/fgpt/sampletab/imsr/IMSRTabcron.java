@@ -104,25 +104,25 @@ public class IMSRTabcron {
         //load defaults
         Properties oracleProperties = new Properties();
         try {
-            InputStream is = getClass().getResourceAsStream("/oracle.properties");
+            InputStream is = getClass().getResourceAsStream("/sampletabconverters.properties");
             oracleProperties.load(is);
         } catch (IOException e) {
-            log.error("Unable to read resource oracle.properties", e);
+            log.error("Unable to read resource sampletabconverters.properties", e);
         }
         if (hostname == null){
-            hostname = oracleProperties.getProperty("hostname");
+            hostname = oracleProperties.getProperty("biosamples.accession.hostname");
         }
         if (port == null){
-            port = new Integer(oracleProperties.getProperty("port"));
+            port = new Integer(oracleProperties.getProperty("biosamples.accession.port"));
         }
         if (database == null){
-            database = oracleProperties.getProperty("database");
+            database = oracleProperties.getProperty("biosamples.accession.database");
         }
         if (dbusername == null){
-            dbusername = oracleProperties.getProperty("username");
+            dbusername = oracleProperties.getProperty("biosamples.accession.username");
         }
         if (dbpassword == null){
-            dbpassword = oracleProperties.getProperty("password");
+            dbpassword = oracleProperties.getProperty("biosamples.accession.password");
         }
         
         DataSource ds = null;

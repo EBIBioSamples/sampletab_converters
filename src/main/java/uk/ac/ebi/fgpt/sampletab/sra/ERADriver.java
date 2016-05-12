@@ -165,17 +165,17 @@ public class ERADriver extends AbstractDriver {
         //load defaults for accessioning
         Properties oracleProperties = new Properties();
         try {
-            InputStream is = getClass().getResourceAsStream("/oracle.properties");
+            InputStream is = getClass().getResourceAsStream("/sampletabconverters.properties");
             oracleProperties.load(is);
         } catch (IOException e) {
-            log.error("Unable to read resource oracle.properties", e);
+            log.error("Unable to read resource sampletabconverters.properties", e);
             return;
         }
-        String hostnameAcc = oracleProperties.getProperty("hostname");
-        int portAcc = new Integer(oracleProperties.getProperty("port"));
-        String databaseAcc = oracleProperties.getProperty("database");
-        String dbusernameAcc = oracleProperties.getProperty("username");
-        String dbpasswordAcc = oracleProperties.getProperty("password");
+        String hostnameAcc = oracleProperties.getProperty("biosamples.accession.hostname");
+        int portAcc = new Integer(oracleProperties.getProperty("biosamples.accession.port"));
+        String databaseAcc = oracleProperties.getProperty("biosamples.accession.database");
+        String dbusernameAcc = oracleProperties.getProperty("biosamples.accession.username");
+        String dbpasswordAcc = oracleProperties.getProperty("biosamples.accession.password");
         
         DataSource ds;
         try {
