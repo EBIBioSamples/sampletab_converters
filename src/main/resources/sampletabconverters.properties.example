@@ -1,17 +1,17 @@
 ##core paths to put files at
-#biosamples.path.script = 
-#biosamples.path.ftp = 
-#biosamples.path.sampletab = 
+biosamples.path.script = 
+biosamples.path.ftp = 
+biosamples.path.sampletab = 
 
 ##properties relating to the Oracle server used for accessioning
-#biosamples.accession.hostname=
-#biosamples.accession.port=
-#biosamples.accession.database=
-#biosamples.accession.username=
-#biosamples.accession.password=
+biosamples.accession.hostname=
+biosamples.accession.port=
+biosamples.accession.database=
+biosamples.accession.username=
+biosamples.accession.password=
 
 ##properties relating to the Conan server used to process new & updated samples
-#biosamples.conan.url=
+biosamples.conan.url=
 ##this is the key of conan-daemon
-#biosamples.conan.apikey=
-#biosamples.conan.priority=LOW
+biosamples.conan.apikey=
+biosamples.conan.priority=LOW
