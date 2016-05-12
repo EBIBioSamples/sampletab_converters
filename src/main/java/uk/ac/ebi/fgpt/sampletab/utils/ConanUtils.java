@@ -33,10 +33,10 @@ public class ConanUtils {
         if (properties == null){
             properties = new Properties();
             try {
-                InputStream is = ConanUtils.class.getResourceAsStream("/conan.properties");
+                InputStream is = ConanUtils.class.getResourceAsStream("/sampletabconverters.properties");
                 properties.load(is);
             } catch (IOException e) {
-                log.error("Unable to read resource mysql.properties", e);
+                log.error("Unable to read resource sampletabconverters.properties", e);
             }
         }
         if (conman == null) {
@@ -55,10 +55,10 @@ public class ConanUtils {
         
         ObjectNode userOb = objectMapper.createObjectNode();
         
-        userOb.put("priority", "MEDIUM");
+        userOb.put("priority", properties.getProperty("biosamples.conan.priority"));
         userOb.put("pipelineName", pipeline);
         userOb.put("startingProcessIndex", startingProcessIndex);
-        userOb.put("restApiKey", properties.getProperty("apikey"));
+        userOb.put("restApiKey", properties.getProperty("biosamples.conan.apikey"));
         ObjectNode inputParameters = userOb.putObject("inputParameters");
         inputParameters.put("SampleTab Accession", submissionIdentifier);
         
@@ -66,7 +66,7 @@ public class ConanUtils {
 
         // Send data
         try (CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(conman).build()) {
-	        HttpPost postRequest = new HttpPost(properties.getProperty("url")+"/api/submissions/");
+	        HttpPost postRequest = new HttpPost(properties.getProperty("biosamples.conan.url")+"/api/submissions/");
 	        StringEntity input = new StringEntity(userOb.toString());
 	        input.setContentType("application/json");
 	        postRequest.setEntity(input);
