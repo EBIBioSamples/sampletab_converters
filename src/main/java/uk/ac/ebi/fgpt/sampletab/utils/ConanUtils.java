@@ -26,6 +26,7 @@ public class ConanUtils {
     private static Properties properties = null;
     
     private static PoolingHttpClientConnectionManager conman = null;
+    private static CloseableHttpClient httpClient = null;
 
     private static ObjectMapper objectMapper = new ObjectMapper();
 
@@ -43,6 +44,7 @@ public class ConanUtils {
         	conman = new PoolingHttpClientConnectionManager();
         	conman.setDefaultMaxPerRoute(10);
         	conman.setValidateAfterInactivity(0);
+        	httpClient = HttpClients.custom().setConnectionManager(conman).build();
         }
     }
 
@@ -65,21 +67,19 @@ public class ConanUtils {
         log.trace(userOb.toString());
 
         // Send data
-        try (CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(conman).build()) {
-	        HttpPost postRequest = new HttpPost(properties.getProperty("biosamples.conan.url")+"/api/submissions/");
-	        StringEntity input = new StringEntity(userOb.toString());
-	        input.setContentType("application/json");
-	        postRequest.setEntity(input);
-	 
-	        //get response
-	        HttpResponse response = httpClient.execute(postRequest);
-	        BufferedReader br = new BufferedReader(
-	                new InputStreamReader((response.getEntity().getContent())));
-	        String line;
-	        while ((line = br.readLine()) != null) {
-	            log.info(line);
-	        }
-	        //TODO parse response and raise exception if submit failed
+        HttpPost postRequest = new HttpPost(properties.getProperty("biosamples.conan.url")+"/api/submissions/");
+        StringEntity input = new StringEntity(userOb.toString());
+        input.setContentType("application/json");
+        postRequest.setEntity(input);
+ 
+        //get response
+        HttpResponse response = httpClient.execute(postRequest);
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader((response.getEntity().getContent())));
+        String line;
+        while ((line = br.readLine()) != null) {
+            log.info(line);
         }
+        //TODO parse response and raise exception if submit failed
     }
 }
