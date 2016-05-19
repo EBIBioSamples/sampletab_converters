@@ -14,6 +14,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
@@ -268,30 +269,27 @@ public class ERAUpdateCallable implements Callable<Void> {
                     valuetext = value.getTextTrim();
                 }
 
-                CharacteristicAttribute characteristicAttribute;
+                CharacteristicAttribute characteristicAttribute = new CharacteristicAttribute(tagtext, valuetext);
                 //some ENA SRA attributes may have ontology terms included 
                 Pattern p = Pattern.compile("(.*) \\((.*)\\)");
                 Matcher m = p.matcher(valuetext);
                 if (m.matches()) {
-                	valuetext = m.group(1);
                 	String ontologyId = m.group(2);
-                    characteristicAttribute = new CharacteristicAttribute(tagtext,
-                            valuetext);
                     
-					URI ontologyIri = null;
+					Optional<URI> ontologyIri = Optional.empty();
                     try {
                     	ontologyIri = OLSUtils.guessIRIfromShortTerm(ontologyId);
 					} catch (IOException | URISyntaxException | TooManyIRIsException e) {
 						log.error("Unable to guess IRI from short term "+ontologyId, e);
 					}
-                    if (ontologyIri != null) {
-                    	log.info("Adding TermSourceID to "+tagtext+":"+valuetext+" "+ontologyIri);
-                    	characteristicAttribute.setTermSourceID(ontologyIri.toString());
+                    if (ontologyIri.isPresent()) {
+                    	log.info("Adding TermSourceID to "+tagtext+":"+valuetext+" "+ontologyIri.get());
+
+                        characteristicAttribute = new CharacteristicAttribute(tagtext,
+                        		m.group(1));
+                    	characteristicAttribute.setTermSourceID(ontologyIri.get().toString());
                     }
-                } else {
-                    characteristicAttribute = new CharacteristicAttribute(tagtext, valuetext);
-                }
-                
+                }                
                 
                 if (units != null && units.getTextTrim().length() > 0) {
                     log.trace("Added unit "+units.getTextTrim());
