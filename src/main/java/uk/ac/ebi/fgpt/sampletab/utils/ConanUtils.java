@@ -52,8 +52,8 @@ public class ConanUtils {
         }
         if (conman == null) {
         	conman = new PoolingHttpClientConnectionManager();
-        	conman.setMaxTotal(10);
-        	conman.setDefaultMaxPerRoute(10);
+        	conman.setMaxTotal(128);
+        	conman.setDefaultMaxPerRoute(64);
         	conman.setValidateAfterInactivity(0);
         	
         	ConnectionKeepAliveStrategy keepAliveStrategy = new ConnectionKeepAliveStrategy() {

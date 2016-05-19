@@ -25,7 +25,7 @@ public class ENAUtils {
     private static Logger log = LoggerFactory.getLogger(ENAUtils.class);
     
     private static LoadingCache<String, Document> lookupDocument = CacheBuilder.newBuilder()
-    .maximumSize(1000)
+    .maximumSize(10000)
     .build(
         new CacheLoader<String, Document>() {
           public Document load(String id) throws DocumentException, MalformedURLException, IOException {

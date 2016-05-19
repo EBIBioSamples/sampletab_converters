@@ -21,7 +21,20 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
+import javax.xml.ws.Response;
 
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.custommonkey.xmlunit.Diff;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.dom4j.Document;
@@ -35,7 +48,47 @@ import org.slf4j.LoggerFactory;
 
 public class XMLUtils {
     private static Logger log = LoggerFactory.getLogger("XMLUtils");
+    
 
+    private static TransformerFactory tf = TransformerFactory.newInstance();
+    
+	private static CloseableHttpClient httpClient;    
+    static {
+    	PoolingHttpClientConnectionManager conman = new PoolingHttpClientConnectionManager();
+    	conman.setMaxTotal(128);
+    	conman.setDefaultMaxPerRoute(64);
+    	conman.setValidateAfterInactivity(0);
+    	
+    	ConnectionKeepAliveStrategy keepAliveStrategy = new ConnectionKeepAliveStrategy() {
+            @Override
+            public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+            	//see if the user provides a live time
+                HeaderElementIterator it = new BasicHeaderElementIterator
+                    (response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+                while (it.hasNext()) {
+                    HeaderElement he = it.nextElement();
+                    String param = he.getName();
+                    String value = he.getValue();
+                    if (value != null && param.equalsIgnoreCase
+                       ("timeout")) {
+                        return Long.parseLong(value) * 1000;
+                    }
+                }
+                //default to one second live time 
+                return 1 * 1000;
+            }
+        };
+    	
+    	httpClient = HttpClients.custom()
+    			.setKeepAliveStrategy(keepAliveStrategy)
+    			.setConnectionManager(conman).build();
+    }
+    
+    static {
+        XMLUnit.setIgnoreAttributeOrder(true);
+        XMLUnit.setIgnoreWhitespace(true);
+    }
+    
     public static Document getDocument(File xmlFile) throws FileNotFoundException, DocumentException {
         return getDocument(new BufferedReader(new FileReader(xmlFile)));
     }
@@ -45,26 +98,14 @@ public class XMLUtils {
         //-Dhttp.proxyHost=wwwcache.ebi.ac.uk -Dhttp.proxyPort=3128 -Dhttp.nonProxyHosts=*.ebi.ac.uk 
         //-DproxyHost=wwwcache.ebi.ac.uk -DproxyPort=3128 -DproxySet=true
         //can't call SAXReader directly because it ignores proxing
-        Reader r = null;
         Document doc = null;
-        HttpURLConnection conn = null;
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            doc = getDocument(r);
-        } finally {
-            if (r != null) {
-                try {
-                    r.close();
-                } catch (IOException e) {
-                    //do nothing
-                }
-            }
-            if (conn != null) {
-                conn.disconnect();
-            }
+        HttpGet get = new HttpGet(url.toString());
+        try (CloseableHttpResponse response = httpClient.execute(get)) {
+	        try (Reader r = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+	            //conn = (HttpURLConnection) url.openConnection();
+	            doc = getDocument(r);
+	        }         
         }
-        
         return doc;
     }
 
@@ -159,7 +200,6 @@ public class XMLUtils {
     } 
 
     public static org.w3c.dom.Document convertDocument(Document orig) throws TransformerException {
-        TransformerFactory tf = TransformerFactory.newInstance();
         Transformer t = tf.newTransformer();
         DOMResult result = new DOMResult();
         t.transform(new DocumentSource(orig), result);
@@ -168,8 +208,7 @@ public class XMLUtils {
 
     public static boolean isSameXML(Document docA, Document docB) throws TransformerException {
 
-        XMLUnit.setIgnoreAttributeOrder(true);
-
+    	//some XMLUnit config is done statically at creation
         org.w3c.dom.Document docw3cA = null;
         org.w3c.dom.Document docw3cB= null;
         docw3cA = convertDocument(docA);
