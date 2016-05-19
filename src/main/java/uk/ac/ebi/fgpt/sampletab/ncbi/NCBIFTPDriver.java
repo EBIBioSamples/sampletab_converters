@@ -338,7 +338,7 @@ public class NCBIFTPDriver extends AbstractDriver {
 			if (downloadFile == null) {
 				is = ncbiftp.streamFromFTP(remoteFile);
 			} else {
-				is = ncbiftp.streamFromLocalCopy(remoteFile, downloadFile);
+				is = ncbiftp.streamFromLocalCopy(remoteFile, downloadFile.getAbsoluteFile());
 			}
 			handleGZStream(is);
 		} catch (IOException e) {
