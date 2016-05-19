@@ -9,11 +9,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.transform.TransformerException;
 
@@ -47,6 +51,8 @@ import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils.MissingBioSampleException;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils.NonPublicObjectException;
 import uk.ac.ebi.fgpt.sampletab.utils.ENAUtils.UnrecognizedBioSampleException;
+import uk.ac.ebi.fgpt.sampletab.utils.OLSUtils;
+import uk.ac.ebi.fgpt.sampletab.utils.OLSUtils.TooManyIRIsException;
 import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
@@ -261,8 +267,31 @@ public class ERAUpdateCallable implements Callable<Void> {
                 } else {
                     valuetext = value.getTextTrim();
                 }
-                CharacteristicAttribute characteristicAttribute = new CharacteristicAttribute(tagtext,
-                        valuetext);
+
+                CharacteristicAttribute characteristicAttribute;
+                //some ENA SRA attributes may have ontology terms included 
+                Pattern p = Pattern.compile("(.*) \\((.*)\\)");
+                Matcher m = p.matcher(valuetext);
+                if (m.matches()) {
+                	valuetext = m.group(1);
+                	String ontologyId = m.group(2);
+                    characteristicAttribute = new CharacteristicAttribute(tagtext,
+                            valuetext);
+                    
+					URI ontologyIri = null;
+                    try {
+                    	ontologyIri = OLSUtils.guessIRIfromShortTerm(ontologyId);
+					} catch (IOException | URISyntaxException | TooManyIRIsException e) {
+						log.error("Unable to guess IRI from short term "+ontologyId, e);
+					}
+                    if (ontologyIri != null) {
+                    	log.info("Adding TermSourceID to "+tagtext+":"+valuetext+" "+ontologyIri);
+                    	characteristicAttribute.setTermSourceID(ontologyIri.toString());
+                    }
+                } else {
+                    characteristicAttribute = new CharacteristicAttribute(tagtext, valuetext);
+                }
+                
                 
                 if (units != null && units.getTextTrim().length() > 0) {
                     log.trace("Added unit "+units.getTextTrim());
