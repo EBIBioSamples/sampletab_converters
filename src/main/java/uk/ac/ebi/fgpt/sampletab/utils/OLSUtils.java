@@ -34,7 +34,7 @@ import com.google.common.cache.LoadingCache;
 
 public class OLSUtils {
 
-	private static Logger log = LoggerFactory.getLogger(ENAUtils.class);
+	private static Logger log = LoggerFactory.getLogger(OLSUtils.class);
 
 	private static RestTemplate restTemplate = new RestTemplate();
 	
