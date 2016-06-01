@@ -76,8 +76,11 @@ public class ERAUpdateCallable implements Callable<Void> {
     private Logger log = LoggerFactory.getLogger(getClass());
     
     private boolean updated = false;
+    
+    private static final Pattern attributeWithOntology = Pattern.compile("(.*) \\((.*)\\)");
 
     private static TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
+    
     //characteristics that we want to ignore
     private static Collection<String> characteristicsIgnore;
     static {
@@ -271,8 +274,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 
                 CharacteristicAttribute characteristicAttribute = new CharacteristicAttribute(tagtext, valuetext);
                 //some ENA SRA attributes may have ontology terms included 
-                Pattern p = Pattern.compile("(.*) \\((.*)\\)");
-                Matcher m = p.matcher(valuetext);
+                Matcher m = attributeWithOntology.matcher(valuetext);
                 if (m.matches()) {
                 	String ontologyId = m.group(2);
                     
