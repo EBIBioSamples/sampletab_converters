@@ -25,7 +25,7 @@ public class SubmissionCallable implements Callable<Void> {
         targetDirFile.mkdirs();
         
         File targetFile = new File(targetDirFile, "sampletab.pre.txt");
-        //only continue if the target is older than the input
+        //only continue if the target is newer than the input
         if (targetFile.exists() && targetFile.lastModified() > inputFile.lastModified()) {
             return null;
         }
