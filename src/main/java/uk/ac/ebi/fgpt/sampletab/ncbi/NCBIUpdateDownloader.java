@@ -40,7 +40,7 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
  */
 public class NCBIUpdateDownloader {
     
-	private static String base = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/";	
+	private static String base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/";	
 
 
     private static Logger log = LoggerFactory.getLogger(NCBIUpdateDownloader.class);
