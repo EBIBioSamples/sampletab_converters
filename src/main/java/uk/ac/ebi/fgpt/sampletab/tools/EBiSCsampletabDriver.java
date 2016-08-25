@@ -24,9 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import au.com.bytecode.opencsv.CSVReader;
+import uk.ac.ebi.arrayexpress2.magetab.datamodel.graph.Node;
 import uk.ac.ebi.arrayexpress2.magetab.exception.ParseException;
 import uk.ac.ebi.arrayexpress2.magetab.listener.ErrorItemListener;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.SampleData;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.GroupNode;
+import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SCDNode;
 import uk.ac.ebi.arrayexpress2.sampletab.datamodel.scd.node.SampleNode;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabParser;
 import uk.ac.ebi.arrayexpress2.sampletab.parser.SampleTabSaferParser;
@@ -37,6 +40,8 @@ import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 public class EBiSCsampletabDriver extends AbstractDriver {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
+
+    private SampleTabSaferParser parser = new SampleTabSaferParser();
 	
 	public static void main(String[] args){
 		new EBiSCsampletabDriver().doMain(args);
@@ -45,17 +50,6 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 	@Override
 	public void doMain(String[] args) {
 		super.doMain(args);
-		/*
-		SampleTabParser parser = new SampleTabParser<SampleData>();
-		List<ErrorItem> errorItems = new ArrayList<ErrorItem>();
-        //make a listener to put error items in the list
-        parser.addErrorItemListener(new ErrorItemListener() {
-            public void errorOccurred(ErrorItem item) {
-            	log.error("Errror encountered "+item.toString());
-                errorItems.add(item);
-            }
-        });
-        */
 		
 		//load the ebisc data
 		Path lineFile = Paths.get("/home/faulcon/work/workspace/sampletab_converters/output.csv");
@@ -82,16 +76,16 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 			String sub = line[3];
 					
 			if (sub.length() > 0 && vialNameWanted.length() > 0) {
-				if (!subToVialAccs.containsValue(sub)) {
+				if (!subToVialAccs.containsKey(sub)) {
 					subToVialAccs.put(sub, new HashSet<>());
 				}
 				subToVialAccs.get(sub).add(vialAcc);
+				log.info("For submission "+sub+" found vial "+vialAcc);
 				
 				vialAccToName.put(vialAcc, vialNameWanted);
 			}
 		}		
 		for (String sub : subToVialAccs.keySet()) {
-			//errorItems.clear();
 			File origin = new File("/home/faulcon/Desktop/ebisc");
 			File file = new File(origin, SampleTabUtils.getSubmissionDirFile(sub).toString());
 			File sampleTab = new File(file, "sampletab.txt");
@@ -99,8 +93,6 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 			if (sampleTab.exists()) {
 
 				boolean changed = false;
-
-		        SampleTabSaferParser parser = new SampleTabSaferParser();
 		        SampleData sd;
 				try {
 					sd = parser.parse(sampleTab);
@@ -108,7 +100,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 					throw new RuntimeException(e1);
 				}
 				
-				log.info("Read "+sampleTab);
+				log.info("Read "+sampleTab+" for "+subToVialAccs.get(sub).size()+" vials");
 				
 				
 				for (String vialAcc : subToVialAccs.get(sub)){
@@ -142,5 +134,92 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 		//for each sampletab file containing batchs
 		//load it
 		//check their name is what it should be
+		//check that everything in the batch is a vial
+		Map<String, String> batchAccToName = new HashMap<>();
+		Map<String, Set<String>> subToBatchAccs = new HashMap<>();
+		for (String[] line : content.subList(1, content.size())) {
+			String batchAcc = line[12];
+			String batchNameWanted = line[14];
+			String sub = line[15];
+					
+			if (sub.length() > 0 && batchNameWanted.length() > 0) {
+				if (!subToBatchAccs.containsValue(sub)) {
+					subToBatchAccs.put(sub, new HashSet<>());
+				}
+				subToBatchAccs.get(sub).add(batchAcc);
+				
+				batchAccToName.put(batchAcc, batchNameWanted);
+			}
+		}
+		
+		
+		for (String sub : subToBatchAccs.keySet()) {
+			File origin = new File("/home/faulcon/Desktop/ebisc");
+			File file = new File(origin, SampleTabUtils.getSubmissionDirFile(sub).toString());
+			File sampleTab = new File(file, "sampletab.txt");
+			
+			if (sampleTab.exists()) {
+
+				boolean changed = false;
+		        SampleData sd;
+				try {
+					sd = parser.parse(sampleTab);
+				} catch (ParseException e1) {
+					throw new RuntimeException(e1);
+				}
+				
+				log.info("Read "+sampleTab);
+				
+				
+				for (String batchAcc : subToBatchAccs.get(sub)){
+					GroupNode groupNode = null;
+					for (GroupNode batch : sd.scd.getNodes(GroupNode.class)) {
+						if (batchAcc.equals(batch.getGroupAccession())) {
+							groupNode = batch;
+						}
+					}
+					if (groupNode != null) {
+						//change the name
+						if (!batchAccToName.get(batchAcc).equals(groupNode.getNodeName())) {
+							groupNode.setNodeName(batchAccToName.get(batchAcc));
+							log.info("Setting name of "+batchAcc+" to "+groupNode.getNodeName());
+							changed = true;
+						}
+						//check the membership
+						Set<Node> toRemove = new HashSet<>();
+						
+						for (Node parentNode : groupNode.getParentNodes()) {
+							if (SampleNode.class.isInstance(parentNode)) {
+								if (!parentNode.getNodeName().contains(" vial ")) {
+									toRemove.add(parentNode);
+								}	
+							}
+						}
+						for (Node toRemoveNode : toRemove) {
+							log.info("Removing node "+toRemoveNode.getNodeName()+" from group "+groupNode.getNodeName());
+							groupNode.removeParentNode(toRemoveNode);
+							toRemoveNode.removeChildNode(groupNode);
+							try {
+								sd.scd.resolveGraphStructure((SCDNode) toRemoveNode);
+							} catch (ParseException e) {
+								throw new RuntimeException(e);
+							}
+							changed = true;
+						}
+					} else {
+						log.warn("Unable to find accession "+batchAcc+" in submission "+sub);
+					}
+				}
+				if (changed) {
+					try (SampleTabWriter sampleTabWriter = new SampleTabWriter(new FileWriter(sampleTab))) {
+						sampleTabWriter.write(sd);
+						log.info("Wrote to "+sampleTab);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}	
+			}
+		}
+		
 	}
 }

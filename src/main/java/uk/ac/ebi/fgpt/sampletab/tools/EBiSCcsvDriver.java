@@ -7,6 +7,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,6 +33,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import uk.ac.ebi.fgpt.sampletab.AbstractDriver;
 import uk.ac.ebi.fgpt.sampletab.Accessioner;
+import uk.ac.ebi.fgpt.sampletab.Corrector;
 import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class EBiSCcsvDriver extends AbstractDriver {
@@ -59,6 +63,8 @@ public class EBiSCcsvDriver extends AbstractDriver {
 	private Map<String, String> accessionToName = new ConcurrentHashMap<>();
 
 	private Map<String, String> accessionToRC = new ConcurrentHashMap<>();
+	
+	private Map<String, String> hipsciToEbisc = new ConcurrentHashMap<>();
 
 	public static void main(String[] args) {
 		new EBiSCcsvDriver().doMain(args);
@@ -149,6 +155,8 @@ public class EBiSCcsvDriver extends AbstractDriver {
 			int headerBiosamplesCellLineId = -1;
 			int headerBiosamplesBatchId = -1;
 			int headerBatch = -1;
+			int headerDepositorCellLineName = -1;
+			int headerHESCregCellLineName = -1;
 			for (int i = 0; i < headers.length; i++) {
 				if ("BioSamples Cell Line ID".equals(headers[i])) {
 					headerBiosamplesCellLineId = i;
@@ -159,12 +167,27 @@ public class EBiSCcsvDriver extends AbstractDriver {
 				if ("Batch".equals(headers[i])) {
 					headerBatch = i;
 				}
+				if ("Depositor Cell Line Name".equals(headers[i])) {
+					headerDepositorCellLineName = i;
+				}
+				if ("hESCreg Cell Line Name".equals(headers[i])) {
+					headerHESCregCellLineName = i;
+				}
+			
 			}
 			
 			for (String[] line : content.subList(1, content.size())) {
-				String biosamplesCellLineId = line[headerBiosamplesCellLineId];
-				String batch = line[headerBatch];
-				String biosamplesBatchId = line[headerBiosamplesBatchId];
+				String biosamplesCellLineId = line[headerBiosamplesCellLineId].trim();
+				String batch = line[headerBatch].trim();
+				String biosamplesBatchId = line[headerBiosamplesBatchId].trim();
+				String depositorCellLineName = line[headerDepositorCellLineName].trim();
+				String hESCregCellLineName = line[headerHESCregCellLineName].trim();
+				
+				biosamplesCellLineId = Corrector.cleanString(biosamplesCellLineId);
+				batch = Corrector.cleanString(batch);
+				biosamplesBatchId = Corrector.cleanString(biosamplesBatchId);
+				depositorCellLineName = Corrector.cleanString(depositorCellLineName);
+				hESCregCellLineName = Corrector.cleanString(hESCregCellLineName);
 				
 				if (batch.trim().length() > 0 && biosamplesBatchId.trim().length() > 0) {
 					if (!accessionToRC.containsKey(biosamplesBatchId)) {
@@ -198,6 +221,11 @@ public class EBiSCcsvDriver extends AbstractDriver {
 					}
 				} else {
 					log.info("Number of batches for line "+biosamplesCellLineId+" is "+batches.size()+" not 1");
+				}
+				
+				//if (depositorCellLineName.startsWith("HPSI")) {
+				if (hESCregCellLineName.startsWith("WTSI")) {
+					hipsciToEbisc.put(depositorCellLineName, hESCregCellLineName);
 				}
 			
 			}
@@ -684,6 +712,9 @@ public class EBiSCcsvDriver extends AbstractDriver {
 				if (getLineOfVial(vialAcc) != null) {
 					lineAcc = getLineOfVial(vialAcc);
 					lineName = accessionToName.get(lineAcc);
+					if (hipsciToEbisc.containsKey(lineName)) {
+						lineName = hipsciToEbisc.get(lineName);
+					}
 					lineSub = accessionToSubmission.get(lineAcc);
 					lineOwner = accessionToOwner.get(lineAcc);
 
@@ -703,9 +734,47 @@ public class EBiSCcsvDriver extends AbstractDriver {
 				if (accessionToRC.containsKey(vialBatchAcc)) {
 					//get the existing vial number 
 					String[] nameSplit = vialNameNow.split(" ");
-					int vialNo = Integer.parseInt(nameSplit[nameSplit.length-1]);
+					int vialNo = Integer.parseInt(nameSplit[nameSplit.length-1]);					
 					
-					vialNameWanted = lineName + " " + accessionToRC.get(vialBatchAcc) + " vial "+String.format("%04d", vialNo);
+					//get the samples in the same batch/group
+					List<String> orderedBatchVialAcc = new ArrayList<>();
+					//make sure to only get vials
+					for (String testAcc : groupToSamples.get(vialBatchAcc)) {
+						if (accessionToType.get(testAcc).equals(AccessionType.VIAL)) {
+							orderedBatchVialAcc.add(testAcc);
+						}
+					}
+					Collections.sort(orderedBatchVialAcc, new Comparator<String>(){
+						@Override
+						public int compare(String vialAcc1, String vialAcc2) {
+							
+							String vialNameNow1 = accessionToName.get(vialAcc1);
+							String[] nameSplit1 = vialNameNow1.split(" ");							
+							int vialNo1;
+							try {
+								vialNo1 = Integer.parseInt(nameSplit1[nameSplit1.length-1]);
+							} catch (NumberFormatException e) {
+								log.error("Unable to get vial number from "+vialNameNow1);
+								throw e;
+							}
+							
+							String vialNameNow2 = accessionToName.get(vialAcc2);
+							String[] nameSplit2 = vialNameNow2.split(" ");										
+							int vialNo2;
+							try {
+								vialNo2 = Integer.parseInt(nameSplit2[nameSplit2.length-1]);
+							} catch (NumberFormatException e) {
+								log.error("Unable to get vial number from "+vialNameNow2);
+								throw e;
+							}
+							
+							return Integer.compare(vialNo1, vialNo2);
+						}});
+					
+					int vialNoNow = orderedBatchVialAcc.indexOf(vialAcc)+1;
+					//TODO renumber vials starting from 1 in each batch
+					
+					vialNameWanted = lineName + " " + accessionToRC.get(vialBatchAcc) + " vial "+String.format("%04d", vialNoNow);
 				}
 				if (accessionToRC.containsKey(vialBatchAcc)) {
 					vialBatchNameWanted = lineName + " " + accessionToRC.get(vialBatchAcc);
