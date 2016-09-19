@@ -23,6 +23,7 @@ import javax.sql.DataSource;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,6 +39,12 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 
 public class EBiSCcsvDriver extends AbstractDriver {
 
+    @Option(name = "--csv", usage = "csv path")
+    private String csvPath;
+    
+    @Option(name = "--csv-extra", usage = "csv path for extra file")
+    private String csvExtraPath;
+    
 	public enum AccessionType {
 		BATCH, LINE, DONOR, VIAL, OTHER;
 	}
@@ -66,6 +73,11 @@ public class EBiSCcsvDriver extends AbstractDriver {
 	
 	private Map<String, String> hipsciToEbisc = new ConcurrentHashMap<>();
 
+	private String urlRoot = "https://www.ebi.ac.uk/biosamples/";
+	//private String urlRoot = "http://cocoa.ebi.ac.uk:14114/biosamples/";
+	
+	
+	
 	public static void main(String[] args) {
 		new EBiSCcsvDriver().doMain(args);
 	}
@@ -140,7 +152,7 @@ public class EBiSCcsvDriver extends AbstractDriver {
 	public void handleExtraFile2() throws IOException {
 
 		
-		Path lineFile = Paths.get("/home/faulcon/Desktop/ebisc/rcbatch.csv");
+		Path lineFile = Paths.get(csvExtraPath);
 
 		try (CSVReader reader = new CSVReader(Files.newBufferedReader(lineFile))) {
 
@@ -234,7 +246,7 @@ public class EBiSCcsvDriver extends AbstractDriver {
 
 	public void handleExtraFile() throws IOException {
 		
-		Path lineFile = Paths.get("/home/faulcon/work/workspace/sampletab_converters/ims-batches-2016-03-24 added batch info.csv");
+		Path lineFile = Paths.get(csvExtraPath);
 
 		try (CSVReader reader = new CSVReader(Files.newBufferedReader(lineFile))) {
 			// these are small enough to read all into memory at
@@ -287,8 +299,7 @@ public class EBiSCcsvDriver extends AbstractDriver {
 		Integer total = null;
 		while (to == null || to < total) {
 			// get an xml for the query
-			Document doc = XMLUtils
-					.getDocument(new URL("https://www.ebi.ac.uk/biosamples/xml/group/query=EBiSC&pagesize=500&page=" + page));
+			Document doc = XMLUtils.getDocument(new URL(urlRoot+"xml/group/query=EBiSC&pagesize=500&page=" + page));
 			Element root = doc.getRootElement();
 
 			// process this pages results
@@ -343,7 +354,7 @@ public class EBiSCcsvDriver extends AbstractDriver {
 			Document doc = null;
 			try {
 				doc = XMLUtils.getDocument(
-						new URL("https://www.ebi.ac.uk/biosamples/xml/groupsamples/" + groupAcc + "/query=&page=" + page));
+						new URL(urlRoot+"xml/groupsamples/" + groupAcc + "/query=&page=" + page));
 			} catch (DocumentException | IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -378,7 +389,7 @@ public class EBiSCcsvDriver extends AbstractDriver {
 
 		Document doc = null;
 		try {
-			doc = XMLUtils.getDocument(new URL("https://www.ebi.ac.uk/biosamples/xml/group/" + groupAcc));
+			doc = XMLUtils.getDocument(new URL(urlRoot+"xml/group/" + groupAcc));
 		} catch (DocumentException | IOException e) {
 			log.error("Unable to process XML for group " + groupAcc);
 			throw new RuntimeException(e);
@@ -427,9 +438,11 @@ public class EBiSCcsvDriver extends AbstractDriver {
 
 		Document doc = null;
 		try {
-			doc = XMLUtils.getDocument(new URL("https://www.ebi.ac.uk/biosamples/xml/sample/" + sampleAcc));
+			doc = XMLUtils.getDocument(new URL(urlRoot+"xml/sample/" + sampleAcc));
 		} catch (DocumentException | IOException e) {
-			throw new RuntimeException("Unable to process XML for sample " + sampleAcc, e);
+			log.warn("Unable to process XML for sample " + sampleAcc);
+			return;
+			//throw new RuntimeException("Unable to process XML for sample " + sampleAcc, e);
 		}
 		Element root = doc.getRootElement();
 		for (Element derivedElem : XMLUtils.getChildrenByName(root, "derivedFrom")) {
@@ -614,16 +627,18 @@ public class EBiSCcsvDriver extends AbstractDriver {
 	public String getLineOfVial(String vialAcc) throws IllegalStateException {
 		// TODO validate input
 		String acc = vialAcc;
-		while (accessionToType.get(acc) != AccessionType.LINE) {
+		while (accessionToType.get(acc) == AccessionType.VIAL) {
 			if (!derivedFrom.containsKey(acc)) {
 				log.error("Accession " + acc + " has derivedFrom");
 				return null;
 			}
 			acc = derivedFrom.get(acc);
+			/*
 			if (!accessionToType.containsKey(acc)) {
 				log.error("Accession " + acc + " has no type");
 				return null;
 			}
+			*/
 			// TODO sanity check values
 		}
 		return acc;
@@ -671,16 +686,13 @@ public class EBiSCcsvDriver extends AbstractDriver {
 	}
 
 	private void output() {
-
-		//TODO handle hipsci -> ebisc naming using RC spreadsheet
-		
 		
 		// some counting
 		Set<String> lineNames = new HashSet<>();
 
 		/// vial vial name vial sub line line sub hESCreg donor donor sub batch
 		try (CSVWriter writer = new CSVWriter(
-				new FileWriter("/home/faulcon/work/workspace/sampletab_converters/output.csv"))) {
+				new FileWriter(csvPath))) {
 			writer.writeNext(new String[] { "vial", "vial name now", "vial name wanted", "vial sub", "vial owner",
 					"line", "line name", "line sub", "line owner", "donor", "donor sub", "donor owner", "batch",
 					"batch name now", "batch name wanted", "batch sub", "batch owner" });
@@ -711,17 +723,19 @@ public class EBiSCcsvDriver extends AbstractDriver {
 
 				if (getLineOfVial(vialAcc) != null) {
 					lineAcc = getLineOfVial(vialAcc);
-					lineName = accessionToName.get(lineAcc);
-					if (hipsciToEbisc.containsKey(lineName)) {
-						lineName = hipsciToEbisc.get(lineName);
-					}
-					lineSub = accessionToSubmission.get(lineAcc);
-					lineOwner = accessionToOwner.get(lineAcc);
-
-					if (getDonorOfLine(lineAcc) != null) {
-						donorAcc = getDonorOfLine(lineAcc);
-						donorSub = accessionToSubmission.get(donorAcc);
-						donorOwner = accessionToOwner.get(donorAcc);
+					if (accessionToName.containsKey(lineAcc)) {
+						lineName = accessionToName.get(lineAcc);
+						if (hipsciToEbisc.containsKey(lineName)) {
+							lineName = hipsciToEbisc.get(lineName);
+						}
+						lineSub = accessionToSubmission.get(lineAcc);
+						lineOwner = accessionToOwner.get(lineAcc);
+	
+						if (getDonorOfLine(lineAcc) != null) {
+							donorAcc = getDonorOfLine(lineAcc);
+							donorSub = accessionToSubmission.get(donorAcc);
+							donorOwner = accessionToOwner.get(donorAcc);
+						}
 					}
 				}
 
@@ -744,6 +758,7 @@ public class EBiSCcsvDriver extends AbstractDriver {
 							orderedBatchVialAcc.add(testAcc);
 						}
 					}
+					//renumber vials starting from 1 in each batch
 					Collections.sort(orderedBatchVialAcc, new Comparator<String>(){
 						@Override
 						public int compare(String vialAcc1, String vialAcc2) {
@@ -772,9 +787,10 @@ public class EBiSCcsvDriver extends AbstractDriver {
 						}});
 					
 					int vialNoNow = orderedBatchVialAcc.indexOf(vialAcc)+1;
-					//TODO renumber vials starting from 1 in each batch
 					
-					vialNameWanted = lineName + " " + accessionToRC.get(vialBatchAcc) + " vial "+String.format("%04d", vialNoNow);
+					if (lineName.length() > 0) {
+						vialNameWanted = lineName + " " + accessionToRC.get(vialBatchAcc) + " vial "+String.format("%04d", vialNoNow);
+					}
 				}
 				if (accessionToRC.containsKey(vialBatchAcc)) {
 					vialBatchNameWanted = lineName + " " + accessionToRC.get(vialBatchAcc);

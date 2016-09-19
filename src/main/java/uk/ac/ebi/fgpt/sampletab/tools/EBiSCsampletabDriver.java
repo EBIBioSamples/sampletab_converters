@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.kohsuke.args4j.Option;
 import org.mged.magetab.error.ErrorItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,14 @@ import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class EBiSCsampletabDriver extends AbstractDriver {
 
+	
+
+    @Option(name = "--csv", usage = "csv path")
+    private String csvPath;
+
+    @Option(name = "--submission", usage = "submission path")
+    private String submissionPath;
+	
 	private Logger log = LoggerFactory.getLogger(getClass());
 
     private SampleTabSaferParser parser = new SampleTabSaferParser();
@@ -52,7 +61,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 		super.doMain(args);
 		
 		//load the ebisc data
-		Path lineFile = Paths.get("/home/faulcon/work/workspace/sampletab_converters/output.csv");
+		Path lineFile = Paths.get(csvPath);
 		List<String[]> content = null;
 
 		try (CSVReader reader = new CSVReader(Files.newBufferedReader(lineFile))) {
@@ -86,7 +95,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 			}
 		}		
 		for (String sub : subToVialAccs.keySet()) {
-			File origin = new File("/home/faulcon/Desktop/ebisc");
+			File origin = new File(submissionPath);
 			File file = new File(origin, SampleTabUtils.getSubmissionDirFile(sub).toString());
 			File sampleTab = new File(file, "sampletab.txt");
 			
@@ -154,7 +163,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 		
 		
 		for (String sub : subToBatchAccs.keySet()) {
-			File origin = new File("/home/faulcon/Desktop/ebisc");
+			File origin = new File(submissionPath);
 			File file = new File(origin, SampleTabUtils.getSubmissionDirFile(sub).toString());
 			File sampleTab = new File(file, "sampletab.txt");
 			
