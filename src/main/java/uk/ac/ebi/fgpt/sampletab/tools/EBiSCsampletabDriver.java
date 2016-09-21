@@ -157,9 +157,11 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 		for (String[] line : content.subList(1, content.size())) {
 			String batchAcc = line[12];
 			String batchNameWanted = line[14];
+			String vialNameWanted = line[2];
 			String sub = line[15];
 					
-			if (sub.length() > 0 && batchNameWanted.length() > 0) {
+			if (vialNameWanted.length() > 0 && //check that it is a sane vial name wanted
+					sub.length() > 0 && batchNameWanted.length() > 0) {
 				if (!subToBatchAccs.containsValue(sub)) {
 					subToBatchAccs.put(sub, new HashSet<>());
 				}
