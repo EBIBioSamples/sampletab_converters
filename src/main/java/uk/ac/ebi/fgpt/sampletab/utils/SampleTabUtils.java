@@ -124,6 +124,7 @@ public class SampleTabUtils {
                 writer = new BufferedWriter(new FileWriter(sampletabFile));
                 SampleTabWriter stwriter = new SampleTabWriter(writer);
                 stwriter.write(sd);
+                stwriter.close();
                 toReturn = true;
             } catch (IOException e) {
                 throw e;
