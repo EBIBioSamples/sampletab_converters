@@ -47,6 +47,9 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 
     @Option(name = "--submission", usage = "submission path")
     private String submissionPath;
+    
+    @Option(name = "--dry-run", usage = "Dry run without writing")
+    private boolean dryRun = false;
 	
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -129,7 +132,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 						log.warn("Unable to find accession "+vialAcc+" in submission "+sub);
 					}
 				}
-				if (changed) {
+				if (changed && !dryRun) {
 					try (SampleTabWriter sampleTabWriter = new SampleTabWriter(new FileWriter(sampleTab))) {
 						sampleTabWriter.write(sd);
 						log.info("Wrote to "+sampleTab);
@@ -222,7 +225,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 						log.warn("Unable to find accession "+batchAcc+" in submission "+sub);
 					}
 				}
-				if (changed) {
+				if (changed && !dryRun) {
 					try (SampleTabWriter sampleTabWriter = new SampleTabWriter(new FileWriter(sampleTab))) {
 						sampleTabWriter.write(sd);
 						log.info("Wrote to "+sampleTab);
