@@ -244,52 +244,6 @@ public class EBiSCcsvDriver extends AbstractDriver {
 		}
 	}
 
-	public void handleExtraFile() throws IOException {
-		
-		Path lineFile = Paths.get(csvExtraPath);
-
-		try (CSVReader reader = new CSVReader(Files.newBufferedReader(lineFile))) {
-			// these are small enough to read all into memory at
-			// once
-			List<String[]> content = reader.readAll();
-
-			String[] headers = content.get(0);
-
-			// need to extract the batch name and the biosample
-			// accession of the batch
-			int headerCellLineName = -1;
-			int headerCellLineBioSamplesId = -1;
-			int headerBatchNo = -1;
-			int headerBatchBioSamplesId = -1;
-			for (int i = 0; i < headers.length; i++) {
-				if ("cell_line_name".equals(headers[i])) {
-					headerCellLineName = i;
-				}
-				if ("cell_line_biosamples_id".equals(headers[i])) {
-					headerCellLineBioSamplesId = i;
-				}
-				if ("batch_no".equals(headers[i])) {
-					headerBatchNo = i;
-				}
-				if ("batch_biosamples_id".equals(headers[i])) {
-					headerBatchBioSamplesId = i;
-				}
-			}
-
-			for (String[] line : content.subList(1, content.size())) {
-				String cellLineName = line[headerCellLineName];
-				String cellLineBioSamplesId = line[headerCellLineBioSamplesId];
-				String batchName = line[headerBatchNo];
-				String batchAccession = line[headerBatchBioSamplesId];
-
-				if (!batchAccession.equals(batchName)) {
-					log.info("Name for "+batchAccession+" is "+batchName);
-					accessionToRC.put(batchAccession, batchName);
-				}
-			}
-		}
-	}
-
 	public Set<String> getEBiSCGroups() throws DocumentException, MalformedURLException, IOException {
 		log.info("Getting EBiSC groups from BioSamples XML API");
 		Set<String> result = new HashSet<>();
