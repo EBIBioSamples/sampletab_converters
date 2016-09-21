@@ -54,6 +54,8 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
     private SampleTabSaferParser parser = new SampleTabSaferParser();
+    
+    private String filename = "sampletab.pre.txt";
 	
 	public static void main(String[] args){
 		new EBiSCsampletabDriver().doMain(args);
@@ -100,7 +102,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 		for (String sub : subToVialAccs.keySet()) {
 			File origin = new File(submissionPath);
 			File file = new File(origin, SampleTabUtils.getSubmissionDirFile(sub).toString());
-			File sampleTab = new File(file, "sampletab.pre.txt");
+			File sampleTab = new File(file, filename);
 			
 			if (sampleTab.exists()) {
 
@@ -171,7 +173,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 		for (String sub : subToBatchAccs.keySet()) {
 			File origin = new File(submissionPath);
 			File file = new File(origin, SampleTabUtils.getSubmissionDirFile(sub).toString());
-			File sampleTab = new File(file, "sampletab.txt");
+			File sampleTab = new File(file, filename);
 			
 			if (sampleTab.exists()) {
 
