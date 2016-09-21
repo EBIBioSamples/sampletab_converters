@@ -97,7 +97,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 		for (String sub : subToVialAccs.keySet()) {
 			File origin = new File(submissionPath);
 			File file = new File(origin, SampleTabUtils.getSubmissionDirFile(sub).toString());
-			File sampleTab = new File(file, "sampletab.txt");
+			File sampleTab = new File(file, "sampletab.pre.txt");
 			
 			if (sampleTab.exists()) {
 
@@ -137,7 +137,10 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 						throw new RuntimeException(e);
 					}
 				}	
+			} else {
+				log.error("Unable to find file "+sampleTab);
 			}
+			
 		}
 		
 		//for each sampletab file containing batchs
@@ -227,6 +230,8 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 						throw new RuntimeException(e);
 					}
 				}	
+			} else {
+				log.error("Unable to find file "+sampleTab);
 			}
 		}
 		
