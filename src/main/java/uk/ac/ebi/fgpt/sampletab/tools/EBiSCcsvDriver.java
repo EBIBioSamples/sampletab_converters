@@ -494,78 +494,6 @@ public class EBiSCcsvDriver extends AbstractDriver {
 		}
 	}
 
-	private void handleRCData(Path start) throws IOException {
-
-		// make sure we are dealing with absolute pathing for reliability
-		start = start.toRealPath();
-
-		for (Path donorCentreName : Files.newDirectoryStream(start)) {
-			if (!Files.isDirectory(donorCentreName))
-				continue;
-			for (Path lineFile : Files.newDirectoryStream(donorCentreName)) {
-				if (Files.isRegularFile(lineFile)) {
-					// this is one of the csv files
-
-					log.info("Found file " + lineFile);
-
-					try (CSVReader reader = new CSVReader(Files.newBufferedReader(lineFile))) {
-						// these are small enough to read all into memory at
-						// once
-						List<String[]> content = reader.readAll();
-
-						String[] headers = content.get(0);
-
-						// need to extract the batch name and the biosample
-						// accession of the batch
-						int headerIdBatch = -1;
-						int headerIdGroupAccession = -1;
-						int headerVialNumber = -1;
-						int headerVialAccession = -1;
-						for (int i = 0; i < headers.length; i++) {
-							if ("Batch".equals(headers[i])) {
-								headerIdBatch = i;
-							}
-							if ("Biosamples Batch ID".equals(headers[i])) {
-								headerIdGroupAccession = i;
-							}
-							if ("Vial number".equals(headers[i])) {
-								headerVialNumber = i;
-							}
-							if ("Biosamples Vial ID".equals(headers[i])) {
-								headerVialAccession = i;
-							}
-						}
-
-						for (String[] line : content.subList(1, content.size())) {
-							String batchName = line[headerIdBatch];
-							String batchAccession = line[headerIdGroupAccession];
-							String vialNumber = line[headerVialNumber];
-							String vialAccession = line[headerVialAccession];
-
-							// only track this if we have both the name and
-							// accession
-							if (batchName.trim().length() > 0 && batchAccession.trim().length() > 0) {
-
-								if (!accessionToRC.containsKey(batchAccession)) {
-									// no existing name for this accession
-									if (!batchAccession.equals(batchName)) {
-										accessionToRC.put(batchAccession, batchName);
-										log.info("Found batch " + batchAccession + " " + batchName);
-									}
-								} else {
-									// check existing name
-									if (!accessionToRC.get(batchAccession).equals(batchName) && !batchName.equals(batchAccession)) {
-										throw new IllegalStateException(
-												"Multiple RC names for batch " + batchAccession + "("+batchName+","+accessionToRC.get(batchAccession)+")");
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
 
 	private Set<String> getVials() {
 		Set<String> toReturn = new HashSet<>();
@@ -699,10 +627,7 @@ public class EBiSCcsvDriver extends AbstractDriver {
 				vialBatchOwner = accessionToOwner.get(vialBatchAcc);
 
 				// can only construct this after other stuff
-				if (accessionToRC.containsKey(vialBatchAcc)) {
-					//get the existing vial number 
-					String[] nameSplit = vialNameNow.split(" ");
-					int vialNo = Integer.parseInt(nameSplit[nameSplit.length-1]);					
+				if (accessionToRC.containsKey(vialBatchAcc)) {		
 					
 					//get the samples in the same batch/group
 					List<String> orderedBatchVialAcc = new ArrayList<>();
