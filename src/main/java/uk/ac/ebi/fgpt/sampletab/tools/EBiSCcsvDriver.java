@@ -40,10 +40,10 @@ import uk.ac.ebi.fgpt.sampletab.utils.XMLUtils;
 public class EBiSCcsvDriver extends AbstractDriver {
 
     @Option(name = "--csv", usage = "csv path")
-    private String csvPath;
+    private String csvPath = "output.csv";
     
     @Option(name = "--csv-extra", usage = "csv path for extra file")
-    private String csvExtraPath;
+    private String csvExtraPath = "rcbatch.csv";
     
 	public enum AccessionType {
 		BATCH, LINE, DONOR, VIAL, OTHER;
