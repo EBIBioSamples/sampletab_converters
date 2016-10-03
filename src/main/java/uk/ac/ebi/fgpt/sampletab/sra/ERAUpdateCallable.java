@@ -306,6 +306,12 @@ public class ERAUpdateCallable implements Callable<Void> {
             }
         }
         
+        //if it was assigned a non-EBI accession, stop
+        //non-EBI should be part of NCBI import
+        if (samplenode.getSampleAccession() != null && !samplenode.getSampleAccession().startsWith("SAME")) {
+        	return;
+        }
+        
         samplenode.addAttribute(new DatabaseAttribute("ENA SRA", sampleId, "http://www.ebi.ac.uk/ena/data/view/" + sampleId));
 
         st.scd.addNode(samplenode);
