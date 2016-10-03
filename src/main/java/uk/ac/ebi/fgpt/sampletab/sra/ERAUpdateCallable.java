@@ -101,6 +101,9 @@ public class ERAUpdateCallable implements Callable<Void> {
 	}
 	
 	private void handleSample(String sampleId, Document sampleDocument) throws ParseException {
+		
+		if (!sampleId.startsWith("ERS")) return;
+		
 
         Element sampleroot = sampleDocument.getRootElement();
         Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
@@ -352,7 +355,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 			Element root = sampleDocument.getRootElement();
             Element sampleElement = XMLUtils.getChildByName(root, "SAMPLE");
             
-            //sometimes a sample will be refered to that doesn't exist - check for that here
+            //sometimes a sample will be referred to that doesn't exist - check for that here
             if (sampleElement != null) {
 				//check that this sample is for this submission
 				if (submissionId.equals(ENAUtils.getSubmissionForSample(sampleElement))) {
@@ -453,7 +456,6 @@ public class ERAUpdateCallable implements Callable<Void> {
 		//only write out and trigger conan if there was an update
 
         File outsubdir = new File(outDir, SampleTabUtils.getSubmissionDirPath(st.msi.submissionIdentifier));
-        outsubdir.mkdirs();
         File file = new File(outsubdir, "sampletab.pre.txt");
         
 		if (updated || !file.exists() || force){
@@ -466,20 +468,22 @@ public class ERAUpdateCallable implements Callable<Void> {
 	
 	        Normalizer norm = new Normalizer();
 	        norm.normalize(st);
-	
-	
-	        SampleTabWriter sampletabwriter = null;
-	        try {
-		        sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(file.getAbsolutePath())));
-		        sampletabwriter.write(st);
-		        log.trace("SampleTab written");
-	        } finally {
-	        	sampletabwriter.close();
-	        }
-	        
-	        //trigger conan if appropriate
-	        if (conan) {
-	            ConanUtils.submit(st.msi.submissionIdentifier, "BioSamples (other)");
+
+	        if (st.scd.getAllNodes().size() > 0 ) {	        
+		        outsubdir.mkdirs();	
+		        SampleTabWriter sampletabwriter = null;
+		        try {
+			        sampletabwriter = new SampleTabWriter(new BufferedWriter(new FileWriter(file.getAbsolutePath())));
+			        sampletabwriter.write(st);
+			        log.trace("SampleTab written");
+		        } finally {
+		        	sampletabwriter.close();
+		        }
+		        
+		        //trigger conan if appropriate
+		        if (conan) {
+		            ConanUtils.submit(st.msi.submissionIdentifier, "BioSamples (other)");
+		        }
 	        }
         
 		}
