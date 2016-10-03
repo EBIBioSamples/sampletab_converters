@@ -35,6 +35,7 @@ public class ERASingleDriver  extends AbstractDriver{
     private Logger log = LoggerFactory.getLogger(getClass());
 
     protected Accessioner accession;
+    protected ERADAO eraDom = new ERADAO();
 
 	public ERASingleDriver() {
 		
@@ -74,13 +75,21 @@ public class ERASingleDriver  extends AbstractDriver{
         
         accession = new Accessioner(ds);
 		
+        try {
+			eraDom.setup();
+		} catch (ClassNotFoundException e) {
+			log.error("Unable to create ERA DOM", e);
+			return;
+		}
+        
+        
         //actually process it
         for (String submissionId : submissionIds) {
 	        if (!submissionId.startsWith("ERA")) {
 	        	log.warn("Submission ID must be an ENA submission starting with ERA ("+submissionId+")");
 	        	continue;
 	        }
-			Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession, force);
+			Callable<Void> call = new ERAUpdateCallable(outputDir, submissionId, !noconan, accession, force, eraDom);
 			try {
 				call.call();
 			} catch (Exception e) {

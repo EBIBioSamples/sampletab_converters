@@ -81,6 +81,8 @@ public class ERAUpdateCallable implements Callable<Void> {
 
     private static TermSource ncbitaxonomy = new TermSource("NCBI Taxonomy", "http://www.ncbi.nlm.nih.gov/taxonomy/", null);
     
+    private final ERADAO eradao;
+    
     //characteristics that we want to ignore
     private static Collection<String> characteristicsIgnore;
     static {
@@ -92,12 +94,13 @@ public class ERAUpdateCallable implements Callable<Void> {
         characteristicsIgnore = Collections.unmodifiableCollection(characteristicsIgnore);
     }
     
-	public ERAUpdateCallable(File outDir, String submissionId, boolean conan, Accessioner accessioner, boolean force) {
+	public ERAUpdateCallable(File outDir, String submissionId, boolean conan, Accessioner accessioner, boolean force, ERADAO eradao) {
 		this.outDir = outDir;
 		this.submissionId = submissionId;
 		this.conan = conan;
 		this.accessioner = accessioner;
 		this.force = force;
+		this.eradao = eradao;
 	}
 	
 	private void handleSample(String sampleId, Document sampleDocument) throws ParseException {
@@ -312,6 +315,12 @@ public class ERAUpdateCallable implements Callable<Void> {
         	return;
         }
         
+        //if this is a sample which has biosamples authority, stop
+        //these will be direct submissions
+        if (samplenode.getSampleAccession() != null && eradao.getBioSamplesAuthority(samplenode.getSampleAccession())) {
+        	return;
+        }
+        
         samplenode.addAttribute(new DatabaseAttribute("ENA SRA", sampleId, "http://www.ebi.ac.uk/ena/data/view/" + sampleId));
 
         st.scd.addNode(samplenode);
@@ -465,8 +474,6 @@ public class ERAUpdateCallable implements Callable<Void> {
         File file = new File(outsubdir, "sampletab.pre.txt");
         
 		if (updated || !file.exists() || force){
-			
-	        log.info("SampleTab converted, preparing to write "+submissionId);
 	        
 	        synchronized(validator) {
 	        	validator.validate(st);
@@ -475,7 +482,9 @@ public class ERAUpdateCallable implements Callable<Void> {
 	        Normalizer norm = new Normalizer();
 	        norm.normalize(st);
 
-	        if (st.scd.getAllNodes().size() > 0 ) {	        
+	        if (st.scd.getAllNodes().size() > 0 ) {	   
+				
+		        log.info("SampleTab converted, preparing to write "+submissionId);     
 		        outsubdir.mkdirs();	
 		        SampleTabWriter sampletabwriter = null;
 		        try {

@@ -2,6 +2,8 @@ package uk.ac.ebi.fgpt.sampletab.sra;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class ERADAO {
@@ -95,4 +98,20 @@ select * from cv_status;
         return sampleIds;
 	}
 	
+	public boolean getBioSamplesAuthority(String biosampleAccession) {
+		String query = "SELECT BIOSAMPLES_AUTHORITY FROM SAMPLE WHERE BIOSAMPLE_ID = ?_";
+		String result = jdbcTemplate.queryForObject(query, new RowMapper<String>() {
+
+			@Override
+			public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+				return rs.getString(1);
+			}});
+		if (result.equals("Y")) { 
+			return true;
+		} else if (result.equals("N")) {
+			return false;
+		} else {
+			throw new IllegalArgumentException("Unrecongized BIOSAMPLE_AUTHORITY "+result);
+		}	
+	}	
 }
