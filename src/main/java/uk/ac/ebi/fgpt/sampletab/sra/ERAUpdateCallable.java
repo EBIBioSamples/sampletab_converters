@@ -105,14 +105,18 @@ public class ERAUpdateCallable implements Callable<Void> {
 	
 	private void handleSample(String sampleId, Document sampleDocument) throws ParseException {
 		
-		if (!sampleId.startsWith("ERS")) return;
+		if (!sampleId.startsWith("ERS")) {
+			log.info("Skipping "+sampleId+" because it doesn't start ERS");
+			return;
+		}
 		
 
-        Element sampleroot = sampleDocument.getRootElement();
-        Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
+         
+        Element sampleElement = sampleDocument.getRootElement();
         
         //if its a null link, then private a do not add
         if (sampleElement == null) {
+        	log.info("Skipping "+sampleId+" because it has no SAMPLE XML element");
         	return;
         }
         
@@ -122,7 +126,7 @@ public class ERAUpdateCallable implements Callable<Void> {
         
         //sometimes the study is public but the samples are private
         //check for that and skip sample
-        if (sampleElement == null){
+        if (sampleElement == null) {
             return;
         }
         // check that this actually is the sample we want
@@ -312,12 +316,14 @@ public class ERAUpdateCallable implements Callable<Void> {
         //if it was assigned a non-EBI accession, stop
         //non-EBI should be part of NCBI import
         if (samplenode.getSampleAccession() != null && !samplenode.getSampleAccession().startsWith("SAME")) {
+        	log.info("Skipping "+samplenode.getSampleAccession()+" because its not EBI");
         	return;
         }
         
         //if this is a sample which has biosamples authority, stop
         //these will be direct submissions
         if (samplenode.getSampleAccession() != null && eradao.getBioSamplesAuthority(samplenode.getSampleAccession())) {
+        	log.info("Skipping "+samplenode.getSampleAccession()+" because its a biosample accession");
         	return;
         }
         
@@ -361,19 +367,21 @@ public class ERAUpdateCallable implements Callable<Void> {
         
         Document subDocument = getDocumentIfUpdated(submissionId);
         
-        Element submissionElement = XMLUtils.getChildByName(subDocument.getRootElement(), "SUBMISSION");
+        Element submissionElement = subDocument.getRootElement();
         
 		//get the samples
-		for (String sampleId : ENAUtils.getSamplesForSubmission(submissionElement)) {			
-
+		for (String sampleId : ENAUtils.getSamplesForSubmission(submissionElement)) {	
 			Document sampleDocument = getDocumentIfUpdated(sampleId);
-			Element root = sampleDocument.getRootElement();
-            Element sampleElement = XMLUtils.getChildByName(root, "SAMPLE");
+			Element sampleElement = sampleDocument.getRootElement();
             
             //sometimes a sample will be referred to that doesn't exist - check for that here
             if (sampleElement != null) {
 				//check that this sample is for this submission
+            	
+            	//log.info(""+submissionId+" vs "+ENAUtils.getSubmissionForSample(sampleElement));
+            	
 				if (submissionId.equals(ENAUtils.getSubmissionForSample(sampleElement))) {
+					
 					//this sample is owned by this submission
 					handleSample(sampleId, sampleDocument);
 				} else {
@@ -389,8 +397,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 		for (String studyId : ENAUtils.getStudiesForSubmission(submissionElement)) {		
 
 			Document studyDocument = getDocumentIfUpdated(studyId);
-			Element root = studyDocument.getRootElement();
-            Element studyElement = XMLUtils.getChildByName(root, "STUDY");
+			Element studyElement = studyDocument.getRootElement();
 	        //if its a null link, then private a do not add
 	        if (studyElement == null) {
 	        	continue;
@@ -453,6 +460,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 				//need to add links to samples in this submission
 
 				//NOTE: datamodel doesn't really handle studies having multiple owners, so disabling this for now
+				log.info("Not adding "+groupNode.getGroupAccession()+" because it is owned by "+studySubmissionId);
 				/*
 	            for (String id : ENAUtils.getSamplesForStudy(studyElement)) {
 	        		SampleNode sampleNode = st.scd.getNode(id, SampleNode.class);
@@ -503,6 +511,8 @@ public class ERAUpdateCallable implements Callable<Void> {
 		        if (conan) {
 		            ConanUtils.submit(st.msi.submissionIdentifier, "BioSamples (other)");
 		        }
+	        } else {
+	        	log.info("Not writing to "+submissionId+" because it has no content");
 	        }
         
 		}

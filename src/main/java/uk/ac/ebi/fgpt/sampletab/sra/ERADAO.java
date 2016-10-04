@@ -99,13 +99,13 @@ select * from cv_status;
 	}
 	
 	public boolean getBioSamplesAuthority(String biosampleAccession) {
-		String query = "SELECT BIOSAMPLES_AUTHORITY FROM SAMPLE WHERE BIOSAMPLE_ID = ?_";
+		String query = "SELECT BIOSAMPLE_AUTHORITY FROM SAMPLE WHERE BIOSAMPLE_ID = ? ";
 		String result = jdbcTemplate.queryForObject(query, new RowMapper<String>() {
 
 			@Override
 			public String mapRow(ResultSet rs, int rowNum) throws SQLException {
 				return rs.getString(1);
-			}});
+			}}, biosampleAccession);
 		if (result.equals("Y")) { 
 			return true;
 		} else if (result.equals("N")) {

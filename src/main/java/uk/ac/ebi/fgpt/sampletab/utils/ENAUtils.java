@@ -106,7 +106,7 @@ public class ENAUtils {
     }
     
     public static Element getStudyElement(String studyId)  throws DocumentException, IOException, NonPublicObjectException {
-    	Element study = XMLUtils.getChildByName(getElementById(studyId), "STUDY");
+    	Element study = getElementById(studyId);
     	if (study == null) {
     		throw new NonPublicObjectException("No public record for "+studyId);
     	}
@@ -114,7 +114,7 @@ public class ENAUtils {
     }
 
     public static Element getSubmissionElement(String subId)  throws DocumentException, IOException, NonPublicObjectException {
-    	Element submission = XMLUtils.getChildByName(getElementById(subId), "SUBMISSION");
+    	Element submission = getElementById(subId);
     	if (submission == null) {
     		throw new NonPublicObjectException("No public record for "+subId);
     	}
@@ -122,7 +122,7 @@ public class ENAUtils {
     }
 
     public static Element getSampleElement(String srsId) throws DocumentException, IOException, NonPublicObjectException {
-    	Element sample = XMLUtils.getChildByName(getElementById(srsId), "SAMPLE");
+    	Element sample = getElementById(srsId);
     	if (sample == null) {
     		throw new NonPublicObjectException("No public record for "+srsId);
     	}
@@ -130,7 +130,7 @@ public class ENAUtils {
     }
 
     public static Element getExperimentElement(String srsId) throws DocumentException, IOException, NonPublicObjectException {
-    	Element experiment = XMLUtils.getChildByName(getElementById(srsId), "EXPERIMENT");
+    	Element experiment = getElementById(srsId);
     	if (experiment == null) {
     		throw new NonPublicObjectException("No public record for "+srsId);
     	}
@@ -138,7 +138,7 @@ public class ENAUtils {
     }
 
     public static Element getRunElement(String srsId) throws DocumentException, IOException, NonPublicObjectException {
-    	Element run = XMLUtils.getChildByName(getElementById(srsId), "RUN");
+    	Element run = getElementById(srsId);
     	if (run == null) {
     		throw new NonPublicObjectException("No public record for "+srsId);
     	}
@@ -274,14 +274,29 @@ public class ENAUtils {
 
     public static Set<String> getSamplesForSubmission(Element submission) {
         Set<String> sampleIDs = new HashSet<String>();
+        if ( XMLUtils.getChildrenByName(submission, "SUBMISSION_LINKS") == null 
+        		||  XMLUtils.getChildrenByName(submission, "SUBMISSION_LINKS").size() == 0) {
+        	log.info("No SUBMISSION_LINKS found");
+        }
         for (Element studyLinks : XMLUtils.getChildrenByName(submission, "SUBMISSION_LINKS")) {
+        	
+            if ( XMLUtils.getChildrenByName(studyLinks, "SUBMISSION_LINK") == null
+            		||  XMLUtils.getChildrenByName(studyLinks, "SUBMISSION_LINK").size() == 0) {
+            	log.info("No SUBMISSION_LINK found");
+            }
             for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "SUBMISSION_LINK")) {
+            	
+                if ( XMLUtils.getChildrenByName(studyLink, "XREF_LINK") == null
+                		||  XMLUtils.getChildrenByName(studyLink, "XREF_LINK").size() == 0){ 
+                	log.info("No XREF_LINK found");
+                }
                 for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
                     Element db = XMLUtils.getChildByName(xrefLink, "DB");
                     Element id = XMLUtils.getChildByName(xrefLink, "ID");
-                    if (db.getText().equals("ENA-SAMPLE")) {
-                        if (db != null && db.getText().equals("ENA-SAMPLE") && id != null) {
-                            log.debug("Processing samples "+id.getText() );
+                    log.info(db.getText()+" "+id.getText());
+                    if (db.getTextTrim().equals("ENA-SAMPLE")) {
+                        if (db != null && db.getTextTrim().equals("ENA-SAMPLE") && id != null) {
+                            log.info("Processing sample "+id.getText() );
                             sampleIDs.addAll(getIdentifiers(id.getText()));
                         }
                     }
