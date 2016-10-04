@@ -451,6 +451,9 @@ public class ERAUpdateCallable implements Callable<Void> {
 				//referenced by this submission, but owned by another
 				//group node already has name and accession
 				//need to add links to samples in this submission
+
+				//NOTE: datamodel doesn't really handle studies having multiple owners, so disabling this for now
+				/*
 	            for (String id : ENAUtils.getSamplesForStudy(studyElement)) {
 	        		SampleNode sampleNode = st.scd.getNode(id, SampleNode.class);
         			//check if this study refers to samples in another submission
@@ -460,6 +463,7 @@ public class ERAUpdateCallable implements Callable<Void> {
 	                    groupNode.addSample(sampleNode);
 	        		}
 	            }
+	            */
 			}
 
 			//only add the group if the group contains samples
