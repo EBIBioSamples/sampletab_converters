@@ -106,7 +106,7 @@ public class ENAUtils {
     }
     
     public static Element getStudyElement(String studyId)  throws DocumentException, IOException, NonPublicObjectException {
-    	Element study = getElementById(studyId);
+    	Element study = XMLUtils.getChildByName(getElementById(studyId), "STUDY");
     	if (study == null) {
     		throw new NonPublicObjectException("No public record for "+studyId);
     	}
@@ -114,7 +114,7 @@ public class ENAUtils {
     }
 
     public static Element getSubmissionElement(String subId)  throws DocumentException, IOException, NonPublicObjectException {
-    	Element submission = getElementById(subId);
+    	Element submission = XMLUtils.getChildByName(getElementById(subId), "SUBMISSION");
     	if (submission == null) {
     		throw new NonPublicObjectException("No public record for "+subId);
     	}
@@ -130,7 +130,7 @@ public class ENAUtils {
     }
 
     public static Element getExperimentElement(String srsId) throws DocumentException, IOException, NonPublicObjectException {
-    	Element experiment = getElementById(srsId);
+    	Element experiment = XMLUtils.getChildByName(getElementById(srsId), "EXPERIMENT");
     	if (experiment == null) {
     		throw new NonPublicObjectException("No public record for "+srsId);
     	}
@@ -138,7 +138,7 @@ public class ENAUtils {
     }
 
     public static Element getRunElement(String srsId) throws DocumentException, IOException, NonPublicObjectException {
-    	Element run = getElementById(srsId);
+    	Element run = XMLUtils.getChildByName(getElementById(srsId), "RUN");
     	if (run == null) {
     		throw new NonPublicObjectException("No public record for "+srsId);
     	}
@@ -276,19 +276,19 @@ public class ENAUtils {
         Set<String> sampleIDs = new HashSet<String>();
         if ( XMLUtils.getChildrenByName(submission, "SUBMISSION_LINKS") == null 
         		||  XMLUtils.getChildrenByName(submission, "SUBMISSION_LINKS").size() == 0) {
-        	log.info("No SUBMISSION_LINKS found");
+        	log.info("No SUBMISSION_LINKS found for submission");
         }
         for (Element studyLinks : XMLUtils.getChildrenByName(submission, "SUBMISSION_LINKS")) {
         	
             if ( XMLUtils.getChildrenByName(studyLinks, "SUBMISSION_LINK") == null
             		||  XMLUtils.getChildrenByName(studyLinks, "SUBMISSION_LINK").size() == 0) {
-            	log.info("No SUBMISSION_LINK found");
+            	log.info("No SUBMISSION_LINK found for submission");
             }
             for (Element studyLink : XMLUtils.getChildrenByName(studyLinks, "SUBMISSION_LINK")) {
             	
                 if ( XMLUtils.getChildrenByName(studyLink, "XREF_LINK") == null
                 		||  XMLUtils.getChildrenByName(studyLink, "XREF_LINK").size() == 0){ 
-                	log.info("No XREF_LINK found");
+                	log.info("No XREF_LINK found for submission");
                 }
                 for (Element xrefLink : XMLUtils.getChildrenByName(studyLink, "XREF_LINK")) {
                     Element db = XMLUtils.getChildByName(xrefLink, "DB");

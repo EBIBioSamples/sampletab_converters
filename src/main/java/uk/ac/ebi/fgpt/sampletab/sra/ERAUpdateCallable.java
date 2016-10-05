@@ -112,7 +112,8 @@ public class ERAUpdateCallable implements Callable<Void> {
 		
 
          
-        Element sampleElement = sampleDocument.getRootElement();
+        Element sampleroot = sampleDocument.getRootElement();
+        Element sampleElement = XMLUtils.getChildByName(sampleroot, "SAMPLE");
         
         //if its a null link, then private a do not add
         if (sampleElement == null) {
@@ -367,12 +368,13 @@ public class ERAUpdateCallable implements Callable<Void> {
         
         Document subDocument = getDocumentIfUpdated(submissionId);
         
-        Element submissionElement = subDocument.getRootElement();
+        Element submissionElement = XMLUtils.getChildByName(subDocument.getRootElement(), "SUBMISSION");
         
 		//get the samples
 		for (String sampleId : ENAUtils.getSamplesForSubmission(submissionElement)) {	
 			Document sampleDocument = getDocumentIfUpdated(sampleId);
-			Element sampleElement = sampleDocument.getRootElement();
+			Element root = sampleDocument.getRootElement();
+            Element sampleElement = XMLUtils.getChildByName(root, "SAMPLE");
             
             //sometimes a sample will be referred to that doesn't exist - check for that here
             if (sampleElement != null) {
@@ -397,7 +399,8 @@ public class ERAUpdateCallable implements Callable<Void> {
 		for (String studyId : ENAUtils.getStudiesForSubmission(submissionElement)) {		
 
 			Document studyDocument = getDocumentIfUpdated(studyId);
-			Element studyElement = studyDocument.getRootElement();
+			Element root = studyDocument.getRootElement();
+            Element studyElement = XMLUtils.getChildByName(root, "STUDY");
 	        //if its a null link, then private a do not add
 	        if (studyElement == null) {
 	        	continue;
