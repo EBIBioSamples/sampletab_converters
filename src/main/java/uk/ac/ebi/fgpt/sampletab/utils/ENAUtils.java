@@ -122,7 +122,7 @@ public class ENAUtils {
     }
 
     public static Element getSampleElement(String srsId) throws DocumentException, IOException, NonPublicObjectException {
-    	Element sample = getElementById(srsId);
+    	Element sample = XMLUtils.getChildByName(getElementById(srsId), "SAMPLE");
     	if (sample == null) {
     		throw new NonPublicObjectException("No public record for "+srsId);
     	}
