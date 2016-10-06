@@ -46,13 +46,19 @@ public class NCBIUpdateDownloader {
     private static Logger log = LoggerFactory.getLogger(NCBIUpdateDownloader.class);
         
     public static Collection<Integer> getUpdatedSampleIds(Date from, Date to) throws MalformedURLException, DocumentException, IOException {
-        
-        Collection<Integer> ids = new HashSet<Integer>();
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY/MM/dd");
         
         //construct a query that the ncbi search engine understands
         String query = dateFormat.format(from)+":"+dateFormat.format(to)+"[MDAT]+OR+"
             +dateFormat.format(from)+":"+dateFormat.format(to)+"[PDAT]+AND+public[Filter]";
+
+        return getSampleIds(query);
+    }
+    
+    public static Collection<Integer> getSampleIds(String query) throws MalformedURLException, DocumentException, IOException {
+        
+        Collection<Integer> ids = new HashSet<Integer>();
         
         int retrievalSize = 100;
         int retrievalOffset = 0;
