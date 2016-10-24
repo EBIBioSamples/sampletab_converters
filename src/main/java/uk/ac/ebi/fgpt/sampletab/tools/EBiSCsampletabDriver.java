@@ -40,8 +40,6 @@ import uk.ac.ebi.fgpt.sampletab.utils.SampleTabUtils;
 
 public class EBiSCsampletabDriver extends AbstractDriver {
 
-	
-
     @Option(name = "--csv", usage = "csv path")
     private String csvPath;
 
@@ -152,6 +150,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 		//load it
 		//check their name is what it should be
 		//check that everything in the batch is a vial
+		//check that everything in the file is a vial or batch
 		Map<String, String> batchAccToName = new HashMap<>();
 		Map<String, Set<String>> subToBatchAccs = new HashMap<>();
 		for (String[] line : content.subList(1, content.size())) {
@@ -176,6 +175,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 			File origin = new File(submissionPath);
 			File file = new File(origin, SampleTabUtils.getSubmissionDirFile(sub).toString());
 			File sampleTab = new File(file, filename);
+			File sampleTabTemp = new File(file, filename+".tmp");
 			
 			if (sampleTab.exists()) {
 
@@ -206,7 +206,6 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 						}
 						//check the membership
 						Set<Node> toRemove = new HashSet<>();
-						
 						for (Node parentNode : groupNode.getParentNodes()) {
 							if (SampleNode.class.isInstance(parentNode)) {
 								if (!parentNode.getNodeName().contains(" vial ")) {
@@ -229,10 +228,21 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 						log.warn("Unable to find accession "+batchAcc+" in submission "+sub);
 					}
 				}
+				//remove any samples that are not  a vial
+				for (SampleNode sampleNode : sd.scd.getNodes(SampleNode.class)) {
+					if (!sampleNode.getNodeName().contains(" vial ")) {
+						log.info("Removing node "+sampleNode.getNodeName());
+						sd.scd.removeNode(sampleNode);
+					}
+				}
+				//output it again
 				if (changed && !dryRun) {
-					try (SampleTabWriter sampleTabWriter = new SampleTabWriter(new FileWriter(sampleTab))) {
+					try (SampleTabWriter sampleTabWriter = new SampleTabWriter(new FileWriter(sampleTabTemp))) {
 						sampleTabWriter.write(sd);
 						log.info("Wrote to "+sampleTab);
+						if (!sampleTabTemp.renameTo(sampleTab)) {
+							throw new IOException("Unable to rename file "+sampleTabTemp);
+						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}

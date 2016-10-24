@@ -74,9 +74,6 @@ public class EBiSCcsvDriver extends AbstractDriver {
 	private Map<String, String> hipsciToEbisc = new ConcurrentHashMap<>();
 
 	private String urlRoot = "https://www.ebi.ac.uk/biosamples/";
-	//private String urlRoot = "http://cocoa.ebi.ac.uk:14114/biosamples/";
-	
-	
 	
 	public static void main(String[] args) {
 		new EBiSCcsvDriver().doMain(args);
@@ -253,7 +250,9 @@ public class EBiSCcsvDriver extends AbstractDriver {
 		Integer total = null;
 		while (to == null || to < total) {
 			// get an xml for the query
-			Document doc = XMLUtils.getDocument(new URL(urlRoot+"xml/group/query=EBiSC&pagesize=500&page=" + page));
+			URL url = new URL(urlRoot+"xml/group/query=EBiSC&pagesize=500&page=" + page);
+			log.info("getting URL "+url);
+			Document doc = XMLUtils.getDocument(url);
 			Element root = doc.getRootElement();
 
 			// process this pages results
@@ -308,7 +307,7 @@ public class EBiSCcsvDriver extends AbstractDriver {
 			Document doc = null;
 			try {
 				doc = XMLUtils.getDocument(
-						new URL(urlRoot+"xml/groupsamples/" + groupAcc + "/query=&page=" + page));
+						new URL(urlRoot+"xml/groupsamples/" + groupAcc + "/query=%2A&page=" + page));
 			} catch (DocumentException | IOException e) {
 				throw new RuntimeException(e);
 			}
