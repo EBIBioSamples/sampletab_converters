@@ -157,14 +157,14 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 			String batchAcc = line[12];
 			String batchNameWanted = line[14];
 			String vialNameWanted = line[2];
-			String sub = line[15];
+			String batchSub = line[15];
 					
 			if (vialNameWanted.length() > 0 && //check that it is a sane vial name wanted
-					sub.length() > 0 && batchNameWanted.length() > 0) {
-				if (!subToBatchAccs.containsValue(sub)) {
-					subToBatchAccs.put(sub, new HashSet<>());
+					batchSub.length() > 0 && batchNameWanted.length() > 0) {
+				if (!subToBatchAccs.containsValue(batchSub)) {
+					subToBatchAccs.put(batchSub, new HashSet<>());
 				}
-				subToBatchAccs.get(sub).add(batchAcc);
+				subToBatchAccs.get(batchSub).add(batchAcc);
 				
 				batchAccToName.put(batchAcc, batchNameWanted);
 			}
@@ -183,8 +183,8 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 		        SampleData sd;
 				try {
 					sd = parser.parse(sampleTab);
-				} catch (ParseException e1) {
-					throw new RuntimeException(e1);
+				} catch (ParseException e) {
+					throw new RuntimeException(e);
 				}
 				
 				log.info("Read "+sampleTab);
@@ -233,6 +233,7 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 					if (!sampleNode.getNodeName().contains(" vial ")) {
 						log.info("Removing node "+sampleNode.getNodeName());
 						sd.scd.removeNode(sampleNode);
+						changed = true;
 					}
 				}
 				//output it again
