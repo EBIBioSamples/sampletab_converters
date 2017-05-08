@@ -229,18 +229,31 @@ public class EBiSCsampletabDriver extends AbstractDriver {
 					}
 				}
 				//remove any samples that are not  a vial
+				Set<SampleNode> toRemove = new HashSet<>();
 				for (SampleNode sampleNode : sd.scd.getNodes(SampleNode.class)) {
 					if (!sampleNode.getNodeName().contains(" vial ")) {
-						log.info("Removing node "+sampleNode.getNodeName());
-						sd.scd.removeNode(sampleNode);
-						changed = true;
+						toRemove.add(sampleNode);
 					}
+				}
+				for (SampleNode sampleNode : toRemove) {
+					log.info("Removing node "+sampleNode.getNodeName());
+					sd.scd.removeNode(sampleNode);
+					try {
+						sd.scd.resolveGraphStructure(sampleNode);
+					} catch (ParseException e) {
+						throw new RuntimeException(e);
+					}
+					changed = true;
 				}
 				//output it again
 				if (changed && !dryRun) {
 					try (SampleTabWriter sampleTabWriter = new SampleTabWriter(new FileWriter(sampleTabTemp))) {
 						sampleTabWriter.write(sd);
-						log.info("Wrote to "+sampleTab);
+						log.info("Wrote to "+sampleTabTemp);
+						
+						if (!sampleTab.delete()) {
+							throw new IOException("Unable to delete file "+sampleTab);
+						}
 						if (!sampleTabTemp.renameTo(sampleTab)) {
 							throw new IOException("Unable to rename file "+sampleTabTemp);
 						}

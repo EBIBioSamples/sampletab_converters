@@ -388,7 +388,11 @@ public class MageTabToSampleTab {
 	                processCharacteristics(characteristics, scdnode, mt, st);
 	                
 	                processComments(comments, scdnode);
-	                            
+
+	                DatabaseAttribute databaseAttribute = new DatabaseAttribute("ArrayExpress", 
+	                        "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
+	                        mt.IDF.accession);
+	                scdnode.addAttribute(databaseAttribute);
                 }
                 
                 //add the node we have just created
