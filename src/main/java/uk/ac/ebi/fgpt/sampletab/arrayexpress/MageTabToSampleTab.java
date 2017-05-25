@@ -327,7 +327,7 @@ public class MageTabToSampleTab {
                         */
                         String id = value;
                         String uri = "http://www.ebi.ac.uk/ena/data/view/"+value;
-                        DatabaseAttribute dba = new DatabaseAttribute("ENA SRA", id, uri);
+                        DatabaseAttribute dba = new DatabaseAttribute("ENA", id, uri);
                         scdnode.addAttribute(dba);
                     } else {
                         CommentAttribute comment = new CommentAttribute();
