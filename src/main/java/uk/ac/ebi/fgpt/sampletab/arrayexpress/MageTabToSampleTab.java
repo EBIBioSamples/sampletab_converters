@@ -389,9 +389,9 @@ public class MageTabToSampleTab {
 	                
 	                processComments(comments, scdnode);
 
-	                DatabaseAttribute databaseAttribute = new DatabaseAttribute("ArrayExpress", 
-	                        "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession,
-	                        mt.IDF.accession);
+	                DatabaseAttribute databaseAttribute = new DatabaseAttribute("ArrayExpress",
+	                        mt.IDF.accession, 
+	                        "http://www.ebi.ac.uk/arrayexpress/experiments/"+ mt.IDF.accession);
 	                scdnode.addAttribute(databaseAttribute);
                 }
                 
