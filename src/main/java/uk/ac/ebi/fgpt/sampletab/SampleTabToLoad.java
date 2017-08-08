@@ -59,7 +59,7 @@ public class SampleTabToLoad {
         }
         
         //make sure the title is an acceptable size
-        if (sampledata.msi.submissionTitle.length() > 250) {
+        if (sampledata.msi.submissionDescription != null && sampledata.msi.submissionTitle.length() > 250) {
         	sampledata.msi.submissionTitle = sampledata.msi.submissionTitle.substring(0, 250)+" [truncated]";
         }
         
